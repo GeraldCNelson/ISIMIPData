@@ -1,0 +1,14 @@
+﻿data
+data/animalCount
+data/cmip5
+data/cmip6
+data/cmip6/belowZero
+data/cmip6/chillingHours
+data/cmip6/damageTemp
+data/cmip6/monthMean
+data/cmip6/optTempRange
+data/cmip6/precip_max
+data/cmip6/precip_zero
+data/cmip6/THI
+data/cmip6/tmaxMonthlySums
+data/crops
