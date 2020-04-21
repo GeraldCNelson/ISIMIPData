@@ -1,0 +1,68 @@
+---
+title: "Notes for the ISIMIP CMIP6 data manipulations"
+author: "Gerald Nelson"
+date: "4/5/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+
+
+
+# Outputs for crops
+The purpose of this exercise is to provide a quantitative assessment of the impacts of climate change on key elements of food security, and in particular to identify potential limits to adaptation. Results are generated for each of the 5 ISIMIP models for four time periods - 2001-2010 (using observed data), 2021-2030, 2051-2060 and 2091-2100.
+
+As of 8 April 2020, the following outputs are being generated. 
+
+* Number of days in each month where 
++ the minimum temperature is below zero degrees Celsius. The R script that does this is 
+
++ the maximum temperature is above the temperature at which a crop would suffer yield-reducing damage for 13 crops. The R script that does this is cropExtremesCMIP6.R
+
++ the maximum temperature is in the optimum temperature range for a crop, for 13 crops. The R script that does this is cropExtremesCMIP6.R
+
+* the number of chilling hours in the northern hemisphere and the southern hemisphere. The R script that does this is chilling.R
+
+# Outputs for animals
+For the following animals - cattle, sheep, goat, yak, swine, layer, and broiler - whether the monthly average maximum temperature is greater than the lethal temperature value. 
+The R script that does this is THIcalcs.R
+
+The animal calculations have two parts. First, estimate the THI value for each pixel. Second, identify those pixels whose THI values are greater than the extreme damage break point.
+
+# Technical issues
+# Input data
+The climate data used in these scripts is prepared initially by the ISIMIP project [link](www.isimip.org). Although a bit of analysis is done with ISIMIP data from the CMIP5 collection, most of it is from CMIP6. We're using the ISIMIP3b output data sets [link](https://www.isimip.org/news/isimip3ab-protocol-released/). It includes data from 5 earth system models (ESMs) and three scenarios, called ssp126, ssp370 and ssp585. More information is available here [link](https://protocol.isimip.org/protocol/ISIMIP3b/agriculture.html). The data have been bias-corrected to facilitate comparisions over time. 
+
+The data from ISIMIP are daily values for a 1/2 degree grid of the whole world. We use a land only dataset (that also excludes Antarctica) produced by Christoph Mueller of PIK for our analysis
+
+## Change units
+Two of the raw variables (in netcdf files, with suffix .nc) from ISIMIP come in units that are not condusive for food security modeling. 
+
+* Temperature (tasmax and tasmin) has units of degrees Kelvin. These can be converted to degrees Celsius by subtracting 273.15.
+
+* Precipitation (pr) has units of kg m−2 s-1 (kilograms of rain per square meter per second). They can be converted to mm per day by mulitiplying by 86400.
+
+Any time a netcdf file is read in it should be immediately converted as needed. The function fixUnits(var, ncin.brick) in the globallyUsed.R file will do this for both temperature and precipitation.
+
+## File formats used
+Any climate or related dataset that is stored as a geotiff il (suffix of .tif) has already implemented these conversions.
+
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

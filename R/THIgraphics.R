@@ -1,0 +1,197 @@
+# script to do THI graphics
+source("R/globallyUsed.R")
+library(RColorBrewer)
+library(colorspace)# use pal <- choose_palette() to see what this is about
+sspChoices <- c("ssp585") #"ssp126", 
+modelChoices <- c( "GFDL-ESM4", "UKESM1-0-LL", "MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
+#modelChoices <- c("IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
+startyearChoices <-  c(2001, 2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
+yearRange <- 9
+
+#test values
+i <- "GFDL-ESM4"
+k <- "ssp585"
+l <- 2021
+
+bpList <- as.data.table(read.csv("data-raw/animals/breakpointslistRaw.csv"))
+thiList <- c("thi.cattle", "thi.sheep", "thi.goat", "thi.yak", "thi.broiler", "thi.layer", "thi.chicken", "thi.swine")
+
+for (i in modelChoices) {
+  for (k in sspChoices) {
+    for (l in startyearChoices) {
+      
+      meanFileName <- paste0("results/modMean", "_", k, "_", l, "_",j, ".tif")
+      raster.mean <-          stack(meanFileName)
+      #      raster.extremeStress <- stack(paste0("results/modMean", "_", k, "_", l, "_",j, ".tif"))
+      rasterNameMean <- paste0("modMean", "_", k, "_", l, "_",j)
+      assign(rasterNameMean, raster.mean)
+    }
+  }
+}
+
+# Do observed. Note that these are not actually model means, just the means over the observed period. There is no model-based SD for this period.
+for (k in thiList) {
+  raster.mean <- stack(paste0("results/", k, "_", "observed", ".tif"))
+  rasterNameMean <- paste0("modMean", "_", k, "_", "observed")
+  names(raster.mean) <- month.abb
+  assign(rasterNameMean, raster.mean)
+}
+
+#read in the animal numbers data
+sourceDir <- "data-raw/animals/arcrasters/"
+animalsList <- list.files(sourceDir)
+# load the data for the number of animals in each 1/2 degree cell
+for (i in animalsList) {
+  species <- unlist(strsplit(i, "-"))[2]
+  if (species %in% "recl.asc") species = "livestockSystem"
+  fileName <- paste0("data/raster_", species, ".tif")
+  print(fileName)
+  rIn <- raster(fileName)
+  rName <- paste0("raster_", species)
+  assign(rName, rIn)
+}
+
+# plot the THI extremes
+
+library(RColorBrewer)
+library(rworldmap)
+library(colorspace)# use pal <- choose_palette() to see what this is about
+
+
+reds = brewer.pal(5, "YlOrRd")
+greens = brewer.pal(3, "Greens")
+blues = brewer.pal(5, "Blues")
+mapTheme <- rasterTheme(region = c('white', blues, greens, reds, "gray"))
+for (l in comboChoices) {
+  for (j in sspChoices) {
+    for (k in thiList) {
+      i <- "modMean"
+      speciesName <- gsub("thi.", "", k)
+      rasterToPlot <- paste0(i, "_", k, "_", l, "_",j)
+      if (l %in% "observed") rasterToPlot <-  paste0("results/modMean_modMean", "_", k, "_", "observed", ".tif")
+      
+      titleText <- paste0("Model Mean THI, ", speciesName, ", ", l, ", ", j)
+      if (l %in% "observed") titleText <- paste0("Model Mean THI, ", speciesName, ", monthly average, ", l)
+      print(titleText)
+      #       print(levelplot(x = get(thiList[m]), main = titleText, par.settings = mapTheme))
+      if (l %in% "observed") {
+        bpExtreme <- bpList[species %in% speciesName & model %in% i & period %in% l & is.na(rcp), extremeStress]
+      }else{
+        bpExtreme <- bpList[species %in% speciesName & model %in% i & period %in% l & rcp %in% j, extremeStress]
+      }
+      print(paste0("bpExtreme: ", bpExtreme))
+      #        g <- levelplot(x = get(thiList[m]), main = titleText,  at = get(bpExtreme), col.regions = c("white", "green", "yellow", "red"))
+      # thiname <- paste(k, i, l, j, sep = "_")
+      thiname <- paste(k, i, l, j, sep = "_")
+      if (i %in% "modMean") {
+        thiname <- paste("modMean",  k, l, j, sep = "_")
+        thiSD <- paste("modSD",  k, l, j, sep = "_")
+      }
+      if (l %in% "observed") { 
+        thiname <- paste(k, l, sep = "_")
+        if (i %in% "modMean") thiname <- paste("modMean", k, l, sep = "_")
+      }
+      myat <- c(0, bpExtreme, 100)
+      myat_SD <- c(0, 1, 2, 3, 4, 7)
+      g <- levelplot(x = get(thiname), main = titleText,  at = myat, col.regions = c("white", "red"))
+      g <- g + latticeExtra::layer(sp.polygons(coastsCoarse, col = "black", lwd = 0.5))
+      plotFileName <- paste0("graphics/cmip6/THI/lp_", i, "_", l, "_", j, "_", gsub(".", "_", k, fixed = TRUE), ".jpg")
+      if (l %in% "observed") plotFileName <- paste0("graphics/cmip6/THI/lp_", i, "_", l, "_", gsub(".", "_", k, fixed = TRUE), ".jpg")
+      print(paste0("plotFileName: ", plotFileName))
+      jpeg(plotFileName, width = 8, height = 8, quality = 100, units = "in", res = 300)
+      print(g)
+      dev.off()
+      
+    }
+  }
+}
+
+
+# ensemble graphics
+# apply masks, can only do this to animals we have in THIlist and that have area mask raster
+thiListReduced <- thiList[!thiList %in% c("thi.yak", "thi.broiler", "thi.layer")]
+
+startyearChoices_ensemble <-  c(2021, 2051, 2091) # no multimodel results for observed data
+for (k in sspChoices) {
+  for (l in startyearChoices_ensemble) {
+    yearSpan <- paste0(l, "_", l + yearRange)
+    print(paste0("ssp choice: ", k, ", start year: ", l))
+    for (j in 1:length(thiListReduced)) {
+      speciesName <- gsub("thi.", "", thiListReduced[j])
+      fileNameMean.masked <- paste0("data/cmip6/THI/THI_ensembleMean_masked_", speciesName, "_",  l, "_", k, ".tif")
+      print(paste0("fileNameMean.masked: ", fileNameMean.masked))
+      fileNameSD.masked <- paste0("data/cmip6/THI/THI_ensembleSD_masked_", speciesName, "_",  l, "_", k, ".tif")
+      print(paste0("fileNameSD.masked: ", fileNameSD.masked))
+      meanData <- brick(fileNameMean.masked)
+      SDData <- brick(fileNameSD.masked)
+      names(meanData) <- month.abb
+      names(SDData) <- month.abb
+      
+      # plot Ensemble mean
+      titleText <- paste0("THI stress levels by month, ", speciesName, "\n ", yearSpan, ", SSP = ", k, ", ensemble mean")
+      zeroLevel <- bpList[species %in% speciesName, zeroLevel]
+      noStress <- bpList[species %in% speciesName, noStress]
+      moderateStress <- bpList[species %in% speciesName, moderateStress]
+      extremeStress <- bpList[species %in% speciesName, extremeStress]
+      col.l <- c("white", "blue", "yellow", "red")
+      
+      myat <- c(zeroLevel, noStress, moderateStress, extremeStress, 100)
+      g <- levelplot(meanData, main = titleText, col.regions = col.l, at = myat,
+                     colorkey = list(at = myat, col = col.l, labels = c( "","No stress/No animals", "moderate stress", "extreme stress", "maximum")),
+                     xlab = "", ylab = "", scales  = list(x = list(draw = FALSE), y = list(draw = FALSE)))
+      
+      g <- g + latticeExtra::layer(sp.polygons(coastsCoarse, col = "black", lwd = 0.5))
+      plotFileName <- paste0("graphics/cmip6/THI/THI_ensembleMean_masked_",  speciesName, "_",  yearSpan, "_", k, ".jpg")
+      print(paste0("plot file name: ", plotFileName, " for species ", speciesName))
+      jpeg(plotFileName, width = 8, height = 8, quality = 100, units = "in", res = 300)
+      print(g)
+      dev.off()
+      
+      # plot Ensemble SD
+      titleText <- paste0("THI SD by month, ", speciesName, "\n ", yearSpan, ", SSP = ", k, ", ensemble SD")
+      myat <- c(0, .5, 1.0, 1.5, 2.0)
+      g <- levelplot(SDData, main = titleText, col.regions = col.l, at = myat,
+                     colorkey = list(at = myat, col = col.l),
+                     xlab = "", ylab = "", scales  = list(x = list(draw = FALSE), y = list(draw = FALSE)))
+      
+      g <- g + latticeExtra::layer(sp.polygons(coastsCoarse, col = "black", lwd = 0.5))
+      plotFileName <- paste0("graphics/cmip6/THI/THI_ensembleSD_masked_",   speciesName, "_",  yearSpan, "_", k, ".jpg")
+      jpeg(plotFileName, width = 8, height = 8, quality = 100, units = "in", res = 300)
+      print(g)
+      dev.off()
+    }
+  }
+}
+# do observed data
+for (j in 1:length(thiListReduced)) {  
+  yearRange <- 9
+  yearSpan <- "2001_2010"
+  speciesName <- gsub("thi.", "", thiListReduced[j])
+  
+  fileNameMean.masked <- paste0("data/cmip6/THI/", thiListReduced[j], "_observed_", yearSpan, ".tif")
+  print(paste0("filenamein ", fileNameMean.masked))
+  temp.mean <- brick(fileNameMean.masked)
+  names(temp.mean) <- month.abb
+  
+  # plot Ensemble mean
+  titleText <- paste0("THI stress levels by month, ", speciesName, "\n ", yearSpan)
+  zeroLevel <- bpList[species %in% speciesName, zeroLevel]
+  noStress <- bpList[species %in% speciesName, noStress]
+  moderateStress <- bpList[species %in% speciesName, moderateStress]
+  extremeStress <- bpList[species %in% speciesName, extremeStress]
+  col.l <- c("white", "blue", "yellow", "red")
+  
+  myat <- c(zeroLevel, noStress, moderateStress, extremeStress, 100)
+  g <- levelplot(meanData, main = titleText, col.regions = col.l, at = myat,
+                 colorkey = list(at = myat, col = col.l, labels = c( "","No stress/No animals", "moderate stress", "extreme stress", "maximum")),
+                 xlab = "", ylab = "", scales  = list(x = list(draw = FALSE), y = list(draw = FALSE)))
+  
+  g <- g + latticeExtra::layer(sp.polygons(coastsCoarse, col = "black", lwd = 0.5))
+  plotFileName <- paste0("graphics/cmip6/THI/",  thiListReduced[j], "_observed_",  yearSpan, ".jpg")
+  print(paste0("plot file name: ", plotFileName, " for species ", speciesName))
+  jpeg(plotFileName, width = 8, height = 8, quality = 100, units = "in", res = 300)
+  print(g)
+  dev.off()
+}
+
+
