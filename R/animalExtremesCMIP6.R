@@ -42,7 +42,7 @@ foreach(l = startyearChoices) %:%
     
     temp[temp < extremeStress] <- NA
     
-    # raster.animalcount <- raster(paste0("data/animalCount/raster_", speciesName, ".tif"))
+    # raster.animalcount <- raster(paste0("data/animals/raster_", speciesName, ".tif"))
     # if (speciesName %in% "chicken") 
     # {cutoff <- 100000
     # }else{cutoff <- 1000}

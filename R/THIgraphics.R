@@ -16,97 +16,6 @@ l <- 2021
 bpList <- as.data.table(read.csv("data-raw/animals/breakpointslistRaw.csv"))
 thiList <- c("thi.cattle", "thi.sheep", "thi.goat", "thi.yak", "thi.broiler", "thi.layer", "thi.chicken", "thi.swine")
 
-for (i in modelChoices) {
-  for (k in sspChoices) {
-    for (l in startyearChoices) {
-      
-      meanFileName <- paste0("results/modMean", "_", k, "_", l, "_",j, ".tif")
-      raster.mean <-          stack(meanFileName)
-      #      raster.extremeStress <- stack(paste0("results/modMean", "_", k, "_", l, "_",j, ".tif"))
-      rasterNameMean <- paste0("modMean", "_", k, "_", l, "_",j)
-      assign(rasterNameMean, raster.mean)
-    }
-  }
-}
-
-# Do observed. Note that these are not actually model means, just the means over the observed period. There is no model-based SD for this period.
-for (k in thiList) {
-  raster.mean <- stack(paste0("results/", k, "_", "observed", ".tif"))
-  rasterNameMean <- paste0("modMean", "_", k, "_", "observed")
-  names(raster.mean) <- month.abb
-  assign(rasterNameMean, raster.mean)
-}
-
-#read in the animal numbers data
-sourceDir <- "data-raw/animals/arcrasters/"
-animalsList <- list.files(sourceDir)
-# load the data for the number of animals in each 1/2 degree cell
-for (i in animalsList) {
-  species <- unlist(strsplit(i, "-"))[2]
-  if (species %in% "recl.asc") species = "livestockSystem"
-  fileName <- paste0("data/raster_", species, ".tif")
-  print(fileName)
-  rIn <- raster(fileName)
-  rName <- paste0("raster_", species)
-  assign(rName, rIn)
-}
-
-# plot the THI extremes
-
-library(RColorBrewer)
-library(rworldmap)
-library(colorspace)# use pal <- choose_palette() to see what this is about
-
-
-reds = brewer.pal(5, "YlOrRd")
-greens = brewer.pal(3, "Greens")
-blues = brewer.pal(5, "Blues")
-mapTheme <- rasterTheme(region = c('white', blues, greens, reds, "gray"))
-for (l in comboChoices) {
-  for (j in sspChoices) {
-    for (k in thiList) {
-      i <- "modMean"
-      speciesName <- gsub("thi.", "", k)
-      rasterToPlot <- paste0(i, "_", k, "_", l, "_",j)
-      if (l %in% "observed") rasterToPlot <-  paste0("results/modMean_modMean", "_", k, "_", "observed", ".tif")
-      
-      titleText <- paste0("Model Mean THI, ", speciesName, ", ", l, ", ", j)
-      if (l %in% "observed") titleText <- paste0("Model Mean THI, ", speciesName, ", monthly average, ", l)
-      print(titleText)
-      #       print(levelplot(x = get(thiList[m]), main = titleText, par.settings = mapTheme))
-      if (l %in% "observed") {
-        bpExtreme <- bpList[species %in% speciesName & model %in% i & period %in% l & is.na(rcp), extremeStress]
-      }else{
-        bpExtreme <- bpList[species %in% speciesName & model %in% i & period %in% l & rcp %in% j, extremeStress]
-      }
-      print(paste0("bpExtreme: ", bpExtreme))
-      #        g <- levelplot(x = get(thiList[m]), main = titleText,  at = get(bpExtreme), col.regions = c("white", "green", "yellow", "red"))
-      # thiname <- paste(k, i, l, j, sep = "_")
-      thiname <- paste(k, i, l, j, sep = "_")
-      if (i %in% "modMean") {
-        thiname <- paste("modMean",  k, l, j, sep = "_")
-        thiSD <- paste("modSD",  k, l, j, sep = "_")
-      }
-      if (l %in% "observed") { 
-        thiname <- paste(k, l, sep = "_")
-        if (i %in% "modMean") thiname <- paste("modMean", k, l, sep = "_")
-      }
-      myat <- c(0, bpExtreme, 100)
-      myat_SD <- c(0, 1, 2, 3, 4, 7)
-      g <- levelplot(x = get(thiname), main = titleText,  at = myat, col.regions = c("white", "red"))
-      g <- g + latticeExtra::layer(sp.polygons(coastsCoarse, col = "black", lwd = 0.5))
-      plotFileName <- paste0("graphics/cmip6/THI/lp_", i, "_", l, "_", j, "_", gsub(".", "_", k, fixed = TRUE), ".jpg")
-      if (l %in% "observed") plotFileName <- paste0("graphics/cmip6/THI/lp_", i, "_", l, "_", gsub(".", "_", k, fixed = TRUE), ".jpg")
-      print(paste0("plotFileName: ", plotFileName))
-      jpeg(plotFileName, width = 8, height = 8, quality = 100, units = "in", res = 300)
-      print(g)
-      dev.off()
-      
-    }
-  }
-}
-
-
 # ensemble graphics
 # apply masks, can only do this to animals we have in THIlist and that have area mask raster
 thiListReduced <- thiList[!thiList %in% c("thi.yak", "thi.broiler", "thi.layer")]
@@ -133,11 +42,12 @@ for (k in sspChoices) {
       noStress <- bpList[species %in% speciesName, noStress]
       moderateStress <- bpList[species %in% speciesName, moderateStress]
       extremeStress <- bpList[species %in% speciesName, extremeStress]
-      col.l <- c("white", "blue", "yellow", "red")
-      
+      col.l <- c("darkslategray1", "blue", "yellow", "red")
+      mapTheme <- rasterTheme(region = col.l)  
+      mapTheme$panel.background$col = 'white' 
       myat <- c(zeroLevel, noStress, moderateStress, extremeStress, 100)
-      g <- levelplot(meanData, main = titleText, col.regions = col.l, at = myat,
-                     colorkey = list(at = myat, col = col.l, labels = c( "","No stress/No animals", "moderate stress", "extreme stress", "maximum")),
+      g <- levelplot(meanData, main = titleText, col.regions = col.l, at = myat, par.settings = mapTheme, 
+                     colorkey = list(at = myat, col = col.l, labels = c( "","No stress", "moderate stress", "extreme stress", "maximum")),
                      xlab = "", ylab = "", scales  = list(x = list(draw = FALSE), y = list(draw = FALSE)))
       
       g <- g + latticeExtra::layer(sp.polygons(coastsCoarse, col = "black", lwd = 0.5))
@@ -194,4 +104,95 @@ for (j in 1:length(thiListReduced)) {
   dev.off()
 }
 
+
+# old code
+# for (i in modelChoices) {
+#   for (k in sspChoices) {
+#     for (l in startyearChoices) {
+#       
+#       meanFileName <- paste0("results/modMean", "_", k, "_", l, "_",j, ".tif")
+#       raster.mean <-          stack(meanFileName)
+#       #      raster.extremeStress <- stack(paste0("results/modMean", "_", k, "_", l, "_",j, ".tif"))
+#       rasterNameMean <- paste0("modMean", "_", k, "_", l, "_",j)
+#       assign(rasterNameMean, raster.mean)
+#     }
+#   }
+# }
+# 
+# # Do observed. Note that these are not actually model means, just the means over the observed period. There is no model-based SD for this period.
+# for (k in thiList) {
+#   raster.mean <- stack(paste0("results/", k, "_", "observed", ".tif"))
+#   rasterNameMean <- paste0("modMean", "_", k, "_", "observed")
+#   names(raster.mean) <- month.abb
+#   assign(rasterNameMean, raster.mean)
+# }
+# 
+# #read in the animal numbers data
+# sourceDir <- "data-raw/animals/arcrasters/"
+# animalsList <- list.files(sourceDir)
+# # load the data for the number of animals in each 1/2 degree cell
+# for (i in animalsList) {
+#   species <- unlist(strsplit(i, "-"))[2]
+#   if (species %in% "recl.asc") species = "livestockSystem"
+#   fileName <- paste0("data/raster_", species, ".tif")
+#   print(fileName)
+#   rIn <- raster(fileName)
+#   rName <- paste0("raster_", species)
+#   assign(rName, rIn)
+# }
+# 
+# # plot the THI extremes
+# 
+# library(RColorBrewer)
+# library(rworldmap)
+# library(colorspace)# use pal <- choose_palette() to see what this is about
+# 
+# 
+# reds = brewer.pal(5, "YlOrRd")
+# greens = brewer.pal(3, "Greens")
+# blues = brewer.pal(5, "Blues")
+# mapTheme <- rasterTheme(region = c('white', blues, greens, reds, "gray"))
+# for (l in comboChoices) {
+#   for (j in sspChoices) {
+#     for (k in thiList) {
+#       i <- "modMean"
+#       speciesName <- gsub("thi.", "", k)
+#       rasterToPlot <- paste0(i, "_", k, "_", l, "_",j)
+#       if (l %in% "observed") rasterToPlot <-  paste0("results/modMean_modMean", "_", k, "_", "observed", ".tif")
+#       
+#       titleText <- paste0("Model Mean THI, ", speciesName, ", ", l, ", ", j)
+#       if (l %in% "observed") titleText <- paste0("Model Mean THI, ", speciesName, ", monthly average, ", l)
+#       print(titleText)
+#       #       print(levelplot(x = get(thiList[m]), main = titleText, par.settings = mapTheme))
+#       if (l %in% "observed") {
+#         bpExtreme <- bpList[species %in% speciesName & model %in% i & period %in% l & is.na(rcp), extremeStress]
+#       }else{
+#         bpExtreme <- bpList[species %in% speciesName & model %in% i & period %in% l & rcp %in% j, extremeStress]
+#       }
+#       print(paste0("bpExtreme: ", bpExtreme))
+#       #        g <- levelplot(x = get(thiList[m]), main = titleText,  at = get(bpExtreme), col.regions = c("white", "green", "yellow", "red"))
+#       # thiname <- paste(k, i, l, j, sep = "_")
+#       thiname <- paste(k, i, l, j, sep = "_")
+#       if (i %in% "modMean") {
+#         thiname <- paste("modMean",  k, l, j, sep = "_")
+#         thiSD <- paste("modSD",  k, l, j, sep = "_")
+#       }
+#       if (l %in% "observed") { 
+#         thiname <- paste(k, l, sep = "_")
+#         if (i %in% "modMean") thiname <- paste("modMean", k, l, sep = "_")
+#       }
+#       myat <- c(0, bpExtreme, 100)
+#       myat_SD <- c(0, 1, 2, 3, 4, 7)
+#       g <- levelplot(x = get(thiname), main = titleText,  at = myat, col.regions = c("white", "red"))
+#       g <- g + latticeExtra::layer(sp.polygons(coastsCoarse, col = "black", lwd = 0.5))
+#       plotFileName <- paste0("graphics/cmip6/THI/lp_", i, "_", l, "_", j, "_", gsub(".", "_", k, fixed = TRUE), ".jpg")
+#       if (l %in% "observed") plotFileName <- paste0("graphics/cmip6/THI/lp_", i, "_", l, "_", gsub(".", "_", k, fixed = TRUE), ".jpg")
+#       print(paste0("plotFileName: ", plotFileName))
+#       jpeg(plotFileName, width = 8, height = 8, quality = 100, units = "in", res = 300)
+#       print(g)
+#       dev.off()
+#       
+#     }
+#   }
+# }
 

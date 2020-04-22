@@ -91,7 +91,7 @@ for (k in sspChoices) {
     
     for (j in 1:length(thiListReduced)) {
       speciesName <- gsub("thi.", "", thiListReduced[j])
-      fileNameMask.in <- paste0("data/animalCount/rasterMask_", tolower(speciesName), ".tif")
+      fileNameMask.in <- paste0("data/animals/rasterMask_", tolower(speciesName), ".tif")
       print(paste0("fileNameMaskIn: ", fileNameMask.in))
       fileNameMean.in <- paste0("data/cmip6/THI/THI_ensembleMean_", speciesName, "_",  yearSpan, "_", k, ".tif")
       print(paste0("fileNameMean.in: ", fileNameMean.in))
@@ -119,7 +119,7 @@ yearSpan <- paste0(l, "_", l + yearRange)
 print(paste0("ssp choice: ", k, "start year: ", l))
 for (j in 1:length(thiListReduced)) {
   speciesName <- gsub("thi.", "", thiListReduced[j])
-  fileNameMask.in <- paste0("data/animalCount/rasterMask_", tolower(speciesName), ".tif")
+  fileNameMask.in <- paste0("data/animals/rasterMask_", tolower(speciesName), ".tif")
   print(paste0("fileNameMaskIn: ", fileNameMask.in))
   fileNameMean.in <- paste0("data/cmip6/THI/", thiListReduced[j], "_",  "observed", "_", yearSpan, ".tif")
   print(paste("fileNameMean.in: ", fileNameMean.in))

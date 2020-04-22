@@ -6,12 +6,12 @@ sourceDir <- "data-raw/animals/arcrasters/"
 animalsList <- list.files(sourceDir)
 
 # run this code only when new animal data come in. This aggregates to 1/2 degree grids
-# globeExtent   <- extent(c(-180, 180, -90, 90))
-# 
+#  globeExtent   <- extent(c(-180, 180, -90, 90))
+# # 
 # for (i in animalsList) {
 #   species <- unlist(strsplit(i, "-"))[2]
 #   if (species %in% "recl.asc") species = "livestockSystem"
-#   fileName <- paste0("data/raster_", species)
+#   fileName <- paste0("data/animals/raster_", species)
 #   rAnimal <- raster(paste0(sourceDir, i), format = "ascii")
 #   rAnimal <- extend(rAnimal, globeExtent)
 #   crs(rAnimal) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
@@ -26,7 +26,7 @@ animalsList <- list.files(sourceDir)
 for (i in animalsList) {
   speciesName <- unlist(strsplit(i, "-"))[2]
   if (speciesName %in% "recl.asc") speciesName = "livestockSystem"
-  fileName <- paste0("data/animalCount/raster_", speciesName, ".tif")
+  fileName <- paste0("data/animals/raster_", speciesName, ".tif")
   rIn <- raster(fileName)
   if (speciesName %in% "chicken") 
   {cutoff <- 100000
@@ -34,7 +34,7 @@ for (i in animalsList) {
   
   rIn[rIn < cutoff] <- NA
   rIn[rIn >= cutoff] <- 1
-  fileNameout <- paste0("data/animalCount/rasterMask_", speciesName, ".tif")
+  fileNameout <- paste0("data/animals/rasterMask_", speciesName, ".tif")
   print(fileNameout)
   writeRaster(rIn, fileNameout, format = "GTiff", overwrite = TRUE)
 }
@@ -47,9 +47,9 @@ getcropAreaYield <- function(cropName, dataType) {
     tifcropFile <- paste0(tiffilecrop, "_HarvestedAreaHectares.tif")
   } else {tifcropFile <- paste0(tiffilecrop, "_YieldPerHectare.tif")
   }
-    tifzipFilePath <- paste0("HarvestedAreaYield175Crops_Geotiff/GeoTiff/", tiffilecrop, "/", tifcropFile)
-    tifOut <- unzip(zipfile = tifzipFile, files = tifzipFilePath)
-    return(tifOut)
+  tifzipFilePath <- paste0("HarvestedAreaYield175Crops_Geotiff/GeoTiff/", tiffilecrop, "/", tifcropFile)
+  tifOut <- unzip(zipfile = tifzipFile, files = tifzipFilePath)
+  return(tifOut)
 }
 
 crops <- c("abaca", "agave", "alfalfa", "almond", "aniseetc", "apple", "apricot", 
@@ -79,11 +79,10 @@ crops <- c("abaca", "agave", "alfalfa", "almond", "aniseetc", "apple", "apricot"
            "wheat", "yam", "yautia")
 
 for (i in crops) {
-#  i <- "wheat"
-  fileInArea <- paste0(pathToCrops, i, "/", i, plantAreaSuffix)
-  fileInYield <- paste0(pathToCrops, i, "/", i, plantYieldSuffix)
+  #  i <- "wheat"
+  tempTifArea <- getcropAreaYield(i, "area")
   
-  rInArea <- raster(fileInArea)
+  rInArea <- raster(tempTifArea)
   # rInYield <- raster(fileInYield)
   
   # Earthstat data (using its harvest area) has a pixel size of  5 minute resolution. Need to convert to 1/2 degree to get to cmip6 cell size
