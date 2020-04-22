@@ -80,8 +80,8 @@ for (j in 1:length(thiListReduced)) {
   
   fileNameMean.masked <- paste0("data/cmip6/THI/", thiListReduced[j], "_observed_", yearSpan, ".tif")
   print(paste0("filenamein ", fileNameMean.masked))
-  temp.mean <- brick(fileNameMean.masked)
-  names(temp.mean) <- month.abb
+  meanData <- brick(fileNameMean.masked)
+  names(meanData) <- month.abb
   
   # plot Ensemble mean
   titleText <- paste0("THI stress levels by month, ", speciesName, "\n ", yearSpan)
@@ -89,11 +89,13 @@ for (j in 1:length(thiListReduced)) {
   noStress <- bpList[species %in% speciesName, noStress]
   moderateStress <- bpList[species %in% speciesName, moderateStress]
   extremeStress <- bpList[species %in% speciesName, extremeStress]
-  col.l <- c("white", "blue", "yellow", "red")
+  col.l <- c("darkslategray1", "blue", "yellow", "red")
+  mapTheme <- rasterTheme(region = col.l)  
+  mapTheme$panel.background$col = 'white' 
   
   myat <- c(zeroLevel, noStress, moderateStress, extremeStress, 100)
-  g <- levelplot(meanData, main = titleText, col.regions = col.l, at = myat,
-                 colorkey = list(at = myat, col = col.l, labels = c( "","No stress/No animals", "moderate stress", "extreme stress", "maximum")),
+  g <- levelplot(meanData, main = titleText, col.regions = col.l, at = myat, par.settings = mapTheme, 
+                 colorkey = list(at = myat, col = col.l, labels = c( "","No stress", "moderate stress", "extreme stress", "maximum")),
                  xlab = "", ylab = "", scales  = list(x = list(draw = FALSE), y = list(draw = FALSE)))
   
   g <- g + latticeExtra::layer(sp.polygons(coastsCoarse, col = "black", lwd = 0.5))
@@ -121,8 +123,8 @@ for (j in 1:length(thiListReduced)) {
 # 
 # # Do observed. Note that these are not actually model means, just the means over the observed period. There is no model-based SD for this period.
 # for (k in thiList) {
-#   raster.mean <- stack(paste0("results/", k, "_", "observed", ".tif"))
-#   rasterNameMean <- paste0("modMean", "_", k, "_", "observed")
+#   raster.mean <- stack(paste0("results/", k, "_observed", ".tif"))
+#   rasterNameMean <- paste0("modMean", "_", k, "_observed")
 #   names(raster.mean) <- month.abb
 #   assign(rasterNameMean, raster.mean)
 # }
@@ -158,8 +160,8 @@ for (j in 1:length(thiListReduced)) {
 #       i <- "modMean"
 #       speciesName <- gsub("thi.", "", k)
 #       rasterToPlot <- paste0(i, "_", k, "_", l, "_",j)
-#       if (l %in% "observed") rasterToPlot <-  paste0("results/modMean_modMean", "_", k, "_", "observed", ".tif")
-#       
+#       if (l %in% "observed") rasterToPlot <-  paste0("results/modMean_modMean", "_", k, "_observed", ".tif")
+# 
 #       titleText <- paste0("Model Mean THI, ", speciesName, ", ", l, ", ", j)
 #       if (l %in% "observed") titleText <- paste0("Model Mean THI, ", speciesName, ", monthly average, ", l)
 #       print(titleText)

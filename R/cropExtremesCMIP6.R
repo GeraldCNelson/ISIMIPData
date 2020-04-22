@@ -102,8 +102,8 @@ for (m in 1:nrow(IPCC_WG2_Ch5_crop_temperature_table)) {
   #         print(paste0("years covered:", yearSpan)), 
   print(paste0(cropName, ", lower optimum: ", lowerOpt, ", upper optimum: ", upperOpt, ", damage temp: ", tdamage_mean))
   
-  fileNameOut_damage <- paste0("tdamage_mean_", cropName, "_", tdamage_mean, "C_", "observed_", yearSpan, ".tif")
-  fileNameOut_optTemp <- paste0("optTempRange_", cropName, "_", lowerOpt, "_", upperOpt, "_", "observed_", yearSpan, ".tif")
+  fileNameOut_damage <- paste0("tdamage_mean_", cropName, "_", tdamage_mean, "C", "_observed_", yearSpan, ".tif")
+  fileNameOut_optTemp <- paste0("optTempRange_", cropName, "_", lowerOpt, "_", upperOpt, "_observed_", yearSpan, ".tif")
   startTime <-  Sys.time()
   numYears <- 10
   monthDamageCount <- raster::stackApply(tmax, indices, fun = function(x, ...){sum(x > tdamage_mean)/numYears}, progress = "text") 

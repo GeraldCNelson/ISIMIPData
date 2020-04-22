@@ -115,7 +115,7 @@ for (m in 1:nrow(IPCC_WG2_Ch5_crop_temperature_table)) {
     add_slide(my_pres, layout = 'Section Header', master = 'Office Theme')  %>% 
       ph_with(value = ensembleTitle, location = ph_location_type(type = "body"))
 
-    fileNameObserved <- paste0("graphics/cmip6/damageTemp/tdamage_mean_masked_", cropName, "_", tdamage_mean, "C_observed_",  "2001_2010", ".jpg")
+    fileNameObserved <- paste0("graphics/cmip6/damageTemp/tdamage_mean_masked_", cropName, "_", tdamage_mean, "C", "_observed_", "2001_2010", ".jpg")
     print(paste0("fileNameObserved: ", fileNameObserved))
     extImgObs <- external_img(src = fileNameObserved, width = 5, height = 8)
     add_slide(my_pres, layout = 'Title Only', master = 'Office Theme') %>% 

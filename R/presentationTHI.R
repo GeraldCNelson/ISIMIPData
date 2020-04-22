@@ -15,7 +15,6 @@ l <- 2021
 
 thiList <- c("thi.cattle", "thi.sheep", "thi.goat", "thi.yak", "thi.broiler", "thi.layer", "thi.chicken", "thi.swine")
 
-
 # big loop across all crops and time periods
 for (m in 1:length(thiList)) {
   cropName <- as.character(IPCC_WG2_Ch5_crop_temperature_table[m, "crop"])

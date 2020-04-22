@@ -121,13 +121,13 @@ for (j in 1:length(thiListReduced)) {
   speciesName <- gsub("thi.", "", thiListReduced[j])
   fileNameMask.in <- paste0("data/animals/rasterMask_", tolower(speciesName), ".tif")
   print(paste0("fileNameMaskIn: ", fileNameMask.in))
-  fileNameMean.in <- paste0("data/cmip6/THI/", thiListReduced[j], "_",  "observed", "_", yearSpan, ".tif")
+  fileNameMean.in <- paste0("data/cmip6/THI/", thiListReduced[j], "_observed_", yearSpan, ".tif")
   print(paste("fileNameMean.in: ", fileNameMean.in))
   mask <- raster(fileNameMask.in)
   meanData <- brick(fileNameMean.in)
   mean.masked <- overlay(meanData, mask, fun = overlayfunction)
   names(mean.masked) <- month.abb
-  fileNameMean.masked <- paste0("data/cmip6/THI/THI_masked_",speciesName, "_",  "observed", "_", yearSpan, ".tif")
+  fileNameMean.masked <- paste0("data/cmip6/THI/THI_masked_",speciesName, "_observed_", yearSpan, ".tif")
   print(fileNameMean.masked)
   writeRaster(mean.masked, filename = fileNameMean.masked, format = "GTiff", overwrite = TRUE)
 }

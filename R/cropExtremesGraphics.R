@@ -32,7 +32,7 @@ for (i in modelChoices) {
         
         fileNameIn_damage <- paste0("data/cmip6/damageTemp/tdamage_mean_", cropName, "_", tdamage_mean, "C_",  modelName.lower, "_", k, "_", filler,  "_", yearSpan, ".tif")
         if (l == 2001) {
-          fileNameIn_damage <- paste0("data/cmip6/damageTemp/tdamage_mean_", cropName, "_", tdamage_mean, "C_",  "observed", "_", yearSpan, ".tif")
+          fileNameIn_damage <- paste0("data/cmip6/damageTemp/tdamage_mean_", cropName, "_", tdamage_mean, "C",  "_observed_", yearSpan, ".tif")
         }
         
         print(fileNameIn_damage)
@@ -155,7 +155,7 @@ for (k in sspChoices) {
     yearSpan <- "2001_2010"
     print(paste0(cropName, ", damage temp: ", tdamage_mean, ", start year: ", "2001"))
     
-    fileNameMean <- paste0("data/cmip6/damageTemp/tdamage_mean_masked_", cropName, "_", tdamage_mean, "C_", "observed_", yearSpan, ".tif")
+    fileNameMean <- paste0("data/cmip6/damageTemp/tdamage_mean_masked_", cropName, "_", tdamage_mean, "C", "_observed_", yearSpan, ".tif")
     print(paste0("filenamein ", fileNameMean))
     temp.mean <- brick(fileNameMean)
     names(temp.mean) <- month.abb
@@ -166,7 +166,7 @@ for (k in sspChoices) {
     g <- levelplot(temp.mean, main = titleText, at = myat, col.regions = c("aliceblue", "blue", "yellow", "orange", "red", "brown" ),
                    xlab = "", ylab = "", scales  = list(x = list(draw = FALSE), y = list(draw = FALSE)))
     g <- g + latticeExtra::layer(sp.polygons(coastsCoarse, col = "black", lwd = 0.5))
-    plotFileName <- paste0("graphics/cmip6/damageTemp/tdamage_mean_masked_", cropName, "_", tdamage_mean, "C_", "observed_", yearSpan, ".jpg")
+    plotFileName <- paste0("graphics/cmip6/damageTemp/tdamage_mean_masked_", cropName, "_", tdamage_mean, "C", "_observed_", yearSpan, ".jpg")
     jpeg(plotFileName, width = 8, height = 8, quality = 100, units = "in", res = 300)
     print(g)
     dev.off()

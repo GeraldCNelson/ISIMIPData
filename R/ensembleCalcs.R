@@ -94,13 +94,13 @@ for (k in sspChoices) {
     tdamage_mean <- as.numeric(IPCC_WG2_Ch5_crop_temperature_table[m, "tdamage mean"])
     fileNameMask.in <- paste0("data/crops/rasterMask_", tolower(cropName), ".tif")
     print(paste("fileNameMaskIn: ", fileNameMask.in))
-    fileNameMean.in <- paste0("data/cmip6/damageTemp/tdamage_mean_", cropName, "_", tdamage_mean, "C_",  "observed", "_", yearSpan, ".tif")
+    fileNameMean.in <- paste0("data/cmip6/damageTemp/tdamage_mean_", cropName, "_", tdamage_mean, "C",  "_observed_", yearSpan, ".tif")
     print(paste("fileNameMean.in: ", fileNameMean.in))
     mask <- raster(fileNameMask.in)
     meanData <- brick(fileNameMean.in)
     mean.masked <- overlay(meanData, mask, fun = overlayfunction)
     names(mean.masked) <- month.abb
-    fileNameMean.masked <- paste0("data/cmip6/damageTemp/tdamage_mean_masked_", cropName, "_", tdamage_mean, "C_",  "observed", "_", yearSpan, ".tif")
+    fileNameMean.masked <- paste0("data/cmip6/damageTemp/tdamage_mean_masked_", cropName, "_", tdamage_mean, "C",  "_observed_", yearSpan, ".tif")
     writeRaster(mean.masked, filename = fileNameMean.masked, format = "GTiff", overwrite = TRUE)
   }
 }
