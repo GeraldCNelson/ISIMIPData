@@ -47,11 +47,11 @@ world_outline <- as(st_geometry(borders), Class = "Spatial")
 # dataDirs <- list.dirs(path = "data")
 # write.csv(paste0("data-raw/", dataDirs, col.names = false))
 #graphicsDirs <- list.dirs(path = "graphics")
-dataDirs <- read.csv("data-raw/dataDirs.csv", header = FALSE)
-for (i in 1:nrow(dataDirs)) if (!dir.exists(dataDirs$V1[i])) dir.create(dataDirs$V1[i])
-
-graphicsDirs <- read.csv("data-raw/graphicsDirs.csv", header = FALSE)
-for (i in 1:nrow(graphicsDirs)) if (!dir.exists(graphicsDirs$V1[i])) dir.create(graphicsDirss$V1[i])
+for (j in c("dataDirs.csv", "graphicsDirs.csv")) {
+  dirList <- read.csv(paste0("data-raw/", j), header = FALSE)
+temp <- as.character(dirList$V1)
+for (i in 1:length(temp)) if (!dir.exists(temp[i])) dir.create(temp[i])
+}
 
 # paths to manage large data sets across machines
 tmpDirName <- paste0("/Volumes/Extreme\ SSD/rasterTmp", Sys.getpid(), "/")

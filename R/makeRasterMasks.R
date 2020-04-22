@@ -32,7 +32,7 @@ for (i in animalsList) {
   {cutoff <- 100000
   }else{cutoff <- 1000}
   
-  rIn[rIn < cutoff] <- 0
+  rIn[rIn < cutoff] <- NA
   rIn[rIn >= cutoff] <- 1
   fileNameout <- paste0("data/animalCount/rasterMask_", speciesName, ".tif")
   print(fileNameout)
@@ -40,9 +40,17 @@ for (i in animalsList) {
 }
 
 # now do plants
-pathToCrops <- "data-raw/crops/HarvestedAreaYield175Crops_Geotiff/GeoTiff/"
-plantAreaSuffix <- "_HarvestedAreaHectares.tif"
-plantYieldSuffix <- "_YieldPerHectare.tif"
+getcropAreaYield <- function(cropName, dataType) {
+  tifzipFile <- paste0("data-raw/crops/HarvestedAreaYield175Crops_Geotiff.zip")
+  tiffilecrop <- cropName
+  if (dataType %in% "area") {
+    tifcropFile <- paste0(tiffilecrop, "_HarvestedAreaHectares.tif")
+  } else {tifcropFile <- paste0(tiffilecrop, "_YieldPerHectare.tif")
+  }
+    tifzipFilePath <- paste0("HarvestedAreaYield175Crops_Geotiff/GeoTiff/", tiffilecrop, "/", tifcropFile)
+    tifOut <- unzip(zipfile = tifzipFile, files = tifzipFilePath)
+    return(tifOut)
+}
 
 crops <- c("abaca", "agave", "alfalfa", "almond", "aniseetc", "apple", "apricot", 
            "areca", "artichoke", "asparagus", "avocado", "bambara", "banana", 
@@ -84,7 +92,7 @@ for (i in crops) {
   
   rInAreaAgg <- aggregate(rInArea, fact = 6, fun = "sum")
   cutoff <- 1000 # only include 1/2 cells where crop area is great than cutoff
-  rInAreaAgg[rInAreaAgg < cutoff] <- 0
+  rInAreaAgg[rInAreaAgg < cutoff] <- NA
   rInAreaAgg[rInAreaAgg >= cutoff] <- 1
   
   fileNameout <- paste0("data/crops/rasterMask_", i, ".tif")
