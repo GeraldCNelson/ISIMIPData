@@ -103,7 +103,7 @@ for (k in sspChoices) {
       ensembleTitle <- paste("Ensemble Mean and Standard Deviation for", speciesName)
       add_slide(my_pres, layout = 'Section Header', master = 'Office Theme')  %>% 
         ph_with(value = ensembleTitle, location = ph_location_type(type = "body"))
-      fileNameObserved <- paste0("graphics/cmip6/THI/",  thiListReduced[j], "_observed_",  "2001_2010", ".jpg")
+      fileNameObserved <- paste0("graphics/cmip6/THI/masked", speciesName, "_observed_",  "2001_2010", ".jpg")
       
       extImgObs <- external_img(src = fileNameObserved, width = 5, height = 8)
       add_slide(my_pres, layout = 'Title Only', master = 'Office Theme') %>% 

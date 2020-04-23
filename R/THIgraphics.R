@@ -99,7 +99,7 @@ for (j in 1:length(thiListReduced)) {
                  xlab = "", ylab = "", scales  = list(x = list(draw = FALSE), y = list(draw = FALSE)))
   
   g <- g + latticeExtra::layer(sp.polygons(coastsCoarse, col = "black", lwd = 0.5))
-  plotFileName <- paste0("graphics/cmip6/THI/",  thiListReduced[j], "_observed_",  yearSpan, ".jpg")
+  plotFileName <- paste0("graphics/cmip6/THI/masked_",  speciesName, "_observed_",  yearSpan, ".jpg")
   print(paste0("plot file name: ", plotFileName, " for species ", speciesName))
   jpeg(plotFileName, width = 8, height = 8, quality = 100, units = "in", res = 300)
   print(g)

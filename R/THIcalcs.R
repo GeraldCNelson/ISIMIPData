@@ -38,9 +38,10 @@ x <- foreach(i = modelChoices, .combine = rbind) %:%
      require(data.table)
      require(raster)
     
+    tmpDirName <- paste0(locOfFiles, "/rasterTmp_", Sys.getpid(), "/")
     rasterOptions(tmpdir = tmpDirName)
     dir.create(tmpDirName)
-#    yearRange <- 9
+    #    yearRange <- 9
     yearSpan <- paste0(l, "_", l + yearRange)
     print(paste0("model: ", i, " start year: ", l, " ssp: ", k, " pid: ", Sys.getpid(), " systime: ", Sys.time()))
     
@@ -111,8 +112,6 @@ x <- foreach(i = modelChoices, .combine = rbind) %:%
 stopCluster(cl)
 end_time <- Sys.time()
 end_time - start_time
-#   }
-# }
 
 # observed data calcs
 
