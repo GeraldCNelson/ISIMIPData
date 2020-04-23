@@ -73,12 +73,13 @@ for (k in sspChoices) {
   }
 }
 # do observed data
+yearRange <- 9
+yearSpan <- "2001_2010"
+
 for (j in 1:length(thiListReduced)) {  
-  yearRange <- 9
-  yearSpan <- "2001_2010"
   speciesName <- gsub("thi.", "", thiListReduced[j])
   
-  fileNameMean.masked <- paste0("data/cmip6/THI/", thiListReduced[j], "_observed_", yearSpan, ".tif")
+  fileNameMean.masked <- paste0("data/cmip6/THI/THI_masked_", speciesName, "_observed_", yearSpan, ".tif")
   print(paste0("filenamein ", fileNameMean.masked))
   meanData <- brick(fileNameMean.masked)
   names(meanData) <- month.abb

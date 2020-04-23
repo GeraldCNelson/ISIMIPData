@@ -41,6 +41,7 @@ for (i in animalsList) {
 
 # now do plants
 getcropAreaYield <- function(cropName, dataType) {
+tifZipUrl <-  " https://s3.us-east-2.amazonaws.com/earthstatdata/HarvestedAreaYield175Crops_Geotiff.zip"
   tifzipFile <- paste0("data-raw/crops/HarvestedAreaYield175Crops_Geotiff.zip")
   tiffilecrop <- cropName
   if (dataType %in% "area") {

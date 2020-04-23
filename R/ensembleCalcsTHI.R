@@ -99,6 +99,7 @@ for (k in sspChoices) {
       print(paste0("fileNameSD.in: ", fileNameSD.in))
       mask <- raster(fileNameMask.in)
       meanData <- brick(fileNameMean.in)
+      meanData[meanData < 0] <- 0 # set all negative THI values to 0
       SDData <- brick(fileNameSD.in)
       mean.masked <- overlay(meanData, mask, fun = overlayfunction)
       names(mean.masked) <- month.abb
@@ -125,6 +126,7 @@ for (j in 1:length(thiListReduced)) {
   print(paste("fileNameMean.in: ", fileNameMean.in))
   mask <- raster(fileNameMask.in)
   meanData <- brick(fileNameMean.in)
+  meanData[meanData < 0] <- 0 # set all negative THI values to 0
   mean.masked <- overlay(meanData, mask, fun = overlayfunction)
   names(mean.masked) <- month.abb
   fileNameMean.masked <- paste0("data/cmip6/THI/THI_masked_",speciesName, "_observed_", yearSpan, ".tif")

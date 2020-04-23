@@ -116,12 +116,12 @@ end_time - start_time
 # observed data calcs
 
 # load observed data and calculate THI values
-fileName.tmax <- paste0(locOfFiles, "monthMean_hurs_observed_2001-2010.tif")
-print(fileName.tmax)
-fileName.tmin <- paste0(locOfFiles, "monthMean_tasmin_observed_2001-2010.tif")
-print(fileName.tmin)
-fileName.rh <- paste0(locOfFiles, "monthMean_tasmax_observed_2001-2010.tif")
+fileName.rh <- paste0(locOfFiles, "monthMean_hurs", "_observed_", "2001_2010.tif")
 print(fileName.rh)
+fileName.tmin <- paste0(locOfFiles, "monthMean_tasmin", "_observed_", "2001_2010.tif")
+print(fileName.tmin)
+fileName.tmax <- paste0(locOfFiles, "monthMean_tasmax", "_observed_", "2001_2010.tif")
+print(fileName.tmax)
 tmax <- brick(fileName.tmax)
 tmax <- readAll(tmax)
 tmin <- brick(fileName.tmin)
@@ -142,7 +142,7 @@ thi.yak <- eval(parse(text = formula.thi.yak))
 names(thi.cattle) <- names(thi.sheep) <- names(thi.goat) <- names(thi.yak) <- names(thi.broiler) <- names(thi.broiler) <- names(thi.layer) <- names(thi.swine) <- month.abb
 
 for (k in thiList) {
-  fileName <- paste0("data/cmip6/THI/", k, "_observed_2001-2010.tif")
+  fileName <- paste0("data/cmip6/THI/", k, "_observed_", "2001_2010.tif")
   print(fileName)
   writeRaster(get(k), filename = fileName, format = "GTiff", overwrite = TRUE)
 }

@@ -90,9 +90,9 @@ my_pres %<>% ph_with(value = "Introduction", location = ph_location_type(type = 
 my_pres %<>% ph_empty_at(left = 1, top = 2, height = 1, width = 8, bg = "white")
 my_pres %<>% ph_add_fpar(value = TITLE, id_chr = lastPhId(my_pres), par_default = FALSE)
 
-add_slide(my_pres, layout = 'Title and Content', master = 'Office Theme')  %>% 
-  ph_with(value = "Introduction", location = ph_location_type(type = "title")) %>% 
-  ph_with(value = paste0(IntroText, collapse = " "), location = ph_location_type(type = "body"))
+# add_slide(my_pres, layout = 'Title and Content', master = 'Office Theme')  %>% 
+#   ph_with(value = "Introduction", location = ph_location_type(type = "title")) %>% 
+#   ph_with(value = paste0(IntroText, collapse = " "), location = ph_location_type(type = "body"))
 
 for (k in sspChoices) {
   for (l in startyearChoices_ensemble) {
@@ -103,7 +103,7 @@ for (k in sspChoices) {
       ensembleTitle <- paste("Ensemble Mean and Standard Deviation for", speciesName)
       add_slide(my_pres, layout = 'Section Header', master = 'Office Theme')  %>% 
         ph_with(value = ensembleTitle, location = ph_location_type(type = "body"))
-      fileNameObserved <- paste0("graphics/cmip6/THI/masked", speciesName, "_observed_",  "2001_2010", ".jpg")
+      fileNameObserved <- paste0("graphics/cmip6/THI/masked_", speciesName, "_observed_",  "2001_2010", ".jpg")
       
       extImgObs <- external_img(src = fileNameObserved, width = 5, height = 8)
       add_slide(my_pres, layout = 'Title Only', master = 'Office Theme') %>% 
@@ -131,7 +131,7 @@ for (k in sspChoices) {
   }
 }
 
-print(my_pres, target = "damageTemp_Ensemble.pptx") %>% browseURL()
+print(my_pres, target = "presentations/cmip6/damageTemp_Ensemble.pptx") %>% browseURL()
 
 print(my_pres, target = paste0("presentations/cmip6/damageTemp_Ensemble", ".pptx"))
 
