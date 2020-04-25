@@ -84,6 +84,10 @@ for (i in crops) {
     geom_raster() + 
     scale_fill_gradientn(colors = colorRange(7), limits = c(0.0, 240427)) + 
     borders() + 
+    theme(axis.ticks = element_blank(), 
+          axis.title = element_blank(), 
+          axis.text.x = element_blank(),
+          axis.text.y = element_blank()) 
 #    scale_fill_viridis_c(limits = c(0.0, 240427)) +
     coord_quickmap()
 }
@@ -91,6 +95,7 @@ for (i in crops) {
 # for animals
 sourceDir <- "data-raw/animals/arcrasters/"
 animalsList <- list.files(sourceDir)
+globeExtent   <- extent(c(-180, 180, -90, 90))
 for (i in animalsList) {
   speciesName <- unlist(strsplit(i, "-"))[2]
   if (speciesName %in% "recl.asc") speciesName = "livestockSystem"
@@ -100,14 +105,22 @@ for (i in animalsList) {
   {cutoff <- 100000
   }else{cutoff <- 1000}
   rIn[rIn < cutoff] <- 0
-  
+  rIn <- extend(rIn, globeExtent)
   titleText <- paste0("Current livestock numbers , ", i, " (000)")
   rIn_df <- as.data.frame(rIn, xy = TRUE)
   colorRange <- colorRampPalette(c("white", "red", "#7F0000"))
+  legendText = "put something here"
   ggplot(data = rIn_df, mapping = aes(x = x, y = y, fill = raster_cattle)) +
     geom_raster() + 
-    scale_fill_gradientn(colors = colorRange(7), limits = c(0.0, 1492071)) + 
-    borders() + 
+    scale_fill_gradientn(colors = colorRange(7), limits = c(0.0, 1492071), name = legendText) + 
+    ggthemes::theme_map() +
+    borders(lwd = 0.5) + 
+    ggtitle("Need to put something here") +
+   theme(axis.ticks = element_blank(), 
+                      axis.title = element_blank(), 
+                      axis.text.x = element_blank(),
+                      axis.text.y = element_blank()) +
+  #                    strip.text = element_text(family = fontFamily, face = "plain", size = 7))
     #    scale_fill_viridis_c(limits = c(0.0, 240427)) +
     coord_quickmap()
 }

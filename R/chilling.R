@@ -5,8 +5,7 @@ library(doParallel) #Foreach Parallel Adaptor
 
 locOfFiles <- locOfCMIP6ncFiles
 sspChoices <- c("ssp585") #"ssp126", 
-modelChoices <- c( "GFDL-ESM4", "UKESM1-0-LL", "MPI-ESM1-2-HR", "MRI-ESM2-0") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
-modelChoices <- c( "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL") #, "MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
+modelChoices <- c( "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM6A-LR") #, "MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
 
 startyearChoices <-  c(2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
 
@@ -23,11 +22,11 @@ i <- "IPSL-CM6A-LR"
 k <- "ssp585"
 l <- 2021
 northernHemWinter <- c("Nov", "Dec", "Jan", "Feb", "Mar", "Apr")
-northernHemWinter.num <- c(11, 12, 1, 2, 3, 4)
+#northernHemWinter.num <- c(11, 12, 1, 2, 3, 4)
 southernHemWinter <- c("May", "Jun", "Jul", "Aug", "Sep", "Oct")
-southernHemWinter.num <- c(5, 6, 7, 8, 9, 10)
-useCores <- detectCores() - 1 # max number of cores
-useCores <- 2 # better for memory intensive activities
+#southernHemWinter.num <- c(5, 6, 7, 8, 9, 10)
+useCores <- detectCores() - 2 # max number of cores
+#useCores <- 2 # better for memory intensive activities
 
 varList <- c("startyearChoices", "sspChoices", "modelChoices", "locOfFiles")
 libList <- c("raster", "ncdf4")
@@ -140,7 +139,7 @@ foreach(l = startyearChoices) %:%
   }
 stopCluster(cl)
 
-# do same calculations on observed tmin data
+# do same calculations on observed data
 tmax <- tasmax.observed
 tmin <- tasmin.observed
 tmin <- readAll(brick(tmin))

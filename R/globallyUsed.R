@@ -47,6 +47,25 @@ world_outline <- as(st_geometry(borders), Class = "Spatial")
 # dataDirs <- list.dirs(path = "data")
 # write.csv(paste0("data-raw/", dataDirs, col.names = false))
 #graphicsDirs <- list.dirs(path = "graphics")
+
+# function to identify operating system
+get_os <- function(){
+  sysinf <- Sys.info()
+  if (!is.null(sysinf)){
+    os <- sysinf['sysname']
+    if (os == 'Darwin')
+      os <- "osx"
+  } else { ## mystery machine
+    os <- .Platform$OS.type
+    if (grepl("^darwin", R.version$os))
+      os <- "osx"
+    if (grepl("linux-gnu", R.version$os))
+      os <- "linux"
+  }
+  tolower(os)
+}
+
+
 for (j in c("dataDirs.csv", "graphicsDirs.csv")) {
   dirList <- read.csv(paste0("data-raw/", j), header = FALSE)
 temp <- as.character(dirList$V1)
@@ -55,8 +74,8 @@ for (i in 1:length(temp)) if (!dir.exists(temp[i])) dir.create(temp[i])
 
 # paths to manage large data sets across machines
 tmpDirName <- paste0("/Volumes/Extreme\ SSD/rasterTmp", Sys.getpid(), "/")
-locOfCMIP6ncFiles <- "/Volumes/Extreme\ SSD/ISIMIP/cmip6/"
-
+if (get_os() %in% "osx") locOfCMIP6ncFiles <- "/Volumes/Extreme\ SSD/ISIMIP/cmip6/"
+if (get_os() %in% "Linux") locOfCMIP6ncFiles <- "data-raw/ISIMIP/cmip6"
 gdal_polygonizeR <- function(x, outshape=NULL, gdalformat = 'ESRI Shapefile',
                              pypath=NULL, readpoly=TRUE, quiet=TRUE) {
   if (isTRUE(readpoly)) require(rgdal)
@@ -158,4 +177,6 @@ observedlist <- c("rh.observed.cmip5", "tmax.observed.cmip5", "tmin.observed.cmi
 is.symlink <- function(paths) isTRUE(nzchar(Sys.readlink(paths), keepNA=TRUE))
 ## will return all FALSE when the platform has no `readlink` system call.
 is.symlink("/foo/bar")
+
+
 
