@@ -74,7 +74,7 @@ for (i in 1:length(temp)) if (!dir.exists(temp[i])) dir.create(temp[i])
 
 # paths to manage large data sets across machines
 if (get_os() %in% "osx") locOfCMIP6ncFiles <- "/Volumes/Extreme\ SSD/ISIMIP/cmip6/"
-if (get_os() %in% c("Linux", "linux")) locOfCMIP6ncFiles <- "data-raw/ISIMIP/cmip6"
+if (get_os() %in% c("Linux", "linux")) locOfCMIP6ncFiles <- "data-raw/ISIMIP/cmip6/"
 tmpDirName <- paste0(locOfCMIP6ncFiles, "rasterTmp", Sys.getpid(), "/")
 
 gdal_polygonizeR <- function(x, outshape=NULL, gdalformat = 'ESRI Shapefile',
