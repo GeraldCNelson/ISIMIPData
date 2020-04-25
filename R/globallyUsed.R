@@ -73,9 +73,10 @@ for (i in 1:length(temp)) if (!dir.exists(temp[i])) dir.create(temp[i])
 }
 
 # paths to manage large data sets across machines
-tmpDirName <- paste0("/Volumes/Extreme\ SSD/rasterTmp", Sys.getpid(), "/")
 if (get_os() %in% "osx") locOfCMIP6ncFiles <- "/Volumes/Extreme\ SSD/ISIMIP/cmip6/"
 if (get_os() %in% "Linux") locOfCMIP6ncFiles <- "data-raw/ISIMIP/cmip6"
+tmpDirName <- paste0(locOfCMIP6ncFiles, "rasterTmp", Sys.getpid(), "/")
+
 gdal_polygonizeR <- function(x, outshape=NULL, gdalformat = 'ESRI Shapefile',
                              pypath=NULL, readpoly=TRUE, quiet=TRUE) {
   if (isTRUE(readpoly)) require(rgdal)
@@ -161,10 +162,10 @@ fixUnits <- function(var, ncin.brick) {
 
 # observed data names and locations
 
-hurs.observed <- c("/Volumes/Extreme\ SSD/ISIMIP/cmip6/observed/gswp3-w5e5_obsclim_hurs_global_daily_2001_2010.nc")
-tasmax.observed <- c("/Volumes/Extreme\ SSD/ISIMIP/cmip6/observed/gswp3-w5e5_obsclim_tasmax_global_daily_2001_2010.nc")
-tasmin.observed <- c("/Volumes/Extreme\ SSD/ISIMIP/cmip6/observed/gswp3-w5e5_obsclim_tasmin_global_daily_2001_2010.nc")
-pr.observed <- c("/Volumes/Extreme\ SSD/ISIMIP/cmip6/observed/gswp3-w5e5_obsclim_pr_global_daily_2001_2010.nc")
+hurs.observed <- paste0(locOfCMIP6ncFiles, "observed/gswp3-w5e5_obsclim_hurs_global_daily_2001_2010.nc")
+tasmax.observed <- paste0(locOfCMIP6ncFiles, "observed/gswp3-w5e5_obsclim_tasmax_global_daily_2001_2010.nc")
+tasmin.observed <- paste0(locOfCMIP6ncFiles, "observed/gswp3-w5e5_obsclim_tasmin_global_daily_2001_2010.nc")
+pr.observed <- paste0(locOfCMIP6ncFiles, "observed/gswp3-w5e5_obsclim_pr_global_daily_2001_2010.nc")
 observedlist <- c("hurs", "tasmax", "tasmin", "pr")
 
 # note that these don't have the path to the file

@@ -9,7 +9,7 @@ modelChoices <- c("GFDL-ESM4", "MRI-ESM2-0", "MPI-ESM1-2-HR", "UKESM1-0-LL",  "I
 #modelChoices <- c( "MRI-ESM2-0")
 variableChoices <- c( "hurs") # "tasmax", "pr", "hurs") # "tasmin", tasmax
 startyearChoices <-  c(2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
-locOfFiles <- "/Volumes/Extreme\ SSD/ISIMIP/cmip6"
+locOfFiles <- locOfCMIP6ncFiles
 yearRange <- 9
 
 # info on managing raster disk use - https://stackoverflow.com/questions/25426405/raster-package-taking-all-hard-drive
@@ -30,7 +30,7 @@ foreach(i = modelChoices) %:%
   foreach(k = sspChoices) %dopar% {
     require(raster)
     print(paste0("working on start year: ", l, " variable: ", j, " ssp choice: ", k, " model: ", " pid: ", Sys.getpid(), " systime: ", Sys.time()))
-    tmpDirName <- paste0(locOfFiles, "/rasterTmp_", Sys.getpid(), "/")
+    tmpDirName <- paste0(locOfFiles, "rasterTmp_", Sys.getpid(), "/")
     rasterOptions(tmpdir = tmpDirName)
     dir.create(tmpDirName)
     modelName.lower <- tolower(i)
@@ -46,9 +46,7 @@ foreach(i = modelChoices) %:%
     #        fileNameIn <- paste0(fileNameIn, ".RDS")
     fileNameIn <- paste0(fileNameIn, ".nc")
     
-    #       locOfFiles <- "data-raw/ISIMIP/cmip6"
-    #    locOfFiles <- "/Volumes/TranscendData/ISIMIP"
-    temp <- paste(locOfFiles, k, i, fileNameIn, sep = "/")
+    temp <- paste(locOfFiles, k, "/", i, "/", fileNameIn, sep = "")
     print(paste0("Working on : ", temp))
     ncin.brick <- brick(temp, varname = j) # because there is no explicit projection info in the netcdf files, this is assumed - +proj=longlat +datum=WGS84"
     ncin.brick <- readAll(ncin.brick) # seems to speed up processing if ncin.brick is an nc file
