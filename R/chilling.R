@@ -37,7 +37,7 @@ foreach(l = startyearChoices) %:%
   #  foreach(j = variableChoices) %:%
   foreach(k = sspChoices) %dopar% {
     print(paste0("start year: ", l, " ssp: ", k, " pid: ", Sys.getpid(), " systime: ", Sys.time()))
-    tmpDirName <- paste0(locOfFiles, "/rasterTmp_", Sys.getpid(), "/")
+    tmpDirName <- paste0(locOfFiles, "rasterTmp_", Sys.getpid(), "/")
     
     rasterOptions(tmpdir = tmpDirName)
     dir.create(tmpDirName)
