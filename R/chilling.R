@@ -63,13 +63,13 @@ foreach(l = startyearChoices) %:%
     tmin <- brick(temp)
     
     startTime <-  Sys.time()
-    tmin <- readAll((tmin))
+#    tmin <- readAll((tmin))
     tmin <- fixUnits(var = "tmin", ncin.brick = tmin) # fixes temp and precip units; assumes ncin.brick values are raw units
     
     print("Done with tmin readIn")
     tminTime <- Sys.time()
-    print(tminTime - startTime, " pid: ", Sys.getpid())
-    tmax <- readAll((tmax))
+    print(paste0(tminTime - startTime, " pid: ", Sys.getpid()))
+#    tmax <- readAll((tmax))
     tmax <- fixUnits(var = "tmax", ncin.brick = tmax) # fixes temp and precip units; assumes ncin.brick values are raw units
     
     tmaxTime <- Sys.time()
@@ -144,8 +144,8 @@ stopCluster(cl)
 # do same calculations on observed data
 tmax <- tasmax.observed
 tmin <- tasmin.observed
-tmin <- readAll(brick(tmin))
-tmax <- readAll(brick(tmax))
+# tmin <- readAll(brick(tmin))
+# tmax <- readAll(brick(tmax))
 print("done with readAll tmin and tmax")
 tmin <- fixUnits(var = "tmin", ncin.brick = tmin) # fixes temp and precip units; assumes ncin.brick values are raw units
 tmax <- fixUnits(var = "tmax", ncin.brick = tmin) # fixes temp and precip units; assumes ncin.brick values are raw units
