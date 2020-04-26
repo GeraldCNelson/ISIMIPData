@@ -7,7 +7,7 @@ locOfFiles <- locOfCMIP6ncFiles
 sspChoices <- c("ssp585") #"ssp126", 
 modelChoices <- c( "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM6A-LR") #, "MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
 
-startyearChoices <-  c(2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
+startyearChoices <-  c(2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
 
 yearRange <- 9
 
@@ -58,7 +58,7 @@ foreach(l = startyearChoices) %:%
     fileNameIn <- paste(modelName.lower, filler, k, j, "global_daily", yearSpan, sep = "_")
     fileNameIn <- paste0(fileNameIn, ".nc")
     
-    temp <- paste(locOfFiles, k, i, fileNameIn, sep = "/")
+    temp <- paste0(locOfFiles, k,"/", i, "/", fileNameIn)
     print(paste0("Working on : ", temp))
     tmin <- brick(temp)
     
@@ -105,7 +105,7 @@ foreach(l = startyearChoices) %:%
     print(difftime(Sys.time(), tmaxfunctionStart, units = "mins"))
     
     print("One tmax function loop")
-    print(tmaxfunctionEnd - tmaxfunctionStart)
+    print(tmaxfunctionEnd - tmaxfunctionStart) 
     
     #tmax > 35
     f.tmaxLimit(tmax, tmaxLimit = 35)
