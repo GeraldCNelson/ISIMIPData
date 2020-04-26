@@ -51,7 +51,7 @@ foreach(l = startyearChoices) %:%
     fileNameIn <- paste0(fileNameIn, ".nc")
     
     temp <- paste0(locOfFiles, k,"/", i, "/", fileNameIn)
-    print(paste0("Working on : ", temp))
+    print(paste0("Working on : ", temp, " pid: ", Sys.getpid()))
     tmax <- brick(temp)
     
     j <- "tasmin"
@@ -59,7 +59,7 @@ foreach(l = startyearChoices) %:%
     fileNameIn <- paste0(fileNameIn, ".nc")
     
     temp <- paste0(locOfFiles, k,"/", i, "/", fileNameIn)
-    print(paste0("Working on : ", temp))
+    print(paste0("Working on : ", temp, " pid: ", Sys.getpid()))
     tmin <- brick(temp)
     
     startTime <-  Sys.time()
@@ -68,7 +68,7 @@ foreach(l = startyearChoices) %:%
     
     print("Done with tmin readIn")
     tminTime <- Sys.time()
-    print(tminTime - startTime)
+    print(tminTime - startTime, " pid: ", Sys.getpid())
     tmax <- readAll((tmax))
     tmax <- fixUnits(var = "tmax", ncin.brick = tmax) # fixes temp and precip units; assumes ncin.brick values are raw units
     
@@ -80,7 +80,7 @@ foreach(l = startyearChoices) %:%
     
     # do several count days in a month
     # first days with temp below zero
-    print("Done with chillHrs function")
+    print(paste0("Done with chillHrs function", " pid: ", Sys.getpid()))
     endTime <-  Sys.time()
     #  print(endTime - startTime)
     print(difftime(endTime, startTime, units = "mins"))
@@ -104,7 +104,7 @@ foreach(l = startyearChoices) %:%
     tmaxfunctionEnd <- Sys.time()
     print(difftime(Sys.time(), tmaxfunctionStart, units = "mins"))
     
-    print("One tmax function loop")
+    print(paste("One tmax function loop", " pid: ", Sys.getpid()))
     print(tmaxfunctionEnd - tmaxfunctionStart) 
     
     #tmax > 35
