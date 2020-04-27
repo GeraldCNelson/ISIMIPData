@@ -14,7 +14,7 @@ i <- "GFDL-ESM4"
 k <- "ssp585"
 l <- 2021
 
-IPCC_WG2_Ch5_crop_temperature_table <- read_excel("/Volumes/Extreme SSD/crops/Crop_temperature_table_summary_07042020.xlsx")
+IPCC_WG2_Ch5_crop_temperature_table <- read_excel("/Volumes/ExtremeSSD/crops/Crop_temperature_table_summary_07042020.xlsx")
 
 # read the tdamage rasters back in and create jpegs
 for (i in modelChoices) {

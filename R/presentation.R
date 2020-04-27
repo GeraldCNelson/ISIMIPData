@@ -25,7 +25,7 @@ yearRange <- 9
 # # add path back onto filename
 # pdfDimensions[, fileName := paste0(imageFilePrefix, fileName)]
 
-IPCC_WG2_Ch5_crop_temperature_table <- read_excel("/Volumes/Extreme SSD/crops/Crop_temperature_table_summary_07042020.xlsx")
+IPCC_WG2_Ch5_crop_temperature_table <- read_excel("/Volumes/ExtremeSSD/crops/Crop_temperature_table_summary_07042020.xlsx")
 
 
 # big loop across all crops and time periods

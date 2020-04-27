@@ -165,7 +165,7 @@ fileNameOutZero <- paste0("belowZeroCount", "_observed_", yearSpan, ".tif")
 writeRaster(monthZeroCount, filename = paste0("data/cmip6/belowZero/", fileNameOutZero), format = "GTiff", overwrite = TRUE)
 
 # now do count above tmax limit
-f.tmaxLimit <- function(tmax, tmaxLimit) {
+f.tmaxLimit <- function(tmax, tmaxLimit, indices) {
   tmaxSum <- stackApply(tmax, indices, fun = function(x, ...){sum(x >= tmaxLimit)}) 
   names(tmaxSum) <- month.abb
   fileNameOut <- paste0("tmaxGT_", tmaxLimit, "_observed_", yearSpan, ".tif")
@@ -173,15 +173,17 @@ f.tmaxLimit <- function(tmax, tmaxLimit) {
 }
 tmaxfunctionStart <- Sys.time()
 #tmax > 31
-f.tmaxLimit(tmax, tmaxLimit = 31)
+f.tmaxLimit(tmax, tmaxLimit = 31, indices)
+print(paste("Completed tmaxlimit for 31C"))
 #tmax > 35
-f.tmaxLimit(tmax, tmaxLimit = 35)
+f.tmaxLimit(tmax, tmaxLimit = 35, indices)
 #tmax > 38
-f.tmaxLimit(tmax, tmaxLimit = 38)
+f.tmaxLimit(tmax, tmaxLimit = 38, indices)
 #tmax > 45
-f.tmaxLimit(tmax, tmaxLimit = 45)
+f.tmaxLimit(tmax, tmaxLimit = 45, indices)
 #tmax > 48
-f.tmaxLimit(tmax, tmaxLimit = 48)
+f.tmaxLimit(tmax, tmaxLimit = 48, indices)
+print(paste("Completed tmaxlimit for 48C"))
 
 rm(list = c("tmax", "tmin"))
 chillHrs.sumMonth <- stackApply(chillHrs, indices, fun = sum, na.rm = TRUE)

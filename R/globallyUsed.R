@@ -1,4 +1,5 @@
-Sys.setenv(PROJ_LIB = "/usr/local/Cellar/proj/7.0.0/share/proj") # use until the sf and gdal issues get sorted out. If you get the error pj_obj_create: Cannot find proj.db, check to see if the proj version (currently 7.0.0) has changed
+# the sys.setenv command is wrong for the linux box so commenting it out for now.
+#Sys.setenv(PROJ_LIB = "/usr/local/Cellar/proj/7.0.0/share/proj") # use until the sf and gdal issues get sorted out. If you get the error pj_obj_create: Cannot find proj.db, check to see if the proj version (currently 7.0.0) has changed
 library(ncdf4)
 #library(PCICt)
 #library(ncdf4.helpers)
@@ -73,7 +74,7 @@ for (i in 1:length(temp)) if (!dir.exists(temp[i])) dir.create(temp[i])
 }
 
 # paths to manage large data sets across machines
-if (get_os() %in% "osx") locOfCMIP6ncFiles <- "/Volumes/Extreme\ SSD/ISIMIP/cmip6/"
+if (get_os() %in% "osx") locOfCMIP6ncFiles <- "/Volumes/ExtremeSSD/ISIMIP/cmip6/"
 if (get_os() %in% c("Linux", "linux")) locOfCMIP6ncFiles <- "data-raw/ISIMIP/cmip6/"
 tmpDirName <- paste0(locOfCMIP6ncFiles, "rasterTmp", Sys.getpid(), "/")
 
@@ -138,7 +139,7 @@ formula.thi.chicken <- "0.60 * tmax + 0.40 * tmin" # using broiler formula
 formula.thi.swine <- "tmax - (0.55 - (0.0055 * rh) * (tmax - 14.5))"
 
 clusterSetup <- function(varList, libList, useCores) {
-  cl <- makeCluster(useCores,  outfile = "")
+  cl <- makeCluster(useCores,  outfile = "", homogeneous = TRUE) # added homogeneous = TRUE because all the nodes are doing the same thing.
   registerDoParallel(cl)
   if (!missing(libList)) {
     varList <- c(varList, "libList")
