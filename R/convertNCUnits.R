@@ -2,6 +2,7 @@
 #source("R/globallyUsed.R")
 library(data.table)
 library(raster)
+library(terra)
 
 dirList <- c("GFDL-ESM4", "IPSL-CM6A-LR", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL")
 dirs.needed <- paste0("/Volumes/ExtremeSSD/ISIMIP/cmip6/unitsCorrected/", dirList)
@@ -27,43 +28,43 @@ for (i in varsToKeep) {
   starttime <- Sys.time()
   if (i %in% "_pr_") {
     for (j in 1:length(filestoKeep)) {
-      # tempfile1 <- "temp1.nc"
-      # tempfile2 <- "temp2.nc"
-      # cdoCommandUnits <- paste("cdo -setunit,'mm/day'", filesInDir[j], tempfile1)
-      # cdoCommandMult <- paste("cdo -mulc,86400", tempfile1, tempfile2)
-      # cdoCommandzip <- paste("cdo -z,zip_6", tempfile2, outfiles[j])
-      # system(cdoCommandUnits)
-      # system(cdoCommandMult)
-      # system(cdoCommandzip)
-      # rm(list(tempfile1, tempfile2))
+      tempfile1 <- "temp1.nc"
+      tempfile2 <- "temp2.nc"
+      cdoCommandUnits <- paste("cdo -setunit,'mm/day'", filesInDir[j], tempfile1)
+      cdoCommandMult <- paste("cdo -mulc,86400", tempfile1, tempfile2)
+      cdoCommandzip <- paste("cdo -z,zip_6", tempfile2, outfiles[j])
+      system(cdoCommandUnits)
+      system(cdoCommandMult)
+      system(cdoCommandzip)
+      rm(list(tempfile1, tempfile2))
       
-      temp.r <- readAll(brick(filestoKeep[j]))
-      temp.r@data@unit <- "mm/day"
-      temp.r <- temp.r * 86400
-      print(paste0("writing out ", outfiles[j]))
-      writeRaster(temp.r, filename = outfiles[j], format = "GTiff", overwrite = TRUE)
-    }
+      # temp.r <- readAll(brick(filestoKeep[j]))
+      # temp.r@data@unit <- "mm/day"
+      # temp.r <- temp.r * 86400
+    #    print(paste0("writing out ", outfiles[j]))
+    #   writeRaster(temp.r, filename = outfiles[j], format = "GTiff", overwrite = TRUE)
+    # }
   }
   if (i %in% c("_tasmax_", "_tasmin_")) {
     for (j in 1:length(filestoKeep)) {
       
-      #   tempfile1 <- "temp1.nc"
-      #   tempfile2 <- "temp2.nc"
-      #   cdoCommandUnits <- paste("cdo -setunit,'degC'", filesInDir[j], tempfile1)
-      #   cdoCommandMult <- paste("cdo -addc,-273.15", tempfile1, tempfile2)
-      #   cdoCommandzip <- paste("cdo -f nc4c -z, zip_6", tempfile2, outfiles[j])
-      #   system(cdoCommandUnits)
-      #   system(cdoCommandMult)
-      #   system(cdoCommandzip)
-      #   rm(list(tempfile1, tempfile2))
-      # }
+        tempfile1 <- "temp1.nc"
+        tempfile2 <- "temp2.nc"
+        cdoCommandUnits <- paste("cdo -setunit,'degC'", filesInDir[j], tempfile1)
+        cdoCommandMult <- paste("cdo -addc,-273.15", tempfile1, tempfile2)
+        cdoCommandzip <- paste("cdo -f nc4c -z, zip_6", tempfile2, outfiles[j])
+        system(cdoCommandUnits)
+        system(cdoCommandMult)
+        system(cdoCommandzip)
+        rm(list(tempfile1, tempfile2))
+      }
       
-      temp.r <- readAll(brick(filestoKeep[j]))
-      temp.r@data@unit <- "C"
-      temp.r <- temp.r - 273.15
-      print(paste0("writing out ", outfiles[j]))
-      writeRaster(temp.r, filename = outfiles[j], format = "GTiff", overwrite = TRUE)
-      
+      # temp.r <- readAll(brick(filestoKeep[j]))
+      # temp.r@data@unit <- "C"
+      # temp.r <- temp.r - 273.15
+      # print(paste0("writing out ", outfiles[j]))
+      # writeRaster(temp.r, filename = outfiles[j], format = "GTiff", overwrite = TRUE)
+      # 
     }
   }
 }
