@@ -15,8 +15,7 @@ startyearChoices <-  c(2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(
 
 yearRange <- 9
 
-#IPCC_WG2_Ch5_crop_temperature_table <- read_excel("data-raw/crops/IPCC WG2 Ch5 crop temperature table 20200318.xlsx")
-IPCC_WG2_Ch5_crop_temperature_table <- read_excel("/Volumes/Extreme SSD/crops/Crop_temperature_table_summary_07042020.xlsx")
+IPCC_WG2_Ch5_crop_temperature_table <- read_excel("data-raw/crops/Crop_temperature_table_summary_29042020.xlsx")
 
 useCores <- detectCores() - 1 # max number of cores
 useCores <- 3 # better for memory intensive activities

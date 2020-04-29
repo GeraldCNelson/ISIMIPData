@@ -3,7 +3,7 @@ source("R/globallyUsed.R")
 library(doParallel) #Foreach Parallel Adaptor 
 # library(foreach) #Provides foreach looping construct, called with doParallel
 
-locOfFiles <- locOfCMIP6ncFiles
+locOfFiles <- paste0(locOfCMIP6ncFiles, "original/")
 sspChoices <- c("ssp585") #"ssp126", 
 modelChoices <- c( "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM6A-LR") #, "MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
 
@@ -11,12 +11,43 @@ startyearChoices <-  c(2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(
 
 yearRange <- 9
 
-f.growdegree <- function(tmin, tmax) {
-  ch <- (7 - tmin)/(tmax - tmin)
-  ch[tmin > 7] <- 0
-  ch[tmax < 7 & tmin <= 7] <- 24
-  ch
+#gdd functions from the package called pollen, based on the paper Baskerville, G. L., and Emin, P. (1969). 
+# Rapid Estimation of Heat Accumulation from Maximum and Minimum Temperatures. Ecology 50, 514–517. doi:10.2307/1933912.
+# note that these are linearized versions. If tmax and tmin are vectors of data over a period of time the function returns t
+# the cumulative degree days.
+f.growdegree <- function(tmax, tmin, tbase, tbase_max, type = "C") 
+{
+  if (!type %in% c("A", "B", "C", "D")) {
+    stop("The case argument must be either \"A\", \"B\", \"C\", or \"D\"", 
+         call. = FALSE)
+  }
+  if (type %in% c("A", "B", "C", "D")) {
+    tmax <- adjust_for_tbase(tmax, tbase)
+    tmin <- adjust_for_tbase(tmin, tbase)
+  }
+  if (type %in% c("C")) {
+    tmax <- adjust_for_tbase_max(tmax, tbase_max)
+    tmin <- adjust_for_tbase_max(tmin, tbase_max)
+  }
+  if (type == "D") {
+    gdd_temp <- ifelse(tmax > tbase_max, yes = 0, no = (tmax + 
+                                                          tmin)/2 - tbase)
+  }
+  else if (type %in% c("A", "B", "C")) {
+    gdd_temp <- (tmax + tmin)/2 - tbase
+  }
+  return(cumsum(gdd_temp))
 }
+
+adjust_for_tbase <- function(x, tbase) {
+  ifelse(test = x < tbase, yes = tbase, no = x)
+}
+
+adjust_for_tbase_max <- function(x, tbase_max) {
+  ifelse(test = x > tbase_max, yes = tbase_max, no = x)
+}
+
+# ---- end of GDD formulas
 #test values
 i <- "IPSL-CM6A-LR"
 k <- "ssp585"
@@ -63,18 +94,22 @@ foreach(l = startyearChoices) %:%
     tmin <- brick(temp)
     
     startTime <-  Sys.time()
-#    tmin <- readAll((tmin))
+    #    tmin <- readAll((tmin))
     tmin <- fixUnits(var = "tmin", ncin.brick = tmin) # fixes temp and precip units; assumes ncin.brick values are raw units
     
     print("Done with tmin readIn")
     tminTime <- Sys.time()
     print(paste0(tminTime - startTime, " pid: ", Sys.getpid()))
-#    tmax <- readAll((tmax))
+    #    tmax <- readAll((tmax))
     tmax <- fixUnits(var = "tmax", ncin.brick = tmax) # fixes temp and precip units; assumes ncin.brick values are raw units
     
     tmaxTime <- Sys.time()
     print("Done with tmax readIn")
     tmaxTime - tminTime
+    
+    testout <- f.growdegree(tmax, tmin, tbase = 10, tbase_max = 35, type = "C")
+    
+    
     chillHrs <- overlay(tmin, tmax, fun = f.chillhrs)
     names(chillHrs) <- names(tmax) # put the date info back into the names
     
