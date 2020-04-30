@@ -36,12 +36,11 @@ foreach(i = modelChoices) %:%
     modelName.lower <- tolower(i)
     startTime <-  Sys.time()
     yearSpan <- paste0(l, "_", l + yearRange)
-    filler <- fixFiller(i)   
-    
-    # fileNameIn <- paste(modelName.lower, filler, k, j, "global_daily", yearSpan, sep = "_")
+
+    # fileNameIn <- paste(modelName.lower, k, j, "global_daily", yearSpan, sep = "_")
     # fileNameIn <- paste0(fileNameIn, ".nc")
-    #        fileNameIn <- paste(spatialCoverageChoices, modelName.lower, filler, k, j, "global_daily", yearSpan, sep = "_")
-    fileNameIn <- paste(modelName.lower, filler, k, j, "global_daily", yearSpan, sep = "_")
+    #        fileNameIn <- paste(spatialCoverageChoices, modelName.lower, k, j, "global_daily", yearSpan, sep = "_")
+    fileNameIn <- paste(modelName.lower, k, j, "global_daily", yearSpan, sep = "_")
     
     #        fileNameIn <- paste0(fileNameIn, ".RDS")
     fileNameIn <- paste0(fileNameIn, ".nc")
@@ -52,7 +51,7 @@ foreach(i = modelChoices) %:%
     ncin.brick <- readAll(ncin.brick) # seems to speed up processing if ncin.brick is an nc file
     indices <- format(as.Date(names(ncin.brick), format = "X%Y.%m.%d"), format = "%m")
     indices <- as.numeric(indices)
-    ncin.brick <- fixUnits(var = j, ncin.brick = ncin.brick) # fixes temp and precip units; assumes ncin.brick values are raw units
+    # ncin.brick <- fixUnits(var = j, ncin.brick = ncin.brick) # fixes temp and precip units; assumes ncin.brick values are raw units
     ncin.brick.mean <- raster::stackApply(ncin.brick, indices, fun = mean, na.rm = TRUE)
     ncin.brick.sd <- raster::stackApply(ncin.brick, indices, fun = sd, na.rm = TRUE)
     names(ncin.brick.mean) <- month.abb
@@ -85,7 +84,7 @@ for (j in observedlist) {
   #in the hurs file, the variable name is rhs
   ncin.brick <- brick(filenameIn) # because there is no explicit projection info in the netcdf files, this is assumed - +proj=longlat +datum=WGS84"
   ncin.brick <- readAll(ncin.brick) # seems to speed up processing if ncin.brick is an nc file
-  ncin.brick <- fixUnits(var = j, ncin.brick = ncin.brick) # fixes temp and precip units; assumes ncin.brick values are raw units
+  # ncin.brick <- fixUnits(var = j, ncin.brick = ncin.brick) # fixes temp and precip units; assumes ncin.brick values are raw units
   
   indices <- format(as.Date(names(ncin.brick), format = "X%Y.%m.%d"), format = "%m")
   indices <- as.numeric(indices)

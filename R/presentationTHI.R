@@ -37,8 +37,7 @@ for (m in 1:length(thiList)) {
       for (l in startyearChoices) {
         modelName.lower <- tolower(i)
         yearSpan <- paste0(l, "_", l + yearRange)
-        filler <- fixFiller(i)
-        plotFileName <- paste0("graphics/cmip6/damageTemp/tdamage_mean_", cropName, "_", tdamage_mean, "C ", modelName.lower, "_", k, "_", filler,  "_", yearSpan, ".jpg")
+        plotFileName <- paste0("graphics/cmip6/damageTemp/tdamage_mean_", cropName, "_", tdamage_mean, "C ", modelName.lower, "_", k,  "_", yearSpan, ".jpg")
         if (l == 2001) {
           plotFileName <- paste0("graphics/cmip6/damageTemp/tdamage_mean_", cropName, "_", tdamage_mean, "C", "_observed_", yearSpan, ".jpg")
         }

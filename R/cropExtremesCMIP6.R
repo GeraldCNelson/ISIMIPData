@@ -8,14 +8,13 @@ sspChoices <- c("ssp585") #"ssp126",
 modelChoices <- c( "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL"
 variableChoices <- c("tasmax", "tasmin", "pr") # "tasmax", "pr" "tasmin"
 locOfFiles <- locOfCMIP6ncFiles
+locOfFiles <- "data-raw/ISIMIP/cmip6/unitsCorrected"
 
-# startday <- "0101"
-# endday <- "1231"
 startyearChoices <-  c(2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
 
 yearRange <- 9
 
-IPCC_WG2_Ch5_crop_temperature_table <- read_excel("data-raw/crops/Crop_temperature_table_summary_29042020.xlsx")
+IPCC_WG2_Ch5_crop_temperature_table <- read_excel("data-raw/crops/Crop_temperature_table_summary_29042020.xlsx", range = "A1:R27")
 
 useCores <- detectCores() - 1 # max number of cores
 useCores <- 3 # better for memory intensive activities
@@ -39,16 +38,15 @@ foreach(l = startyearChoices) %:%
     modelName.lower <- tolower(i)
     startTime <-  Sys.time()
     yearSpan <- paste0(l, "_", l + yearRange)
-    filler <- fixFiller(i) # needed to get the correct netcdf file name
-    filename.tmax <- paste0(locOfFiles, "/", k, "/", i, "/", modelName.lower, "_", filler,  "_", k, "_tasmax_global_daily_", yearSpan, ".nc")
+   filename.tmax <- paste0(locOfFiles, "/", k, "/", i, "/", modelName.lower, "_", k, "_tasmax_global_daily_", yearSpan, ".nc")
     
     tmax <- brick(filename.tmax, varname = "tasmax") 
     tmax <- readAll(tmax)
-    tmax <- fixUnits(var = "tasmax", ncin.brick = tmax) # fixes temp and precip units; assumes ncin.brick values are raw units
+    # tmax <- fixUnits(var = "tasmax", ncin.brick = tmax) # fixes temp and precip units; assumes ncin.brick values are raw units
     
     # tmin <- brick(filename.tmin, varname = "tasmin") 
     # tmin <- readAll(tmin)
-    # tmin <- fixUnits(var = "tasmin", ncin.brick = tmin) # fixes temp and precip units; assumes ncin.brick values are raw units
+    ## tmin <- fixUnits(var = "tasmin", ncin.brick = tmin) # fixes temp and precip units; assumes ncin.brick values are raw units
     # 
     indices <- format(as.Date(names(tmax), format = "X%Y.%m.%d"), format = "%m")
     indices <- as.numeric(indices)
@@ -62,8 +60,8 @@ foreach(l = startyearChoices) %:%
       lowerOpt <- as.numeric(IPCC_WG2_Ch5_crop_temperature_table[m, "topt lower"])
       print(paste0(cropName, ", lower optimum: ", lowerOpt, ", upper optimum: ", upperOpt, ", damage temp: ", tdamage_mean, "\n"))
       
-      fileNameOut_damage <- paste0("tdamage_mean_", cropName, "_", tdamage_mean, "C_", modelName.lower, "_", k, "_", filler,  "_", yearSpan, ".tif")
-      fileNameOut_optTemp <- paste0("optTempRange_", cropName, "_", lowerOpt, "_", upperOpt, "_", modelName.lower, "_", k, "_", filler, "_", yearSpan, ".tif")
+      fileNameOut_damage <- paste0("tdamage_mean_", cropName, "_", tdamage_mean, "C_", modelName.lower, "_", k, "_", yearSpan, ".tif")
+      fileNameOut_optTemp <- paste0("optTempRange_", cropName, "_", lowerOpt, "_", upperOpt, "_", modelName.lower, "_", k, "_", yearSpan, ".tif")
       startTime <-  Sys.time()
       numYears <- 10
       monthDamageCount <- raster::stackApply(tmax, indices, fun = function(x, ...){sum(x > tdamage_mean)/numYears}, progress = "text") 
@@ -88,7 +86,7 @@ startTime <-  Sys.time()
 yearSpan <- "2001_2010"
 tmax <- tasmax.observed
 tmax <- readAll(brick(tmax))
-tmax <- fixUnits(var = "tasmax", ncin.brick = tmax) # fixes temp and precip units; assumes ncin.brick values are raw units
+# tmax <- fixUnits(var = "tasmax", ncin.brick = tmax) # fixes temp and precip units; assumes ncin.brick values are raw units
 indices <- format(as.Date(names(tmax), format = "X%Y.%m.%d"), format = "%m")
 indices <- as.numeric(indices)
 

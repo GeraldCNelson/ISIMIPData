@@ -45,9 +45,8 @@ foreach(l = startyearChoices) %:%
     modelName.lower <- tolower(i)
     startTime <-  Sys.time()
     yearSpan <- paste0(l, "_", l + yearRange)
-    filler <- fixFiller(i)
     j <- "tasmax"
-    fileNameIn <- paste(modelName.lower, filler, k, j, "global_daily", yearSpan, sep = "_")
+    fileNameIn <- paste(modelName.lower, k, j, "global_daily", yearSpan, sep = "_")
     fileNameIn <- paste0(fileNameIn, ".nc")
     
     temp <- paste0(locOfFiles, k,"/", i, "/", fileNameIn)
@@ -55,7 +54,7 @@ foreach(l = startyearChoices) %:%
     tmax <- brick(temp)
     
     j <- "tasmin"
-    fileNameIn <- paste(modelName.lower, filler, k, j, "global_daily", yearSpan, sep = "_")
+    fileNameIn <- paste(modelName.lower, k, j, "global_daily", yearSpan, sep = "_")
     fileNameIn <- paste0(fileNameIn, ".nc")
     
     temp <- paste0(locOfFiles, k,"/", i, "/", fileNameIn)
@@ -64,13 +63,13 @@ foreach(l = startyearChoices) %:%
     
     startTime <-  Sys.time()
 #    tmin <- readAll((tmin))
-    tmin <- fixUnits(var = "tmin", ncin.brick = tmin) # fixes temp and precip units; assumes ncin.brick values are raw units
+    # tmin <- fixUnits(var = "tmin", ncin.brick = tmin) # fixes temp and precip units; assumes ncin.brick values are raw units
     
     print("Done with tmin readIn")
     tminTime <- Sys.time()
     print(paste0(tminTime - startTime, " pid: ", Sys.getpid()))
 #    tmax <- readAll((tmax))
-    tmax <- fixUnits(var = "tmax", ncin.brick = tmax) # fixes temp and precip units; assumes ncin.brick values are raw units
+    # tmax <- fixUnits(var = "tmax", ncin.brick = tmax) # fixes temp and precip units; assumes ncin.brick values are raw units
     
     tmaxTime <- Sys.time()
     print("Done with tmax readIn")
@@ -147,8 +146,8 @@ tmin <- tasmin.observed
 # tmin <- readAll(brick(tmin))
 # tmax <- readAll(brick(tmax))
 print("done with readAll tmin and tmax")
-tmin <- fixUnits(var = "tmin", ncin.brick = tmin) # fixes temp and precip units; assumes ncin.brick values are raw units
-tmax <- fixUnits(var = "tmax", ncin.brick = tmin) # fixes temp and precip units; assumes ncin.brick values are raw units
+# tmin <- fixUnits(var = "tmin", ncin.brick = tmin) # fixes temp and precip units; assumes ncin.brick values are raw units
+# tmax <- fixUnits(var = "tmax", ncin.brick = tmin) # fixes temp and precip units; assumes ncin.brick values are raw units
 yearSpan <- "2001_2010"
 
 chillHrs <- overlay(tmin, tmax, fun = f.chillhrs)

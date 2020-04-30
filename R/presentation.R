@@ -51,8 +51,7 @@ for (m in 1:nrow(IPCC_WG2_Ch5_crop_temperature_table)) {
         
         modelName.lower <- tolower(i)
         yearSpan <- paste0(l, "_", l + yearRange)
-        filler <- fixFiller(i)
-        plotFileName <- paste0("graphics/cmip6/damageTemp/tdamage_ensembleMean_masked_", cropName, "_", tdamage_mean, "C_", k, "_", yearSpan, ".jpg")
+       plotFileName <- paste0("graphics/cmip6/damageTemp/tdamage_ensembleMean_masked_", cropName, "_", tdamage_mean, "C_", k, "_", yearSpan, ".jpg")
         if (l == 2001) {
           plotFileName <- paste0("graphics/cmip6/damageTemp/tdamage_mean_", cropName, "_", tdamage_mean, "C", "_observed_", yearSpan, ".jpg")
         }

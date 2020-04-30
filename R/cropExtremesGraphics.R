@@ -23,14 +23,12 @@ for (i in modelChoices) {
       for (m in 1:nrow(IPCC_WG2_Ch5_crop_temperature_table)) {
         cropName <- as.character(IPCC_WG2_Ch5_crop_temperature_table[m, "crop"])
         tdamage_mean <- as.numeric(IPCC_WG2_Ch5_crop_temperature_table[m, "tdamage mean"])
-        filler <- fixFiller(i)
         yearRange <- 9
         print(paste0(cropName, ", damage temp: ", tdamage_mean, " start year: ", l))
         modelName.lower <- tolower(i)
         yearSpan <- paste0(l, "_", l + yearRange)
-        filler <- fixFiller(i)
         
-        fileNameIn_damage <- paste0("data/cmip6/damageTemp/tdamage_mean_", cropName, "_", tdamage_mean, "C_",  modelName.lower, "_", k, "_", filler,  "_", yearSpan, ".tif")
+        fileNameIn_damage <- paste0("data/cmip6/damageTemp/tdamage_mean_", cropName, "_", tdamage_mean, "C_",  modelName.lower, "_", k,  "_", yearSpan, ".tif")
         if (l == 2001) {
           fileNameIn_damage <- paste0("data/cmip6/damageTemp/tdamage_mean_", cropName, "_", tdamage_mean, "C",  "_observed_", yearSpan, ".tif")
         }
@@ -49,7 +47,7 @@ for (i in modelChoices) {
         g <- levelplot(temp, main = titleText, at = myat, col.regions = c("white", "blue", "yellow", "orange", "red", "brown" ),
                        xlab = "", ylab = "", scales  = list(x = list(draw = FALSE), y = list(draw = FALSE)))
         g <- g + latticeExtra::layer(sp.polygons(coastsCoarse, col = "black", lwd = 0.5)) # layout.heights = list(top.padding = 0, bottom.padding = 0))
-        plotFileName <- paste0("graphics/cmip6/damageTemp/tdamage_mean_", cropName, "_", tdamage_mean, "C ", modelName.lower, "_", k, "_", filler,  "_", yearSpan, ".jpg")
+        plotFileName <- paste0("graphics/cmip6/damageTemp/tdamage_mean_", cropName, "_", tdamage_mean, "C ", modelName.lower, "_", k,  "_", yearSpan, ".jpg")
         if (l == 2001) plotFileName <- paste0("graphics/cmip6/damageTemp/tdamage_mean_", cropName, "_", tdamage_mean, "C", "_observed_", yearSpan, ".jpg")
         
         #        jpeg(plotFileName, width = 1800, height = 1400, quality = 100)
@@ -71,8 +69,7 @@ for (i in modelChoices) {
         upperOpt <- as.numeric(IPCC_WG2_Ch5_crop_temperature_table[m, "topt mean"])
         lowerOpt <- as.numeric(IPCC_WG2_Ch5_crop_temperature_table[m, "topt lower"])
         yearSpan <- paste0(l, "_", l + yearRange)
-        filler <- fixFiller(i)
-        fileNameIn <- paste0("data/cmip6/optTempRange/optTempRange_", cropName, "_", lowerOpt, "_", upperOpt, "_", modelName.lower, "_", k, "_", filler, "_", yearSpan, ".tif")
+        fileNameIn <- paste0("data/cmip6/optTempRange/optTempRange_", cropName, "_", lowerOpt, "_", upperOpt, "_", modelName.lower, "_", k, "_", yearSpan, ".tif")
         if (l == 2001) {
           fileNameIn <- paste0("data/cmip6/optTempRange/optTempRange_", cropName, "_", lowerOpt, "_", upperOpt, "_observed_", yearSpan, ".tif")
         }
@@ -93,7 +90,7 @@ for (i in modelChoices) {
         g <- levelplot(temp, main = titleText, at = myat, col.regions = c("white", "blue", "yellow", "orange", "red", "brown" ),
                        xlab = "", ylab = "", scales  = list(x = list(draw = FALSE), y = list(draw = FALSE)))
         g <- g + latticeExtra::layer(sp.polygons(coastsCoarse, col = "black", lwd = 0.5))
-        plotFileName <- paste0("graphics/cmip6/optTempRange/optTempRange_", cropName, "_", lowerOpt, "_", upperOpt, "_",  modelName.lower, "_", k, "_", filler,  "_", yearSpan, ".jpg")
+        plotFileName <- paste0("graphics/cmip6/optTempRange/optTempRange_", cropName, "_", lowerOpt, "_", upperOpt, "_",  modelName.lower, "_", k,  "_", yearSpan, ".jpg")
         if (l == 2001) plotFileName <- paste0("graphics/cmip6/optTempRange/optTempRange_", cropName, "_", lowerOpt, "_", upperOpt, "_observed_", yearSpan, ".jpg")
         
         jpeg(plotFileName, width = 8, height = 8, quality = 100, units = "in", res = 300)

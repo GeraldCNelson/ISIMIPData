@@ -50,13 +50,13 @@ world_outline <- as(st_geometry(borders), Class = "Spatial")
 #graphicsDirs <- list.dirs(path = "graphics")
 
 # function to identify operating system
-get_os <- function(){
+get_os <- function() {
   sysinf <- Sys.info()
-  if (!is.null(sysinf)){
+  if (!is.null(sysinf)) {
     os <- sysinf['sysname']
     if (os == 'Darwin')
       os <- "osx"
-  } else { ## mystery machine
+  } else {## mystery machine
     os <- .Platform$OS.type
     if (grepl("^darwin", R.version$os))
       os <- "osx"
@@ -73,9 +73,10 @@ temp <- as.character(dirList$V1)
 for (i in 1:length(temp)) if (!dir.exists(temp[i])) dir.create(temp[i])
 }
 
-# paths to manage large data sets across machines
-if (get_os() %in% "osx") locOfCMIP6ncFiles <- "/Volumes/ExtremeSSD/ISIMIP/cmip6/"
-if (get_os() %in% c("Linux", "linux")) locOfCMIP6ncFiles <- "data-raw/ISIMIP/cmip6/"
+# paths to manage large data sets across machines. I don't think this is needed anymore
+# if (get_os() %in% "osx") locOfCMIP6ncFiles <- "/Volumes/ExtremeSSD/ISIMIP/cmip6/"
+# if (get_os() %in% c("Linux", "linux")) locOfCMIP6ncFiles <- "data-raw/ISIMIP/cmip6/"
+locOfCMIP6ncFiles <- "data-raw/ISIMIP/cmip6/unitsCorrected/"
 tmpDirName <- paste0(locOfCMIP6ncFiles, "rasterTmp", Sys.getpid(), "/")
 
 gdal_polygonizeR <- function(x, outshape=NULL, gdalformat = 'ESRI Shapefile',
@@ -149,17 +150,19 @@ clusterSetup <- function(varList, libList, useCores) {
   return(cl)
 }
 
-fixFiller <- function(i) {
-  if (i %in% c("GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR")) filler <- "r1i1p1f1_w5e5" # the bias correction method. "r1i1p1f1_w5e5" for all models except UKESM1-0-LL
-  if (i %in% c("UKESM1-0-LL")) filler <- "r1i1p1f2_w5e5" # the bias correction method. "r1i1p1f1_w5e5" for all models except UKESM1-0-LL
-  return(filler)
-}
+# no longer used because I'm saving the file names without the filler text.
+# fixFiller <- function(i) {
+#   if (i %in% c("GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR")) filler <- "r1i1p1f1_w5e5" # the bias correction method. "r1i1p1f1_w5e5" for all models except UKESM1-0-LL
+#   if (i %in% c("UKESM1-0-LL")) filler <- "r1i1p1f2_w5e5" # the bias correction method. "r1i1p1f1_w5e5" for all models except UKESM1-0-LL
+#   return(filler)
+# }
 
-fixUnits <- function(var, ncin.brick) {
-  if (var %in% c("tasmax", "tasmin")) ncin.brick <- ncin.brick - 273.15
-  if (var %in% c("pr")) ncin.brick <- ncin.brick * 86400
-  return(ncin.brick)
-}
+# commented fixUnits out because reading from the unitsCorrected directory
+# fixUnits <- function(var, ncin.brick) {
+#   if (var %in% c("tasmax", "tasmin")) ncin.brick <- ncin.brick - 273.15
+#   if (var %in% c("pr")) ncin.brick <- ncin.brick * 86400
+#   return(ncin.brick)
+# }
 
 # observed data names and locations
 
