@@ -18,7 +18,6 @@ cropChoices <- unique(IPCC_WG2_Ch5_crop_temperature_table$crop)
 i <- "IPSL-CM6A-LR"
 k <- "ssp585"
 l <- 2021
-m <- "Barley"
 useCores <- detectCores() - 2 # max number of cores
 #useCores <- 2 # better for memory intensive activities
 
@@ -52,7 +51,6 @@ foreach(l = startyearChoices) %:%
     Tbase_max <- IPCC_WG2_Ch5_crop_temperature_table[crop %in% m, Tbase_max]
     tmax_clamped <- clamp(tmax, lower = Tbase, upper = Tbase_max, useValues = TRUE)
     
-    
     j <- "tasmin"
     fileNameIn <- paste(modelName.lower, k, j, "global_daily", yearSpan, sep = "_")
     fileNameIn <- paste0(fileNameIn, ".nc")
@@ -61,10 +59,28 @@ foreach(l = startyearChoices) %:%
     print(paste0("Working on : ", temp, " pid: ", Sys.getpid()))
     tmin <- brick(temp)
     tmin_clamped <- clamp(tmin, lower = Tbase, upper = Tbase_max, useValues = TRUE)
-    gdd <- (tmax_clamped + tmin_clamped)/2 - Tbase
-    names(gdd) <- names(tmax)
+    
+    
+    j <- "hurs"
+    fileNameIn <- paste(modelName.lower, k, j, "global_daily", yearSpan, sep = "_")
+    fileNameIn <- paste0(fileNameIn, ".nc")
+    
+    temp <- paste0(locOfFiles, k,"/", i, "/", fileNameIn)
+    print(paste0("Working on : ", temp, " pid: ", Sys.getpid()))
+    rh <- brick(temp)
+    
+    
     indices <- format(as.Date(names(tmax_clamped), format = "X%Y.%m.%d"), format = "%j") # %j is day of the year
     indices <- as.numeric(indices)
+    
+    # heat index formulas use temperature in farenheit. Need to conver tmax to farenheit
+    tmax_F <- tmax * 9/5 + 32
+  #  hiSimple = 0.5 * (tmax_F + 61.0 + ((tmax_F - 68.0)*1.2) + (rh * 0.094))
+    #   hiSimple <- 0.5 * (-20.6 + 2.2 * t) + (rh * 0.094))
+    hiSimple <- -10.3 + 1.1 * tmax_F + rh * 0.047 # simplified math version
+    
+    hi = -42.379 + 2.04901523 *  tmax + 10.14333127 * rh - .22475541 *  tmax * rh - .00683783 *  tmax^2 - .05481717 * rh^2 + 
+      .00122874 *  tmax^2 * rh + .00085282 *  tmax * rh^2 - .00000199 *  tmax^2 * rh^2
     
     endTime <-  Sys.time()
     endTime - startTime
@@ -72,19 +88,6 @@ foreach(l = startyearChoices) %:%
     fileNameOut <-    paste(modelName.lower, k, "gdd", "global_daily", yearSpan, sep = "_")
     writeRaster(gdd, filename = paste0(fileOutLoc, fileNameOut, ".tif"), format = "GTiff", overwrite = TRUE)
     
-    #  gdd <- brick(fileNameOut)
-    # cropping calendar ncs have the following variables - index, filled.index, plant, plant.start, plant.end, plant.range, harvest, harvest.start, harvest.end, harvest.range, tot.days
-    # The following variables are included in all files:
-    #   - plant: mean planting day of year
-    # - plant.start: day of year of start of planting period
-    # - plant.end: day of year of end of planting period
-    # - plant.range: number of days between start and end of planting period
-    # - harvest: mean harvest day of year
-    # - harvest.start: day of year of start of harvest period
-    # - harvest.end: day of year of end of harvest period
-    # - harvest.range: number of days between start and end of harvest period
-    # - tot.days: number of days between planting and harvest
-    # Source: https://nelson.wisc.edu/sage/data-and-models/crop-calendar-dataset/netCDF0-5degree.php
     cropName <- m
     filesLoc <- "data-raw/crops/cropCalendars/ALL_CROPS_netCDF_0.5deg_filled/"
     fileInName <- paste0(cropName, ".crop.calendar.fill.nc")
@@ -109,14 +112,7 @@ foreach(l = startyearChoices) %:%
     endtime <- Sys.time()
     endtime - starttime
     starttime <- Sys.time()
-    x <- calc(s, fun = function(v) {
-      if (is.na(v[1])) {
-        NA
-      } else {
-        mean(v[ (v[1]:v[2]) + 2 ] ) 
-      }
-    }
-    )
+    x <- calc(s, fun = function(x) sum(x[(x[1]:x[2]) + 2]))
     endtime <- Sys.time()
     endtime - starttime
     

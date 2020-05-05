@@ -17,7 +17,7 @@ library(ggplot2)
 library(readxl)
 library(rworldmap)
 
-rasterOptions(chunksize = 1e+09, maxmemory = 7e+09)
+rasterOptions(chunksize = 3e+09, maxmemory = 9e+09)
 
 # starttime <- Sys.time()
 # tmin_clamped <- clamp(tmin, lower = Tbase_barley, upper = Tbase_max_barley, useValues = TRUE)
