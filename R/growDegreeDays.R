@@ -3,7 +3,7 @@ source("R/globallyUsed.R")
 library(doParallel) #Foreach Parallel Adaptor 
 # library(foreach) #Provides foreach looping construct, called with doParallel
 
-locOfFiles <- paste0(locOfCMIP6ncFiles, "original/")
+locOfFiles <- locOfCMIP6ncFiles
 sspChoices <- c("ssp585") #"ssp126", 
 modelChoices <- c( "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM6A-LR") #, "MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
 
@@ -11,62 +11,26 @@ startyearChoices <-  c(2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(
 
 yearRange <- 9
 
-#gdd functions from the package called pollen, based on the paper Baskerville, G. L., and Emin, P. (1969). 
-# Rapid Estimation of Heat Accumulation from Maximum and Minimum Temperatures. Ecology 50, 514–517. doi:10.2307/1933912.
-# note that these are linearized versions. If tmax and tmin are vectors of data over a period of time the function returns t
-# the cumulative degree days.
-f.growdegree <- function(tmax, tmin, tbase, tbase_max, type = "C") 
-{
-  if (!type %in% c("A", "B", "C", "D")) {
-    stop("The case argument must be either \"A\", \"B\", \"C\", or \"D\"", 
-         call. = FALSE)
-  }
-  if (type %in% c("A", "B", "C", "D")) {
-    tmax <- adjust_for_tbase(tmax, tbase)
-    tmin <- adjust_for_tbase(tmin, tbase)
-  }
-  if (type %in% c("C")) {
-    tmax <- adjust_for_tbase_max(tmax, tbase_max)
-    tmin <- adjust_for_tbase_max(tmin, tbase_max)
-  }
-  if (type == "D") {
-    gdd_temp <- ifelse(tmax > tbase_max, yes = 0, no = (tmax + 
-                                                          tmin)/2 - tbase)
-  }
-  else if (type %in% c("A", "B", "C")) {
-    gdd_temp <- (tmax + tmin)/2 - tbase
-  }
-  return(cumsum(gdd_temp))
-}
+IPCC_WG2_Ch5_crop_temperature_table <- as.data.table(read_excel("data-raw/crops/Crop_temperature_table_summary_02052020.xlsx", range = "A1:S26"))
+cropChoices <- unique(IPCC_WG2_Ch5_crop_temperature_table$crop)
 
-adjust_for_tbase <- function(x, tbase) {
-  ifelse(test = x < tbase, yes = tbase, no = x)
-}
-
-adjust_for_tbase_max <- function(x, tbase_max) {
-  ifelse(test = x > tbase_max, yes = tbase_max, no = x)
-}
-
-# ---- end of GDD formulas
 #test values
 i <- "IPSL-CM6A-LR"
 k <- "ssp585"
 l <- 2021
-northernHemWinter <- c("Nov", "Dec", "Jan", "Feb", "Mar", "Apr")
-#northernHemWinter.num <- c(11, 12, 1, 2, 3, 4)
-southernHemWinter <- c("May", "Jun", "Jul", "Aug", "Sep", "Oct")
-#southernHemWinter.num <- c(5, 6, 7, 8, 9, 10)
+m <- "Barley"
 useCores <- detectCores() - 2 # max number of cores
 #useCores <- 2 # better for memory intensive activities
 
-varList <- c("startyearChoices", "sspChoices", "modelChoices", "locOfFiles")
+varList <- c("startyearChoices", "sspChoices", "modelChoices", "locOfFiles", "IPCC_WG2_Ch5_crop_temperature_table")
 libList <- c("raster", "ncdf4")
 
 cl <- clusterSetup(varList, libList, useCores) # function created in globallyUsed.R
 foreach(l = startyearChoices) %:%
   foreach(i = modelChoices) %:%
   #  foreach(j = variableChoices) %:%
-  foreach(k = sspChoices) %dopar% {
+  foreach(k = sspChoices)  %:%
+  foreach(m = cropChoices) %dopar% {
     print(paste0("start year: ", l, " ssp: ", k, " pid: ", Sys.getpid(), " systime: ", Sys.time()))
     tmpDirName <- paste0(locOfFiles, "rasterTmp_", Sys.getpid(), "/")
     
@@ -76,13 +40,18 @@ foreach(l = startyearChoices) %:%
     modelName.lower <- tolower(i)
     startTime <-  Sys.time()
     yearSpan <- paste0(l, "_", l + yearRange)
-   j <- "tasmax"
+    j <- "tasmax"
     fileNameIn <- paste(modelName.lower, k, j, "global_daily", yearSpan, sep = "_")
     fileNameIn <- paste0(fileNameIn, ".nc")
     
     temp <- paste0(locOfFiles, k,"/", i, "/", fileNameIn)
     print(paste0("Working on : ", temp, " pid: ", Sys.getpid()))
     tmax <- brick(temp)
+    
+    Tbase <- IPCC_WG2_Ch5_crop_temperature_table[crop %in% m, Tbase]
+    Tbase_max <- IPCC_WG2_Ch5_crop_temperature_table[crop %in% m, Tbase_max]
+    tmax_clamped <- clamp(tmax, lower = Tbase, upper = Tbase_max, useValues = TRUE)
+    
     
     j <- "tasmin"
     fileNameIn <- paste(modelName.lower, k, j, "global_daily", yearSpan, sep = "_")
@@ -91,33 +60,65 @@ foreach(l = startyearChoices) %:%
     temp <- paste0(locOfFiles, k,"/", i, "/", fileNameIn)
     print(paste0("Working on : ", temp, " pid: ", Sys.getpid()))
     tmin <- brick(temp)
+    tmin_clamped <- clamp(tmin, lower = Tbase, upper = Tbase_max, useValues = TRUE)
+    gdd <- (tmax_clamped + tmin_clamped)/2 - Tbase
+    names(gdd) <- names(tmax)
+    indices <- format(as.Date(names(tmax_clamped), format = "X%Y.%m.%d"), format = "%j") # %j is day of the year
+    indices <- as.numeric(indices)
     
-    startTime <-  Sys.time()
-    #    tmin <- readAll((tmin))
-    # tmin <- fixUnits(var = "tmin", ncin.brick = tmin) # fixes temp and precip units; assumes ncin.brick values are raw units
-    
-    print("Done with tmin readIn")
-    tminTime <- Sys.time()
-    print(paste0(tminTime - startTime, " pid: ", Sys.getpid()))
-    #    tmax <- readAll((tmax))
-   # tmax <- fixUnits(var = "tmax", ncin.brick = tmax) # fixes temp and precip units; assumes ncin.brick values are raw units
-    
-    tmaxTime <- Sys.time()
-    print("Done with tmax readIn")
-    tmaxTime - tminTime
-    
-    testout <- f.growdegree(tmax, tmin, tbase = 10, tbase_max = 35, type = "C")
-    
-    
-    chillHrs <- overlay(tmin, tmax, fun = f.chillhrs)
-    names(chillHrs) <- names(tmax) # put the date info back into the names
-    
-    # do several count days in a month
-    # first days with temp below zero
-    print(paste0("Done with chillHrs function", " pid: ", Sys.getpid()))
     endTime <-  Sys.time()
-    #  print(endTime - startTime)
-    print(difftime(endTime, startTime, units = "mins"))
+    endTime - startTime
+    fileOutLoc <- "data/cmip6/growingDegreeDays/"
+    fileNameOut <-    paste(modelName.lower, k, "gdd", "global_daily", yearSpan, sep = "_")
+    writeRaster(gdd, filename = paste0(fileOutLoc, fileNameOut, ".tif"), format = "GTiff", overwrite = TRUE)
+    
+  #  gdd <- brick(fileNameOut)
+    # cropping calendar ncs have the following variables - index, filled.index, plant, plant.start, plant.end, plant.range, harvest, harvest.start, harvest.end, harvest.range, tot.days
+    # The following variables are included in all files:
+    #   - plant: mean planting day of year
+    # - plant.start: day of year of start of planting period
+    # - plant.end: day of year of end of planting period
+    # - plant.range: number of days between start and end of planting period
+    # - harvest: mean harvest day of year
+    # - harvest.start: day of year of start of harvest period
+    # - harvest.end: day of year of end of harvest period
+    # - harvest.range: number of days between start and end of harvest period
+    # - tot.days: number of days between planting and harvest
+    # Source: https://nelson.wisc.edu/sage/data-and-models/crop-calendar-dataset/netCDF0-5degree.php
+    cropName <- m
+    filesLoc <- "data-raw/crops/cropCalendars/ALL_CROPS_netCDF_0.5deg_filled/"
+    fileInName <- paste0(cropName, ".crop.calendar.fill.nc")
+    #    locNFileIn <- paste0(filesLoc, fileInName, ".gz")
+    locNFileIn <- paste0(filesLoc, fileInName)
+    R.utils::gunzip(paste0(locNFileIn, ".gz"), remove = FALSE)
+    
+    croppingCalendar_plantstart <- readAll(raster(locNFileIn, var = "plant.start"))
+    croppingCalendar_plantend <-  readAll(raster(locNFileIn, var = "plant.end"))
+    # croppingCalendar_plantrange <- raster(locNFileIn, var = "plant.range")
+    # croppingCalendar_plant <- raster(locNFileIn, var = "plant")
+    # croppingCalendar_harvest <- raster(locNFileIn, var = "harvest")
+    # croppingCalendar_harveststart <- raster(locNFileIn, var = "harvest.start")
+    # croppingCalendar_harvestend <- raster(locNFileIn, var = "harvest.end")
+    # 
+    
+    unlink(locNFileIn) # delete the .nc file when no longer needed.
+    
+    b <- brick(croppingCalendar_plantstart, croppingCalendar_plantend, gdd)
+    s <- stack(croppingCalendar_plantstart, croppingCalendar_plantend, gdd)
+    x <- calc(s, fun = function(x) sum(x[(x[1]:x[2]) + 2]))
+    
+    for (i in 1:nrow(croppingCalendar_plantstart)) { 
+      for (j in 1:ncol(croppingCalendar_plantend)) { 
+        print(paste0("row: ", i, " column :", j))
+        start <- croppingCalendar_plantstart[i,j] # get the starting day
+        end <- croppingCalendar_plantend[i,j] # get the ending day
+        print(paste0("start: ", start, " end: ", end))
+        
+        datasum.sub1 <- stackApply(gdd[[start:end]], indices, fun = sum) 
+        print(datasum.sub1)
+      } 
+    }
+    
     indices <- format(as.Date(names(tmin), format = "X%Y.%m.%d"), format = "%m")
     indices <- as.numeric(indices)
     monthZeroCount <- stackApply(tmin, indices, fun = function(x, ...){sum(x <= 0)}) 
@@ -141,31 +142,10 @@ foreach(l = startyearChoices) %:%
     print(paste("One tmax function loop", " pid: ", Sys.getpid()))
     print(tmaxfunctionEnd - tmaxfunctionStart) 
     
-    #tmax > 35
-    f.tmaxLimit(tmax, tmaxLimit = 35)
-    #tmax > 38
-    f.tmaxLimit(tmax, tmaxLimit = 38)
-    #tmax > 45
-    f.tmaxLimit(tmax, tmaxLimit = 45)
-    #tmax > 48
-    f.tmaxLimit(tmax, tmaxLimit = 48)
+    
     
     rm(list = c("tmax", "tmin"))
-    chillHrs.sumMonth <- stackApply(chillHrs, indices, fun = sum, na.rm = TRUE)
-    chillHrs.sumMonth <- chillHrs.sumMonth/10 # to get to the monthly average over 10 years
-    names(chillHrs.sumMonth) <- month.abb
-    chillHrsNorthernHem <- dropLayer(chillHrs.sumMonth, southernHemWinter) # note dropping layers for southern hemisphere winter
-    chillHrsSouthernHem <- dropLayer(chillHrs.sumMonth, northernHemWinter) # note dropping layers for northern hemisphere winter
-    chillHrsNorthernHem <- sum(chillHrsNorthernHem)
-    chillHrsSouthernHem <- sum(chillHrsSouthernHem)
-    endCompleteLoop <- Sys.time()
-    print("complete loop time")
-    print(difftime(Sys.time(), startTime, units = "mins"))
     
-    #print(endCompleteLoop - startTime)
-    
-    fileNameNH <- paste0("chillHrsNorthernHem_", modelName.lower, "_", k, "_", yearSpan, ".tif")
-    fileNameSH <- paste0("chillHrsSouthernHem_", modelName.lower, "_", k, "_", yearSpan, ".tif")
     
     writeRaster(chillHrsNorthernHem, filename = paste0("data/cmip6/chillingHours/", fileNameNH), format = "GTiff", overwrite = TRUE)
     writeRaster(chillHrsSouthernHem, filename = paste0("data/cmip6/chillingHours/", fileNameSH), format = "GTiff", overwrite = TRUE)

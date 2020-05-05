@@ -17,6 +17,20 @@ library(ggplot2)
 library(readxl)
 library(rworldmap)
 
+rasterOptions(chunksize = 1e+09, maxmemory = 7e+09)
+
+# starttime <- Sys.time()
+# tmin_clamped <- clamp(tmin, lower = Tbase_barley, upper = Tbase_max_barley, useValues = TRUE)
+# endtime <- Sys.time()
+# endtime - starttime
+# 
+# rasterOptions(chunksize = 1e+09, maxmemory = 6e+09)
+# 
+# starttime <- Sys.time()
+# tmin_clamped <- clamp(tmin, lower = Tbase_barley, upper = Tbase_max_barley, useValues = TRUE)
+# endtime <- Sys.time()
+# endtime - starttime
+
 data("coastsCoarse")
 
 data(wrld_simpl)
