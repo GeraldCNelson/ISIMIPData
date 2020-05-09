@@ -16,6 +16,7 @@ library(rasterVis)
 library(ggplot2)
 library(readxl)
 library(rworldmap)
+library(lubridate)
 
 rasterOptions(chunksize = 3e+09, maxmemory = 9e+09)
 
@@ -154,8 +155,8 @@ formula.thi.chicken <- "0.60 * tmax + 0.40 * tmin" # using broiler formula
 formula.thi.swine <- "tmax - (0.55 - (0.0055 * rh) * (tmax - 14.5))"
 
 clusterSetup <- function(varList, libList, useCores) {
-  cl <- makeCluster(useCores,  outfile = "", homogeneous = TRUE) # added homogeneous = TRUE because all the nodes are doing the same thing.
-  registerDoParallel(cl)
+  cl <- makeCluster(useCores,  outfile = "", , setup_strategy = "sequential", homogeneous = TRUE) # added homogeneous = TRUE because all the nodes are doing the same thing.
+  registerDoParallel(cl, cores = useCores)
   if (!missing(libList)) {
     varList <- c(varList, "libList")
   }
@@ -197,5 +198,26 @@ is.symlink <- function(paths) isTRUE(nzchar(Sys.readlink(paths), keepNA=TRUE))
 ## will return all FALSE when the platform has no `readlink` system call.
 is.symlink("/foo/bar")
 
+# used in calculating cumulative growing degree days
+gddSum <- function(i, v) {
+  j <- !is.na(i[,1])
+  r <- rep(NA, nrow(i))
+  x <- cbind(i[j,,drop=FALSE], v[j,,drop=FALSE])
+  r[j] <- apply(x, 1, function(y) sum(y[ (y[1]:y[2])+2 ] )) 
+  r
+}
+
+getcropAreaYield <- function(cropName, dataType) {
+  tifZipUrl <-  " https://s3.us-east-2.amazonaws.com/earthstatdata/HarvestedAreaYield175Crops_Geotiff.zip"
+  tifzipFile <- paste0("data-raw/crops/HarvestedAreaYield175Crops_Geotiff.zip")
+  tiffilecrop <- cropName
+  if (dataType %in% "area") {
+    tifcropFile <- paste0(tiffilecrop, "_HarvestedAreaHectares.tif")
+  } else {tifcropFile <- paste0(tiffilecrop, "_YieldPerHectare.tif")
+  }
+  tifzipFilePath <- paste0("HarvestedAreaYield175Crops_Geotiff/GeoTiff/", tiffilecrop, "/", tifcropFile)
+  tifOut <- unzip(zipfile = tifzipFile, files = tifzipFilePath)
+  return(tifOut)
+}
 
 

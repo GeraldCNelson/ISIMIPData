@@ -5,24 +5,25 @@ library(doParallel) #Foreach Parallel Adaptor
 
 locOfFiles <- locOfCMIP6ncFiles
 sspChoices <- c("ssp585") #"ssp126", 
-modelChoices <- c( "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM6A-LR") #, "MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
+modelChoices <- c( "GFDL-ESM4") #, "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM6A-LR") #, "MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
 
 startyearChoices <-  c(2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
 
 yearRange <- 9
 
 IPCC_WG2_Ch5_crop_temperature_table <- as.data.table(read_excel("data-raw/crops/Crop_temperature_table_summary_02052020.xlsx", range = "A1:S26"))
+setnames(IPCC_WG2_Ch5_crop_temperature_table, old = names(IPCC_WG2_Ch5_crop_temperature_table), new = make.names(names(IPCC_WG2_Ch5_crop_temperature_table)))
 cropChoices <- unique(IPCC_WG2_Ch5_crop_temperature_table$crop)
-
+#cropChoices <- c("Barley")
 #test values
-i <- "IPSL-CM6A-LR"
+i <- "GFDL-ESM4"
 k <- "ssp585"
-l <- 2021
-m <- "Barley"
+l <- 2051
+m <- "Broadbean"
 useCores <- detectCores() - 2 # max number of cores
-#useCores <- 2 # better for memory intensive activities
+useCores <- 3 # better for memory intensive activities
 
-varList <- c("startyearChoices", "sspChoices", "modelChoices", "locOfFiles", "IPCC_WG2_Ch5_crop_temperature_table")
+varList <- c("startyearChoices", "sspChoices", "modelChoices", "locOfFiles", "IPCC_WG2_Ch5_crop_temperature_table", "cropChoices")
 libList <- c("raster", "ncdf4")
 
 cl <- clusterSetup(varList, libList, useCores) # function created in globallyUsed.R
@@ -31,12 +32,14 @@ foreach(l = startyearChoices) %:%
   #  foreach(j = variableChoices) %:%
   foreach(k = sspChoices)  %:%
   foreach(m = cropChoices) %dopar% {
+    require(data.table)
     print(paste0("start year: ", l, " ssp: ", k, " pid: ", Sys.getpid(), " systime: ", Sys.time()))
-    tmpDirName <- paste0(locOfFiles, "rasterTmp_", Sys.getpid(), "/")
-    
-    rasterOptions(tmpdir = tmpDirName)
-    dir.create(tmpDirName)
-    
+    print(paste0("crop: ", m, " model: ", i, " start year: ", l, " ssp choice: ", k))
+    # tmpDirName <- paste0(locOfFiles, "rasterTmp_", Sys.getpid(), "/")
+    # 
+    # rasterOptions(tmpdir = tmpDirName)
+    # dir.create(tmpDirName)
+    # 
     modelName.lower <- tolower(i)
     startTime <-  Sys.time()
     yearSpan <- paste0(l, "_", l + yearRange)
@@ -47,32 +50,65 @@ foreach(l = startyearChoices) %:%
     temp <- paste0(locOfFiles, k,"/", i, "/", fileNameIn)
     print(paste0("Working on : ", temp, " pid: ", Sys.getpid()))
     tmax <- brick(temp)
+    print(paste0("tmax brick created",  " pid: ", Sys.getpid()))
+    Tbase <- IPCC_WG2_Ch5_crop_temperature_table[(crop %in% m), Tbase]
+    print(paste0("Tbase created: ", Tbase, " pid: ", Sys.getpid()))
     
-    Tbase <- IPCC_WG2_Ch5_crop_temperature_table[crop %in% m, Tbase]
-    Tbase_max <- IPCC_WG2_Ch5_crop_temperature_table[crop %in% m, Tbase_max]
+    print(paste0("Tbase created", " pid: ", Sys.getpid()))
+    Tbase_max <- IPCC_WG2_Ch5_crop_temperature_table[(crop %in% m), Tbase_max]
+    print(paste0("Tbase_max created: ", Tbase_max))
+    print(paste0("crop: ", m, " tbase: ", Tbase, " Tbase_max: ", Tbase_max))
     tmax_clamped <- clamp(tmax, lower = Tbase, upper = Tbase_max, useValues = TRUE)
-    
-    
+    print(tmax_clamped)
+    print("Done with tmax_clamped",  " pid: ", Sys.getpid())
+
     j <- "tasmin"
     fileNameIn <- paste(modelName.lower, k, j, "global_daily", yearSpan, sep = "_")
     fileNameIn <- paste0(fileNameIn, ".nc")
     
     temp <- paste0(locOfFiles, k,"/", i, "/", fileNameIn)
-    print(paste0("Working on : ", temp, " pid: ", Sys.getpid()))
+
+    startTime <-  Sys.time()
     tmin <- brick(temp)
     tmin_clamped <- clamp(tmin, lower = Tbase, upper = Tbase_max, useValues = TRUE)
+    endTime <-  Sys.time()
+    print(endTime - startTime)
+    print("Done with tmin_clamped", " pid: ", Sys.getpid())
+    
+    startTime <-  Sys.time()
     gdd <- (tmax_clamped + tmin_clamped)/2 - Tbase
     names(gdd) <- names(tmax)
     indices <- format(as.Date(names(tmax_clamped), format = "X%Y.%m.%d"), format = "%j") # %j is day of the year
     indices <- as.numeric(indices)
-    
     endTime <-  Sys.time()
-    endTime - startTime
-    fileOutLoc <- "data/cmip6/growingDegreeDays/"
-    fileNameOut <-    paste(modelName.lower, k, "gdd", "global_daily", yearSpan, sep = "_")
-    writeRaster(gdd, filename = paste0(fileOutLoc, fileNameOut, ".tif"), format = "GTiff", overwrite = TRUE)
+    print(endTime - startTime)
     
-    #  gdd <- brick(fileNameOut)
+    gddsfileOutLoc <- "data/cmip6/growingDegreeDays/"
+    fileNameOut <-    paste(modelName.lower, k, "gdd", "global_daily", yearSpan, sep = "_")
+    
+    writeRaster(gdd, filename = paste0(gddsfileOutLoc, fileNameOut, ".tif"), format = "GTiff", overwrite = TRUE)  
+    
+    unlink(tmpDirName, recursive = TRUE)
+    gc()
+    
+  }
+stopCluster(cl)
+    
+      gdd <- brick(paste0(fileOutLoc, fileNameOut, ".tif"))
+      # indices <- format(as.Date(names(gdd), format = "X%Y.%m.%d"), format = "%j") # %j is day of the year
+      # indices <- as.numeric(indices)
+      # 
+      
+      # crop the gdd brick to just the area of the crop from the 
+      
+      cropArea <- getcropAreaYield(cropName = tolower(m), dataType = "area")
+      rInArea <- raster(cropArea)
+      rInAreaAgg <- aggregate(rInArea, fact = 6, fun = "sum")
+      cutoff <- 1000 # only include 1/2 cells where crop area is great than cutoff
+      rInAreaAgg[rInAreaAgg < cutoff] <- NA
+      rInAreaAgg[rInAreaAgg >= cutoff] <- 1
+      
+      
     # cropping calendar ncs have the following variables - index, filled.index, plant, plant.start, plant.end, plant.range, harvest, harvest.start, harvest.end, harvest.range, tot.days
     # The following variables are included in all files:
     #   - plant: mean planting day of year
@@ -86,39 +122,65 @@ foreach(l = startyearChoices) %:%
     # - tot.days: number of days between planting and harvest
     # Source: https://nelson.wisc.edu/sage/data-and-models/crop-calendar-dataset/netCDF0-5degree.php
     cropName <- m
-    filesLoc <- "data-raw/crops/cropCalendars/ALL_CROPS_netCDF_0.5deg_filled/"
+    cropCalFilesLoc <- "data-raw/crops/cropCalendars/ALL_CROPS_netCDF_0.5deg_filled/"
     fileInName <- paste0(cropName, ".crop.calendar.fill.nc")
     #    locNFileIn <- paste0(filesLoc, fileInName, ".gz")
-    locNFileIn <- paste0(filesLoc, fileInName)
+    locNFileIn <- paste0(cropCalFilesLoc, fileInName)
     R.utils::gunzip(paste0(locNFileIn, ".gz"), remove = FALSE)
     
-    croppingCalendar_plantstart <- readAll(raster(locNFileIn, var = "plant.start"))
-    croppingCalendar_plantend <-  readAll(raster(locNFileIn, var = "plant.end"))
+ #   croppingCalendar_plantstart <- readAll(raster(locNFileIn, var = "plant.start"))
+ #   croppingCalendar_plantend <-  readAll(raster(locNFileIn, var = "plant.end"))
     # croppingCalendar_plantrange <- raster(locNFileIn, var = "plant.range")
-    # croppingCalendar_plant <- raster(locNFileIn, var = "plant")
-    # croppingCalendar_harvest <- raster(locNFileIn, var = "harvest")
+     croppingCalendar_plant <- raster(locNFileIn, var = "plant")
+     croppingCalendar_harvest <- raster(locNFileIn, var = "harvest")
     # croppingCalendar_harveststart <- raster(locNFileIn, var = "harvest.start")
     # croppingCalendar_harvestend <- raster(locNFileIn, var = "harvest.end")
     # 
-    
+     #gdd_cropped <- mask(gdd, rInAreaAgg)
+     croppingCalendar_plant_crop <- mask(croppingCalendar_plant, rInAreaAgg)
+     croppingCalendar_harvest_crop <- mask(croppingCalendar_harvest, rInAreaAgg)
+     cal <- readAll(stack(croppingCalendar_plant_crop, croppingCalendar_plant_crop))
     unlink(locNFileIn) # delete the .nc file when no longer needed.
     
+#    gddy1 <- subset(gdd_cropped, 1:365)
+#    gddy1 <- gdd_cropped
+    
     #  b <- brick(croppingCalendar_plantstart, croppingCalendar_plantend, gdd)
-    starttime <- Sys.time()
-    s <- stack(croppingCalendar_plantstart, croppingCalendar_plantend, gdd)
-    endtime <- Sys.time()
-    endtime - starttime
-    starttime <- Sys.time()
-    x <- calc(s, fun = function(v) {
-      if (is.na(v[1])) {
-        NA
-      } else {
-        mean(v[ (v[1]:v[2]) + 2 ] ) 
-      }
+    # starttime <- Sys.time()
+    # s <- stack(croppingCalendar_plant, croppingCalendar_harvest, gddy1)
+    # endtime <- Sys.time()
+    # print(endTime - startTime)
+    # starttime <- Sys.time()
+    
+    gddSum <- function(i, v) {
+      j <- !is.na(i[,1])
+      r <- rep(NA, nrow(i))
+      x <- cbind(i[j,,drop=FALSE], v[j,,drop=FALSE])
+      r[j] <- apply(x, 1, function(y) sum(y[ (y[1]:y[2])+2 ] )) 
+      r
     }
-    )
+    
+    # need to subset and run this by year. This means figuring out what are the leap years
+    starttime <- Sys.time()
+    cumDays <- 0
+    stack.temp <- stack() #, ..., bands=NULL, varname="", native=FALSE, RAT=TRUE, quick=FALSE)
+    for (cntr in 0:yearRange) {
+      yearIndex <- l + cntr
+      daysInYear <- 365
+      if (leap_year(yearIndex)) daysInYear <- 366
+      daysStart <- cumDays + 1
+      daysEnd <- daysStart + daysInYear - 1
+      gddy_subset <- subset(gdd_cropped, daysStart:daysEnd)
+    x <- overlay(cal, gddy_subset, fun = gddSum, recycle = FALSE)
+    stack.temp <- addLayer(stack.temp, x)
+    cumDays <- cumDays + daysInYear
+    
+    }
+    gddfileOut <- paste0(gddsfileOutLoc, "cumgdds_", m, "_", yearSpan, "_", i,  ".tif")
+    writeRaster(stack.temp, filename = gddfileOut, format = "GTiff", overwrite = TRUE)
     endtime <- Sys.time()
-    endtime - starttime
+    print(endTime - startTime)
+    
     
     for (i in 1:nrow(croppingCalendar_plantstart)) { 
       for (j in 1:ncol(croppingCalendar_plantend)) { 

@@ -16,18 +16,7 @@ l <- 2021
 
 # do plants
 # now do plants
-getcropAreaYield <- function(cropName, dataType) {
-  tifZipUrl <-  " https://s3.us-east-2.amazonaws.com/earthstatdata/HarvestedAreaYield175Crops_Geotiff.zip"
-  tifzipFile <- paste0("data-raw/crops/HarvestedAreaYield175Crops_Geotiff.zip")
-  tiffilecrop <- cropName
-  if (dataType %in% "area") {
-    tifcropFile <- paste0(tiffilecrop, "_HarvestedAreaHectares.tif")
-  } else {tifcropFile <- paste0(tiffilecrop, "_YieldPerHectare.tif")
-  }
-  tifzipFilePath <- paste0("HarvestedAreaYield175Crops_Geotiff/GeoTiff/", tiffilecrop, "/", tifcropFile)
-  tifOut <- unzip(zipfile = tifzipFile, files = tifzipFilePath)
-  return(tifOut)
-}
+# getcropAreaYield function moved to globallyUsed.R
 
 crops <- c("abaca", "agave", "alfalfa", "almond", "aniseetc", "apple", "apricot", 
            "areca", "artichoke", "asparagus", "avocado", "bambara", "banana", 
