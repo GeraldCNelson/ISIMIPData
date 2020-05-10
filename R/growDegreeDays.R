@@ -24,17 +24,17 @@ useCores <- detectCores() - 2 # max number of cores
 useCores <- 3 # better for memory intensive activities
 
 varList <- c("startyearChoices", "sspChoices", "modelChoices", "locOfFiles", "IPCC_WG2_Ch5_crop_temperature_table", "cropChoices")
-libList <- c("raster", "ncdf4")
+libList <- c("raster", "ncdf4", "data.table")
 
 cl <- clusterSetup(varList, libList, useCores) # function created in globallyUsed.R
 foreach(l = startyearChoices) %:%
   foreach(i = modelChoices) %:%
   #  foreach(j = variableChoices) %:%
-  foreach(k = sspChoices)  %:%
-  foreach(m = cropChoices) %dopar% {
-    require(data.table)
-    print(paste0("start year: ", l, " ssp: ", k, " pid: ", Sys.getpid(), " systime: ", Sys.time()))
-    print(paste0("crop: ", m, " model: ", i, " start year: ", l, " ssp choice: ", k))
+  foreach(k = sspChoices)  %dopar% {
+    
+#  foreach(m = cropChoices)  {
+#    require(data.table)
+    print(paste0("start year: ", l, " ssp: ", k,  " model: ", i, " start year: ", l, " ssp choice: ", k, " pid: ", Sys.getpid(), " systime: ", Sys.time()))
     # tmpDirName <- paste0(locOfFiles, "rasterTmp_", Sys.getpid(), "/")
     # 
     # rasterOptions(tmpdir = tmpDirName)
@@ -50,29 +50,28 @@ foreach(l = startyearChoices) %:%
     temp <- paste0(locOfFiles, k,"/", i, "/", fileNameIn)
     print(paste0("Working on : ", temp, " pid: ", Sys.getpid()))
     tmax <- brick(temp)
-    print(paste0("tmax brick created",  " pid: ", Sys.getpid()))
-    Tbase <- IPCC_WG2_Ch5_crop_temperature_table[(crop %in% m), Tbase]
-    print(paste0("Tbase created: ", Tbase, " pid: ", Sys.getpid()))
+    print(paste0("tmax brick created, ", temp,  " pid: ", Sys.getpid()))
     
-    print(paste0("Tbase created", " pid: ", Sys.getpid()))
-    Tbase_max <- IPCC_WG2_Ch5_crop_temperature_table[(crop %in% m), Tbase_max]
-    print(paste0("Tbase_max created: ", Tbase_max))
-    print(paste0("crop: ", m, " tbase: ", Tbase, " Tbase_max: ", Tbase_max))
-    tmax_clamped <- clamp(tmax, lower = Tbase, upper = Tbase_max, useValues = TRUE)
-    print(paste0("Done with tmax_clamped",  " pid: ", Sys.getpid()))
-
     j <- "tasmin"
     fileNameIn <- paste(modelName.lower, k, j, "global_daily", yearSpan, sep = "_")
     fileNameIn <- paste0(fileNameIn, ".nc")
-    
     temp <- paste0(locOfFiles, k,"/", i, "/", fileNameIn)
-
-    startTime <-  Sys.time()
     tmin <- brick(temp)
+    print(paste0("tmin brick created, ", temp, " pid: ", Sys.getpid()))
+    
+    for (m in cropChoices) {
+    
+    Tbase <- IPCC_WG2_Ch5_crop_temperature_table[(crop %in% m), Tbase]
+    Tbase_max <- IPCC_WG2_Ch5_crop_temperature_table[(crop %in% m), Tbase_max]
+    print(paste0("crop: ", m, " tbase: ", Tbase, " Tbase_max: ", Tbase_max))
+ 
+       tmax_clamped <- clamp(tmax, lower = Tbase, upper = Tbase_max, useValues = TRUE)
+    print(paste0("Done with tmax_clamped for ", m,  " pid: ", Sys.getpid()))
+
     tmin_clamped <- clamp(tmin, lower = Tbase, upper = Tbase_max, useValues = TRUE)
+    print(paste0("Done with tmin_clamped for ", m, " pid: ", Sys.getpid()))
     endTime <-  Sys.time()
     print(endTime - startTime)
-    print(paste0("Done with tmin_clamped", " pid: ", Sys.getpid()))
     
     startTime <-  Sys.time()
     gdd <- (tmax_clamped + tmin_clamped)/2 - Tbase
@@ -87,6 +86,7 @@ foreach(l = startyearChoices) %:%
     print(paste0("gdd file out name: ", gddsfileOutLoc, fileNameOut, ".tif"))
     
     writeRaster(gdd, filename = paste0(gddsfileOutLoc, fileNameOut, ".tif"), format = "GTiff", overwrite = TRUE)  
+    }
     
     unlink(tmpDirName, recursive = TRUE)
     gc()
