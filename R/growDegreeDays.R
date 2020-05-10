@@ -59,8 +59,7 @@ foreach(l = startyearChoices) %:%
     print(paste0("Tbase_max created: ", Tbase_max))
     print(paste0("crop: ", m, " tbase: ", Tbase, " Tbase_max: ", Tbase_max))
     tmax_clamped <- clamp(tmax, lower = Tbase, upper = Tbase_max, useValues = TRUE)
-    print(tmax_clamped)
-    print("Done with tmax_clamped",  " pid: ", Sys.getpid())
+    print(paste0("Done with tmax_clamped",  " pid: ", Sys.getpid()))
 
     j <- "tasmin"
     fileNameIn <- paste(modelName.lower, k, j, "global_daily", yearSpan, sep = "_")
@@ -73,7 +72,7 @@ foreach(l = startyearChoices) %:%
     tmin_clamped <- clamp(tmin, lower = Tbase, upper = Tbase_max, useValues = TRUE)
     endTime <-  Sys.time()
     print(endTime - startTime)
-    print("Done with tmin_clamped", " pid: ", Sys.getpid())
+    print(paste0("Done with tmin_clamped", " pid: ", Sys.getpid()))
     
     startTime <-  Sys.time()
     gdd <- (tmax_clamped + tmin_clamped)/2 - Tbase
@@ -84,7 +83,8 @@ foreach(l = startyearChoices) %:%
     print(endTime - startTime)
     
     gddsfileOutLoc <- "data/cmip6/growingDegreeDays/"
-    fileNameOut <-    paste(modelName.lower, k, "gdd", "global_daily", yearSpan, sep = "_")
+    fileNameOut <-    paste(modelName.lower, m, k, "gdd", "global_daily", yearSpan, sep = "_")
+    print(paste0("gdd file out name: ", gddsfileOutLoc, fileNameOut, ".tif"))
     
     writeRaster(gdd, filename = paste0(gddsfileOutLoc, fileNameOut, ".tif"), format = "GTiff", overwrite = TRUE)  
     
