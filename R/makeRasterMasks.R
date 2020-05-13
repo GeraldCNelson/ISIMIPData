@@ -40,18 +40,6 @@ for (i in animalsList) {
 }
 
 # now do plants
-getcropAreaYield <- function(cropName, dataType) {
-tifZipUrl <-  " https://s3.us-east-2.amazonaws.com/earthstatdata/HarvestedAreaYield175Crops_Geotiff.zip"
-  tifzipFile <- paste0("data-raw/crops/HarvestedAreaYield175Crops_Geotiff.zip")
-  tiffilecrop <- cropName
-  if (dataType %in% "area") {
-    tifcropFile <- paste0(tiffilecrop, "_HarvestedAreaHectares.tif")
-  } else {tifcropFile <- paste0(tiffilecrop, "_YieldPerHectare.tif")
-  }
-  tifzipFilePath <- paste0("HarvestedAreaYield175Crops_Geotiff/GeoTiff/", tiffilecrop, "/", tifcropFile)
-  tifOut <- unzip(zipfile = tifzipFile, files = tifzipFilePath)
-  return(tifOut)
-}
 
 crops <- c("abaca", "agave", "alfalfa", "almond", "aniseetc", "apple", "apricot", 
            "areca", "artichoke", "asparagus", "avocado", "bambara", "banana", 
@@ -79,7 +67,14 @@ crops <- c("abaca", "agave", "alfalfa", "almond", "aniseetc", "apple", "apricot"
            "turnipfor", "vanilla", "vegetablenes", "vegfor", "vetch", "walnut", "watermelon", 
            "wheat", "yam", "yautia")
 
+fruitsOnly <-  c("apple", "apricot", "avocado", "berrynes", "blueberry", 
+             "cherry", "cranberry", "currant", "grape", 
+             "grapefruitetc", "lemonlime", "orange", "peachetc", "persimmon", "rasberry", "sourcherry", 
+             "stonefruitnes", "walnut")
+
+otherCropsOnly <- crops[!crops %in% fruitsOnly]
 for (i in crops) {
+  print(i)
   #  i <- "wheat"
   tempTifArea <- getcropAreaYield(i, "area")
   
@@ -91,10 +86,14 @@ for (i in crops) {
   # 30 min = 0.5 degree
   
   rInAreaAgg <- aggregate(rInArea, fact = 6, fun = "sum")
-  cutoff <- 1000 # only include 1/2 cells where crop area is great than cutoff
+  if (i %in% fruitsOnly) {
+  cutoff <- 100 # only include 1/2 cells where crop area is great than cutoff
+  }
+  if (i %in% otherCropsOnly) {
+    cutoff <- 1000 # only include 1/2 cells where crop area is great than cutoff
+  }
   rInAreaAgg[rInAreaAgg < cutoff] <- NA
   rInAreaAgg[rInAreaAgg >= cutoff] <- 1
-  
   fileNameout <- paste0("data/crops/rasterMask_", i, ".tif")
   print(fileNameout)
   writeRaster(rInAreaAgg, fileNameout, format = "GTiff", overwrite = TRUE)

@@ -2,7 +2,7 @@
 #source("R/globallyUsed.R")
 library(data.table)
 library(raster)
-library(terra)
+#library(terra)
 
 pathPrefix <- getwd()
 
@@ -66,6 +66,48 @@ for (i in varsToKeep) {
 endtime <- Sys.time()
 endtime - starttime
 
+# Now do the observed data
+
+filesInDir <- list.files("data-raw/ISIMIP/cmip6/observed", full.names = TRUE, recursive = TRUE)
+filesInDir <- gsub("//", "/", filesInDir)
+renameFileObserved <- function(inNCfile){
+  inNCfile <- gsub("observed", "unitsCorrected/observed", inNCfile, fixed = TRUE)
+  #outfiles <- gsub(".nc", ".tif", outfiles, fixed = TRUE)
+  inNCfile <- paste0(inNCfile)
+  return(inNCfile)
+}
+
+for (i in varsToKeep) {
+  print(i)
+  filestoKeep <- filesInDir[grepl(i, filesInDir, fixed = TRUE)]
+  #  filestoKeep <- head(filestoKeep)
+  #  filestoKeep <- paste0(pathPrefix, "/", filestoKeep)
+  
+  starttime <- Sys.time()
+  if (i %in% "_pr_") {
+    for (j in 1:length(filestoKeep)) {
+      inFile <- filestoKeep[j]
+      outFile <- renameFileObserved(filestoKeep[j])
+      cdoCommandMult <- paste("cdo -z zip_6 setunit,'mm/day' -mulc,86400 ", inFile, outFile)
+      system(cdoCommandMult)
+      # temp.r <- readAll(brick(filestoKeep[j]))
+      # temp.r@data@unit <- "mm/day"
+      # temp.r <- temp.r * 86400
+      #    print(paste0("writing out ", outfiles[j]))
+      #   writeRaster(temp.r, filename = outfiles[j], format = "GTiff", overwrite = TRUE)
+      # }
+    }
+  }
+  if (i %in% c("_tasmax_", "_tasmin_")) {
+    for (j in 1:length(filestoKeep)) {
+      inFile <- filestoKeep[j]
+      outFile <- renameFileObserved(filestoKeep[j])
+      
+      cdoCommandMult <- paste("cdo -z zip_6 setunit,'mm/day' -addc,-273.15 ",  inFile, outFile)
+      system(cdoCommandMult)
+    }
+  }
+}
 
 # cdo -setunit="degC" -addc,-273.15 <infile> <outfile>
 # cdo -setunit="mm/day" -mulc,86400 <infile> <outfile>

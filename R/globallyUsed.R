@@ -7,8 +7,8 @@ library(raster)
 #library(rgdal)
 library(gdalUtils)
 library(rgeos)
-library(sp)
-library(sf)
+# library(sp)
+# library(sf)
 library(maps)
 library(maptools)
 library(data.table)
@@ -17,6 +17,7 @@ library(ggplot2)
 library(readxl)
 library(rworldmap)
 library(lubridate)
+library(readxl)
 
 rasterOptions(chunksize = 3e+09, maxmemory = 9e+09)
 
@@ -39,16 +40,16 @@ wrld_land <- subset(wrld_simpl, !NAME == "Antarctica")
 wrld_land@bbox <- bbox(rbind(c(-180, -90), c(180, 90)))
 
 #an alternative
-data(wrld_simpl)
-wrld_land <- subset(wrld_simpl, !NAME == "Antarctica")
-wrld_land <- as(wrld_land, "sf")
-new_bb = c(-180, -90, 180, 90)
-names(new_bb) = c("xmin", "ymin", "xmax", "ymax")
-attr(new_bb, "class") = "bbox"
-attr(st_geometry(wrld_land), "bbox") = new_bb
-
-borders <- sf::st_as_sf(map('world', plot = FALSE, fill = TRUE))
-world_outline <- as(st_geometry(borders), Class = "Spatial")
+# data(wrld_simpl)
+# wrld_land <- subset(wrld_simpl, !NAME == "Antarctica")
+# wrld_land <- as(wrld_land, "sf")
+# new_bb = c(-180, -90, 180, 90)
+# names(new_bb) = c("xmin", "ymin", "xmax", "ymax")
+# attr(new_bb, "class") = "bbox"
+# attr(st_geometry(wrld_land), "bbox") = new_bb
+# 
+# borders <- sf::st_as_sf(map('world', plot = FALSE, fill = TRUE))
+# world_outline <- as(st_geometry(borders), Class = "Spatial")
 
 # rcpChoices <- c("rcp45", "rcp85") 
 # modelChoices <- c("HadGEM2-ES", "GFDL-ESM2M",  "MIROC5", "IPSL-CM5A-LR", "modMean")
