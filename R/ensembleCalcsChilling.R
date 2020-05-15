@@ -74,11 +74,6 @@ stopCluster(cl)
 end_time <- Sys.time()
 end_time - start_time
 
-fruits <-  c("apple", "apricot", "avocado", "berrynes", "blueberry", 
-             "cherry", "cranberry", "currant", "grape", 
-             "grapefruitetc", "lemonlime", "orange", "peachetc", "persimmon", "rasberry", "sourcherry", 
-             "stonefruitnes", "walnut")
-
 # the overlay function needs a user defined function on the relationship between the two rasters
 overlayfunction <- function(x,y) {
   return(x * y)
@@ -92,7 +87,7 @@ for (k in sspChoices) {
       yearSpan <- paste0(l, "_", l + yearRange)
       print(paste0("ssp choice: ", k, ", start year: ", l, " hemisphere: ", hemisphereName))
       
-      for (j in 1:length(fruits)) {
+      for (j in 1:length(fruits)) { #fruits variable is from the globallyUsed.R file
         speciesName <- fruits[j]
         fileNameMask.in <- paste0("data/crops/rasterMask_", tolower(speciesName), ".tif")
         print(paste0("fileNameMaskIn: ", fileNameMask.in))

@@ -1,4 +1,4 @@
-# this script reads in the monthly means of tmax, tmin and rh from data/cmip6/monthMean/ calculate the THI values for each animal type. These are 
+# this script reads in the monthly means of tmax, tmin and rh from data/cmip6/monthMean/ calculates the THI values for each animal type. These are 
 # written out to files in data/cmip6/THI/
 source("R/globallyUsed.R")
 library(doParallel) #Foreach Parallel Adaptor 
@@ -28,7 +28,7 @@ varList <- c("modelChoices", "thiList",  "startyearChoices", "sspChoices", "tmpD
 libList <- c("raster", "data.table")
 
 UseCores <- detectCores() - 1 # max number of cores
-useCores <- 4 # better for memory intensive activities
+useCores <- 3 # better for memory intensive activities
 
 cl <- clusterSetup(varList, libList, useCores = useCores)
 start_time <- Sys.time()
@@ -58,14 +58,11 @@ x <- foreach(i = modelChoices, .combine = rbind) %:%
     fileName.rh <- paste0(locOfFiles, filePrefix.rh, modelName.lower, fileSuffix)
     
     print(fileName.tmax)
-    tmax <- brick(fileName.tmax)
-    tmax <- readAll(tmax)
+    tmax <- readAll(brick(fileName.tmax))
     print(fileName.tmin)
-    tmin <- brick(fileName.tmin)
-    tmin <- readAll(tmin)
+    tmin <- readAll(brick(fileName.tmin))
     print(fileName.rh)
-    rh <- brick(fileName.rh)
-    rh <- readAll(rh)
+    rh <- readAll(brick(fileName.rh))
     names(tmax) <- names(tmin) <- names(rh) <- month.abb
     # # THI equations
     # mostly from Lallo
@@ -122,12 +119,9 @@ fileName.tmin <- paste0(locOfFiles, "monthMean_tasmin", "_observed_", "2001_2010
 print(fileName.tmin)
 fileName.tmax <- paste0(locOfFiles, "monthMean_tasmax", "_observed_", "2001_2010.tif")
 print(fileName.tmax)
-tmax <- brick(fileName.tmax)
-tmax <- readAll(tmax)
-tmin <- brick(fileName.tmin)
-tmin <- readAll(tmin)
-rh <- brick(fileName.rh)
-rh <- readAll(rh)
+tmax <- readAll(brick(fileName.tmax))
+tmin <- readAll(brick(fileName.tmin))
+rh <- readAll(brick(fileName.rh))
 
 names(tmax) <- names(tmin) <- names(rh) <- month.abb
 

@@ -15,10 +15,7 @@ k <- "ssp585"
 l <- 2091
 m = "apple"
 
-fruits <-  c("apple", "apricot", "avocado", "berrynes", "blueberry", 
-             "cherry", "cranberry", "currant", "grape", 
-             "grapefruitetc", "lemonlime", "orange", "peachetc", "persimmon", "rasberry", "sourcherry", 
-             "stonefruitnes", "walnut")
+#fruits list is from globallyUsed.R
 
 # read the ensemble mean masked rasters back in and create graphic outputs
 for (k in sspChoices) {

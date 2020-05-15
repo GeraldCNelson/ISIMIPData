@@ -155,6 +155,13 @@ formula.thi.layer <- "0.60 * tmax + 0.40 * tmin"
 formula.thi.chicken <- "0.60 * tmax + 0.40 * tmin" # using broiler formula
 formula.thi.swine <- "tmax - (0.55 - (0.0055 * rh) * (tmax - 14.5))"
 
+#list of fruits to be used
+
+fruits <-  c("apple", "almond", "blueberry", "cherry", "grape", "walnut")
+
+removedFruit <- c("apricot", "avocado", "berrynes", "cranberry", "currant", "persimmon", "sourcherry", "grapefruitetc", 
+                  "lemonlime", "pistachio", "pear", "strawberry", "orange", "peachetc",  "rasberry",  "stonefruitnes")
+
 clusterSetup <- function(varList, libList, useCores) {
   cl <- makeCluster(useCores,  outfile = "", , setup_strategy = "sequential", homogeneous = TRUE) # added homogeneous = TRUE because all the nodes are doing the same thing.
   registerDoParallel(cl, cores = useCores)
@@ -195,7 +202,7 @@ tmin.observed.cmip5 <- c("tasmin_ewembi1_daily_1991_2000.nc", "tasmin_ewembi1_da
 observedlist <- c("rh.observed.cmip5", "tmax.observed.cmip5", "tmin.observed.cmip5")
 
 ##' To check if files (incl. directories) are symbolic links:
-is.symlink <- function(paths) isTRUE(nzchar(Sys.readlink(paths), keepNA=TRUE))
+is.symlink <- function(paths) isTRUE(nzchar(Sys.readlink(paths), keepNA = TRUE))
 ## will return all FALSE when the platform has no `readlink` system call.
 is.symlink("/foo/bar")
 
@@ -203,8 +210,8 @@ is.symlink("/foo/bar")
 gddSum <- function(i, v) {
   j <- !is.na(i[,1])
   r <- rep(NA, nrow(i))
-  x <- cbind(i[j,,drop=FALSE], v[j,,drop=FALSE])
-  r[j] <- apply(x, 1, function(y) sum(y[ (y[1]:y[2])+2 ] )) 
+  x <- cbind(i[j,,drop = FALSE], v[j,,drop = FALSE])
+  r[j] <- apply(x, 1, function(y) sum(y[ (y[1]:y[2]) + 2 ] )) 
   r
 }
 

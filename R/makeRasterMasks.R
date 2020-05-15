@@ -87,13 +87,13 @@ for (i in crops) {
   
   rInAreaAgg <- aggregate(rInArea, fact = 6, fun = "sum")
   if (i %in% fruitsOnly) {
-  cutoff <- 25 # only include 1/2 degree cells where crop area is great than cutoff
+  cutoff <- 0 # only include 1/2 degree cells where crop area is great than cutoff
   }
   if (i %in% otherCropsOnly) {
     cutoff <- 1000 # only include 1/2 degree cells where crop area is great than cutoff
   }
   rInAreaAgg[rInAreaAgg < cutoff] <- NA
-  rInAreaAgg[rInAreaAgg >= cutoff] <- 1
+  rInAreaAgg[rInAreaAgg > cutoff] <- 1
   fileNameout <- paste0("data/crops/rasterMask_", i, ".tif")
   print(fileNameout)
   writeRaster(rInAreaAgg, fileNameout, format = "GTiff", overwrite = TRUE)
