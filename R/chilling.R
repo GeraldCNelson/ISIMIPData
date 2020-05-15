@@ -146,11 +146,9 @@ stopCluster(cl)
 # do same calculations on observed data
 tmax <- tasmax.observed
 tmin <- tasmin.observed
-# tmin <- readAll(brick(tmin))
-# tmax <- readAll(brick(tmax))
+ tmin <- readAll(brick(tmin))
+ tmax <- readAll(brick(tmax))
 print("done with readAll tmin and tmax")
-# tmin <- fixUnits(var = "tmin", ncin.brick = tmin) # fixes temp and precip units; assumes ncin.brick values are raw units
-# tmax <- fixUnits(var = "tmax", ncin.brick = tmin) # fixes temp and precip units; assumes ncin.brick values are raw units
 yearSpan <- "2001_2010"
 
 chillHrs <- overlay(tmin, tmax, fun = f.chillhrs)
@@ -159,8 +157,8 @@ names(chillHrs) <- names(tmax) # put the date info back into the names
 # do several count days in a month
 # first days with temp below zero
 print("Done with chillHrs function")
-indices <- format(as.Date(names(tmin), format = "X%Y.%m.%d"), format = "%m")
-indices <- as.numeric(indices)
+# indices <- format(as.Date(names(tmin), format = "X%Y.%m.%d"), format = "%m")
+# indices <- as.numeric(indices)
 monthZeroCount <- stackApply(tmin, indices, fun = function(x, ...){sum(x <= 0)}) 
 names(monthZeroCount) <- month.abb
 fileNameOutZero <- paste0("belowZeroCount", "_observed_", yearSpan, ".tif")

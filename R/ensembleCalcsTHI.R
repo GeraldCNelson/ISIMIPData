@@ -1,4 +1,4 @@
-# combine 10 year rasters across models to get ensemble means and standard deviations .
+# combine 10 year rasters across models to get ensemble means and coeffients of variation
 
 source("R/globallyUsed.R")
 library(raster)
@@ -6,6 +6,7 @@ library(doParallel) #Foreach Parallel Adaptor
 library(foreach) #Provides foreach looping construct
 
 startyearChoices <-  c(2021, 2051, 2091) #2021, 2051, 2091) # c(2091) # c(2006) #, 2041, 2051, 2081)
+startyearChoices_ensemble <-  c(2021, 2051, 2091) # no multimodel results for observed data
 
 yearRange <- 9
 sspChoices <- c("ssp585") #"ssp126", 
@@ -18,23 +19,23 @@ l <- 2021
 thiList <- c("thi.cattle", "thi.sheep", "thi.goat", "thi.yak", "thi.broiler", "thi.layer", "thi.chicken", "thi.swine")
 
 # for (k in sspChoices) {
-#   for (l in startyearChoices) {
+#   for (l in startyearChoices_ensemble) {
 #     
-varList <- c("modelChoices", "thiList",  "startyearChoices", "sspChoices", "tmpDirName")
+varList <- c("modelChoices", "thiList",  "startyearChoices_ensemble", "sspChoices", "tmpDirName")
 libList <- c("raster", "data.table")
 
-UseCores <- detectCores() - 1 # max number of cores
-useCores <- 3 # better for memory intensive activities
+# UseCores <- detectCores() - 1 # max number of cores
+# useCores <- 3 # better for memory intensive activities
+# cl <- clusterSetup(varList, libList, useCores = useCores)
 
-cl <- clusterSetup(varList, libList, useCores = useCores)
 start_time <- Sys.time()
-# x <- foreach(l = startyearChoices, .combine = rbind) %:%
+# x <- foreach(l = startyearChoices_ensemble, .combine = rbind) %:%
 #   foreach(k = sspChoices, .combine = rbind)  %dopar% {
 # require(data.table)
 # require(raster)
 # rasterOptions(tmpdir = tmpDirName)
 # dir.create(tmpDirName)
-for (l in startyearChoices) {
+for (l in startyearChoices_ensemble) {
   for (k in sspChoices) {
     yearSpan <- paste0(l, "_", l + yearRange)
     print(paste0("ssp choice: ", k, ", start year: ", l, ", pid number: ", Sys.getpid()))
@@ -45,7 +46,7 @@ for (l in startyearChoices) {
       print(paste0("species names: ", speciesName, ", start year: ", l,  ", pid number: ", Sys.getpid()))
       rasterList <- vector(mode = "list", length = length(modelChoices))
       for (m in 1:length(modelChoices)) {
-        fileNameIn <- paste0("data/cmip6/THI/", thiList[j], "_", modelChoices[m],  "_", l, "_", k, ".tif")
+        fileNameIn <- paste0("data/cmip6/THI/", thiList[j], "_", modelChoices[m],  "_", yearSpan, "_", k, ".tif")
         print(paste0("raster file name in: ", fileNameIn,  ", pid number: ", Sys.getpid()))
         rasterList[[m]] <- brick(fileNameIn)
         names(rasterList[[m]]) <- month.abb
@@ -57,14 +58,14 @@ for (l in startyearChoices) {
       indices <- as.numeric(indices)
       print(paste0( "Done setting doing raster indices for ras.test stack for species: ", speciesName, ", start year: ", l))
       ras.test.mean <- raster::stackApply(ras.test, indices, fun = mean, na.rm = TRUE)
-      ras.test.sd <- raster::stackApply(ras.test, indices, fun = sd, na.rm = TRUE)
+      ras.test.cv <- raster::stackApply(ras.test, indices, fun = cv, na.rm = TRUE)
       names(ras.test.mean) <- month.abb
-      names(ras.test.sd) <- month.abb
+      names(ras.test.cv) <- month.abb
       print(paste0( "Done updating raster names with month.abb for species: ", speciesName, ", start year: ", l))
       fileNameMean <- paste0("data/cmip6/THI/THI_ensembleMean_", speciesName,  "_",  yearSpan, "_", k, ".tif") 
-      fileNameSD <- paste0("data/cmip6/THI/THI_ensembleSD_", speciesName,  "_",  yearSpan, "_", k, ".tif")
+      fileNameCV <- paste0("data/cmip6/THI/THI_ensembleCV_", speciesName,  "_",  yearSpan, "_", k, ".tif")
       writeRaster(ras.test.mean, filename = fileNameMean, format = "GTiff", overwrite = TRUE)
-      writeRaster(ras.test.sd, filename = fileNameSD, format = "GTiff", overwrite = TRUE)
+      writeRaster(ras.test.cv, filename = fileNameCV, format = "GTiff", overwrite = TRUE)
       print(paste("fileNameMeanOut: ", fileNameMean))
       print(paste0( "Done writing out files for species: ", speciesName, ", start year: ", l, ", pid number: ", Sys.getpid()))
     }
@@ -73,7 +74,7 @@ for (l in startyearChoices) {
   }
 }
 
-stopCluster(cl)
+# stopCluster(cl)
 end_time <- Sys.time()
 end_time - start_time
 
@@ -85,7 +86,7 @@ overlayfunction <- function(x,y) {
   return(x * y)
 }
 for (k in sspChoices) {
-  for (l in startyearChoices) {
+  for (l in startyearChoices_ensemble) {
     yearSpan <- paste0(l, "_", l + yearRange)
     print(paste0("ssp choice: ", k, ", start year: ", l))
     
@@ -95,21 +96,21 @@ for (k in sspChoices) {
       print(paste0("fileNameMaskIn: ", fileNameMask.in))
       fileNameMean.in <- paste0("data/cmip6/THI/THI_ensembleMean_", speciesName, "_",  yearSpan, "_", k, ".tif")
       print(paste0("fileNameMean.in: ", fileNameMean.in))
-      fileNameSD.in <- paste0("data/cmip6/THI/THI_ensembleSD_", speciesName, "_", yearSpan, "_", k, ".tif")
-      print(paste0("fileNameSD.in: ", fileNameSD.in))
+      fileNameCV.in <- paste0("data/cmip6/THI/THI_ensembleCV_", speciesName, "_", yearSpan, "_", k, ".tif")
+      print(paste0("fileNameCV.in: ", fileNameCV.in))
       mask <- raster(fileNameMask.in)
       meanData <- brick(fileNameMean.in)
       meanData[meanData < 0] <- 0 # set all negative THI values to 0
-      SDData <- brick(fileNameSD.in)
+      CVData <- brick(fileNameCV.in)
       mean.masked <- overlay(meanData, mask, fun = overlayfunction)
       names(mean.masked) <- month.abb
-      SD.masked <- overlay(SDData, mask, fun = overlayfunction)
-      names(SD.masked) <- month.abb
-      fileNameMean.masked <- paste0("data/cmip6/THI/THI_ensembleMean_masked_",speciesName, "_",  l, "_", k, ".tif")
-      fileNameSD.masked <- paste0("data/cmip6/THI/THI_ensembleSD_masked_", speciesName, "_",  l, "_", k, ".tif")
+      CV.masked <- overlay(CVData, mask, fun = overlayfunction)
+      names(CV.masked) <- month.abb
+      fileNameMean.masked <- paste0("data/cmip6/THI/THI_ensembleMean_masked_",speciesName, "_",  yearSpan, "_", k, ".tif")
+      fileNameCV.masked <- paste0("data/cmip6/THI/THI_ensembleCV_masked_", speciesName, "_",  yearSpan, "_", k, ".tif")
       print(fileNameMean.masked)
       writeRaster(mean.masked, filename = fileNameMean.masked, format = "GTiff", overwrite = TRUE)
-      writeRaster(SD.masked, filename = fileNameSD.masked, format = "GTiff", overwrite = TRUE)
+      writeRaster(CV.masked, filename = fileNameCV.masked, format = "GTiff", overwrite = TRUE)
     }
   }
 }

@@ -1,4 +1,4 @@
-# climate data monthly mean and standard deviations
+# climate data monthly mean and coeffients of variation
 source("R/globallyUsed.R")
 library(doParallel) #Foreach Parallel Adaptor 
 library(foreach) #Provides foreach looping construct
@@ -53,19 +53,19 @@ foreach(i = modelChoices) %:%
     indices <- as.numeric(indices)
     # ncin.brick <- fixUnits(var = j, ncin.brick = ncin.brick) # fixes temp and precip units; assumes ncin.brick values are raw units
     ncin.brick.mean <- raster::stackApply(ncin.brick, indices, fun = mean, na.rm = TRUE)
-    ncin.brick.sd <- raster::stackApply(ncin.brick, indices, fun = sd, na.rm = TRUE)
+    ncin.brick.cv <- raster::stackApply(ncin.brick, indices, fun = cv, na.rm = TRUE)
     names(ncin.brick.mean) <- month.abb
-    names(ncin.brick.sd) <- month.abb
+    names(ncin.brick.cv) <- month.abb
     
     fileNameOut_monthMean <- paste0("monthMean_", j, "_", modelName.lower, "_", k,  "_", yearSpan, ".tif")
-    fileNameOut_monthSD <- paste0("monthSD_", j, "_", modelName.lower, "_", k,  "_", yearSpan, ".tif")
+    fileNameOut_monthCV <- paste0("monthCV_", j, "_", modelName.lower, "_", k,  "_", yearSpan, ".tif")
     
     writeRaster(ncin.brick.mean, filename = paste0("data/cmip6/monthMean/", fileNameOut_monthMean), format = "GTiff", overwrite = TRUE)
-    writeRaster(ncin.brick.sd, filename = paste0("data/cmip6/monthMean/", fileNameOut_monthSD), format = "GTiff", overwrite = TRUE)
+    writeRaster(ncin.brick.cv, filename = paste0("data/cmip6/monthMean/", fileNameOut_monthCV), format = "GTiff", overwrite = TRUE)
     print(paste("time to do one brick: ", difftime(Sys.time(), startTime, units = "mins")))
     unlink(tmpDirName, recursive = TRUE)
     rm(ncin.brick.mean)
-    rm(ncin.brick.sd)
+    rm(ncin.brick.cv)
     gc(TRUE)
   }
 stopCluster(cl)
@@ -89,17 +89,17 @@ for (j in observedlist) {
   indices <- format(as.Date(names(ncin.brick), format = "X%Y.%m.%d"), format = "%m")
   indices <- as.numeric(indices)
   ncin.brick.mean <- raster::stackApply(ncin.brick, indices, fun = mean, na.rm = TRUE)
-  ncin.brick.sd <- raster::stackApply(ncin.brick, indices, fun = sd, na.rm = TRUE)
+  ncin.brick.cv <- raster::stackApply(ncin.brick, indices, fun = cv, na.rm = TRUE)
   names(ncin.brick.mean) <- month.abb
-  names(ncin.brick.sd) <- month.abb
+  names(ncin.brick.cv) <- month.abb
   
   yearSpan <- "2001_2010"
   
   fileNameOut_monthMean <- paste0("monthMean_", j, "_", "observed_", yearSpan, ".tif")
-  fileNameOut_monthSD <- paste0("monthSD_", j, "_", "observed_", yearSpan, ".tif")
+  fileNameOut_monthCV <- paste0("monthCV_", j, "_", "observed_", yearSpan, ".tif")
   
   writeRaster(ncin.brick.mean, filename = paste0("data/cmip6/monthMean/", fileNameOut_monthMean), format = "GTiff", overwrite = TRUE)
-  writeRaster(ncin.brick.sd, filename = paste0("data/cmip6/monthMean/", fileNameOut_monthSD), format = "GTiff", overwrite = TRUE)
+  writeRaster(ncin.brick.cv, filename = paste0("data/cmip6/monthMean/", fileNameOut_monthCV), format = "GTiff", overwrite = TRUE)
   
   gc(TRUE)
 }

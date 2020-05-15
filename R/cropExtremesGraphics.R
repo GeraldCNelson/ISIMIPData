@@ -115,11 +115,11 @@ for (k in sspChoices) {
       print(paste0(cropName, ", damage temp: ", tdamage_mean, ", start year: ", l))
       
       fileNameMean <- paste0("data/cmip6/damageTemp/tdamage_ensembleMean_masked_", cropName, "_", tdamage_mean, "C_", k, "_", yearSpan, ".tif")
-      fileNameSD <- paste0("data/cmip6/damageTemp/tdamage_ensembleSD_masked_", cropName, "_", tdamage_mean, "C_", k, "_", yearSpan, ".tif")
+      fileNameCV <- paste0("data/cmip6/damageTemp/tdamage_ensembleCV_masked_", cropName, "_", tdamage_mean, "C_", k, "_", yearSpan, ".tif")
       temp.mean <- brick(fileNameMean)
       names(temp.mean) <- month.abb
-      temp.sd <- brick(fileNameSD)
-      names(temp.sd) <- month.abb
+      temp.cv <- brick(fileNameCV)
+      names(temp.cv) <- month.abb
       
       # plot Ensemble mean
       titleText <- paste0("Average number of days by month, temps above damage level, ", tolower(cropName), " (", tdamage_mean, "°C)\n ", yearSpan, ", SSP = ", k, ", ensemble results")
@@ -132,13 +132,13 @@ for (k in sspChoices) {
       print(g)
       dev.off()
       
-      # plot Ensemble SD
-      titleText <- paste0("SD, number of days by month, temps above damage level, ", tolower(cropName), " (", tdamage_mean, "°C)\n ", yearSpan, ", SSP = ", k, ", ensemble results")
+      # plot Ensemble CV
+      titleText <- paste0("CV, number of days by month, temps above damage level, ", tolower(cropName), " (", tdamage_mean, "°C)\n ", yearSpan, ", SSP = ", k, ", ensemble results")
       myat <- c(0, 1, 2, 3, 4, 5, 15)
-      g <- levelplot(temp.sd, main = titleText, at = myat, col.regions = c("white", "blue", "yellow", "orange", "red", "brown" ),
+      g <- levelplot(temp.cv, main = titleText, at = myat, col.regions = c("white", "blue", "yellow", "orange", "red", "brown" ),
                      xlab = "", ylab = "", scales  = list(x = list(draw = FALSE), y = list(draw = FALSE)))
       g <- g + latticeExtra::layer(sp.polygons(coastsCoarse, col = "black", lwd = 0.5))
-      plotFileName <- paste0("graphics/cmip6/damageTemp/tdamage_ensembleSD_masked_", cropName, "_", tdamage_mean, "C_", k, "_", yearSpan, ".jpg")
+      plotFileName <- paste0("graphics/cmip6/damageTemp/tdamage_ensembleCV_masked_", cropName, "_", tdamage_mean, "C_", k, "_", yearSpan, ".jpg")
       jpeg(plotFileName, width = 8, height = 8, quality = 100, units = "in", res = 300)
       print(g)
       dev.off()

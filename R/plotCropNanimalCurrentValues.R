@@ -133,15 +133,15 @@ for (i in animalsList) {
 #   print(g)
 #   dev.off()
 #   
-#   # plot Ensemble SD
-#   titleText <- paste0("THI SD by month, ", speciesName, "\n ", yearSpan, ", SSP = ", k, ", ensemble SD")
+#   # plot Ensemble CV
+#   titleText <- paste0("THI CV by month, ", speciesName, "\n ", yearSpan, ", SSP = ", k, ", ensemble CV")
 #   myat <- c(0, .5, 1.0, 1.5, 2.0)
-#   g <- levelplot(SDData, main = titleText, col.regions = col.l, at = myat,
+#   g <- levelplot(CVData, main = titleText, col.regions = col.l, at = myat,
 #                  colorkey = list(at = myat, col = col.l),
 #                  xlab = "", ylab = "", scales  = list(x = list(draw = FALSE), y = list(draw = FALSE)))
 #   
 #   g <- g + latticeExtra::layer(sp.polygons(coastsCoarse, col = "black", lwd = 0.5))
-#   plotFileName <- paste0("graphics/cmip6/THI/THI_ensembleSD_masked_",   speciesName, "_",  yearSpan, "_", k, ".jpg")
+#   plotFileName <- paste0("graphics/cmip6/THI/THI_ensembleCV_masked_",   speciesName, "_",  yearSpan, "_", k, ".jpg")
 #   jpeg(plotFileName, width = 8, height = 8, quality = 100, units = "in", res = 300)
 #   print(g)
 #   dev.off()

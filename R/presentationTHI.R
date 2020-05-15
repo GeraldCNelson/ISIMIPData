@@ -54,8 +54,8 @@ for (m in 1:length(thiList)) {
   }
 }
 
-# do ppt for ensemble means and SDs
-titleString <- paste0("Ensemble Means and SDs for 6 animal species")
+# do ppt for ensemble means and CVs
+titleString <- paste0("Ensemble Means and CVs for 6 animal species")
 contentString <- paste0("Ensemble means and standard deviations: Average number of days by month with maximum temperature above damage level, powerpoint produced on ", Sys.Date())
 startyearChoices_ensemble <-  c(2021, 2051, 2091) # no multimodel results for observed data
 thiList <- c("thi.cattle", "thi.sheep", "thi.goat", "thi.yak", "thi.broiler", "thi.layer", "thi.chicken", "thi.swine")
@@ -110,21 +110,21 @@ for (k in sspChoices) {
       
       for (l in startyearChoices_ensemble) {
         yearSpan <- paste0(l, "_", l + yearRange)
-        fileNameSD <- paste0("graphics/cmip6/THI/THI_ensembleSD_masked_",   speciesName, "_",  yearSpan, "_", k, ".jpg")
+        fileNameCV <- paste0("graphics/cmip6/THI/THI_ensembleCV_masked_",   speciesName, "_",  yearSpan, "_", k, ".jpg")
         fileNameMean <- paste0("graphics/cmip6/THI/THI_ensembleMean_masked_",  speciesName, "_",  yearSpan, "_", k, ".jpg")
         
         extImgMean <- external_img(src = fileNameMean, width = 5, height = 8)
-        extImgSD <- external_img(src = fileNameSD, width = 5, height = 8)
+        extImgCV <- external_img(src = fileNameCV, width = 5, height = 8)
         
         #   add_slide(my_pres, layout = 'Comparison', master = 'Office Theme') %>% 
         #     ph_with(value = extImgMean, location = ph_location_left(),  use_loc_size = FALSE ) %>%
         # #  add_slide(my_pres, layout = 'Comparison', master = 'Office Theme') %>% 
-        #     ph_with(value = extImgSD, location = ph_location_right(),  use_loc_size = FALSE )
+        #     ph_with(value = extImgCV, location = ph_location_right(),  use_loc_size = FALSE )
         
         
         add_slide(my_pres, layout = 'Title Only', master = 'Office Theme') %>% 
           ph_with(value = extImgMean, location = ph_location(left = 0, top = 0, width = 5, height = 8) ) %>%
-          ph_with(value = extImgSD, location = ph_location(left = 5, top = 0, width = 5, height = 8) )
+          ph_with(value = extImgCV, location = ph_location(left = 5, top = 0, width = 5, height = 8) )
       }
     }
   }

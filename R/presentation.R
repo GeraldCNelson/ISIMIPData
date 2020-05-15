@@ -68,9 +68,9 @@ for (m in 1:nrow(IPCC_WG2_Ch5_crop_temperature_table)) {
   }
 }
 
-# do ppt for ensemble means and SDs
-titleString <- paste0("Ensemble Means and SDs for 13 crops")
-contentString <- paste0("Ensemble means and standard deviations: Average number of days by month with maximum temperature above damage level, powerpoint produced on ", Sys.Date())
+# do ppt for ensemble means and CVs
+titleString <- paste0("Ensemble Means and CVs for 13 crops")
+contentString <- paste0("Ensemble means and coeffients of variation: Average number of days by month with maximum temperature above damage level, powerpoint produced on ", Sys.Date())
 startyearChoices_ensemble <-  c(2021, 2051, 2091) # no multimodel results for observed data
 my_pres <- read_pptx() %>% 
   add_slide(layout = 'Title Slide', master = 'Office Theme')  %>% 
@@ -80,7 +80,7 @@ my_pres <- read_pptx() %>%
 IntroText1 <- "The climate data set used in these graphics was prepared initially by the ISIMIP project (www.isimip.org) using CMIP6 data." 
 IntroText2 <- "This analysis uses the ISIMIP3b output data sets (https://www.isimip.org/news/isimip3ab-protocol-released/)."
 IntroText3 <- "It includes data from 5 earth system models (GFDL-ESM4, UKESM1-0-LL, MPI-ESM1-2-HR, MRI-ESM2-0, and IPSL-CM6A-LR) and three scenarios (ssp126, ssp370 and ssp585). In this powerpoint, only results using ssp585 are presented." 
-IntroText4 <- "The data from a 10 year period for the individual models are averaged for each month and a standard deviation across the 5 models is calculated."
+IntroText4 <- "The data from a 10 year period for the individual models are averaged for each month and a coeffient of variation across the 5 models is calculated."
 
 IntroText <- c(IntroText1, IntroText2, IntroText3, IntroText4)
 
@@ -109,7 +109,7 @@ for (m in 1:nrow(IPCC_WG2_Ch5_crop_temperature_table)) {
   tdamage_mean <- as.numeric(IPCC_WG2_Ch5_crop_temperature_table[m, "tdamage mean"])
   for (k in sspChoices) {
     
-    ensembleTitle <- paste("Ensemble Mean and Standard Deviation for", cropName)
+    ensembleTitle <- paste("Ensemble Mean and coeffient of variation for", cropName)
     add_slide(my_pres, layout = 'Section Header', master = 'Office Theme')  %>% 
       ph_with(value = ensembleTitle, location = ph_location_type(type = "body"))
 
@@ -123,22 +123,22 @@ for (m in 1:nrow(IPCC_WG2_Ch5_crop_temperature_table)) {
       yearSpan <- paste0(l, "_", l + yearRange)
       
       fileNameMean <- paste0("graphics/cmip6/damageTemp/tdamage_ensembleMean_masked_", cropName, "_", tdamage_mean, "C_", k, "_", yearSpan, ".jpg")
-      fileNameSD <- paste0("graphics/cmip6/damageTemp/tdamage_ensembleSD_masked_", cropName, "_", tdamage_mean, "C_",  k, "_", yearSpan, ".jpg")
+      fileNameCV <- paste0("graphics/cmip6/damageTemp/tdamage_ensembleCV_masked_", cropName, "_", tdamage_mean, "C_",  k, "_", yearSpan, ".jpg")
       print(paste0("fileNameMean: ", fileNameMean))
-      print(paste0("fileNameSD: ", fileNameSD))
+      print(paste0("fileNameCV: ", fileNameCV))
       
       extImgMean <- external_img(src = fileNameMean, width = 5, height = 8)
-      extImgSD <- external_img(src = fileNameSD, width = 5, height = 8)
+      extImgCV <- external_img(src = fileNameCV, width = 5, height = 8)
       
       #   add_slide(my_pres, layout = 'Comparison', master = 'Office Theme') %>% 
       #     ph_with(value = extImgMean, location = ph_location_left(),  use_loc_size = FALSE ) %>%
       # #  add_slide(my_pres, layout = 'Comparison', master = 'Office Theme') %>% 
-      #     ph_with(value = extImgSD, location = ph_location_right(),  use_loc_size = FALSE )
+      #     ph_with(value = extImgCV, location = ph_location_right(),  use_loc_size = FALSE )
       
       
       add_slide(my_pres, layout = 'Title Only', master = 'Office Theme') %>% 
         ph_with(value = extImgMean, location = ph_location(left = 0, top = 0, width = 5, height = 8) ) %>%
-        ph_with(value = extImgSD, location = ph_location(left = 5, top = 0, width = 5, height = 8) )
+        ph_with(value = extImgCV, location = ph_location(left = 5, top = 0, width = 5, height = 8) )
       print(paste0("m: ", m))
     }
   }

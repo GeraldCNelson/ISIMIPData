@@ -84,7 +84,7 @@ x <- foreach(i = modelChoices, .combine = rbind) %:%
     names(thi.cattle) <- names(thi.sheep) <- names(thi.goat) <- names(thi.yak) <- names(thi.broiler) <- names(thi.broiler) <- names(thi.layer) <- names(thi.swine) <- month.abb
     
     for (k in thiList) {
-      fileName <- paste0("data/cmip6/THI/", k, "_", i, "_", l, "_", m, ".tif")
+      fileName <- paste0("data/cmip6/THI/", k, "_", i, "_", yearSpan, "_", m, ".tif")
       print(fileName)
       writeRaster(get(k), filename = fileName, format = "GTiff", overwrite = TRUE)
       

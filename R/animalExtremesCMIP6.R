@@ -37,7 +37,7 @@ foreach(l = startyearChoices) %:%
     
     speciesName <- gsub("thi.", "", j)
     extremeStress <- breakPoints[species %in% speciesName, extremeStress]
-    fileNameIn <- paste0("data/cmip6/THI/", j, "_", i, "_", l, "_", k, ".tif")
+    fileNameIn <- paste0("data/cmip6/THI/", j, "_", i, "_", yearSpan, "_", k, ".tif")
     temp <- readAll(brick(fileNameIn))
     
     temp[temp < extremeStress] <- NA

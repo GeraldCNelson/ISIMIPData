@@ -1,4 +1,4 @@
-# combine 10 year rasters across models to get ensemble means and standard deviations .
+# combine 10 year rasters across models to get ensemble means and coeffients of variation
 
 source("R/globallyUsed.R")
 library(raster)
@@ -40,13 +40,13 @@ for (k in sspChoices) {
       indices <- format(as.Date(names(ras.test), format = "%b.%d"), format = "%m")
       indices <- as.numeric(indices)
       ras.test.mean <- raster::stackApply(ras.test, indices, fun = mean, na.rm = TRUE)
-      ras.test.sd <- raster::stackApply(ras.test, indices, fun = sd, na.rm = TRUE)
+      ras.test.cv <- raster::stackApply(ras.test, indices, fun = cv, na.rm = TRUE)
       names(ras.test.mean) <- month.abb
-      names(ras.test.sd) <- month.abb
+      names(ras.test.cv) <- month.abb
       fileNameMean <- paste0("data/cmip6/damageTemp/tdamage_ensembleMean_", cropName, "_", tdamage_mean, "C_",  modelName.lower, "_", k,  "_", yearSpan, ".tif")
-      fileNameSD <- paste0("data/cmip6/damageTemp/tdamage_ensembleSD_", cropName, "_", tdamage_mean, "C_",  modelName.lower, "_", k,  "_", yearSpan, ".tif")
+      fileNameCV <- paste0("data/cmip6/damageTemp/tdamage_ensembleCV_", cropName, "_", tdamage_mean, "C_",  modelName.lower, "_", k,  "_", yearSpan, ".tif")
       writeRaster(ras.test.mean, filename = fileNameMean, format = "GTiff", overwrite = TRUE)
-      writeRaster(ras.test.sd, filename = fileNameSD, format = "GTiff", overwrite = TRUE)
+      writeRaster(ras.test.cv, filename = fileNameCV, format = "GTiff", overwrite = TRUE)
     }
   }
 }

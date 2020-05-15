@@ -1,4 +1,4 @@
-# combine 10 year rasters across models to get ensemble means and standard deviations .
+# combine 10 year rasters across models to get ensemble means and coeffients of variation
 
 source("R/globallyUsed.R")
 library(raster)
@@ -40,13 +40,13 @@ for (k in sspChoices) {
       indices <- format(as.Date(names(ras.test), format = "%b.%d"), format = "%m")
       indices <- as.numeric(indices)
       ras.test.mean <- raster::stackApply(ras.test, indices, fun = mean, na.rm = TRUE)
-      ras.test.sd <- raster::stackApply(ras.test, indices, fun = sd, na.rm = TRUE)
+      ras.test.cv <- raster::stackApply(ras.test, indices, fun = cv, na.rm = TRUE)
       names(ras.test.mean) <- month.abb
-      names(ras.test.sd) <- month.abb
+      names(ras.test.cv) <- month.abb
       fileNameMean <- paste0("data/cmip6/damageTemp/tdamage_ensembleMean_", cropName, "_", tdamage_mean, "C_", k, "_", yearSpan, ".tif")
-      fileNameSD <- paste0("data/cmip6/damageTemp/tdamage_ensembleSD_", cropName, "_", tdamage_mean, "C_", k, "_", yearSpan, ".tif")
+      fileNameCV <- paste0("data/cmip6/damageTemp/tdamage_ensembleCV_", cropName, "_", tdamage_mean, "C_", k, "_", yearSpan, ".tif")
       writeRaster(ras.test.mean, filename = fileNameMean, format = "GTiff", overwrite = TRUE)
-      writeRaster(ras.test.sd, filename = fileNameSD, format = "GTiff", overwrite = TRUE)
+      writeRaster(ras.test.cv, filename = fileNameCV, format = "GTiff", overwrite = TRUE)
     }
   }
 }
@@ -67,20 +67,20 @@ for (k in sspChoices) {
       print(paste("fileNameMaskIn: ", fileNameMask.in))
       fileNameMean.in <- paste0("data/cmip6/damageTemp/tdamage_ensembleMean_", cropName, "_", tdamage_mean, "C_", k, "_", yearSpan, ".tif")
       print(paste("fileNameMean.in: ", fileNameMean.in))
-      fileNameSD.in <- paste0("data/cmip6/damageTemp/tdamage_ensembleSD_", cropName, "_", tdamage_mean, "C_", k, "_", yearSpan, ".tif")
-      print(paste("fileNameSD.in: ", fileNameSD.in))
+      fileNameCV.in <- paste0("data/cmip6/damageTemp/tdamage_ensembleCV_", cropName, "_", tdamage_mean, "C_", k, "_", yearSpan, ".tif")
+      print(paste("fileNameCV.in: ", fileNameCV.in))
       mask <- raster(fileNameMask.in)
       meanData <- brick(fileNameMean.in)
-      SDData <- brick(fileNameSD.in)
+      CVData <- brick(fileNameCV.in)
       mean.masked <- overlay(meanData, mask, fun = overlayfunction)
       names(mean.masked) <- month.abb
-      SD.masked <- overlay(SDData, mask, fun = overlayfunction)
-      names(SD.masked) <- month.abb
+      CV.masked <- overlay(CVData, mask, fun = overlayfunction)
+      names(CV.masked) <- month.abb
       fileNameMean.masked <- paste0("data/cmip6/damageTemp/tdamage_ensembleMean_masked_", cropName, "_", tdamage_mean, "C_", k, "_", yearSpan, ".tif")
-      fileNameSD.masked <- paste0("data/cmip6/damageTemp/tdamage_ensembleSD_masked_", cropName, "_", tdamage_mean, "C_", k, "_", yearSpan, ".tif")
+      fileNameCV.masked <- paste0("data/cmip6/damageTemp/tdamage_ensembleCV_masked_", cropName, "_", tdamage_mean, "C_", k, "_", yearSpan, ".tif")
       print(fileNameMean.masked)
       writeRaster(mean.masked, filename = fileNameMean.masked, format = "GTiff", overwrite = TRUE)
-      writeRaster(SD.masked, filename = fileNameSD.masked, format = "GTiff", overwrite = TRUE)
+      writeRaster(CV.masked, filename = fileNameCV.masked, format = "GTiff", overwrite = TRUE)
     }
   }
   # do observed data
