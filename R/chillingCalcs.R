@@ -5,7 +5,9 @@ library(doParallel) #Foreach Parallel Adaptor
 
 locOfFiles <- locOfCMIP6ncFiles
 sspChoices <- c("ssp585") #"ssp126", 
-modelChoices <- c("IPSL-CM6A-LR")# "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM6A-LR") #, "MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
+modelChoices <- c("IPSL-CM6A-LR")# 
+
+modelChoices <- c("GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL") #, "MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
 
 startyearChoices <-  c(2021) #, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
 
@@ -63,12 +65,12 @@ foreach(l = startyearChoices) %:%
     tmin <- readAll(brick(temp))
     
     startTime <-  Sys.time()
-#    tmin <- readAll((tmin))
-    # tmin <- fixUnits(var = "tmin", ncin.brick = tmin) # fixes temp and precip units; assumes ncin.brick values are raw units
-    
+
     print("Done with tmin readIn")
     tminTime <- Sys.time()
     print(paste0(tminTime - startTime, " pid: ", Sys.getpid()))
+    print(paste0(difftime(tminTime, startTime, units = "mins"), " pid: ", Sys.getpid()))
+    
 #    tmax <- readAll((tmax))
     # tmax <- fixUnits(var = "tmax", ncin.brick = tmax) # fixes temp and precip units; assumes ncin.brick values are raw units
     
@@ -95,7 +97,7 @@ foreach(l = startyearChoices) %:%
     # now do count above tmax limit
     f.tmaxLimit <- function(tmax, tmaxLimit) {
       tmaxSum <- stackApply(tmax, indices, fun = function(x, ...){sum(x >= tmaxLimit)}) 
-      names(tmaxSum) <- month.abb
+  #    names(tmaxSum) <- month.abb
       fileNameOut <- paste0("tmaxGT_", tmaxLimit, "_", modelName.lower, "_", k, "_", yearSpan, ".tif")
       writeRaster(tmaxSum, filename = paste0("data/cmip6/tmaxMonthlySums/", fileNameOut), format = "GTiff", overwrite = TRUE)
     }
@@ -104,7 +106,6 @@ foreach(l = startyearChoices) %:%
     f.tmaxLimit(tmax, tmaxLimit = 31)
     tmaxfunctionEnd <- Sys.time()
     print(difftime(Sys.time(), tmaxfunctionStart, units = "mins"))
-    
     
     print(paste("One tmax function loop", " pid: ", Sys.getpid()))
     print(tmaxfunctionEnd - tmaxfunctionStart) 

@@ -31,10 +31,15 @@ for (k in sspChoices) {
       fileNameSH_CV <- paste0("chillHrs_ensembleCV_masked_SouthernHem_",  cropName, "_", yearSpan, "_", k, ".tif")
       
       chillHrsNorthernHem_mean <- brick( paste0("data/cmip6/chillingHours/", fileNameNH_mean))
+      chillHrsNorthernHem_mean <- crop(chillHrsNorthernHem_mean, extent( c( -180, 180, 0, 90)))
       chillHrsSouthernHem_mean <- brick( paste0("data/cmip6/chillingHours/", fileNameSH_mean))
+      chillHrsSouthernHem_mean <- crop(chillHrsSouthernHem_mean, extent( c( -180, 180, -90, 0)))
       chillHrsNorthernHem_CV <- brick( paste0("data/cmip6/chillingHours/", fileNameNH_CV))
+      chillHrsNorthernHem_CV <- crop(chillHrsNorthernHem_CV, extent( c( -180, 180, 0, 90)))
       chillHrsSouthernHem_CV <- brick( paste0("data/cmip6/chillingHours/", fileNameSH_CV))
+      chillHrsSouthernHem_CV <- crop(chillHrsSouthernHem_CV, extent( c( -180, 180, -90, 0)))
       
+       
       col.l <- c("darkslategray1", "blue", "yellow", "red")
       mapTheme <- rasterTheme(region = col.l)  
       mapTheme$panel.background$col = 'gray100' 

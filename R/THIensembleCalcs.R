@@ -35,8 +35,8 @@ start_time <- Sys.time()
 # require(raster)
 # rasterOptions(tmpdir = tmpDirName)
 # dir.create(tmpDirName)
-for (l in startyearChoices_ensemble) {
-  for (k in sspChoices) {
+for (k in sspChoices) {
+  for (l in startyearChoices_ensemble) {
     yearSpan <- paste0(l, "_", l + yearRange)
     print(paste0("ssp choice: ", k, ", start year: ", l, ", pid number: ", Sys.getpid()))
     

@@ -1,9 +1,8 @@
-# script to create powerpoints for THI results
+# script to create powerpoints for chilling hours results
 source("R/globallyUsed.R")
 library(officer)
 library(magrittr)
 sspChoices <- c("ssp585") #"ssp126", 
-modelChoices <- c( "GFDL-ESM4", "UKESM1-0-LL", "MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
 #modelChoices <- c("IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
 startyearChoices <-  c(2001, 2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
 
@@ -13,53 +12,15 @@ modelChoices.lower <- tolower(modelChoices)
 k <- "ssp585"
 l <- 2021
 
-thiList <- c("thi.cattle", "thi.sheep", "thi.goat", "thi.yak", "thi.broiler", "thi.layer", "thi.chicken", "thi.swine")
-
-# # big loop across all crops and time periods
-# for (m in 1:length(thiList)) {
-#   cropName <- as.character(IPCC_WG2_Ch5_crop_temperature_table[m, "crop"])
-#   tdamage_mean <- as.numeric(IPCC_WG2_Ch5_crop_temperature_table[m, "tdamage mean"])
-#   
-#   titleString <- paste0("THI vaues for ", cropName)
-#   contentString <- paste0("Average number of days by month with maximum temperature above damage level, powerpoint produced ", Sys.Date())
-#   my_pres <- read_pptx() %>% 
-#     add_slide(layout = 'Title Slide', master = 'Office Theme')  %>% 
-#     ph_with(value = titleString, location = ph_location_type(type = "ctrTitle")) %>% 
-#     ph_with(value = contentString, location = ph_location_type(type = "subTitle"))
-#   
-#   for (i in modelChoices) {
-#     print(i)
-#     modelTitle <- gsub("_", " ", i)
-#     add_slide(my_pres, layout = 'Section Header', master = 'Office Theme')  %>% 
-#       ph_with(value = modelTitle, location = ph_location_type(type = "body"))
-#     
-#     for (k in sspChoices) {
-#       for (l in startyearChoices) {
-#         modelName.lower <- tolower(i)
-#         yearSpan <- paste0(l, "_", l + yearRange)
-#         plotFileName <- paste0("graphics/cmip6/damageTemp/tdamage_mean_", cropName, "_", tdamage_mean, "C ", modelName.lower, "_", k,  "_", yearSpan, ".jpg")
-#         if (l == 2001) {
-#           plotFileName <- paste0("graphics/cmip6/damageTemp/tdamage_mean_", cropName, "_", tdamage_mean, "C", "_observed_", yearSpan, ".jpg")
-#         }
-#         print(plotFileName)
-#         extImg <- external_img(src = plotFileName, width = 8, height = 8)
-#         #        my_pres <- add_slide(my_pres, layout = 'Two Content', master = 'Office Theme')
-#         #       cropInfoString <- paste0(Crop)
-#         #        my_pres <- ph_with(my_pres, value = cropInfoString, location = ph_location_type(type = "ctrTitle"))
-#         
-#         add_slide(my_pres, layout = 'Comparison', master = 'Office Theme') %>% 
-#           ph_with(value = extImg, location = ph_location_fullsize(),  use_loc_size = FALSE )
-#       }
-#     }
-#   }
-# }
+fruits <-  c("apple", "apricot", "avocado", "berrynes", "blueberry", 
+             "cherry", "cranberry", "currant", "grape", 
+             "grapefruitetc", "lemonlime", "orange", "peachetc", "persimmon", "rasberry", "sourcherry", 
+             "stonefruitnes", "walnut")
 
 # do ppt for ensemble means and CVs
-titleString <- paste0("Ensemble Means and CVs for 6 animal species")
-contentString <- paste0("Ensemble means and standard deviations: Average number of days by month with maximum temperature above damage level, powerpoint produced on ", Sys.Date())
+titleString <- paste0("Ensemble Means and CVs for chilling hours for ", length(fruits), " perennial fruits")
+contentString <- paste0("Ensemble means and coeffients of variation: Average chilling hours, powerpoint produced on ", Sys.Date())
 startyearChoices_ensemble <-  c(2021, 2051, 2091) # no multimodel results for observed data
-thiList <- c("thi.cattle", "thi.sheep", "thi.goat", "thi.yak", "thi.broiler", "thi.layer", "thi.chicken", "thi.swine")
-thiListReduced <- thiList[!thiList %in% c("thi.yak", "thi.broiler", "thi.layer")]
 
 my_pres <- read_pptx() %>% 
   add_slide(layout = 'Title Slide', master = 'Office Theme')  %>% 
@@ -69,7 +30,7 @@ my_pres <- read_pptx() %>%
 IntroText1 <- "The climate data set used in these graphics was prepared initially by the ISIMIP project (www.isimip.org) using CMIP6 data." 
 IntroText2 <- "This analysis uses the ISIMIP3b output data sets (https://www.isimip.org/news/isimip3ab-protocol-released/)."
 IntroText3 <- "It includes data from 5 earth system models (GFDL-ESM4, UKESM1-0-LL, MPI-ESM1-2-HR, MRI-ESM2-0, and IPSL-CM6A-LR) and three scenarios (ssp126, ssp370 and ssp585). In this powerpoint, only results using ssp585 are presented." 
-IntroText4 <- "The data from a 10 year period for the individual models are averaged for each month and a standard deviation across the 5 models is calculated."
+IntroText4 <- "The data from a 10 year period for the individual models are averaged for each month and a coeffient of variation across the 5 models is calculated."
 
 IntroText <- c(IntroText1, IntroText2, IntroText3, IntroText4)
 
@@ -94,15 +55,16 @@ my_pres %<>% ph_add_fpar(value = TITLE, id_chr = lastPhId(my_pres), par_default 
 #   ph_with(value = paste0(IntroText, collapse = " "), location = ph_location_type(type = "body"))
 
 for (k in sspChoices) {
-  for (l in startyearChoices_ensemble) {
+# for (l in startyearChoices_ensemble) {
     yearSpan <- paste0(l, "_", l + yearRange)
     print(paste0("ssp choice: ", k, ", start year: ", l))
-    for (j in 1:length(thiListReduced)) {
-      speciesName <- gsub("thi.", "", thiListReduced[j])
-      ensembleTitle <- paste("Ensemble Mean and Standard Deviation for", speciesName)
+    for (j in 1:length(fruits)) {
+      cropName <- fruits[j]
+      # southern hemisphere
+      ensembleTitle <- paste("Southern hemisphere ensemble mean and coeffient of variation for", cropName)
       add_slide(my_pres, layout = 'Section Header', master = 'Office Theme')  %>% 
         ph_with(value = ensembleTitle, location = ph_location_type(type = "body"))
-      fileNameObserved <- paste0("graphics/cmip6/THI/masked_", speciesName, "_observed_",  "2001_2010", ".jpg")
+      fileNameObserved <- paste0("graphics/cmip6/chillingHours/chillHrs_ensembleMean_masked_SouthernHem_", cropName, "_observed_", "2001_2010", ".jpg")
       
       extImgObs <- external_img(src = fileNameObserved, width = 5, height = 8)
       add_slide(my_pres, layout = 'Title Only', master = 'Office Theme') %>% 
@@ -110,8 +72,37 @@ for (k in sspChoices) {
       
       for (l in startyearChoices_ensemble) {
         yearSpan <- paste0(l, "_", l + yearRange)
-        fileNameCV <- paste0("graphics/cmip6/THI/THI_ensembleCV_masked_",   speciesName, "_",  yearSpan, "_", k, ".jpg")
-        fileNameMean <- paste0("graphics/cmip6/THI/THI_ensembleMean_masked_",  speciesName, "_",  yearSpan, "_", k, ".jpg")
+        fileNameCV <- paste0("graphics/cmip6/chillingHours/chillHrs_ensembleCV_masked_SouthernHem_", cropName, "_", yearSpan, "_", k, ".jpg")
+        fileNameMean <- paste0("graphics/cmip6/chillingHours/chillHrs_ensembleMean_masked_SouthernHem_", cropName, "_", yearSpan, "_", k, ".jpg")
+        
+        extImgMean <- external_img(src = fileNameMean, width = 5, height = 8)
+        extImgCV <- external_img(src = fileNameCV, width = 5, height = 8)
+        
+        #   add_slide(my_pres, layout = 'Comparison', master = 'Office Theme') %>% 
+        #     ph_with(value = extImgMean, location = ph_location_left(),  use_loc_size = FALSE ) %>%
+        # #  add_slide(my_pres, layout = 'Comparison', master = 'Office Theme') %>% 
+        #     ph_with(value = extImgCV, location = ph_location_right(),  use_loc_size = FALSE )
+        
+        
+        add_slide(my_pres, layout = 'Title Only', master = 'Office Theme') %>% 
+          ph_with(value = extImgMean, location = ph_location(left = 0, top = 0, width = 5, height = 8) ) %>%
+          ph_with(value = extImgCV, location = ph_location(left = 5, top = 0, width = 5, height = 8) )
+      }
+      
+      # northern hemisphere
+      ensembleTitle <- paste("Northern hemisphere ensemble mean and coefficient of variation for", cropName)
+      add_slide(my_pres, layout = 'Section Header', master = 'Office Theme')  %>% 
+        ph_with(value = ensembleTitle, location = ph_location_type(type = "body"))
+      fileNameObserved <- paste0("graphics/cmip6/chillingHours/chillHrs_ensembleMean_masked_NorthernHem_", cropName, "_observed_", "2001_2010", ".jpg")
+      
+      extImgObs <- external_img(src = fileNameObserved, width = 5, height = 8)
+      add_slide(my_pres, layout = 'Title Only', master = 'Office Theme') %>% 
+        ph_with(value = extImgObs, location = ph_location(left = 0, top = 0, width = 5, height = 8) )
+      
+      for (l in startyearChoices_ensemble) {
+        yearSpan <- paste0(l, "_", l + yearRange)
+        fileNameCV <- paste0("graphics/cmip6/chillingHours/chillHrs_ensembleCV_masked_NorthernHem_", cropName, "_", yearSpan, "_", k, ".jpg")
+        fileNameMean <-  paste0("graphics/cmip6/chillingHours/chillHrs_ensembleMean_masked_NorthernHem_", cropName, "_", yearSpan, "_", k, ".jpg")
         
         extImgMean <- external_img(src = fileNameMean, width = 5, height = 8)
         extImgCV <- external_img(src = fileNameCV, width = 5, height = 8)
@@ -128,11 +119,11 @@ for (k in sspChoices) {
       }
     }
   }
-}
+#}
 
-print(my_pres, target = "presentations/cmip6/damageTemp_Ensemble.pptx") %>% browseURL()
+print(my_pres, target = "presentations/cmip6/chillHours_Ensemble.pptx") %>% browseURL()
 
-print(my_pres, target = paste0("presentations/cmip6/damageTemp_Ensemble", ".pptx"))
+print(my_pres, target = paste0("presentations/cmip6/chillHours_Ensemble", ".pptx"))
 
 
 

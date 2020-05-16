@@ -5,7 +5,8 @@ library(doParallel) #Foreach Parallel Adaptor
 
 locOfFiles <- locOfCMIP6ncFiles
 sspChoices <- c("ssp585") #"ssp126", 
-modelChoices <- c( "GFDL-ESM4") #, "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM6A-LR") #, "MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
+modelChoices <- c( "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM6A-LR") #, 
+#modelChoices <- c("MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM6A-LR") #, "MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
 
 startyearChoices <-  c(2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
 
@@ -21,17 +22,17 @@ k <- "ssp585"
 l <- 2051
 m <- "Broadbean"
 useCores <- detectCores() - 2 # max number of cores
-useCores <- 3 # better for memory intensive activities
+useCores <- 2 # better for memory intensive activities
 
 varList <- c("startyearChoices", "sspChoices", "modelChoices", "locOfFiles", "IPCC_WG2_Ch5_crop_temperature_table", "cropChoices")
 libList <- c("raster", "ncdf4", "data.table")
 
 cl <- clusterSetup(varList, libList, useCores) # function created in globallyUsed.R
-foreach(l = startyearChoices) %:%
-  foreach(i = modelChoices) %:%
+foreach(k = sspChoices)  %:%
+  foreach(l = startyearChoices) %:%
+  foreach(i = modelChoices) %dopar% {
   #  foreach(j = variableChoices) %:%
-  foreach(k = sspChoices)  %dopar% {
-    
+     
 #  foreach(m = cropChoices)  {
 #    require(data.table)
     print(paste0("start year: ", l, " ssp: ", k,  " model: ", i, " start year: ", l, " ssp choice: ", k, " pid: ", Sys.getpid(), " systime: ", Sys.time()))
