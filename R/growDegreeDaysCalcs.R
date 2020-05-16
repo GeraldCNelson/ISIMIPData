@@ -50,14 +50,14 @@ foreach(k = sspChoices)  %:%
     
     temp <- paste0(locOfFiles, k,"/", i, "/", fileNameIn)
     print(paste0("Working on : ", temp, " pid: ", Sys.getpid()))
-    tmax <- brick(temp)
+    tmax <- readAll(brick(temp))
     print(paste0("tmax brick created, ", temp,  " pid: ", Sys.getpid()))
     
     j <- "tasmin"
     fileNameIn <- paste(modelName.lower, k, j, "global_daily", yearSpan, sep = "_")
     fileNameIn <- paste0(fileNameIn, ".nc")
     temp <- paste0(locOfFiles, k,"/", i, "/", fileNameIn)
-    tmin <- brick(temp)
+    tmin <- readAll(brick(temp))
     print(paste0("tmin brick created, ", temp, " pid: ", Sys.getpid()))
     
     for (m in cropChoices) {
