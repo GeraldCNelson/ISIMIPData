@@ -159,7 +159,7 @@ formula.thi.swine <- "tmax - (0.55 - (0.0055 * rh) * (tmax - 14.5))"
 
 fruits <-  c("apple", "almond", "blueberry", "cherry", "grape", "walnut")
 
-removedFruit <- c("apricot", "avocado", "berrynes", "cranberry", "currant", "persimmon", "sourcherry", "grapefruitetc", 
+removedFruit <- c("almond", "apricot", "avocado", "berrynes", "cranberry", "currant", "persimmon", "sourcherry", "grapefruitetc", 
                   "lemonlime", "pistachio", "pear", "strawberry", "orange", "peachetc",  "rasberry",  "stonefruitnes")
 
 clusterSetup <- function(varList, libList, useCores) {
@@ -228,4 +228,15 @@ getcropAreaYield <- function(cropName, dataType) {
   return(tifOut)
 }
 
+savepdf <- function(fileName) {
+  pdf(fileName)
+}
+
+savepdf <- function(file, width, height, destDir) {
+  fname <- paste0(destDir, "/", file)
+  pdf(fname, width, height, pointsize = 10)
+  par( mar = c(0,0,0,0)) #mgp=c(2.2,0.45,0), tcl=-0.4, 
+}
+
+#system2('pdfcrop', c('filename1', 'filename2'))
 

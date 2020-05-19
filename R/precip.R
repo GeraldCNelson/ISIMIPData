@@ -50,3 +50,26 @@ foreach(i = modelChoices) %:%
     print(paste0("Working on : ", temp))
     ncin.brick <- brick(temp, varname = j) # because there is no explicit projection info in the netcdf files, this is assumed - +proj=longlat +datum=WGS84"
     
+    
+    fileNameMask.in <- paste0("data/crops/rasterMask_", tolower(speciesName), ".tif")
+    
+    cropName <- m
+    cropCalFilesLoc <- "data-raw/crops/cropCalendars/ALL_CROPS_netCDF_0.5deg_filled/"
+    fileInName <- paste0(cropName, ".crop.calendar.fill.nc")
+    #    locNFileIn <- paste0(filesLoc, fileInName, ".gz")
+    locNFileIn <- paste0(cropCalFilesLoc, fileInName)
+    R.utils::gunzip(paste0(locNFileIn, ".gz"), remove = FALSE)
+    
+    #   croppingCalendar_plantstart <- readAll(raster(locNFileIn, var = "plant.start"))
+    #   croppingCalendar_plantend <-  readAll(raster(locNFileIn, var = "plant.end"))
+    # croppingCalendar_plantrange <- raster(locNFileIn, var = "plant.range")
+    croppingCalendar_plant <- raster(locNFileIn, var = "plant")
+    croppingCalendar_harvest <- raster(locNFileIn, var = "harvest")
+    # croppingCalendar_harveststart <- raster(locNFileIn, var = "harvest.start")
+    # croppingCalendar_harvestend <- raster(locNFileIn, var = "harvest.end")
+    # 
+    #gdd_cropped <- mask(gdd, rInAreaAgg)
+    croppingCalendar_plant_crop <- mask(croppingCalendar_plant, rInAreaAgg)
+    croppingCalendar_harvest_crop <- mask(croppingCalendar_harvest, rInAreaAgg)
+    cal <- readAll(stack(croppingCalendar_plant_crop, croppingCalendar_plant_crop))
+    unlink(locNFileIn) # delete the .nc file when no longer needed.

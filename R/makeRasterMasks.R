@@ -67,7 +67,7 @@ crops <- c("abaca", "agave", "alfalfa", "almond", "aniseetc", "apple", "apricot"
            "turnipfor", "vanilla", "vegetablenes", "vegfor", "vetch", "walnut", "watermelon", 
            "wheat", "yam", "yautia")
 
-fruitsOnly <-  c("apple", "apricot", "avocado", "berrynes", "blueberry", 
+fruitsOnly <-  c("almond", "apple", "apricot", "avocado", "berrynes", "blueberry", 
              "cherry", "cranberry", "currant", "grape", 
              "grapefruitetc", "lemonlime", "orange", "peachetc", "persimmon", "rasberry", "sourcherry", 
              "stonefruitnes", "walnut")
@@ -87,7 +87,7 @@ for (i in crops) {
   
   rInAreaAgg <- aggregate(rInArea, fact = 6, fun = "sum")
   if (i %in% fruitsOnly) {
-  cutoff <- 0 # only include 1/2 degree cells where crop area is great than cutoff
+  cutoff <- .1 # only include 1/2 degree cells where crop area is great than cutoff
   }
   if (i %in% otherCropsOnly) {
     cutoff <- 1000 # only include 1/2 degree cells where crop area is great than cutoff
