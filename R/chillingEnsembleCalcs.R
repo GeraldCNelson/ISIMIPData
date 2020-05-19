@@ -46,8 +46,8 @@ for (l in startyearChoices_ensemble) {
       yearRange <- 9
       yearSpan <- paste0(l, "_", l + yearRange)
       print(paste0("hemisphere name ", hemisphereName, ", start year: ", l,  ", pid number: ", Sys.getpid()))
-      rasterList <- vector(mode = "list", length = length(modelChoices))
-      for (m in 1:length(modelChoices)) {
+      rasterList <- vector(mode = "list", length = length(modelChoices.lower))
+      for (m in 1:length(modelChoices.lower)) {
         fileNameIn <- paste0("data/cmip6/chillingHours/chillHrs_", hemisphereName, "_", modelChoices.lower[m], "_", k,  "_", yearSpan, ".tif")
         print(paste0("raster file name in: ", fileNameIn,  ", pid number: ", Sys.getpid()))
         rasterList[[m]] <- brick(fileNameIn)

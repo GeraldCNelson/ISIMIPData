@@ -23,6 +23,12 @@ useCores <- 3 # better for memory intensive activities
 varList <- c("startyearChoices", "sspChoices", "modelChoices", "wrld_land",  "locOfFiles")
 libList <- c("raster", "ncdf4", "stringr")
 
+#test values
+i <- "IPSL-CM6A-LR"
+k <- "ssp585"
+l <- 2091
+j = "pr"
+
 cl <- clusterSetup(varList, libList, useCores) # function created in globallyUsed.R
 
 foreach(i = modelChoices) %:%
@@ -30,10 +36,11 @@ foreach(i = modelChoices) %:%
   foreach(j = variableChoices) %:%
   foreach(k = sspChoices) %dopar% {
     require(raster)
-    print(paste0("working on start year: ", l, " variable: ", j, " ssp choice: ", k, " model: ", " pid: ", Sys.getpid(), " systime: ", Sys.time()))
     tmpDirName <- paste0(locOfFiles, "rasterTmp_", Sys.getpid(), "/")
     rasterOptions(tmpdir = tmpDirName)
     dir.create(tmpDirName)
+    
+    print(paste0("working on start year: ", l, " variable: ", j, " ssp choice: ", k, " model: ", " pid: ", Sys.getpid(), " systime: ", Sys.time()))
     modelName.lower <- tolower(i)
     startTime <-  Sys.time()
     yearSpan <- paste0(l, "_", l + yearRange)
@@ -48,8 +55,7 @@ foreach(i = modelChoices) %:%
     
     temp <- paste(locOfFiles, k, "/", i, "/", fileNameIn, sep = "")
     print(paste0("Working on : ", temp))
-    ncin.brick <- brick(temp, varname = j) # because there is no explicit projection info in the netcdf files, this is assumed - +proj=longlat +datum=WGS84"
-    
+    brick.pr <- brick(temp, varname = j) # because there is no explicit projection info in the netcdf files, this is assumed - +proj=longlat +datum=WGS84"
     
     fileNameMask.in <- paste0("data/crops/rasterMask_", tolower(speciesName), ".tif")
     
