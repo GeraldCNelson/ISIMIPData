@@ -44,7 +44,7 @@ foreach(l = startyearChoices) %:%
     
     rasterOptions(tmpdir = tmpDirName)
     dir.create(tmpDirName)
-   # rasterOptions(chunksize = 3e+09, maxmemory = 9e+09)
+    # rasterOptions(chunksize = 3e+09, maxmemory = 9e+09)
     
     modelName.lower <- tolower(i)
     startTime <-  Sys.time()
@@ -66,14 +66,11 @@ foreach(l = startyearChoices) %:%
     tmin <- readAll(brick(temp))
     
     startTime <-  Sys.time()
-
+    
     print("Done with tmin readIn")
     tminTime <- Sys.time()
     print(paste0(tminTime - startTime, " pid: ", Sys.getpid()))
     print(paste0(difftime(tminTime, startTime, units = "mins"), " pid: ", Sys.getpid()))
-    
-#    tmax <- readAll((tmax))
-    # tmax <- fixUnits(var = "tmax", ncin.brick = tmax) # fixes temp and precip units; assumes ncin.brick values are raw units
     
     tmaxTime <- Sys.time()
     print("Done with tmax readIn")
@@ -81,46 +78,46 @@ foreach(l = startyearChoices) %:%
     chillHrs <- overlay(tmin, tmax, fun = f.chillhrs)
     names(chillHrs) <- names(tmax) # put the date info back into the names
     # 
-    # # do several count days in a month
-    # # first days with temp below zero
-    # print(paste0("Done with chillHrs function", " pid: ", Sys.getpid()))
-    # endTime <-  Sys.time()
-    # #  print(endTime - startTime)
-    # print(difftime(endTime, startTime, units = "mins"))
-     indices <- format(as.Date(names(tmin), format = "X%Y.%m.%d"), format = "%m")
-     indices <- as.numeric(indices)
-    # monthZeroCount <- stackApply(tmin, indices, fun = function(x, ...){sum(x <= 0)}) 
-    # names(monthZeroCount) <- month.abb
-    # fileNameOutZero <- paste0("belowZeroCount_", modelName.lower, "_", k, "_", yearSpan, ".tif")
-    # print(paste0("Writing out ", fileNameOutZero))
-    # writeRaster(monthZeroCount, filename = paste0("data/cmip6/belowZero/", fileNameOutZero), format = "GTiff", overwrite = TRUE)
+    # do several count days in a month
+    # first days with temp below zero
+    print(paste0("Done with chillHrs function", " pid: ", Sys.getpid()))
+    endTime <-  Sys.time()
+    #  print(endTime - startTime)
+    print(difftime(endTime, startTime, units = "mins"))
+    indices <- format(as.Date(names(tmin), format = "X%Y.%m.%d"), format = "%m")
+    indices <- as.numeric(indices)
+    monthZeroCount <- stackApply(tmin, indices, fun = function(x, ...){sum(x <= 0)})
+    names(monthZeroCount) <- month.abb
+    fileNameOutZero <- paste0("belowZeroCount_", modelName.lower, "_", k, "_", yearSpan, ".tif")
+    print(paste0("Writing out ", fileNameOutZero))
+    writeRaster(monthZeroCount, filename = paste0("data/cmip6/belowZero/", fileNameOutZero), format = "GTiff", overwrite = TRUE)
     
-  #   # now do count above tmax limit
-  #   f.tmaxLimit <- function(tmax, tmaxLimit) {
-  #     tmaxSum <- stackApply(tmax, indices, fun = function(x, ...){sum(x >= tmaxLimit)}) 
-  # #    names(tmaxSum) <- month.abb
-  #     fileNameOut <- paste0("tmaxGT_", tmaxLimit, "_", modelName.lower, "_", k, "_", yearSpan, ".tif")
-  #     writeRaster(tmaxSum, filename = paste0("data/cmip6/tmaxMonthlySums/", fileNameOut), format = "GTiff", overwrite = TRUE)
-  #   }
-  #   tmaxfunctionStart <- Sys.time()
-  #   #tmax > 31
-  #   f.tmaxLimit(tmax, tmaxLimit = 31)
-  #   tmaxfunctionEnd <- Sys.time()
-  #   print(difftime(Sys.time(), tmaxfunctionStart, units = "mins"))
-  #   
-  #   print(paste("One tmax function loop", " pid: ", Sys.getpid()))
-  #   print(tmaxfunctionEnd - tmaxfunctionStart) 
-  #   
-  #   #tmax > 35
-  #   f.tmaxLimit(tmax, tmaxLimit = 35)
-  #   #tmax > 38
-  #   f.tmaxLimit(tmax, tmaxLimit = 38)
-  #   #tmax > 45
-  #   f.tmaxLimit(tmax, tmaxLimit = 45)
-  #   #tmax > 48
-  #   f.tmaxLimit(tmax, tmaxLimit = 48)
+    # now do count above tmax limit
+    f.tmaxLimit <- function(tmax, tmaxLimit) {
+      tmaxSum <- stackApply(tmax, indices, fun = function(x, ...){sum(x >= tmaxLimit)})
+      #    names(tmaxSum) <- month.abb
+      fileNameOut <- paste0("tmaxGT_", tmaxLimit, "_", modelName.lower, "_", k, "_", yearSpan, ".tif")
+      writeRaster(tmaxSum, filename = paste0("data/cmip6/tmaxMonthlySums/", fileNameOut), format = "GTiff", overwrite = TRUE)
+    }
+    tmaxfunctionStart <- Sys.time()
+    #tmax > 31
+    f.tmaxLimit(tmax, tmaxLimit = 31)
+    tmaxfunctionEnd <- Sys.time()
+    print(difftime(Sys.time(), tmaxfunctionStart, units = "mins"))
     
- #   rm(list = c("tmax", "tmin"))
+    print(paste("One tmax function loop", " pid: ", Sys.getpid()))
+    print(tmaxfunctionEnd - tmaxfunctionStart)
+    
+    #tmax > 35
+    f.tmaxLimit(tmax, tmaxLimit = 35)
+    #tmax > 38
+    f.tmaxLimit(tmax, tmaxLimit = 38)
+    #tmax > 45
+    f.tmaxLimit(tmax, tmaxLimit = 45)
+    #tmax > 48
+    f.tmaxLimit(tmax, tmaxLimit = 48)
+    
+    #   rm(list = c("tmax", "tmin"))
     chillHrs.sumMonth <- stackApply(chillHrs, indices, fun = sum, na.rm = TRUE)
     chillHrs.sumMonth <- chillHrs.sumMonth/10 # to get to the monthly average over 10 years
     names(chillHrs.sumMonth) <- month.abb
@@ -141,15 +138,14 @@ foreach(l = startyearChoices) %:%
     writeRaster(chillHrsSouthernHem, filename = paste0("data/cmip6/chillingHours/", fileNameSH), format = "GTiff", overwrite = TRUE)
     unlink(tmpDirName, recursive = TRUE)
     gc()
-    
   }
 stopCluster(cl)
 
 # do same calculations on observed data
-tmax <- tasmax.observed
 tmin <- tasmin.observed
- tmin <- readAll(brick(tmin))
- tmax <- readAll(brick(tmax))
+tmax <- tasmax.observed
+tmin <- readAll(brick(tmin))
+tmax <- readAll(brick(tmax))
 print("done with readAll tmin and tmax")
 yearSpan <- "2001_2010"
 
@@ -157,10 +153,11 @@ chillHrs <- overlay(tmin, tmax, fun = f.chillhrs)
 names(chillHrs) <- names(tmax) # put the date info back into the names
 
 # do several count days in a month
-# first days with temp below zero
+
+# first count the number of days with temp below zero
 print("Done with chillHrs function")
- indices <- format(as.Date(names(tmin), format = "X%Y.%m.%d"), format = "%m")
- indices <- as.numeric(indices)
+indices <- format(as.Date(names(tmin), format = "X%Y.%m.%d"), format = "%m")
+indices <- as.numeric(indices)
 monthZeroCount <- stackApply(tmin, indices, fun = function(x, ...){sum(x <= 0)}) 
 names(monthZeroCount) <- month.abb
 fileNameOutZero <- paste0("belowZeroCount", "_observed_", yearSpan, ".tif")
@@ -195,9 +192,6 @@ chillHrsNorthernHem <- dropLayer(chillHrs.sumMonth, southernHemWinter) # note dr
 chillHrsSouthernHem <- dropLayer(chillHrs.sumMonth, northernHemWinter) # note dropping layers for northern hemisphere winter
 chillHrsNorthernHem <- sum(chillHrsNorthernHem)
 chillHrsSouthernHem <- sum(chillHrsSouthernHem)
-endCompleteLoop <- Sys.time()
-
-#print(endCompleteLoop - startTime)
 
 fileNameNH <- paste0("chillHrs_NorthernHem", "_observed_", yearSpan, ".tif")
 fileNameSH <- paste0("chillHrs_SouthernHem", "_observed_", yearSpan, ".tif")

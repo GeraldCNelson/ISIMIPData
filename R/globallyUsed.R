@@ -19,7 +19,7 @@ library(rworldmap)
 library(lubridate)
 library(readxl)
 
-rasterOptions(chunksize = 3e+09, maxmemory = 9e+09)
+rasterOptions(chunksize = 3e+09, maxmemory = 9e+09, tmptime = 2, progress = "text", timer = TRUE)
 
 # starttime <- Sys.time()
 # tmin_clamped <- clamp(tmin, lower = Tbase_barley, upper = Tbase_max_barley, useValues = TRUE)
@@ -236,6 +236,11 @@ savepdf <- function(file, width, height, destDir) {
   fname <- paste0(destDir, "/", file)
   pdf(fname, width, height, pointsize = 10)
   par( mar = c(0,0,0,0)) #mgp=c(2.2,0.45,0), tcl=-0.4, 
+}
+
+# the overlay function needs a user defined function on the relationship between the two rasters. this function is used to set areas outside crop area to NA, by multiplication
+overlayfunction_mask <- function(x,y) {
+  return(x * y)
 }
 
 #system2('pdfcrop', c('filename1', 'filename2'))

@@ -75,8 +75,9 @@ for (l in startyearChoices_ensemble) {
 end_time <- Sys.time()
 end_time - start_time
 
-# the overlay function needs a user defined function on the relationship between the two rasters
-overlayfunction <- function(x,y) {
+#mask overlay function moved to globallyUsed.R
+# the overlay function needs a user defined function on the relationship between the two rasters. this function is used to set areas outside crop area to NA, by multiplication
+overlayfunction_mask <- function(x,y) {
   return(x * y)
 }
 
@@ -100,8 +101,8 @@ for (k in sspChoices) {
         meanData <- brick(fileNameMean.in)
         meanData[meanData < 0] <- 0 # set all negative values to 0
         CVData <- brick(fileNameCV.in)
-        mean.masked <- overlay(meanData, mask, fun = overlayfunction)
-        CV.masked <- overlay(CVData, mask, fun = overlayfunction)
+        mean.masked <- overlay(meanData, mask, fun = overlayfunction_mask)
+        CV.masked <- overlay(CVData, mask, fun = overlayfunction_mask)
         fileNameMean.masked <- paste0("data/cmip6/chillingHours/chillHrs_", hemisphereName, "_ensembleMean_masked_", cropName, "_",  yearSpan, "_", k, ".tif")
         fileNameCV.masked <- paste0("data/cmip6/chillingHours/chillHrs_", hemisphereName, "_ensembleCV_masked_", cropName, "_",  yearSpan, "_", k, ".tif")
         print(paste("fileNameMean.masked: ", fileNameMean.masked))
@@ -129,7 +130,7 @@ for (j in 1:length(fruits)) {
   mask <- raster(fileNameMask.in)
   meanData <- brick(fileNameMean.in)
   meanData[meanData < 0] <- 0 # set all negative  values to 0
-  mean.masked <- overlay(meanData, mask, fun = overlayfunction)
+  mean.masked <- overlay(meanData, mask, fun = overlayfunction_mask)
   fileNameMean.masked <- paste0("data/cmip6/chillingHours/chillHrs_", hemisphereName, "_masked_", cropName,  "_observed_", yearSpan, ".tif")
   print(fileNameMean.masked)
   writeRaster(mean.masked, filename = fileNameMean.masked, format = "GTiff", overwrite = TRUE)

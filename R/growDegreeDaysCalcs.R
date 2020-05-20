@@ -31,10 +31,6 @@ cl <- clusterSetup(varList, libList, useCores) # function created in globallyUse
 foreach(k = sspChoices)  %:%
   foreach(l = startyearChoices) %:%
   foreach(i = modelChoices) %dopar% {
-    #  foreach(j = variableChoices) %:%
-    
-    #  foreach(m = cropChoices)  {
-    #    require(data.table)
     print(paste0("start year: ", l, " ssp: ", k,  " model: ", i, " start year: ", l, " ssp choice: ", k, " pid: ", Sys.getpid(), " systime: ", Sys.time()))
     # tmpDirName <- paste0(locOfFiles, "rasterTmp_", Sys.getpid(), "/")
     # 
@@ -61,21 +57,27 @@ foreach(k = sspChoices)  %:%
     print(paste0("tmin brick created, ", temp, " pid: ", Sys.getpid()))
     
     for (m in cropChoices) {
-      
+      fileNameMask.in <- paste0("data/crops/rasterMask_", tolower(m), ".tif")
+      mask <- raster(fileNameMask.in)
+      tmin_cropArea <- overlay(tmin, mask, fun = overlayfunction_mask)
+      tmax_cropArea <- overlay(tmax, mask, fun = overlayfunction_mask)
       Tbase <- IPCC_WG2_Ch5_crop_temperature_table[(crop %in% m), Tbase]
       Tbase_max <- IPCC_WG2_Ch5_crop_temperature_table[(crop %in% m), Tbase_max]
       print(paste0("crop: ", m, " tbase: ", Tbase, " Tbase_max: ", Tbase_max))
       
-      tmax_clamped <- clamp(tmax, lower = Tbase, upper = Tbase_max, useValues = TRUE)
+      tmax_clamped <- clamp(tmax_cropArea, lower = Tbase, upper = Tbase_max, useValues = TRUE)
       print(paste0("Done with tmax_clamped for ", m,  " pid: ", Sys.getpid()))
       
-      tmin_clamped <- clamp(tmin, lower = Tbase, upper = Tbase_max, useValues = TRUE)
+      tmin_clamped <- clamp(tmin_cropArea, lower = Tbase, upper = Tbase_max, useValues = TRUE)
       print(paste0("Done with tmin_clamped for ", m, " pid: ", Sys.getpid()))
       endTime <-  Sys.time()
       print(endTime - startTime)
       
       startTime <-  Sys.time()
       gdd <- (tmax_clamped + tmin_clamped)/2 - Tbase
+      endTime <-  Sys.time()
+      endTime - startTime
+      
       names(gdd) <- names(tmax)
       indices <- format(as.Date(names(tmax_clamped), format = "X%Y.%m.%d"), format = "%j") # %j is day of the year
       indices <- as.numeric(indices)
@@ -95,139 +97,139 @@ foreach(k = sspChoices)  %:%
   }
 stopCluster(cl)
 
-gdd <- readAll(brick(paste0(fileOutLoc, fileNameOut, ".tif")))
-# indices <- format(as.Date(names(gdd), format = "X%Y.%m.%d"), format = "%j") # %j is day of the year
-# indices <- as.numeric(indices)
-# 
+# code above generates gdds for each day for a specific crop
+# code below sums over the cropping calender to get gdds during the calendar
 
-# crop the gdd brick to just the area of the crop from the 
+gddsfileOutLoc <- "data/cmip6/growingDegreeDays/"
 
-cropArea <- getcropAreaYield(cropName = tolower(m), dataType = "area")
-rInArea <- raster(cropArea)
-rInAreaAgg <- aggregate(rInArea, fact = 6, fun = "sum")
-cutoff <- 1000 # only include 1/2 cells where crop area is great than cutoff
-rInAreaAgg[rInAreaAgg < cutoff] <- NA
-rInAreaAgg[rInAreaAgg >= cutoff] <- 1
-
-
-# cropping calendar ncs have the following variables - index, filled.index, plant, plant.start, plant.end, plant.range, harvest, harvest.start, harvest.end, harvest.range, tot.days
-# The following variables are included in all files:
-#   - plant: mean planting day of year
-# - plant.start: day of year of start of planting period
-# - plant.end: day of year of end of planting period
-# - plant.range: number of days between start and end of planting period
-# - harvest: mean harvest day of year
-# - harvest.start: day of year of start of harvest period
-# - harvest.end: day of year of end of harvest period
-# - harvest.range: number of days between start and end of harvest period
-# - tot.days: number of days between planting and harvest
-# Source: https://nelson.wisc.edu/sage/data-and-models/crop-calendar-dataset/netCDF0-5degree.php
-cropName <- m
-cropCalFilesLoc <- "data-raw/crops/cropCalendars/ALL_CROPS_netCDF_0.5deg_filled/"
-fileInName <- paste0(cropName, ".crop.calendar.fill.nc")
-#    locNFileIn <- paste0(filesLoc, fileInName, ".gz")
-locNFileIn <- paste0(cropCalFilesLoc, fileInName)
-R.utils::gunzip(paste0(locNFileIn, ".gz"), remove = FALSE)
-
-#   croppingCalendar_plantstart <- readAll(raster(locNFileIn, var = "plant.start"))
-#   croppingCalendar_plantend <-  readAll(raster(locNFileIn, var = "plant.end"))
-# croppingCalendar_plantrange <- raster(locNFileIn, var = "plant.range")
-croppingCalendar_plant <- raster(locNFileIn, var = "plant")
-croppingCalendar_harvest <- raster(locNFileIn, var = "harvest")
-# croppingCalendar_harveststart <- raster(locNFileIn, var = "harvest.start")
-# croppingCalendar_harvestend <- raster(locNFileIn, var = "harvest.end")
-# 
-#gdd_cropped <- mask(gdd, rInAreaAgg)
-croppingCalendar_plant_crop <- mask(croppingCalendar_plant, rInAreaAgg)
-croppingCalendar_harvest_crop <- mask(croppingCalendar_harvest, rInAreaAgg)
-cal <- readAll(stack(croppingCalendar_plant_crop, croppingCalendar_plant_crop))
-unlink(locNFileIn) # delete the .nc file when no longer needed.
-
-#    gddy1 <- subset(gdd_cropped, 1:365)
-#    gddy1 <- gdd_cropped
-
-#  b <- brick(croppingCalendar_plantstart, croppingCalendar_plantend, gdd)
-# starttime <- Sys.time()
-# s <- stack(croppingCalendar_plant, croppingCalendar_harvest, gddy1)
-# endtime <- Sys.time()
-# print(endTime - startTime)
-# starttime <- Sys.time()
-
-gddSum <- function(i, v) {
-  j <- !is.na(i[,1])
-  r <- rep(NA, nrow(i))
-  x <- cbind(i[j,,drop=FALSE], v[j,,drop=FALSE])
-  r[j] <- apply(x, 1, function(y) sum(y[ (y[1]:y[2])+2 ] )) 
-  r
-}
-
-# need to subset and run this by year. This means figuring out what are the leap years
-starttime <- Sys.time()
-cumDays <- 0
-stack.temp <- stack() #, ..., bands=NULL, varname="", native=FALSE, RAT=TRUE, quick=FALSE)
-for (cntr in 0:yearRange) {
-  yearIndex <- l + cntr
-  daysInYear <- 365
-  if (leap_year(yearIndex)) daysInYear <- 366
-  daysStart <- cumDays + 1
-  daysEnd <- daysStart + daysInYear - 1
-  gddy_subset <- subset(gdd_cropped, daysStart:daysEnd)
-  x <- overlay(cal, gddy_subset, fun = gddSum, recycle = FALSE)
-  stack.temp <- addLayer(stack.temp, x)
-  cumDays <- cumDays + daysInYear
+for (m in cropChoices) {
+  gddIn_crop <- paste0(gddsfileOutLoc, modelName.lower, "_", m, "_", k, "_gdd", "_global_daily_", yearSpan, ".tif")
+  gdd <- brick(gddIn_crop)
+  names(gdd) <- names(tmax)
+  indices <- format(as.Date(names(tmax_clamped), format = "X%Y.%m.%d"), format = "%j") # %j is day of the year
+  indices <- as.numeric(indices)
   
-}
-gddfileOut <- paste0(gddsfileOutLoc, "cumgdds_", m, "_", yearSpan, "_", i,  ".tif")
-writeRaster(stack.temp, filename = gddfileOut, format = "GTiff", overwrite = TRUE)
-endtime <- Sys.time()
-print(endTime - startTime)
-
-
-for (i in 1:nrow(croppingCalendar_plantstart)) { 
-  for (j in 1:ncol(croppingCalendar_plantend)) { 
-    print(paste0("row: ", i, " column :", j))
-    start <- croppingCalendar_plantstart[i,j] # get the starting day
-    end <- croppingCalendar_plantend[i,j] # get the ending day
-    print(paste0("start: ", start, " end: ", end))
-    
-    datasum.sub1 <- stackApply(gdd[[start:end]], indices, fun = sum) 
-    print(datasum.sub1)
-  } 
-}
-
-indices <- format(as.Date(names(tmin), format = "X%Y.%m.%d"), format = "%m")
-indices <- as.numeric(indices)
-monthZeroCount <- stackApply(tmin, indices, fun = function(x, ...){sum(x <= 0)}) 
-names(monthZeroCount) <- month.abb
-fileNameOutZero <- paste0("belowZeroCount_", modelName.lower, "_", k, "_", yearSpan, ".tif")
-writeRaster(monthZeroCount, filename = paste0("data/cmip6/belowZero/", fileNameOutZero), format = "GTiff", overwrite = TRUE)
-
-# now do count above tmax limit
-f.tmaxLimit <- function(tmax, tmaxLimit) {
-  tmaxSum <- stackApply(tmax, indices, fun = function(x, ...){sum(x >= tmaxLimit)}) 
-  names(tmaxSum) <- month.abb
-  fileNameOut <- paste0("tmaxGT_", tmaxLimit, "_", modelName.lower, "_", k, "_", yearSpan, ".tif")
-  writeRaster(tmaxSum, filename = paste0("data/cmip6/tmaxMonthlySums/", fileNameOut), format = "GTiff", overwrite = TRUE)
-}
-tmaxfunctionStart <- Sys.time()
-#tmax > 31
-f.tmaxLimit(tmax, tmaxLimit = 31)
-tmaxfunctionEnd <- Sys.time()
-print(difftime(Sys.time(), tmaxfunctionStart, units = "mins"))
-
-print(paste("One tmax function loop", " pid: ", Sys.getpid()))
-print(tmaxfunctionEnd - tmaxfunctionStart) 
-
-
-
-rm(list = c("tmax", "tmin"))
-
-
-writeRaster(chillHrsNorthernHem, filename = paste0("data/cmip6/chillingHours/", fileNameNH), format = "GTiff", overwrite = TRUE)
-writeRaster(chillHrsSouthernHem, filename = paste0("data/cmip6/chillingHours/", fileNameSH), format = "GTiff", overwrite = TRUE)
-unlink(tmpDirName, recursive = TRUE)
-gc()
-
+  
+  # crop the gdd brick to just the area of the crop from the 
+  
+  # cropArea <- getcropAreaYield(cropName = tolower(m), dataType = "area")
+  # rInArea <- raster(cropArea)
+  # rInAreaAgg <- aggregate(rInArea, fact = 6, fun = "sum")
+  # cutoff <- 1000 # only include 1/2 cells where crop area is great than cutoff
+  # rInAreaAgg[rInAreaAgg < cutoff] <- NA
+  # rInAreaAgg[rInAreaAgg >= cutoff] <- 1
+  
+  #
+  
+  
+  
+  # cropping calendar ncs have the following variables - index, filled.index, plant, plant.start, plant.end, plant.range, harvest, harvest.start, harvest.end, harvest.range, tot.days
+  # The following variables are included in all files:
+  #   - plant: mean planting day of year
+  # - plant.start: day of year of start of planting period
+  # - plant.end: day of year of end of planting period
+  # - plant.range: number of days between start and end of planting period
+  # - harvest: mean harvest day of year
+  # - harvest.start: day of year of start of harvest period
+  # - harvest.end: day of year of end of harvest period
+  # - harvest.range: number of days between start and end of harvest period
+  # - tot.days: number of days between planting and harvest
+  # Source: https://nelson.wisc.edu/sage/data-and-models/crop-calendar-dataset/netCDF0-5degree.php
+  cropName <- m
+  fileNameMask.in <- paste0("data/crops/rasterMask_", tolower(m), ".tif")
+  mask <- raster(fileNameMask.in)
+  
+  cropCalendarName <- IPCC_WG2_Ch5_crop_temperature_table[crop %in% cropName, crop.calendar]
+  cropCalFilesLoc <- paste0("data-raw/crops/cropCalendars/ALL_CROPS_netCDF_0.5deg_filled/")
+  fileInName <- paste0(cropCalendarName, ".crop.calendar.fill.nc")
+  #    locNFileIn <- paste0(filesLoc, fileInName, ".gz")
+  locNFileIn <- paste0(cropCalFilesLoc, fileInName)
+  R.utils::gunzip(paste0(locNFileIn, ".gz"), remove = FALSE)
+  
+  croppingCalendar_plant <- raster(locNFileIn, var = "plant")
+  croppingCalendar_harvest <- raster(locNFileIn, var = "harvest")
+  croppingCalendar_plant_crop <- mask(croppingCalendar_plant, mask)
+  croppingCalendar_harvest_crop <- mask(croppingCalendar_harvest, mask)
+  croppingCalendar_plant_crop <- mask(croppingCalendar_plant, mask)
+  croppingCalendar_harvest_crop <- mask(croppingCalendar_harvest, mask)
+  cal <- readAll(stack(croppingCalendar_plant_crop, croppingCalendar_harvest_crop))
+  unlink(locNFileIn) # delete the .nc file when no longer needed.
+  
+  # this function sums the number of degree days during the cropping calendar
+  # i - is the stack cal; two rasters - when the crop is planted and when it is harvested
+  # v - is the set of rasters in a year that are the subset of days in the growing year. It is called gddy_subset and generated below
+  gddSum <- function(i, v) {
+    j <- !is.na(i[,1])
+    r <- rep(NA, nrow(i))
+    x <- cbind(i[j,,drop=FALSE], v[j,,drop=FALSE])
+    r[j] <- apply(x, 1, function(y) sum(y[ (y[1]:y[2])+2 ] )) 
+    r
+  }
+  
+  # need to subset and run this by year. This means figuring out what are the leap years
+  starttime <- Sys.time()
+  cumDays <- 0
+  stack.temp <- stack() #, ..., bands=NULL, varname="", native=FALSE, RAT=TRUE, quick=FALSE)
+  for (cntr in 0:yearRange) {
+    yearIndex <- l + cntr
+    daysInYear <- 365
+    if (leap_year(yearIndex)) daysInYear <- 366
+    daysStart <- cumDays + 1
+    daysEnd <- daysStart + daysInYear - 1
+    gddy_subset <- subset(gdd, daysStart:daysEnd)
+    x <- overlay(cal, gddy_subset, fun = gddSum, recycle = FALSE)
+    stack.temp <- addLayer(stack.temp, x)
+    cumDays <- cumDays + daysInYear
+  }
+  
+  gddfileOut <- paste0(gddsfileOutLoc, "cumgdds_", m, "_", yearSpan, "_", i,  ".tif")
+  writeRaster(stack.temp, filename = gddfileOut, format = "GTiff", overwrite = TRUE)
+  endtime <- Sys.time()
+  print(endtime - starttime)
+  
+  
+  for (i in 1:nrow(croppingCalendar_plantstart)) { 
+    for (j in 1:ncol(croppingCalendar_plantend)) { 
+      print(paste0("row: ", i, " column :", j))
+      start <- croppingCalendar_plantstart[i,j] # get the starting day
+      end <- croppingCalendar_plantend[i,j] # get the ending day
+      print(paste0("start: ", start, " end: ", end))
+      
+      datasum.sub1 <- stackApply(gdd[[start:end]], indices, fun = sum) 
+      print(datasum.sub1)
+    } 
+  }
+  
+  indices <- format(as.Date(names(tmin), format = "X%Y.%m.%d"), format = "%m")
+  indices <- as.numeric(indices)
+  monthZeroCount <- stackApply(tmin, indices, fun = function(x, ...){sum(x <= 0)}) 
+  names(monthZeroCount) <- month.abb
+  fileNameOutZero <- paste0("belowZeroCount_", modelName.lower, "_", k, "_", yearSpan, ".tif")
+  writeRaster(monthZeroCount, filename = paste0("data/cmip6/belowZero/", fileNameOutZero), format = "GTiff", overwrite = TRUE)
+  
+  # now do count above tmax limit
+  f.tmaxLimit <- function(tmax, tmaxLimit) {
+    tmaxSum <- stackApply(tmax, indices, fun = function(x, ...){sum(x >= tmaxLimit)}) 
+    names(tmaxSum) <- month.abb
+    fileNameOut <- paste0("tmaxGT_", tmaxLimit, "_", modelName.lower, "_", k, "_", yearSpan, ".tif")
+    writeRaster(tmaxSum, filename = paste0("data/cmip6/tmaxMonthlySums/", fileNameOut), format = "GTiff", overwrite = TRUE)
+  }
+  tmaxfunctionStart <- Sys.time()
+  #tmax > 31
+  f.tmaxLimit(tmax, tmaxLimit = 31)
+  tmaxfunctionEnd <- Sys.time()
+  print(difftime(Sys.time(), tmaxfunctionStart, units = "mins"))
+  
+  print(paste("One tmax function loop", " pid: ", Sys.getpid()))
+  print(tmaxfunctionEnd - tmaxfunctionStart) 
+  
+  
+  
+  rm(list = c("tmax", "tmin"))
+  
+  unlink(tmpDirName, recursive = TRUE)
+  gc()
+  
 }
 stopCluster(cl)
 

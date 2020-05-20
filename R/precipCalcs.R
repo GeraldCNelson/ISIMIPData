@@ -13,6 +13,10 @@ startyearChoices <-  c(2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(
 locOfFiles <- locOfCMIP6ncFiles
 yearRange <- 9
 
+IPCC_WG2_Ch5_crop_temperature_table <- as.data.table(read_excel("data-raw/crops/Crop_temperature_table_summary_02052020.xlsx", range = "A1:S26"))
+setnames(IPCC_WG2_Ch5_crop_temperature_table, old = names(IPCC_WG2_Ch5_crop_temperature_table), new = make.names(names(IPCC_WG2_Ch5_crop_temperature_table)))
+cropChoices <- unique(IPCC_WG2_Ch5_crop_temperature_table$crop)
+
 # info on managing raster disk use - https://stackoverflow.com/questions/25426405/raster-package-taking-all-hard-drive
 
 #Sys.setenv(PROJ_LIB = "/usr/local/Cellar/proj/6.2.1/share/proj") # use until the sf and gdal issues get sorted out. See https://github.com/r-spatial/sf/issues/1060
@@ -20,7 +24,7 @@ yearRange <- 9
 useCores <- detectCores() - 1 # max number of cores
 useCores <- 3 # better for memory intensive activities
 
-varList <- c("startyearChoices", "sspChoices", "modelChoices", "wrld_land",  "locOfFiles")
+varList <- c("startyearChoices", "sspChoices", "modelChoices", "wrld_land",  "locOfFiles", "cropChoices")
 libList <- c("raster", "ncdf4", "stringr")
 
 #test values
@@ -28,6 +32,7 @@ i <- "IPSL-CM6A-LR"
 k <- "ssp585"
 l <- 2091
 j = "pr"
+m = 1
 
 cl <- clusterSetup(varList, libList, useCores) # function created in globallyUsed.R
 
@@ -45,17 +50,40 @@ foreach(i = modelChoices) %:%
     startTime <-  Sys.time()
     yearSpan <- paste0(l, "_", l + yearRange)
     
-    # fileNameIn <- paste(modelName.lower, k, j, "global_daily", yearSpan, sep = "_")
-    # fileNameIn <- paste0(fileNameIn, ".nc")
-    #        fileNameIn <- paste(spatialCoverageChoices, modelName.lower, k, j, "global_daily", yearSpan, sep = "_")
     fileNameIn <- paste(modelName.lower, k, j, "global_daily", yearSpan, sep = "_")
-    
-    #        fileNameIn <- paste0(fileNameIn, ".RDS")
     fileNameIn <- paste0(fileNameIn, ".nc")
     
     temp <- paste(locOfFiles, k, "/", i, "/", fileNameIn, sep = "")
     print(paste0("Working on : ", temp))
     brick.pr <- brick(temp, varname = j) # because there is no explicit projection info in the netcdf files, this is assumed - +proj=longlat +datum=WGS84"
+
+    # the overlay function needs a user defined function on the relationship between the two rasters
+    overlayfunction <- function(x,y) {
+      return(x * y)
+    }
+    
+    for (m in 1:length(cropChoices)) { #fruits variable is from the globallyUsed.R file
+      cropName <- cropChoices[m]
+      fileNameMask.in <- paste0("data/crops/rasterMask_", tolower(cropName), ".tif")
+      print(paste0("fileNameMaskIn: ", fileNameMask.in))
+      mask <- raster(fileNameMask.in)
+      startTime <- Sys.time()
+      brick.pr.masked <- overlay(brick.pr, mask, fun = overlayfunction)
+      endTime <- Sys.time()
+      temp <- endTime - startTime
+      print(paste0("time to crop precip data: ", temp))
+      
+      
+       fileNameMean.masked <- paste0("data/cmip6/chillingHours/chillHrs_", hemisphereName, "_ensembleMean_masked_", cropName, "_",  yearSpan, "_", k, ".tif")
+      fileNameCV.masked <- paste0("data/cmip6/chillingHours/chillHrs_", hemisphereName, "_ensembleCV_masked_", cropName, "_",  yearSpan, "_", k, ".tif")
+      print(paste("fileNameMean.masked: ", fileNameMean.masked))
+      writeRaster(mean.masked, filename = fileNameMean.masked, format = "GTiff", overwrite = TRUE)
+      writeRaster(CV.masked, filename = fileNameCV.masked, format = "GTiff", overwrite = TRUE)
+    }
+    
+    
+    
+    
     
     fileNameMask.in <- paste0("data/crops/rasterMask_", tolower(speciesName), ".tif")
     
