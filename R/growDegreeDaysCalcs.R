@@ -8,7 +8,7 @@ sspChoices <- c("ssp585") #"ssp126",
 modelChoices <- c( "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM6A-LR") #, 
 #modelChoices <- c("MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM6A-LR") #, "MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
 
-startyearChoices <-  c(2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
+startyearChoices <-  c(2021) #, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
 hemisphereList <- c("Northern", "Southern")
 northerHemExtent <- c( -180, 180, 0, 90)
 southernHemExtent <-  c( -180, 180, -90, 0)
@@ -52,6 +52,12 @@ foreach(k = sspChoices)  %:%
     print(paste0("Working on : ", temp, " pid: ", Sys.getpid()))
     tmax <- readAll(brick(temp))
     print(paste0("tmax brick created, ", temp,  " pid: ", Sys.getpid()))
+    
+    fileNameIn <- paste(modelName.lower, k, j, "global_daily", yearSpan, sep = "_")
+    fileNameIn <- paste0(fileNameIn, ".nc")
+    temp <- paste0(locOfFiles, k,"/", i, "/", fileNameIn)
+    tmin <- readAll(brick(temp))
+    print(paste0("tmin brick created, ", temp, " pid: ", Sys.getpid()))
     
     for (m in cropChoices) {
       fileNameMask.in <- paste0("data/crops/rasterMask_", tolower(m), ".tif")
