@@ -53,16 +53,39 @@ foreach(k = sspChoices)  %:%
     tmax <- readAll(brick(temp))
     print(paste0("tmax brick created, ", temp,  " pid: ", Sys.getpid()))
     
-    j <- "tasmin"
-    fileNameIn <- paste(modelName.lower, k, j, "global_daily", yearSpan, sep = "_")
-    fileNameIn <- paste0(fileNameIn, ".nc")
-    temp <- paste0(locOfFiles, k,"/", i, "/", fileNameIn)
-    tmin <- readAll(brick(temp))
-    print(paste0("tmin brick created, ", temp, " pid: ", Sys.getpid()))
-    
     for (m in cropChoices) {
-     
+      fileNameMask.in <- paste0("data/crops/rasterMask_", tolower(m), ".tif")
+      mask <- raster(fileNameMask.in)
+      tmin_cropArea <- overlay(tmin, mask, fun = overlayfunction_mask)
+      tmax_cropArea <- overlay(tmax, mask, fun = overlayfunction_mask)
+      Tbase <- IPCC_WG2_Ch5_crop_temperature_table[(crop %in% m), Tbase]
+      Tbase_max <- IPCC_WG2_Ch5_crop_temperature_table[(crop %in% m), Tbase_max]
+      print(paste0("crop: ", m, " tbase: ", Tbase, " Tbase_max: ", Tbase_max))
       
+      tmax_clamped <- clamp(tmax_cropArea, lower = Tbase, upper = Tbase_max, useValues = TRUE)
+      print(paste0("Done with tmax_clamped for ", m,  " pid: ", Sys.getpid()))
+      
+      tmin_clamped <- clamp(tmin_cropArea, lower = Tbase, upper = Tbase_max, useValues = TRUE)
+      print(paste0("Done with tmin_clamped for ", m, " pid: ", Sys.getpid()))
+      endTime <-  Sys.time()
+      print(endTime - startTime)
+      
+      startTime <-  Sys.time()
+      gdd <- (tmax_clamped + tmin_clamped)/2 - Tbase
+      endTime <-  Sys.time()
+      endTime - startTime
+      
+      names(gdd) <- names(tmax)
+      indices <- format(as.Date(names(tmax_clamped), format = "X%Y.%m.%d"), format = "%j") # %j is day of the year
+      indices <- as.numeric(indices)
+      endTime <-  Sys.time()
+      print(endTime - startTime)
+      
+      gddsfileOutLoc <- "data/cmip6/growingDegreeDays/"
+      fileNameOut <-    paste(modelName.lower, m, k, "gdd", "global_daily", yearSpan, sep = "_")
+      print(paste0("gdd file out name: ", gddsfileOutLoc, fileNameOut, ".tif"))
+      
+      writeRaster(gdd, filename = paste0(gddsfileOutLoc, fileNameOut, ".tif"), format = "GTiff", overwrite = TRUE)  
     }
     
     unlink(tmpDirName, recursive = TRUE)
