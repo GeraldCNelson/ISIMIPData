@@ -129,6 +129,9 @@ gdal_polygonizeR <- function(x, outshape=NULL, gdalformat = 'ESRI Shapefile',
   return(NULL)
 }
 
+# source of crop temperature values
+IPCC_WG2_Ch5_crop_temperature_table <- as.data.table(read_excel("data-raw/crops/Crop_temperature_table_summary_20052020.xlsx", range = "A1:S26"))
+data.table::setnames(IPCC_WG2_Ch5_crop_temperature_table, old = names(IPCC_WG2_Ch5_crop_temperature_table), new = make.names(names(IPCC_WG2_Ch5_crop_temperature_table)))
 
 # THI formulas
 # mostly from Lallo

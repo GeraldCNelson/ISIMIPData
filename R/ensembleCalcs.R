@@ -15,7 +15,9 @@ modelChoices.lower <- tolower(modelChoices)
 k <- "ssp585"
 l <- 2021
 
-IPCC_WG2_Ch5_crop_temperature_table <- read_excel("data-raw/crops/Crop_temperature_table_summary_02052020.xlsx")
+# commented out, now in the globallyUsed.R script
+#IPCC_WG2_Ch5_crop_temperature_table <- as.data.table(read_excel("data-raw/crops/Crop_temperature_table_summary_02052020.xlsx", range = "A1:S26"))
+#setnames(IPCC_WG2_Ch5_crop_temperature_table, old = names(IPCC_WG2_Ch5_crop_temperature_table), new = make.names(names(IPCC_WG2_Ch5_crop_temperature_table)))
 
 for (k in sspChoices) {
   for (l in startyearChoices) {

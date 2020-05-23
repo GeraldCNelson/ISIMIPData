@@ -13,8 +13,10 @@ startyearChoices <-  c(2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(
 locOfFiles <- locOfCMIP6ncFiles
 yearRange <- 9
 
-IPCC_WG2_Ch5_crop_temperature_table <- as.data.table(read_excel("data-raw/crops/Crop_temperature_table_summary_02052020.xlsx", range = "A1:S26"))
-setnames(IPCC_WG2_Ch5_crop_temperature_table, old = names(IPCC_WG2_Ch5_crop_temperature_table), new = make.names(names(IPCC_WG2_Ch5_crop_temperature_table)))
+# commented out, now in the globallyUsed.R script
+#IPCC_WG2_Ch5_crop_temperature_table <- as.data.table(read_excel("data-raw/crops/Crop_temperature_table_summary_02052020.xlsx", range = "A1:S26"))
+#setnames(IPCC_WG2_Ch5_crop_temperature_table, old = names(IPCC_WG2_Ch5_crop_temperature_table), new = make.names(names(IPCC_WG2_Ch5_crop_temperature_table)))
+
 cropChoices <- unique(IPCC_WG2_Ch5_crop_temperature_table$crop)
 
 # info on managing raster disk use - https://stackoverflow.com/questions/25426405/raster-package-taking-all-hard-drive
