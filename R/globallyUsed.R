@@ -19,7 +19,7 @@ library(rworldmap)
 library(lubridate)
 library(readxl)
 
-rasterOptions(chunksize = 3e+09, maxmemory = 9e+09, tmptime = 2, progress = "text", timer = TRUE)
+raster::rasterOptions(chunksize = 3e+09, maxmemory = 9e+09, tmptime = 2, progress = "text", timer = TRUE)
 
 # starttime <- Sys.time()
 # tmin_clamped <- clamp(tmin, lower = Tbase_barley, upper = Tbase_max_barley, useValues = TRUE)

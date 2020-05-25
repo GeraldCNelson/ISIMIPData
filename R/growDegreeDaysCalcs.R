@@ -19,7 +19,7 @@ yearRange <- 9
 #IPCC_WG2_Ch5_crop_temperature_table <- as.data.table(read_excel("data-raw/crops/Crop_temperature_table_summary_02052020.xlsx", range = "A1:S26"))
 data.table::setnames(IPCC_WG2_Ch5_crop_temperature_table, old = names(IPCC_WG2_Ch5_crop_temperature_table), new = make.names(names(IPCC_WG2_Ch5_crop_temperature_table)))
 cropChoices <- unique(IPCC_WG2_Ch5_crop_temperature_table$crop)
-#cropChoices <- c("Barley")
+cropChoices <- c("Cassava", "Chickpea", "Cotton")
 #test values
 i <- "GFDL-ESM4"
 k <- "ssp585"
