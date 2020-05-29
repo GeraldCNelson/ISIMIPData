@@ -26,13 +26,13 @@ yearRange <- 9
 # pdfDimensions[, fileName := paste0(imageFilePrefix, fileName)]
 
 # commented out, now in the globallyUsed.R script
-#IPCC_WG2_Ch5_crop_temperature_table <- as.data.table(read_excel("data-raw/crops/Crop_temperature_table_summary_02052020.xlsx", range = "A1:S26"))
-#setnames(IPCC_WG2_Ch5_crop_temperature_table, old = names(IPCC_WG2_Ch5_crop_temperature_table), new = make.names(names(IPCC_WG2_Ch5_crop_temperature_table)))
+#ann_crop_temp_table <- as.data.table(read_excel("data-raw/crops/ann_crop_temp_table_summary_02052020.xlsx", range = "A1:S26"))
+#setnames(ann_crop_temp_table, old = names(ann_crop_temp_table), new = make.names(names(ann_crop_temp_table)))
 
 # big loop across all crops and time periods
-for (m in 1:nrow(IPCC_WG2_Ch5_crop_temperature_table)) {
-  cropName <- as.character(IPCC_WG2_Ch5_crop_temperature_table[m, "crop"])
-  tdamage_mean <- as.numeric(IPCC_WG2_Ch5_crop_temperature_table[m, "tdamage mean"])
+for (m in 1:nrow(ann_crop_temp_table)) {
+  cropName <- as.character(ann_crop_temp_table[m, "crop"])
+  tdamage_mean <- as.numeric(ann_crop_temp_table[m, "tdamage mean"])
   
   titleString <- paste0("Mapping locations with damaging temperatures for ", cropName)
   contentString <- paste0("Average number of days by month with maximum temperature above damage level, powerpoint produced ", Sys.Date())
@@ -106,9 +106,9 @@ add_slide(my_pres, layout = 'Title and Content', master = 'Office Theme')  %>%
   ph_with(value = "Introduction", location = ph_location_type(type = "title")) %>% 
   ph_with(value = paste0(IntroText, collapse = " "), location = ph_location_type(type = "body"))
 
-for (m in 1:nrow(IPCC_WG2_Ch5_crop_temperature_table)) {
-  cropName <- as.character(IPCC_WG2_Ch5_crop_temperature_table[m, "crop"])
-  tdamage_mean <- as.numeric(IPCC_WG2_Ch5_crop_temperature_table[m, "tdamage mean"])
+for (m in 1:nrow(ann_crop_temp_table)) {
+  cropName <- as.character(ann_crop_temp_table[m, "crop"])
+  tdamage_mean <- as.numeric(ann_crop_temp_table[m, "tdamage mean"])
   for (k in sspChoices) {
     
     ensembleTitle <- paste("Ensemble Mean and coeffient of variation for", cropName)

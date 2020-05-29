@@ -18,7 +18,7 @@ l <- 2021
 useCores <- detectCores() - 2 # max number of cores
 #useCores <- 2 # better for memory intensive activities
 
-varList <- c("startyearChoices", "sspChoices", "modelChoices", "locOfFiles", "IPCC_WG2_Ch5_crop_temperature_table")
+varList <- c("startyearChoices", "sspChoices", "modelChoices", "locOfFiles", "ann_crop_temp_table")
 libList <- c("raster", "ncdf4")
 
 cl <- clusterSetup(varList, libList, useCores) # function created in globallyUsed.R

@@ -17,6 +17,7 @@ modelChoices.lower <- tolower(modelChoices)
 #test values
 k <- "ssp585"
 l <- 2021
+j = 1
 
 # do ppt for ensemble means and CVs
 titleString <- paste0("Ensemble Means and CVs for chilling hours for ", length(fruits), " perennial fruits")
@@ -64,29 +65,32 @@ for (k in sspChoices) {
     
     print(cropName)
     # get observed images for both southern and northern hemisphere
-    fileNameObserved_SH <- paste0("graphics/cmip6/chillingHours/chillHrs_SouthernHem_masked_", cropName, "_observed_", "2001_2010", ".pdf")
+    fileNameObserved_SH <- paste0("graphics/cmip6/chillingHours/chillHrs_SouthernHem_masked_", cropName, "_observed_", "2001_2010", ".png")
     extImgObs_SH <- external_img(src = fileNameObserved_SH, width = defaultWidth, height = defaultHeight)
-    fileNameObserved_NH <- paste0("graphics/cmip6/chillingHours/chillHrs_NorthernHem_masked_", cropName, "_observed_", "2001_2010", ".pdf")
-    extImgObs_NH <- external_img(src = fileNameObserved_NH)#, width = defaultWidth, height = defaultHeight)
+    fileNameObserved_NH <- paste0("graphics/cmip6/chillingHours/chillHrs_NorthernHem_masked_", cropName, "_observed_", "2001_2010", ".png")
+    extImgObs_NH <- external_img(src = fileNameObserved_NH, width = defaultWidth, height = defaultHeight)
     
     ensembleTitle <- paste("Ensemble mean and coefficient of variation for", cropName)
     my_pres <- add_slide(x = my_pres, layout = 'Section Header', master = 'Office Theme')
     my_pres <- ph_with(x = my_pres, value = ensembleTitle, location = ph_location_type(type = "title"))
     
-    my_pres <- add_slide(x = my_pres, layout = 'Title Only', master = 'Office Theme')
+    my_pres <- add_slide(x = my_pres, layout = 'Title and Content', master = 'Office Theme')
     titleTextObserved <- paste0("Mean chilling hours, 2001-2010, ", cropName, "; Required chilling hours - min. ", minChillHours, ", max. ", maxChillHours)
     my_pres <- ph_with( x = my_pres, value = fpar(ftext(titleTextObserved, fp_3)), location = ph_location_type(type = "title") )
-    my_pres <- ph_with( x = my_pres, value = extImgObs_NH, location = ph_location(left = defaultLeft, top = 1.2, width = defaultWidth) )
-    my_pres <- ph_with( x = my_pres, value = extImgObs_SH, location = ph_location(left = defaultLeft, top = 4.2, width = defaultWidth) )
+   
+    # my_pres <- ph_with(x = my_pres, value = extImgObs_NH, location = ph_location_type(type = "body"),
+    #         use_loc_size = FALSE )
+    my_pres <- ph_with( x = my_pres, value = extImgObs_NH, location = ph_location(left = defaultLeft, top = 1.2 ))
+    my_pres <- ph_with( x = my_pres, value = extImgObs_SH, location = ph_location(left = defaultLeft, top = 4.2) )
     
     for (l in startyearChoices_ensemble) {
       yearSpan <- paste0(l, "_", l + yearRange)
-      fileNameCV_NH <- paste0("graphics/cmip6/chillingHours/chillHrs_NorthernHem_ensembleCV_masked_", cropName, "_", yearSpan, "_", k, ".pdf")
-      fileNameMean_NH <-  paste0("graphics/cmip6/chillingHours/chillHrs_NorthernHem_ensembleMean_masked_", cropName, "_", yearSpan, "_", k, ".pdf")
+      fileNameCV_NH <- paste0("graphics/cmip6/chillingHours/chillHrs_NorthernHem_ensembleCV_masked_", cropName, "_", yearSpan, "_", k, ".png")
+      fileNameMean_NH <-  paste0("graphics/cmip6/chillingHours/chillHrs_NorthernHem_ensembleMean_masked_", cropName, "_", yearSpan, "_", k, ".png")
       extImgMean_NH <- external_img(src = fileNameMean_NH, width = defaultWidth, height = defaultHeight)
       extImgCV_NH <-   external_img(src = fileNameCV_NH,   width = defaultWidth, height = defaultHeight)
-      fileNameCV_SH <- paste0("graphics/cmip6/chillingHours/chillHrs_SouthernHem_ensembleCV_masked_", cropName, "_", yearSpan, "_", k, ".pdf")
-      fileNameMean_SH <- paste0("graphics/cmip6/chillingHours/chillHrs_SouthernHem_ensembleMean_masked_", cropName, "_", yearSpan, "_", k, ".pdf")
+      fileNameCV_SH <- paste0("graphics/cmip6/chillingHours/chillHrs_SouthernHem_ensembleCV_masked_", cropName, "_", yearSpan, "_", k, ".png")
+      fileNameMean_SH <- paste0("graphics/cmip6/chillingHours/chillHrs_SouthernHem_ensembleMean_masked_", cropName, "_", yearSpan, "_", k, ".png")
       extImgMean_SH <- external_img(src = fileNameMean_SH, width = defaultWidth, height = defaultHeight)
       extImgCV_SH <-   external_img(src = fileNameCV_SH, width = defaultWidth, height = defaultHeight)
       
@@ -94,10 +98,10 @@ for (k in sspChoices) {
       titleTextFuture <- paste0("Ensemble mean and CoV chilling hours, ", k, ", ", yearSpan, ", ", cropName , "; Required chilling hours - min. ", minChillHours, ", max. ", maxChillHours)
       
       my_pres <- ph_with( x = my_pres, value = fpar(ftext(titleTextFuture, fp_3)), location = ph_location_type(type = "title") )
-      my_pres <- ph_with(x = my_pres, value = extImgMean_NH, location = ph_location(left = defaultLeft, top = 1.2, width = defaultWidth) )
-      my_pres <- ph_with(x = my_pres, value = extImgMean_SH, location = ph_location(left = defaultLeft, top = 4.2, width = defaultWidth) )
-      my_pres <- ph_with(x = my_pres, value = extImgCV_NH, location = ph_location(left = 5, top = 1.2), width = defaultWidth * 2 )
-      my_pres <- ph_with(x = my_pres, value = extImgCV_SH, location = ph_location(left = 5, top = 4.2, width = defaultWidth) )
+      my_pres <- ph_with(x = my_pres, value = extImgMean_NH, location = ph_location(left = defaultLeft, top = 1.2) )
+      my_pres <- ph_with(x = my_pres, value = extImgMean_SH, location = ph_location(left = defaultLeft, top = 4.2) )
+      my_pres <- ph_with(x = my_pres, value = extImgCV_NH, location = ph_location(left = 5, top = 1.2))
+      my_pres <- ph_with(x = my_pres, value = extImgCV_SH, location = ph_location(left = 5, top = 4.2))
       
     }
   }

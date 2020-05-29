@@ -24,9 +24,11 @@ f.chillhrs <- function(tmin, tmax) {
 i <- "IPSL-CM6A-LR"
 k <- "ssp585"
 l <- 2091
-northernHemWinter <- c("Nov", "Dec", "Jan", "Feb", "Mar", "Apr")
+northernHemWinter <- c("Nov", "Dec", "Jan", "Feb") #, "Mar", "Apr")
+northernHemSummer <- c("May", "Jun", "Jul", "Aug", "Sep", "Oct")
 #northernHemWinter.num <- c(11, 12, 1, 2, 3, 4)
-southernHemWinter <- c("May", "Jun", "Jul", "Aug", "Sep", "Oct")
+southernHemWinter <- c("May", "Jun", "Jul", "Aug") #, "Sep", "Oct")
+southernHemSummer <- c("Nov", "Dec", "Jan", "Feb", "Mar", "Apr")
 #southernHemWinter.num <- c(5, 6, 7, 8, 9, 10)
 useCores <- detectCores() - 2 # max number of cores
 useCores <- 2 # better for memory intensive activities

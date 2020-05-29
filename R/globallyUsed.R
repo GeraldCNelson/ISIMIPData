@@ -130,8 +130,21 @@ gdal_polygonizeR <- function(x, outshape=NULL, gdalformat = 'ESRI Shapefile',
 }
 
 # source of crop temperature values
-IPCC_WG2_Ch5_crop_temperature_table <- as.data.table(read_excel("data-raw/crops/Crop_temperature_table_summary_20052020.xlsx", range = "A1:S26"))
-data.table::setnames(IPCC_WG2_Ch5_crop_temperature_table, old = names(IPCC_WG2_Ch5_crop_temperature_table), new = make.names(names(IPCC_WG2_Ch5_crop_temperature_table)))
+ann_crop_temp_table <- as.data.table(read_excel("data-raw/crops/ann_crop_temp_table_summary_20052020.xlsx", range = "A1:S26"))
+data.table::setnames(ann_crop_temp_table, old = names(ann_crop_temp_table), new = make.names(names(ann_crop_temp_table)))
+
+perennial_crop_temp_table <- as.data.table(read_excel("data-raw/crops/perennnial_crop_temp_table_summary_29_52020.xlsx", range = "A1:S10"))
+data.table::setnames(perennial_crop_temp_table, old = names(perennial_crop_temp_table), new = make.names(names(perennial_crop_temp_table)))
+
+cropChoice_cereals <- ann_crop_temp_table[ICC.crop.classification %in% "Cereal", crop]
+cropChoice_legumes <- ann_crop_temp_table[ICC.crop.classification %in% "Leguminous crops", crop]
+cropChoice_oilseeds <- ann_crop_temp_table[ICC.crop.classification %in% "Oilseed crops", crop]
+cropChoice_RnTubers <- ann_crop_temp_table[ICC.crop.classification %in% "Root/tuber crops", crop]
+cropChoice_vegetables <- ann_crop_temp_table[ICC.crop.classification %in% "Vegetable", crop]
+cropChoice_sugar <- ann_crop_temp_table[ICC.crop.classification %in% "Sugar crops", crop]
+cropChoice_perennials <- perennial_crop_temp_table[ICC.crop.classification %in% "Fruit and nuts", title]
+cropChoices <- c("cropChoice_cereals", "cropChoice_legumes", "cropChoice_oilseeds", "cropChoice_RnTubers", "cropChoice_vegetables", "cropChoice_sugar", "cropChoice_perennials")
+
 
 # THI formulas
 # mostly from Lallo
@@ -231,20 +244,47 @@ getcropAreaYield <- function(cropName, dataType) {
   return(tifOut)
 }
 
-savepdf <- function(fileName) {
-  pdf(fileName)
-}
+# savepdf <- function(fileName) {
+#   pdf(fileName)
+# }
+# 
+# savepdf <- function(file, width, height, destDir) {
+#   fname <- paste0(destDir, "/", file)
+#   pdf(fname, width, height, pointsize = 10)
+#   par( mar = c(0,0,0,0)) #mgp=c(2.2,0.45,0), tcl=-0.4, 
+# }
 
-savepdf <- function(file, width, height, destDir) {
-  fname <- paste0(destDir, "/", file)
-  pdf(fname, width, height, pointsize = 10)
-  par( mar = c(0,0,0,0)) #mgp=c(2.2,0.45,0), tcl=-0.4, 
-}
+
 
 # the overlay function needs a user defined function on the relationship between the two rasters. this function is used to set areas outside crop area to NA, by multiplication
 overlayfunction_mask <- function(x,y) {
   return(x * y)
 }
 
-#system2('pdfcrop', c('filename1', 'filename2'))
+# growing degree days functions
+
+f.gdd <- function(tmin, tmax, tbase, tbase_max, crop) {
+  fileNameMask.in <- paste0("data/crops/rasterMask_", tolower(crop), ".tif")
+  mask <- raster(fileNameMask.in)
+  tmin_cropArea <- overlay(tmin, mask, fun = overlayfunction_mask)
+#  print(paste0("tmin_cropArea created, ", temp, ", creation time: ", endTime -startTime,  ", pid: ", Sys.getpid()))
+  tmax_cropArea <- overlay(tmax, mask, fun = overlayfunction_mask)
+  if (tbase_max > 0) {
+  tmax_clamped <- clamp(tmax, lower = tbase, upper = tbase_max, useValues = TRUE)
+  } else {
+    tmax_clamped <- clamp(tmax, lower = tbase, upper = Inf, useValues = TRUE)
+  }
+  
+  if (tbase_max > 0) {
+    tmin_clamped <- clamp(tmin, lower = tbase, upper = tbase_max, useValues = TRUE)
+  } else {
+    tmin_clamped <- clamp(tmin, lower = tbase, upper = Inf, useValues = TRUE)
+  }
+  gddFunction2 <- function(z) {
+    function(x, y) (x + y) / 2 - z
+  }
+  gdd <- overlay(x = tmax_clamped, y = tmin_clamped, fun = gddFunction2(z = Tbase))
+}
+
+
 
