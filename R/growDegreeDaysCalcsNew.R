@@ -8,7 +8,7 @@ sspChoices <- c("ssp585") #"ssp126",
 modelChoices <- c( "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM6A-LR") #, 
 #modelChoices <- c("MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM6A-LR") #, "MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
 
-startyearChoices <-  c(2021) #, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
+startyearChoices <-  c(2051) #, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
 hemisphereList <- c("Northern", "Southern")
 northerHemExtent <- c( -180, 180, 0, 90)
 southernHemExtent <-  c( -180, 180, -90, 0)
@@ -57,7 +57,7 @@ for (k in sspChoices)  {
       print(paste0("Working on : ", temp, " pid: ", Sys.getpid()))
       tmax <- readAll(brick(temp))
       endTime <- Sys.time()
-      print(paste0("tmax brick created, ", temp, ", creation time: ", endTime -startTime,  " pid: ", Sys.getpid()))
+      print(paste0("tmax brick created, ", temp, ", creation time: ",  difftime(endTime, startTime, units = "mins"),  " pid: ", Sys.getpid()))
       
       j <- "tasmin"
       fileNameIn <- paste(modelName.lower, k, j, "global_daily", yearSpan, sep = "_")
@@ -67,38 +67,33 @@ for (k in sspChoices)  {
       endTime <- Sys.time()
       print(paste0("tmin brick created, ", temp, ", creation time: ", endTime -startTime,  ", pid: ", Sys.getpid()))
       
-      for (m in cropChoices) {
-        Tbase <- ann_crop_temp_table[(crop %in% m), Tbase]
+      for (m in get(cropChoices)) {
+        print(paste0("crop: ", m))
+         Tbase <- ann_crop_temp_table[(crop %in% m), Tbase]
         Tbase_max <- ann_crop_temp_table[(crop %in% m), Tbase_max]
         startTime <-  Sys.time()
         gdd <- f.gdd(tmax = tmax, tmin = tmin, tbase = Tbase, tbase_max = Tbase_max, crop = m)
         endTime <-  Sys.time()
-        print(paste0("gdd created, ", "creation time: ", endTime -startTime,  ", pid: ", Sys.getpid()))
+        print(paste0("gdd created, ", "creation time: ", round(difftime(endTime, startTime, units = "mins"), digits = 2),  ", pid: ", Sys.getpid()))
         gddsfileOutLoc <- "data/cmip6/growingDegreeDays/"
         fileNameOut <-    paste(modelName.lower, m, k, "gdd", "global_daily", yearSpan, sep = "_")
         print(paste0("gdd file out name: ", gddsfileOutLoc, fileNameOut, ".tif"))
         writeRaster(gdd, filename = paste0(gddsfileOutLoc, fileNameOut, ".tif"), format = "GTiff", overwrite = TRUE)  
+        gc()
       }
       unlink(tmpDirName, recursive = TRUE)
-      gc()
       
     }
   }
 }
 #    stopCluster(cl)
 
-
-}
-stopCluster(cl)
-
 # do same calculations on observed data
 tmax <- tasmax.observed
 tmin <- tasmin.observed
-# tmin <- readAll(brick(tmin))
-# tmax <- readAll(brick(tmax))
+tmin <- readAll(brick(tmin))
+tmax <- readAll(brick(tmax))
 print("done with readAll tmin and tmax")
-# tmin <- fixUnits(var = "tmin", ncin.brick = tmin) # fixes temp and precip units; assumes ncin.brick values are raw units
-# tmax <- fixUnits(var = "tmax", ncin.brick = tmin) # fixes temp and precip units; assumes ncin.brick values are raw units
 yearSpan <- "2001_2010"
 
 chillHrs <- overlay(tmin, tmax, fun = f.chillhrs)

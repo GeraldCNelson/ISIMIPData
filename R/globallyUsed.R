@@ -287,4 +287,3 @@ f.gdd <- function(tmin, tmax, tbase, tbase_max, crop) {
 }
 
 
-

@@ -16,17 +16,17 @@ k <- "ssp585"
 l <- 2021
 
 # commented out, now in the globallyUsed.R script
-#IPCC_WG2_Ch5_crop_temperature_table <- as.data.table(read_excel("data-raw/crops/Crop_temperature_table_summary_02052020.xlsx", range = "A1:S26"))
-#setnames(IPCC_WG2_Ch5_crop_temperature_table, old = names(IPCC_WG2_Ch5_crop_temperature_table), new = make.names(names(IPCC_WG2_Ch5_crop_temperature_table)))
+#ann_crop_temp_table <- as.data.table(read_excel("data-raw/crops/ann_crop_temp_table_summary_02052020.xlsx", range = "A1:S26"))
+#setnames(ann_crop_temp_table, old = names(ann_crop_temp_table), new = make.names(names(ann_crop_temp_table)))
 
 for (k in sspChoices) {
   for (l in startyearChoices) {
     yearSpan <- paste0(l, "_", l + yearRange)
     print(paste0("ssp choice: ", k, "start year: ", l))
     
-    for (m in 1:nrow(IPCC_WG2_Ch5_crop_temperature_table)) {
-      cropName <- as.character(IPCC_WG2_Ch5_crop_temperature_table[m, "crop"])
-      tdamage_mean <- as.numeric(IPCC_WG2_Ch5_crop_temperature_table[m, "tdamage mean"])
+    for (m in 1:nrow(ann_crop_temp_table)) {
+      cropName <- as.character(ann_crop_temp_table[m, "crop"])
+      tdamage_mean <- as.numeric(ann_crop_temp_table[m, "tdamage mean"])
       yearRange <- 9
       print(paste0(cropName, ", damage temp: ", tdamage_mean, " start year: ", l))
       modelName.lower <- tolower(i)
