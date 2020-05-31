@@ -10,14 +10,13 @@ library(rgeos)
 # library(sp)
 # library(sf)
 library(maps)
-library(maptools)
+#library(maptools)
 library(data.table)
 library(rasterVis)
 library(ggplot2)
 library(readxl)
 library(rworldmap)
 library(lubridate)
-library(readxl)
 
 raster::rasterOptions(chunksize = 3e+09, maxmemory = 9e+09, tmptime = 2, progress = "text", timer = TRUE)
 
@@ -85,8 +84,8 @@ get_os <- function() {
 
 for (j in c("dataDirs.csv", "graphicsDirs.csv")) {
   dirList <- read.csv(paste0("data-raw/", j), header = FALSE)
-temp <- as.character(dirList$V1)
-for (i in 1:length(temp)) if (!dir.exists(temp[i])) dir.create(temp[i])
+  temp <- as.character(dirList$V1)
+  for (i in 1:length(temp)) if (!dir.exists(temp[i])) dir.create(temp[i])
 }
 
 # paths to manage large data sets across machines. I don't think this is needed anymore
@@ -143,7 +142,7 @@ cropChoice_RnTubers <- ann_crop_temp_table[ICC.crop.classification %in% "Root/tu
 cropChoice_vegetables <- ann_crop_temp_table[ICC.crop.classification %in% "Vegetable", crop]
 cropChoice_sugar <- ann_crop_temp_table[ICC.crop.classification %in% "Sugar crops", crop]
 cropChoice_perennials <- perennial_crop_temp_table[ICC.crop.classification %in% "Fruit and nuts", title]
-cropChoices <- c("cropChoice_cereals", "cropChoice_legumes", "cropChoice_oilseeds", "cropChoice_RnTubers", "cropChoice_vegetables", "cropChoice_sugar", "cropChoice_perennials")
+cropChoices <- c("cropChoice_cereals", "cropChoice_legumes", "cropChoice_oilseeds", "cropChoice_RnTubers", "cropChoice_vegetables", "cropChoice_sugar") # omitted until we get gdd coefficients, "cropChoice_perennials")
 
 
 # THI formulas
@@ -266,11 +265,12 @@ overlayfunction_mask <- function(x,y) {
 f.gdd <- function(tmin, tmax, tbase, tbase_max, crop) {
   fileNameMask.in <- paste0("data/crops/rasterMask_", tolower(crop), ".tif")
   mask <- raster(fileNameMask.in)
+  paste0(fileNameOut, ".tif")
   tmin_cropArea <- overlay(tmin, mask, fun = overlayfunction_mask)
-#  print(paste0("tmin_cropArea created, ", temp, ", creation time: ", endTime -startTime,  ", pid: ", Sys.getpid()))
+  #  print(paste0("tmin_cropArea created, ", temp, ", creation time: ", endTime -startTime,  ", pid: ", Sys.getpid()))
   tmax_cropArea <- overlay(tmax, mask, fun = overlayfunction_mask)
   if (tbase_max > 0) {
-  tmax_clamped <- clamp(tmax, lower = tbase, upper = tbase_max, useValues = TRUE)
+    tmax_clamped <- clamp(tmax, lower = tbase, upper = tbase_max, useValues = TRUE)
   } else {
     tmax_clamped <- clamp(tmax, lower = tbase, upper = Inf, useValues = TRUE)
   }
@@ -285,5 +285,4 @@ f.gdd <- function(tmin, tmax, tbase, tbase_max, crop) {
   }
   gdd <- overlay(x = tmax_clamped, y = tmin_clamped, fun = gddFunction2(z = Tbase))
 }
-
 
