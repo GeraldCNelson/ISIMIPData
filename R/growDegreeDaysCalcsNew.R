@@ -5,10 +5,10 @@ source("R/globallyUsed.R")
 
 locOfFiles <- locOfCMIP6ncFiles
 sspChoices <- c("ssp585") #"ssp126", 
-modelChoices <- c("IPSL-CM6A-LR") #"MPI-ESM1-2-HR", "MRI-ESM2-0")# "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM6A-LR") #, 
+modelChoices <- c("UKESM1-0-LL") #"MPI-ESM1-2-HR", "MRI-ESM2-0")# "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM6A-LR") #, 
 #modelChoices <- c("MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM6A-LR") #, "MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
 
-startyearChoices <-  c(2021, 2091) #, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
+startyearChoices <-  c(2051) #, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
 hemisphereList <- c("Northern", "Southern")
 northerHemExtent <- c( -180, 180, 0, 90)
 southernHemExtent <-  c( -180, 180, -90, 0)
@@ -38,8 +38,8 @@ m <- "Barley"
 #   foreach(i = modelChoices) %dopar% {
 
 for (k in sspChoices)  {
-  for (l in startyearChoices) {
-    for (i in modelChoices)  {
+  for (i in modelChoices)  {
+    for (l in startyearChoices) {
       
       print(paste0("start year: ", l, " ssp: ", k,  " model: ", i, " start year: ", l, " ssp choice: ", k, " pid: ", Sys.getpid(), " systime: ", Sys.time()))
       tmpDirName <- paste0(locOfFiles, "rasterTmp_", Sys.getpid(), "/")
@@ -68,20 +68,21 @@ for (k in sspChoices)  {
       endTime <- Sys.time()
       print(paste0("tmin brick created, ", temp, ",  creation time: ",  round(difftime(endTime, startTime, units = "mins"), digits = 2),  " min.,  pid: ", Sys.getpid()))
       gddFilesCompleted <- list.files(gddsfileOutLoc)
+      gddFilesCompleted <- gddFilesCompleted[!grepl("aux.xml", gddFilesCompleted, fixed = TRUE)]
       for (o in 1:length(cropChoices)) {
         for (m in get(cropChoices[o])) {
           print(paste0("crop: ", m))
           fileNameOut <-    paste(modelName.lower, m, k, "gdd", "global_daily", yearSpan, sep = "_")
           print(paste0("Working on: ", fileNameOut))
           if (!paste0(fileNameOut, ".tif") %in% gddFilesCompleted) {
-          Tbase <- ann_crop_temp_table[(crop %in% m), Tbase]
-          Tbase_max <- ann_crop_temp_table[(crop %in% m), Tbase_max]
-          startTime <-  Sys.time()
-          gdd <- f.gdd(tmax = tmax, tmin = tmin, tbase = Tbase, tbase_max = Tbase_max, crop = m)
-          endTime <-  Sys.time()
-          print(paste0("gdd created, ", "creation time: ", round(difftime(endTime, startTime, units = "mins"), digits = 2),  " min., pid: ", Sys.getpid()))
-          print(paste0("gdd file out name: ", gddsfileOutLoc, fileNameOut, ".tif"))
-          writeRaster(gdd, filename = paste0(gddsfileOutLoc, fileNameOut, ".tif"), format = "GTiff", overwrite = TRUE)  
+            Tbase <- ann_crop_temp_table[(crop %in% m), Tbase]
+            Tbase_max <- ann_crop_temp_table[(crop %in% m), Tbase_max]
+            startTime <-  Sys.time()
+            gdd <- f.gdd(tmax = tmax, tmin = tmin, tbase = Tbase, tbase_max = Tbase_max, crop = m)
+            endTime <-  Sys.time()
+            print(paste0("gdd created, ", "creation time: ", round(difftime(endTime, startTime, units = "mins"), digits = 2),  " min., pid: ", Sys.getpid()))
+            print(paste0("gdd file out name: ", gddsfileOutLoc, fileNameOut, ".tif"))
+            writeRaster(gdd, filename = paste0(gddsfileOutLoc, fileNameOut, ".tif"), format = "GTiff", overwrite = TRUE)  
           }else{
             print(paste("This file has already been created: ", fileNameOut))
           }
@@ -103,36 +104,25 @@ tmax <- readAll(brick(tmax))
 print("done with readAll tmin and tmax")
 yearSpan <- "2001_2010"
 
-
-
-
-# do several count days in a month
-# first days with temp below zero
-print("Done with chillHrs function")
-indices <- format(as.Date(names(tmin), format = "X%Y.%m.%d"), format = "%m")
-indices <- as.numeric(indices)
-monthZeroCount <- stackApply(tmin, indices, fun = function(x, ...){sum(x <= 0)}) 
-names(monthZeroCount) <- month.abb
-fileNameOutZero <- paste0("belowZeroCount", "_observed_", yearSpan, ".tif")
-writeRaster(monthZeroCount, filename = paste0("data/cmip6/belowZero/", fileNameOutZero), format = "GTiff", overwrite = TRUE)
-
-
-rm(list = c("tmax", "tmin"))
-chillHrs.sumMonth <- stackApply(chillHrs, indices, fun = sum, na.rm = TRUE)
-chillHrs.sumMonth <- chillHrs.sumMonth/10 # to get to the monthly average over 10 years
-names(chillHrs.sumMonth) <- month.abb
-chillHrsNorthernHem <- dropLayer(chillHrs.sumMonth, southernHemWinter) # note dropping layers for southern hemisphere winter
-chillHrsSouthernHem <- dropLayer(chillHrs.sumMonth, northernHemWinter) # note dropping layers for northern hemisphere winter
-chillHrsNorthernHem <- sum(chillHrsNorthernHem)
-chillHrsSouthernHem <- sum(chillHrsSouthernHem)
-endCompleteLoop <- Sys.time()
-
-#print(endCompleteLoop - startTime)
-
-fileNameNH <- paste0("chillHrsNorthernHem", "_observed_", yearSpan, ".tif")
-fileNameSH <- paste0("chillHrsSouthernHem", "_observed_", yearSpan, ".tif")
-
-writeRaster(chillHrsNorthernHem, filename = paste0("data/cmip6/chillingHours/", fileNameNH), format = "GTiff", overwrite = TRUE)
-writeRaster(chillHrsSouthernHem, filename = paste0("data/cmip6/chillingHours/", fileNameSH), format = "GTiff", overwrite = TRUE)
-
-gc(TRUE)
+for (o in 1:length(cropChoices)) {
+  for (m in get(cropChoices[o])) {
+    print(paste0("crop: ", m))
+    fileNameOut <-    paste(modelName.lower, m, k, "gdd", "global_daily", yearSpan, sep = "_")
+    print(paste0("Working on: ", fileNameOut))
+    if (!paste0(fileNameOut, ".tif") %in% gddFilesCompleted) {
+      Tbase <- ann_crop_temp_table[(crop %in% m), Tbase]
+      Tbase_max <- ann_crop_temp_table[(crop %in% m), Tbase_max]
+      startTime <-  Sys.time()
+      gdd <- f.gdd(tmax = tmax, tmin = tmin, tbase = Tbase, tbase_max = Tbase_max, crop = m)
+      endTime <-  Sys.time()
+      print(paste0("gdd created, ", "creation time: ", round(difftime(endTime, startTime, units = "mins"), digits = 2),  " min., pid: ", Sys.getpid()))
+      print(paste0("gdd file out name: ", gddsfileOutLoc, fileNameOut, ".tif"))
+      writeRaster(gdd, filename = paste0(gddsfileOutLoc, fileNameOut, ".tif"), format = "GTiff", overwrite = TRUE)  
+    }else{
+      print(paste("This file has already been created: ", fileNameOut))
+    }
+    gc()
+  }
+}
+  
+  
