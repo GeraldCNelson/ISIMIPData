@@ -104,7 +104,7 @@ x <- foreach(i = modelChoices, .combine = rbind) %:%
       # bpList <- rbind(bpList, bp.cattle, bp.sheep, bp.goat, bp.yak, bp.swine, bp.layer, bp.broiler)
    }
      unlink(tmpDirName, recursive = TRUE)
-    gc(TRUE) 
+    gc(reset = FALSE, full = TRUE) 
   }
 stopCluster(cl)
 end_time <- Sys.time()

@@ -43,9 +43,7 @@ for (l in startyearChoices_ensemble) {
     
     for (j in 1:length(hemisphereList)) {
       hemisphereName <- paste0(hemisphereList[j], "Hem")
-      yearRange <- 9
-      yearSpan <- paste0(l, "_", l + yearRange)
-      print(paste0("hemisphere name ", hemisphereName, ", start year: ", l,  ", pid number: ", Sys.getpid()))
+       print(paste0("hemisphere name ", hemisphereName, ", start year: ", l,  ", pid number: ", Sys.getpid()))
       rasterList <- vector(mode = "list", length = length(modelChoices.lower))
       for (m in 1:length(modelChoices.lower)) {
         fileNameIn <- paste0("data/cmip6/chillingHours/chillHrs_", hemisphereName, "_", modelChoices.lower[m], "_", k,  "_", yearSpan, ".tif")
@@ -67,7 +65,7 @@ for (l in startyearChoices_ensemble) {
       print(paste0( "Done writing out files for hemisphere: ", hemisphereName, ", start year: ", l, ", pid number: ", Sys.getpid()))
     }
     #    unlink(tmpDirName, recursive = TRUE)
-    gc(TRUE) 
+    gc(reset = FALSE, full = TRUE) 
   }
 }
 #stopCluster(cl)

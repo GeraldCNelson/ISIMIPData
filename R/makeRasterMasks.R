@@ -87,7 +87,7 @@ for (i in crops) {
   
   rInAreaAgg <- aggregate(rInArea, fact = 6, fun = "sum")
   if (i %in% fruitsOnly) {
-  cutoff <- .1 # only include 1/2 degree cells where crop area is great than cutoff
+  cutoff <- .001 # only include 1/2 degree cells where crop area is great than cutoff
   }
   if (i %in% otherCropsOnly) {
     cutoff <- 1000 # only include 1/2 degree cells where crop area is great than cutoff

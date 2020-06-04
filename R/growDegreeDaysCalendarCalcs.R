@@ -137,5 +137,5 @@ for (m in cropChoices) {
   rm(list = c("tmax", "tmin"))
   
   unlink(tmpDirName, recursive = TRUE)
-  gc()
+  gc(reset = FALSE, full = TRUE)
   

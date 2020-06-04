@@ -47,10 +47,10 @@ for (k in sspChoices) {
       fileNameNH_CV <- paste0("chillHrs_NorthernHem_ensembleCV_masked_", cropName, "_", yearSpan, "_", k, ".tif")
       fileNameSH_CV <- paste0("chillHrs_SouthernHem_ensembleCV_masked_",  cropName, "_", yearSpan, "_", k, ".tif")
       
-      chillHrsNorthernHem_mean <- brick( paste0("data/cmip6/chillingHours/", fileNameNH_mean))
+      chillHrsNorthernHem_mean <- brick(paste0("data/cmip6/chillingHours/", fileNameNH_mean))
       chillHrsNorthernHem_mean <- crop(chillHrsNorthernHem_mean, extent(northerHemExtent))
       
-      chillHrsSouthernHem_mean <- brick( paste0("data/cmip6/chillingHours/", fileNameSH_mean))
+      chillHrsSouthernHem_mean <- brick(paste0("data/cmip6/chillingHours/", fileNameSH_mean))
       chillHrsSouthernHem_mean <- crop(chillHrsSouthernHem_mean, extent(southernHemExtent))
       
       chillHrsNorthernHem_CV <- brick( paste0("data/cmip6/chillingHours/", fileNameNH_CV))
@@ -168,7 +168,7 @@ for (m in fruits) {
   
   # Northern hemisphere
   ## mean
-  titleText <- paste0("Northern hemisphere winter (Nov to Apr)")
+  titleText <- paste0("Northern hemisphere winter (Nov to Feb)")
   myat <- round(seq.int(from = 0, to =  maxMean, length.out = 5))
   myat[2] <- minChillHours; myat[3] <- maxChillHours
   plotFileName <- paste0(getwd(), "/graphics/cmip6/chillingHours/", "chillHrs_NorthernHem_masked_", cropName, "_observed_",  yearSpan, ".png")

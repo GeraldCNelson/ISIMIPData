@@ -58,7 +58,7 @@ for (k in sspChoices) {
       print(paste0( "Done writing out files for max temp: ", j, ", start year: ", l, ", pid number: ", Sys.getpid()))
     }
     #    unlink(tmpDirName, recursive = TRUE)
-    gc(TRUE) 
+    gc(reset = FALSE, full = TRUE) 
   }
 }
 

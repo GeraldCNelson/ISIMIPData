@@ -8,9 +8,9 @@ sspChoices <- c("ssp585") #"ssp126",
 modelChoices <- c("IPSL-CM6A-LR")# 
 
 modelChoices <- c("IPSL-CM6A-LR", "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL") #, "MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
-#modelChoices <- c("IPSL-CM6A-LR") #, "MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
+#modelChoices <- c("GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0") #, "MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
 
-startyearChoices <-  c(2021) #, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
+startyearChoices <-  c(2021, 2051, 2091) #, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
 
 yearRange <- 9
 
@@ -26,10 +26,8 @@ k <- "ssp585"
 l <- 2091
 northernHemWinter <- c("Nov", "Dec", "Jan", "Feb") #, "Mar", "Apr")
 northernHemSummer <- c("May", "Jun", "Jul", "Aug", "Sep", "Oct")
-#northernHemWinter.num <- c(11, 12, 1, 2, 3, 4)
 southernHemWinter <- c("May", "Jun", "Jul", "Aug") #, "Sep", "Oct")
 southernHemSummer <- c("Nov", "Dec", "Jan", "Feb", "Mar", "Apr")
-#southernHemWinter.num <- c(5, 6, 7, 8, 9, 10)
 useCores <- detectCores() - 2 # max number of cores
 useCores <- 2 # better for memory intensive activities
 
@@ -93,32 +91,7 @@ foreach(l = startyearChoices) %:%
     fileNameOutZero <- paste0("belowZeroCount_", modelName.lower, "_", k, "_", yearSpan, ".tif")
     print(paste0("Writing out ", fileNameOutZero))
     writeRaster(monthZeroCount, filename = paste0("data/cmip6/belowZero/", fileNameOutZero), format = "GTiff", overwrite = TRUE)
-    
-    # # now do count above tmax limit
-    # f.tmaxLimit <- function(tmax, tmaxLimit) {
-    #   tmaxSum <- stackApply(tmax, indices, fun = function(x, ...){sum(x >= tmaxLimit)})
-    #   #    names(tmaxSum) <- month.abb
-    #   fileNameOut <- paste0("tmaxGT_", tmaxLimit, "_", modelName.lower, "_", k, "_", yearSpan, ".tif")
-    #   writeRaster(tmaxSum, filename = paste0("data/cmip6/tmaxMonthlySums/", fileNameOut), format = "GTiff", overwrite = TRUE)
-    # }
-    # tmaxfunctionStart <- Sys.time()
-    # #tmax > 31
-    # f.tmaxLimit(tmax, tmaxLimit = 31)
-    # tmaxfunctionEnd <- Sys.time()
-    # print(difftime(Sys.time(), tmaxfunctionStart, units = "mins"))
-    # 
-    # print(paste("One tmax function loop", " pid: ", Sys.getpid()))
-    # print(tmaxfunctionEnd - tmaxfunctionStart)
-    # 
-    # #tmax > 35
-    # f.tmaxLimit(tmax, tmaxLimit = 35)
-    # #tmax > 38
-    # f.tmaxLimit(tmax, tmaxLimit = 38)
-    # #tmax > 45
-    # f.tmaxLimit(tmax, tmaxLimit = 45)
-    # #tmax > 48
-    # f.tmaxLimit(tmax, tmaxLimit = 48)
-    
+ 
     #   rm(list = c("tmax", "tmin"))
     chillHrs.sumMonth <- stackApply(chillHrs, indices, fun = sum, na.rm = TRUE)
     chillHrs.sumMonth <- chillHrs.sumMonth/10 # to get to the monthly average over 10 years
@@ -139,7 +112,7 @@ foreach(l = startyearChoices) %:%
     writeRaster(chillHrsNorthernHem, filename = paste0("data/cmip6/chillingHours/", fileNameNH), format = "GTiff", overwrite = TRUE)
     writeRaster(chillHrsSouthernHem, filename = paste0("data/cmip6/chillingHours/", fileNameSH), format = "GTiff", overwrite = TRUE)
     unlink(tmpDirName, recursive = TRUE)
-    gc()
+    gc(reset = FALSE, full = TRUE)
   }
 stopCluster(cl)
 
@@ -201,4 +174,4 @@ fileNameSH <- paste0("chillHrs_SouthernHem", "_observed_", yearSpan, ".tif")
 writeRaster(chillHrsNorthernHem, filename = paste0("data/cmip6/chillingHours/", fileNameNH), format = "GTiff", overwrite = TRUE)
 writeRaster(chillHrsSouthernHem, filename = paste0("data/cmip6/chillingHours/", fileNameSH), format = "GTiff", overwrite = TRUE)
 
-gc(TRUE)
+gc(reset = FALSE, full = TRUE)

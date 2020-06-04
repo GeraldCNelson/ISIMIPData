@@ -78,7 +78,7 @@ foreach(l = startyearChoices) %:%
     writeRaster(gdd, filename = paste0(fileOutLoc, fileNameOut, ".tif"), format = "GTiff", overwrite = TRUE)
     
     unlink(tmpDirName, recursive = TRUE)
-    gc()
+    gc(reset = FALSE, full = TRUE)
     
   }
 stopCluster(cl)
@@ -86,4 +86,4 @@ stopCluster(cl)
 # do same calculations on observed data
 
 
-gc(TRUE)
+gc(reset = FALSE, full = TRUE)
