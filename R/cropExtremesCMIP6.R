@@ -79,7 +79,7 @@ foreach(l = startyearChoices) %:%
       writeRaster(monthOptTempRangeCount, filename = paste0("data/cmip6/optTempRange/", fileNameOut_optTemp), format = "GTiff", overwrite = TRUE)
     }
     unlink(tmpDirName, recursive = TRUE)
-    gc(TRUE) 
+    gc(reset = FALSE, full = TRUE) 
   }
 stopCluster(cl)
 

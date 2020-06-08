@@ -36,7 +36,7 @@ for (k in sspChoices) {
       names(meanData) <- month.abb
       names(CVData) <- month.abb
       
-      # plot Ensemble mean
+       # plot Ensemble mean
       titleText <- paste0("THI stress levels by month, ", speciesName, "\n ", yearSpan, ", SSP = ", k, ", ensemble mean")
       zeroLevel <- bpList[species %in% speciesName, zeroLevel]
       noStress <- bpList[species %in% speciesName, noStress]

@@ -10,7 +10,7 @@ library(rgeos)
 # library(sp)
 # library(sf)
 library(maps)
-#library(maptools)
+library(maptools)
 library(data.table)
 library(rasterVis)
 library(ggplot2)
@@ -129,7 +129,7 @@ gdal_polygonizeR <- function(x, outshape=NULL, gdalformat = 'ESRI Shapefile',
 }
 
 # source of crop temperature values
-ann_crop_temp_table <- as.data.table(read_excel("data-raw/crops/ann_crop_temp_table_summary_20052020.xlsx", range = "A1:S26"))
+ann_crop_temp_table <- as.data.table(read_excel("data-raw/crops/ann_crop_temp_table_summary_0506052020.xlsx", range = "A1:S26"))
 data.table::setnames(ann_crop_temp_table, old = names(ann_crop_temp_table), new = make.names(names(ann_crop_temp_table)))
 
 perennial_crop_temp_table <- as.data.table(read_excel("data-raw/crops/perennnial_crop_temp_table_summary_29_52020.xlsx", range = "A1:S10"))
@@ -270,15 +270,15 @@ f.gdd <- function(tmin, tmax, tbase, tbase_max, crop) {
   #  print(paste0("tmin_cropArea created, ", temp, ", creation time: ", endTime -startTime,  ", pid: ", Sys.getpid()))
   tmax_cropArea <- overlay(tmax, mask, fun = overlayfunction_mask)
   if (tbase_max > 0) {
-    tmax_clamped <- clamp(tmax, lower = tbase, upper = tbase_max, useValues = TRUE)
+    tmax_clamped <- clamp(tmax_cropArea, lower = tbase, upper = tbase_max, useValues = TRUE)
   } else {
-    tmax_clamped <- clamp(tmax, lower = tbase, upper = Inf, useValues = TRUE)
+    tmax_clamped <- clamp(tmax_cropArea, lower = tbase, upper = Inf, useValues = TRUE)
   }
   
   if (tbase_max > 0) {
-    tmin_clamped <- clamp(tmin, lower = tbase, upper = tbase_max, useValues = TRUE)
+    tmin_clamped <- clamp(tmin_cropArea, lower = tbase, upper = tbase_max, useValues = TRUE)
   } else {
-    tmin_clamped <- clamp(tmin, lower = tbase, upper = Inf, useValues = TRUE)
+    tmin_clamped <- clamp(tmin_cropArea, lower = tbase, upper = Inf, useValues = TRUE)
   }
   gddFunction2 <- function(z) {
     function(x, y) (x + y) / 2 - z

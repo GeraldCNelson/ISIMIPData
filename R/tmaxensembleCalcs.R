@@ -13,7 +13,7 @@ sspChoices <- c("ssp585") #"ssp126",
 modelChoices <- c( "MPI-ESM1-2-HR", "MRI-ESM2-0", "GFDL-ESM4", "UKESM1-0-LL", "IPSL-CM6A-LR")
 modelChoices.lower <- tolower(modelChoices)
 
-tmaxList <- c(31, 35, 38, 45, 48)
+tmaxList <- sort(unique(ann_crop_temp_table$tdamage.mean)) #get all the damaging temperature levels for the annual crops
 
 #test values
 k <- "ssp585"
@@ -30,35 +30,39 @@ for (k in sspChoices) {
   for (l in startyearChoices_ensemble) {
     yearSpan <- paste0(l, "_", l + yearRange)
     print(paste0("ssp choice: ", k, ", start year: ", l, ", pid number: ", Sys.getpid()))
-    
-    for (j in tmaxList) {
-      print(paste0("tmax value: ", j, ", start year: ", l,  ", pid number: ", Sys.getpid()))
-      rasterList <- vector(mode = "list", length = length(modelChoices))
-      for (m in 1:length(modelChoices)) {
-        fileName <- paste0("tmaxGT_", j, "_", modelName.lower, "_", k, "_", yearSpan, ".tif")
-        
-        fileNameIn <- paste0("data/cmip6/tmaxMonthlySums/", fileName)
-        print(paste0("raster file name in: ", fileNameIn,  ", pid number: ", Sys.getpid()))
-        rasterList[[m]] <- brick(fileNameIn)
-        names(rasterList[[m]]) <- month.abb
+    for (o in 1:length(cropChoices)) {
+      for (m in get(cropChoices[o])) {
+        print(paste0("crop: ", m))  
+        tmaxLimit <- ann_crop_temp_table[crop %in% m, tdamage.mean]
+        j <- tmaxLimit
+        print(paste0("tmax value: ", tmaxLimit, ", start year: ", l,  ", pid number: ", Sys.getpid()))
+        rasterList <- vector(mode = "list", length = length(modelChoices))
+        for (n in 1:length(modelChoices)) {
+          modelName.lower <- tolower(modelChoices[n])
+          fileName <- paste0("tmaxGT_masked", m, "_", tmaxLimit, "_", modelName.lower, "_", k, "_", yearSpan, ".tif")
+          
+          fileNameIn <- paste0("data/cmip6/tmaxMonthlySums/", fileName)
+          print(paste0("raster file name in: ", fileNameIn,  ", pid number: ", Sys.getpid()))
+          rasterList[[n]] <- brick(fileNameIn)
+          names(rasterList[[n]]) <- month.abb
+        }
+        ras.test <- stack(rasterList)
+        indices <- format(as.Date(names(ras.test), format = "%b.%d"), format = "%m")
+        indices <- as.numeric(indices)
+        print(paste0( "Done setting doing raster indices for ras.test stack for tmax: ", j, " for crop ", m, ", start year: ", l))
+        ras.test.mean <- raster::stackApply(ras.test, indices, fun = mean, na.rm = TRUE)
+        ras.test.cv <- raster::stackApply(ras.test, indices, fun = cv, na.rm = TRUE)
+        names(ras.test.mean) <- month.abb
+        names(ras.test.cv) <- month.abb
+        fileNameMean <- paste0("data/cmip6/tmaxMonthlySums/tmaxMonthlySums_ensembleMean_", m, "_", j,  "_", k, "_",  yearSpan, ".tif") 
+        fileNameCV <- paste0("data/cmip6/tmaxMonthlySums/tmaxMonthlySums_ensembleCV_", m, "_", j,  "_", k, "_",  yearSpan, ".tif") 
+        writeRaster(ras.test.mean, filename = fileNameMean, format = "GTiff", overwrite = TRUE)
+        writeRaster(ras.test.cv, filename = fileNameCV, format = "GTiff", overwrite = TRUE)
+        print(paste("fileNameMeanOut: ", fileNameMean))
+        print(paste0( "Done writing out files for max temp: ", j, "for crop ", m, ", start year: ", l, ", pid number: ", Sys.getpid()))
       }
-      ras.test <- stack(rasterList)
-      indices <- format(as.Date(names(ras.test), format = "%b.%d"), format = "%m")
-      indices <- as.numeric(indices)
-      print(paste0( "Done setting doing raster indices for ras.test stack for tmax: ", j, ", start year: ", l))
-      ras.test.mean <- raster::stackApply(ras.test, indices, fun = mean, na.rm = TRUE)
-      ras.test.cv <- raster::stackApply(ras.test, indices, fun = cv, na.rm = TRUE)
-      names(ras.test.mean) <- month.abb
-      names(ras.test.cv) <- month.abb
-       fileNameMean <- paste0("data/cmip6/tmaxMonthlySums/tmaxMonthlySums_ensembleMean_", j,  "_",  yearSpan, "_", k, ".tif") 
-      fileNameCV <- paste0("data/cmip6/tmaxMonthlySums/tmaxMonthlySums_ensembleCV_", j,  "_",  yearSpan, "_", k, ".tif")
-      writeRaster(ras.test.mean, filename = fileNameMean, format = "GTiff", overwrite = TRUE)
-      writeRaster(ras.test.cv, filename = fileNameCV, format = "GTiff", overwrite = TRUE)
-      print(paste("fileNameMeanOut: ", fileNameMean))
-      print(paste0( "Done writing out files for max temp: ", j, ", start year: ", l, ", pid number: ", Sys.getpid()))
+      gc(reset = FALSE, full = TRUE) 
     }
-    #    unlink(tmpDirName, recursive = TRUE)
-    gc(reset = FALSE, full = TRUE) 
   }
 }
 
@@ -66,57 +70,38 @@ for (k in sspChoices) {
 end_time <- Sys.time()
 end_time - start_time
 
-
-# the overlay function needs a user defined function on the relationship between the two rasters
-overlayfunction <- function(x,y) {
-  return(x * y)
-}
-for (k in sspChoices) {
-  for (l in startyearChoices_ensemble) {
-    yearSpan <- paste0(l, "_", l + yearRange)
-    print(paste0("ssp choice: ", k, ", start year: ", l))
-    
-    for (j in 1:length(thiListReduced)) {
-      speciesName <- gsub("thi.", "", thiListReduced[j])
-      fileNameMask.in <- paste0("data/animals/rasterMask_", tolower(speciesName), ".tif")
-      print(paste0("fileNameMaskIn: ", fileNameMask.in))
-      fileNameMean.in <- paste0("data/cmip6/THI/THI_ensembleMean_", speciesName, "_",  yearSpan, "_", k, ".tif")
-      print(paste0("fileNameMean.in: ", fileNameMean.in))
-      fileNameCV.in <- paste0("data/cmip6/THI/THI_ensembleCV_", speciesName, "_", yearSpan, "_", k, ".tif")
-      print(paste0("fileNameCV.in: ", fileNameCV.in))
-      mask <- raster(fileNameMask.in)
-      meanData <- brick(fileNameMean.in)
-      meanData[meanData < 0] <- 0 # set all negative THI values to 0
-      CVData <- brick(fileNameCV.in)
-      mean.masked <- overlay(meanData, mask, fun = overlayfunction)
-      names(mean.masked) <- month.abb
-      CV.masked <- overlay(CVData, mask, fun = overlayfunction)
-      names(CV.masked) <- month.abb
-      fileNameMean.masked <- paste0("data/cmip6/THI/THI_ensembleMean_masked_",speciesName, "_",  yearSpan, "_", k, ".tif")
-      fileNameCV.masked <- paste0("data/cmip6/THI/THI_ensembleCV_masked_", speciesName, "_",  yearSpan, "_", k, ".tif")
-      print(fileNameMean.masked)
-      writeRaster(mean.masked, filename = fileNameMean.masked, format = "GTiff", overwrite = TRUE)
-      writeRaster(CV.masked, filename = fileNameCV.masked, format = "GTiff", overwrite = TRUE)
-    }
-  }
-}
-
 # do observed data
 l <- 2001
 yearSpan <- paste0(l, "_", l + yearRange)
-print(paste0("ssp choice: ", k, "start year: ", l))
-for (j in 1:length(thiListReduced)) {
-  speciesName <- gsub("thi.", "", thiListReduced[j])
-  fileNameMask.in <- paste0("data/animals/rasterMask_", tolower(speciesName), ".tif")
-  print(paste0("fileNameMaskIn: ", fileNameMask.in))
-  fileNameMean.in <- paste0("data/cmip6/THI/", thiListReduced[j], "_observed_", yearSpan, ".tif")
-  print(paste("fileNameMean.in: ", fileNameMean.in))
-  mask <- raster(fileNameMask.in)
-  meanData <- brick(fileNameMean.in)
-  meanData[meanData < 0] <- 0 # set all negative THI values to 0
-  mean.masked <- overlay(meanData, mask, fun = overlayfunction)
-  names(mean.masked) <- month.abb
-  fileNameMean.masked <- paste0("data/cmip6/THI/THI_masked_",speciesName, "_observed_", yearSpan, ".tif")
-  print(fileNameMean.masked)
-  writeRaster(mean.masked, filename = fileNameMean.masked, format = "GTiff", overwrite = TRUE)
+for (o in 1:length(cropChoices)) {
+  for (m in get(cropChoices[o])) {
+    print(paste0("crop: ", m))  
+    tmaxLimit <- ann_crop_temp_table[crop %in% m, tdamage.mean]
+    j <- tmaxLimit
+    
+    rasterList <- vector(mode = "list", length = length(modelChoices))
+    for (n in 1:length(modelChoices)) {
+      modelName.lower <- tolower(modelChoices[n])
+      fileName <- paste0("tmaxGT_masked", m, "_", tmaxLimit, "_observed_", yearSpan, ".tif")
+      
+      fileNameIn <- paste0("data/cmip6/tmaxMonthlySums/", fileName)
+      print(paste0("raster file name in: ", fileNameIn,  ", pid number: ", Sys.getpid()))
+      rasterList[[n]] <- brick(fileNameIn)
+      names(rasterList[[n]]) <- month.abb
+    }
+    ras.test <- stack(rasterList)
+    indices <- format(as.Date(names(ras.test), format = "%b.%d"), format = "%m")
+    indices <- as.numeric(indices)
+    print(paste0( "Done setting doing raster indices for ras.test stack for tmax: ", j, " for crop ", m, ", start year: ", l))
+    ras.test.mean <- raster::stackApply(ras.test, indices, fun = mean, na.rm = TRUE)
+    ras.test.cv <- raster::stackApply(ras.test, indices, fun = cv, na.rm = TRUE)
+    names(ras.test.mean) <- month.abb
+    names(ras.test.cv) <- month.abb
+    fileNameMean <- paste0("data/cmip6/tmaxMonthlySums/tmaxMonthlySums_ensembleMean_", m, "_", j, "_observed_",  yearSpan, ".tif") 
+    fileNameCV <- paste0("data/cmip6/tmaxMonthlySums/tmaxMonthlySums_ensembleCV_", m, "_", j,  "_observed_",  yearSpan, ".tif") 
+    writeRaster(ras.test.mean, filename = fileNameMean, format = "GTiff", overwrite = TRUE)
+    writeRaster(ras.test.cv, filename = fileNameCV, format = "GTiff", overwrite = TRUE)
+    print(paste("fileNameMeanOut: ", fileNameMean))
+    print(paste0( "Done writing out files for max temp: ", j, "for crop ", m, ", start year: ", l, ", pid number: ", Sys.getpid()))
+  }
 }

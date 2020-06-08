@@ -9,10 +9,10 @@ modelChoices <- c("UKESM1-0-LL", "IPSL-CM6A-LR") #"MPI-ESM1-2-HR", "MRI-ESM2-0")
 #modelChoices <- c("MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM6A-LR") #, "MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
 
 startyearChoices <-  c(2051) #, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
-hemisphereList <- c("Northern", "Southern")
-northerHemExtent <- c( -180, 180, 0, 90)
-southernHemExtent <-  c( -180, 180, -90, 0)
-
+# hemisphereList <- c("Northern", "Southern")
+# northerHemExtent <- c( -180, 180, 0, 90)
+# southernHemExtent <-  c( -180, 180, -90, 0)
+# 
 yearRange <- 9
 gddsfileOutLoc <- "data/cmip6/growingDegreeDays/"
 
@@ -25,7 +25,7 @@ gddsfileOutLoc <- "data/cmip6/growingDegreeDays/"
 i <- "GFDL-ESM4"
 k <- "ssp585"
 l <- 2051
-m <- "Barley"
+m <- "Wheat"
 # useCores <- detectCores() - 2 # max number of cores
 # useCores <- 2 # better for memory intensive activities
 # 
