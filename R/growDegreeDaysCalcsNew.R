@@ -44,7 +44,7 @@ for (k in sspChoices)  {
       print(paste0("start year: ", l, " ssp: ", k,  " model: ", i, " start year: ", l, " ssp choice: ", k, " pid: ", Sys.getpid(), " systime: ", Sys.time()))
       tmpDirName <- paste0(locOfFiles, "rasterTmp_", Sys.getpid(), "/")
       
-      # rasterOptions(tmpdir = tmpDirName)
+       rasterOptions(tmpdir =  "/Users/gcn/Documents/workspace/ISIMIPData/data/ISIMIP/")
       # dir.create(tmpDirName)
       # 
       modelName.lower <- tolower(i)
@@ -87,6 +87,7 @@ for (k in sspChoices)  {
             print(paste("This file has already been created: ", fileNameOut))
           }
           gc(reset = FALSE, full = TRUE)
+          removeTmpFiles(h = 1)
         }
       }
 #      unlink(tmpDirName, recursive = TRUE)
