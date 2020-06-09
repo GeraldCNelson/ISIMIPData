@@ -8,7 +8,7 @@ sspChoices <- c("ssp585") #"ssp126",
 modelChoices <- c("UKESM1-0-LL", "IPSL-CM6A-LR") #"MPI-ESM1-2-HR", "MRI-ESM2-0")# "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM6A-LR") #, 
 #modelChoices <- c("MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM6A-LR") #, "MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
 
-startyearChoices <-  c(2051) #, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
+startyearChoices <-  c( 2091) #, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
 # hemisphereList <- c("Northern", "Southern")
 # northerHemExtent <- c( -180, 180, 0, 90)
 # southernHemExtent <-  c( -180, 180, -90, 0)
@@ -44,9 +44,9 @@ for (k in sspChoices)  {
       print(paste0("start year: ", l, " ssp: ", k,  " model: ", i, " start year: ", l, " ssp choice: ", k, " pid: ", Sys.getpid(), " systime: ", Sys.time()))
       tmpDirName <- paste0(locOfFiles, "rasterTmp_", Sys.getpid(), "/")
       
-      rasterOptions(tmpdir = tmpDirName)
-      dir.create(tmpDirName)
-      
+      # rasterOptions(tmpdir = tmpDirName)
+      # dir.create(tmpDirName)
+      # 
       modelName.lower <- tolower(i)
       startTime <-  Sys.time()
       yearSpan <- paste0(l, "_", l + yearRange)
@@ -89,7 +89,7 @@ for (k in sspChoices)  {
           gc(reset = FALSE, full = TRUE)
         }
       }
-      unlink(tmpDirName, recursive = TRUE)
+#      unlink(tmpDirName, recursive = TRUE)
       
     }
   }
