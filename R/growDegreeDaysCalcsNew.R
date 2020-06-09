@@ -44,7 +44,7 @@ for (k in sspChoices)  {
       print(paste0("start year: ", l, " ssp: ", k,  " model: ", i, " start year: ", l, " ssp choice: ", k, " pid: ", Sys.getpid(), " systime: ", Sys.time()))
       tmpDirName <- paste0(locOfFiles, "rasterTmp_", Sys.getpid(), "/")
       
-       rasterOptions(tmpdir =  "/Users/gcn/Documents/workspace/ISIMIPData/data/ISIMIP/")
+       rasterOptions(tmpdir =  "data/ISIMIP/") # need to use a relative path
       # dir.create(tmpDirName)
       # 
       modelName.lower <- tolower(i)
