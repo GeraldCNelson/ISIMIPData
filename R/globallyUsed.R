@@ -264,7 +264,7 @@ f.gdd <- function(mask, tmin, tmax, tbase, tbase_max, m) {
   tavg[is.na(mask), ] <- NA
   tavg
 }
-
+ 
 # the overlay function needs a user defined function on the relationship between the two rasters. this function is used to set areas outside crop area to NA, by multiplication
 overlayfunction_mask <- function(x,y) {
   return(x * y)
