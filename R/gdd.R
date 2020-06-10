@@ -49,10 +49,10 @@ gdd.f2 <- function(mask, tmin, tmax, tbase, tbase_max) {
 # faster version
 gdd.f3 <- function(mask, tmin, tmax, tbase, tbase_max) {
 	tavg <- (tmax + tmin) / 2 - tbase
-	tavg[is.na(mask), ] <- NA
 	tavg[tavg < 0] <- 0
 	tbase_max <- tbase_max - tbase
 	tavg[tavg > tbase_max] <- tbase_max
+	tavg[is.na(mask), ] <- NA
 	tavg
 }
 

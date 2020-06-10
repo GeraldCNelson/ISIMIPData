@@ -253,7 +253,17 @@ getcropAreaYield <- function(cropName, dataType) {
 #   par( mar = c(0,0,0,0)) #mgp=c(2.2,0.45,0), tcl=-0.4, 
 # }
 
-
+# faster version
+f.gdd <- function(mask, tmin, tmax, tbase, tbase_max, m) {
+  fileNameMask.in <- paste0("data/crops/rasterMask_", tolower(m), ".tif")
+  mask <- raster(fileNameMask.in)
+  tavg <- (tmax + tmin) / 2 - tbase
+  tavg[tavg < 0] <- 0
+  tbase_max <- tbase_max - tbase
+  tavg[tavg > tbase_max] <- tbase_max
+  tavg[is.na(mask), ] <- NA
+  tavg
+}
 
 # the overlay function needs a user defined function on the relationship between the two rasters. this function is used to set areas outside crop area to NA, by multiplication
 overlayfunction_mask <- function(x,y) {
@@ -262,7 +272,7 @@ overlayfunction_mask <- function(x,y) {
 
 # growing degree days functions
 
-#f.gdd.old is the oirignal function
+#f.gdd.old is the original function
 
 f.gdd.old <- function(tmin, tmax, tbase, tbase_max, crop) {
   fileNameMask.in <- paste0("data/crops/rasterMask_", tolower(crop), ".tif")
@@ -287,4 +297,6 @@ f.gdd.old <- function(tmin, tmax, tbase, tbase_max, crop) {
   }
   gdd <- overlay(x = tmax_clamped, y = tmin_clamped, fun = gddFunction2(z = Tbase))
 }
+
+
 
