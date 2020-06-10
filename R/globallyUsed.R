@@ -262,7 +262,9 @@ overlayfunction_mask <- function(x,y) {
 
 # growing degree days functions
 
-f.gdd <- function(tmin, tmax, tbase, tbase_max, crop) {
+#f.gdd.old is the oirignal function
+
+f.gdd.old <- function(tmin, tmax, tbase, tbase_max, crop) {
   fileNameMask.in <- paste0("data/crops/rasterMask_", tolower(crop), ".tif")
   mask <- raster(fileNameMask.in)
   paste0(fileNameOut, ".tif")

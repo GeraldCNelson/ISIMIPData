@@ -22,7 +22,7 @@ gddsfileOutLoc <- "data/cmip6/growingDegreeDays/"
 # cropChoices <- c("Cassava", "Chickpea", "Cotton")
 # cropChoices <- c( "Rye"  , "Sorghum" , "Soybean",  "Sugarbeet" , "Sunflower")
 #test values
-i <- "GFDL-ESM4"
+i <- "IPSL-CM6A-LR"
 k <- "ssp585"
 l <- 2051
 m <- "Wheat"
