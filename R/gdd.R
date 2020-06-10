@@ -63,11 +63,11 @@ mask <- raster(fileNameMask.in)
 # example data
 library(raster)
 r <- raster()
-# tmp <- 25 * sin(seq(0,pi,1/365)) - 5
-# tmin <- stack(lapply(1:365, function(i)setValues(r, tmp[i])))
-# tmin[seq(1,ncell(tmin),111)] <- NA
-# tmax <- tmin + 10
-# mask <- setValues(r, rep(c(NA,1), ncell(r)/2))
+tmp <- 25 * sin(seq(0,pi,1/365)) - 5
+tmin <- stack(lapply(1:365, function(i)setValues(r, tmp[i])))
+tmin[seq(1,ncell(tmin),111)] <- NA
+tmax <- tmin + 10
+mask <- setValues(r, rep(c(NA,1), ncell(r)/2))
 # 
 # tb <- 5
 # tbm <- 20

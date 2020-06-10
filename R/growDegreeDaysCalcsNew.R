@@ -77,9 +77,13 @@ for (k in sspChoices)  {
           if (!paste0(fileNameOut, ".tif") %in% gddFilesCompleted) {
             Tbase <- ann_crop_temp_table[(crop %in% m), Tbase]
             Tbase_max <- ann_crop_temp_table[(crop %in% m), Tbase_max]
+            fileNameMask.in <- paste0("data/crops/rasterMask_", tolower(m), ".tif")
+            cropMask <- raster(fileNameMask.in)
+            cropMask[cropMask == 0] <- NA
             startTime <-  Sys.time()
             #gdd <- f.gdd(tmax = tmax, tmin = tmin, tbase = Tbase, tbase_max = Tbase_max, crop = m)
-            system.time(gdd <- setValues(tmin, gdd.f3(values(mask), values(tmin), values(tmax), tbase = Tbase, tbase_max = Tbase_max)))
+#            system.time(gdd <- setValues(tmin, gdd.f3(values(mask), values(tmin), values(tmax), tbase = Tbase, tbase_max = Tbase_max)))
+            system.time(gdd <- setValues(tmin, f.gdd(values(cropMask), values(tmin), values(tmax), tbase = Tbase, tbase_max = Tbase_max)))
             endTime <-  Sys.time()
             print(paste0("gdd created, ", "creation time: ", round(difftime(endTime, startTime, units = "mins"), digits = 2),  " min., pid: ", Sys.getpid()))
             print(paste0("gdd file out name: ", gddsfileOutLoc, fileNameOut, ".tif"))

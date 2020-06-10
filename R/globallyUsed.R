@@ -254,14 +254,12 @@ getcropAreaYield <- function(cropName, dataType) {
 # }
 
 # faster version
-f.gdd <- function(mask, tmin, tmax, tbase, tbase_max, m) {
-  fileNameMask.in <- paste0("data/crops/rasterMask_", tolower(m), ".tif")
-  mask <- raster(fileNameMask.in)
+f.gdd <- function(cropMask, tmin, tmax, tbase, tbase_max) {
   tavg <- (tmax + tmin) / 2 - tbase
   tavg[tavg < 0] <- 0
   tbase_max <- tbase_max - tbase
   tavg[tavg > tbase_max] <- tbase_max
-  tavg[is.na(mask), ] <- NA
+  tavg[is.na(cropMask), ] <- NA
   tavg
 }
  
@@ -274,29 +272,29 @@ overlayfunction_mask <- function(x,y) {
 
 #f.gdd.old is the original function
 
-f.gdd.old <- function(tmin, tmax, tbase, tbase_max, crop) {
-  fileNameMask.in <- paste0("data/crops/rasterMask_", tolower(crop), ".tif")
-  mask <- raster(fileNameMask.in)
-  paste0(fileNameOut, ".tif")
-  tmin_cropArea <- overlay(tmin, mask, fun = overlayfunction_mask)
-  #  print(paste0("tmin_cropArea created, ", temp, ", creation time: ", endTime -startTime,  ", pid: ", Sys.getpid()))
-  tmax_cropArea <- overlay(tmax, mask, fun = overlayfunction_mask)
-  if (tbase_max > 0) {
-    tmax_clamped <- clamp(tmax_cropArea, lower = tbase, upper = tbase_max, useValues = TRUE)
-  } else {
-    tmax_clamped <- clamp(tmax_cropArea, lower = tbase, upper = Inf, useValues = TRUE)
-  }
-  
-  if (tbase_max > 0) {
-    tmin_clamped <- clamp(tmin_cropArea, lower = tbase, upper = tbase_max, useValues = TRUE)
-  } else {
-    tmin_clamped <- clamp(tmin_cropArea, lower = tbase, upper = Inf, useValues = TRUE)
-  }
-  gddFunction2 <- function(z) {
-    function(x, y) (x + y) / 2 - z
-  }
-  gdd <- overlay(x = tmax_clamped, y = tmin_clamped, fun = gddFunction2(z = Tbase))
-}
+# f.gdd.old <- function(tmin, tmax, tbase, tbase_max, crop) {
+#   fileNameMask.in <- paste0("data/crops/rasterMask_", tolower(crop), ".tif")
+#   mask <- raster(fileNameMask.in)
+#   paste0(fileNameOut, ".tif")
+#   tmin_cropArea <- overlay(tmin, mask, fun = overlayfunction_mask)
+#   #  print(paste0("tmin_cropArea created, ", temp, ", creation time: ", endTime -startTime,  ", pid: ", Sys.getpid()))
+#   tmax_cropArea <- overlay(tmax, mask, fun = overlayfunction_mask)
+#   if (tbase_max > 0) {
+#     tmax_clamped <- clamp(tmax_cropArea, lower = tbase, upper = tbase_max, useValues = TRUE)
+#   } else {
+#     tmax_clamped <- clamp(tmax_cropArea, lower = tbase, upper = Inf, useValues = TRUE)
+#   }
+#   
+#   if (tbase_max > 0) {
+#     tmin_clamped <- clamp(tmin_cropArea, lower = tbase, upper = tbase_max, useValues = TRUE)
+#   } else {
+#     tmin_clamped <- clamp(tmin_cropArea, lower = tbase, upper = Inf, useValues = TRUE)
+#   }
+#   gddFunction2 <- function(z) {
+#     function(x, y) (x + y) / 2 - z
+#   }
+#   gdd <- overlay(x = tmax_clamped, y = tmin_clamped, fun = gddFunction2(z = Tbase))
+# }
 
 
 
