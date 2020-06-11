@@ -257,12 +257,45 @@ getcropAreaYield <- function(cropName, dataType) {
 f.gdd <- function(cropMask, tmin, tmax, tbase, tbase_max) {
   tavg <- (tmax + tmin) / 2 - tbase
   tavg[tavg < 0] <- 0
-  tbase_max <- tbase_max - tbase
+#  tbase_max <- tbase_max - tbase
   tavg[tavg > tbase_max] <- tbase_max
-  tavg[is.na(cropMask), ] <- NA
+  tavg[cropMask == 0, ] <- NA
+  tavg
+}
+
+# faster version with make loading included
+f.gdd_model <- function(cropMask, tmin, tmax, tbase, tbase_max, m) {
+  fileNameMask.in <- paste0("data/crops/rasterMask_", tolower(m), ".tif")
+  cropMask <- raster(fileNameMask.in)
+  tavg <- (tmax + tmin) / 2 - tbase
+  tavg[tavg < 0] <- 0
+#  tbase_max <- tbase_max - tbase
+  tavg[tavg > tbase_max] <- tbase_max
+  tavg[cropMask == 0, ] <- NA
   tavg
 }
  
+f.gdd.clamped <- function(cropMask, tmin, tmax, tbase, tbase_max) {
+  #	tbase_max  <- ifelse(tbase_max > 0, tbase_max, Inf) 
+  tmax_clamped <- apply(tmax, 1, function(i) clamp(i, tbase, tbase_max, useValues = TRUE))
+  tmin_clamped <- apply(tmin, 1, function(i) clamp(i, tbase, tbase_max, useValues = TRUE))
+  r <- t((tmax_clamped + tmin_clamped) / 2 - tbase)
+  r[cropMask == 0, ] <- NA
+  r
+}
+
+f.gdd.clamped_masked <- function(cropMask, tmin, tmax, tbase, tbase_max) {
+  #	tbase_max  <- ifelse(tbase_max > 0, tbase_max, Inf) 
+  tmin[cropMask == 0, ] <- NA
+  tmax[cropMask == 0, ] <- NA
+  tmin[tmin < tbase] <- tbase
+  tmin[tmax >  tbase_max] <- tbase_max
+  tmax_clamped <- apply(tmax, 1, function(i) clamp(i, tbase, tbase_max, useValues = TRUE))
+  tmin_clamped <- apply(tmin, 1, function(i) clamp(i, tbase, tbase_max, useValues = TRUE))
+  r <- t((tmax_clamped + tmin_clamped) / 2 - tbase)
+  r[cropMask == 0, ] <- NA
+  r
+}
 # the overlay function needs a user defined function on the relationship between the two rasters. this function is used to set areas outside crop area to NA, by multiplication
 overlayfunction_mask <- function(x,y) {
   return(x * y)

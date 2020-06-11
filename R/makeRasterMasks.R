@@ -32,11 +32,13 @@ for (i in animalsList) {
   {cutoff <- 100000
   }else{cutoff <- 1000}
   
-  rIn[rIn < cutoff] <- NA
-  rIn[rIn >= cutoff] <- 1
+  # rIn[rIn < cutoff] <- NA
+  # rIn[rIn >= cutoff] <- 1
+  r <- reclassify(rIn, rbind(c(-Inf, cutoff, NA), c(cutoff, Inf, 1)))
+  
   fileNameout <- paste0("data/animals/rasterMask_", speciesName, ".tif")
   print(fileNameout)
-  writeRaster(rIn, fileNameout, format = "GTiff", overwrite = TRUE)
+  writeRaster(r, fileNameout, format = "GTiff", overwrite = TRUE)
 }
 
 # now do plants
@@ -72,7 +74,7 @@ fruitsOnly <-  c("almond", "apple", "apricot", "avocado", "berrynes", "blueberry
              "grapefruitetc", "lemonlime", "orange", "peachetc", "persimmon", "rasberry", "sourcherry", 
              "stonefruitnes", "walnut")
 
-otherCropsOnly <- crops[!cropsi %in% fruitsOnly]
+otherCropsOnly <- crops[!crops %in% fruitsOnly]
 for (i in crops) {
   print(i)
   #  i <- "wheat"
@@ -94,9 +96,11 @@ for (i in crops) {
   }
   rInAreaAgg[rInAreaAgg < cutoff] <- NA
   rInAreaAgg[rInAreaAgg > cutoff] <- 1
+  r <- reclassify(rInAreaAgg, rbind(c(-Inf, cutoff, NA), c(cutoff, Inf, 1)))
+  
   fileNameout <- paste0("data/crops/rasterMask_", i, ".tif")
   print(fileNameout)
-  writeRaster(rInAreaAgg, fileNameout, format = "GTiff", overwrite = TRUE)
+  writeRaster(r, fileNameout, format = "GTiff", overwrite = TRUE)
   
 }
 
