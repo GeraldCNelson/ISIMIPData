@@ -284,6 +284,15 @@ f.gdd.clamped <- function(cropMask, tmin, tmax, tbase, tbase_max) {
   r
 }
 
+gdd.f1 <- function(mask, tmin, tmax, tbase, tbase_max) {
+  #	tbase_max  <- ifelse(tbase_max > 0, tbase_max, Inf) 
+  tmax_clamped <- apply(tmax, 1, function(i) clamp(i, tbase, tbase_max))
+  tmin_clamped <- apply(tmin, 1, function(i) clamp(i, tbase, tbase_max))
+  r <- t((tmax_clamped + tmin_clamped) / 2 - tbase)
+  r[is.na(mask), ] <- NA
+  r
+}
+
 f.gdd.clamped_masked <- function(cropMask, tmin, tmax, tbase, tbase_max) {
   #	tbase_max  <- ifelse(tbase_max > 0, tbase_max, Inf) 
   tmin[cropMask == 0, ] <- NA

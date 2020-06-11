@@ -94,8 +94,8 @@ for (i in crops) {
   if (i %in% otherCropsOnly) {
     cutoff <- 500 # only include 1/2 degree cells where crop area is great than cutoff
   }
-  rInAreaAgg[rInAreaAgg < cutoff] <- NA
-  rInAreaAgg[rInAreaAgg > cutoff] <- 1
+  # rInAreaAgg[rInAreaAgg < cutoff] <- NA
+  # rInAreaAgg[rInAreaAgg > cutoff] <- 1
   r <- reclassify(rInAreaAgg, rbind(c(-Inf, cutoff, NA), c(cutoff, Inf, 1)))
   
   fileNameout <- paste0("data/crops/rasterMask_", i, ".tif")
