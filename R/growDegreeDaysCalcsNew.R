@@ -8,7 +8,7 @@ sspChoices <- c("ssp585") #"ssp126",
 modelChoices <- c( "IPSL-CM6A-LR") #"MPI-ESM1-2-HR", "MRI-ESM2-0")# "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM6A-LR") #, 
 #modelChoices <- c("MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM6A-LR") #, "MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
 
-startyearChoices <-  c( 2021, 2051) #, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
+startyearChoices <-  c( 2021, 2051, 2091) #, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
 # hemisphereList <- c("Northern", "Southern")
 # northerHemExtent <- c( -180, 180, 0, 90)
 # southernHemExtent <-  c( -180, 180, -90, 0)
@@ -79,12 +79,12 @@ for (k in sspChoices)  {
             Tbase_max <- ann_crop_temp_table[(crop %in% m), Tbase_max]
             fileNameMask.in <- paste0("data/crops/rasterMask_", tolower(m), ".tif")
             cropMask <- raster(fileNameMask.in)
-            startTime <-  Sys.time()
+#            startTime <-  Sys.time()
             system.time(gdd <- setValues(tmin, f.gdd(cropMask = values(cropMask), tmin = values(tmin), tmax = values(tmax), tbase = Tbase, tbase_max = Tbase_max)))
             function(cropMask, tmin, tmax, tbase, tbase_max) 
             #         #system.time(gdd <- overlay(cropMask, tmin, tmax, fun=function(x, y, z) gdd.f1(x, y, z, tb = Tbase, tbm = Tbase_max)))
-            endTime <-  Sys.time()
-            print(paste0("gdd created, ", "creation time: ", round(difftime(endTime, startTime, units = "mins"), digits = 2),  " min., pid: ", Sys.getpid()))
+#            endTime <-  Sys.time()
+ #           print(paste0("gdd created, ", "creation time: ", round(difftime(endTime, startTime, units = "mins"), digits = 2),  " min., pid: ", Sys.getpid()))
             print(paste0("gdd file out name: ", gddsfileOutLoc, fileNameOut, ".tif"))
             writeRaster(gdd, filename = paste0(gddsfileOutLoc, fileNameOut, ".tif"), format = "GTiff", overwrite = TRUE)  
             cropMask <- NULL
