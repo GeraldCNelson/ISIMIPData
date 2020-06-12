@@ -259,7 +259,7 @@ f.gdd <- function(cropMask, tmin, tmax, tbase, tbase_max) {
   tavg[tavg < 0] <- 0
 #  tbase_max <- tbase_max - tbase
   tavg[tavg > tbase_max] <- tbase_max
-  tavg[cropMask == 0, ] <- NA
+  tavg[is.na(cropMask), ] <- NA
   tavg
 }
 
