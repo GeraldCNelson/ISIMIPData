@@ -25,7 +25,7 @@ gddsfileOutLoc <- "data/cmip6/growingDegreeDays/"
 i <- "IPSL-CM6A-LR"
 k <- "ssp585"
 l <- 2051
-m <- "Wheat"
+m <- "Bean"
 # useCores <- detectCores() - 2 # max number of cores
 # useCores <- 2 # better for memory intensive activities
 # 

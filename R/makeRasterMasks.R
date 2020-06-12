@@ -43,6 +43,8 @@ for (i in animalsList) {
 
 # now do plants
 
+annCropsToAnalyze <- tolower(ann_crop_temp_table$crop)
+
 crops <- c("abaca", "agave", "alfalfa", "almond", "aniseetc", "apple", "apricot", 
            "areca", "artichoke", "asparagus", "avocado", "bambara", "banana", 
            "barley", "bean", "beetfor", "berrynes", "blueberry", "brazil", "broadbean", 
@@ -74,8 +76,13 @@ fruitsOnly <-  c("almond", "apple", "apricot", "avocado", "berrynes", "blueberry
              "grapefruitetc", "lemonlime", "orange", "peachetc", "persimmon", "rasberry", "sourcherry", 
              "stonefruitnes", "walnut")
 
-otherCropsOnly <- crops[!crops %in% fruitsOnly]
-for (i in crops) {
+fruitsToAnalyse <- fruits
+
+otherCrops <- crops[!crops %in% fruitsOnly]
+
+crops.new <- c(cropsToAnalyze, fruitsToAnalyse)
+
+for (i in crops.new) {
   print(i)
   #  i <- "wheat"
   tempTifArea <- getcropAreaYield(i, "area")
@@ -88,10 +95,10 @@ for (i in crops) {
   # 30 min = 0.5 degree
   
   rInAreaAgg <- aggregate(rInArea, fact = 6, fun = "sum")
-  if (i %in% fruitsOnly) {
+  if (i %in% fruitsToAnalyse) {
   cutoff <- .001 # only include 1/2 degree cells where crop area is great than cutoff
   }
-  if (i %in% otherCropsOnly) {
+  if (i %in% annCropsToAnalyze) {
     cutoff <- 500 # only include 1/2 degree cells where crop area is great than cutoff
   }
   # rInAreaAgg[rInAreaAgg < cutoff] <- NA
