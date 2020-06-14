@@ -5,7 +5,7 @@ source("R/globallyUsed.R")
 
 locOfFiles <- locOfCMIP6ncFiles
 sspChoices <- c("ssp585") #"ssp126", 
-modelChoices <- c( "IPSL-CM6A-LR") #"MPI-ESM1-2-HR", "MRI-ESM2-0")# "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM6A-LR") #, 
+modelChoices <- c( "UKESM1-0-LL") #"MPI-ESM1-2-HR", "MRI-ESM2-0")# "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM6A-LR") #, 
 #modelChoices <- c("MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM6A-LR") #, "MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
 
 startyearChoices <-  c( 2021, 2051, 2091) #, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
@@ -42,9 +42,9 @@ for (k in sspChoices)  {
     for (l in startyearChoices) {
       
       print(paste0("start year: ", l, " ssp: ", k,  " model: ", i, " start year: ", l, " ssp choice: ", k, " pid: ", Sys.getpid(), " systime: ", Sys.time()))
-      tmpDirName <- paste0(locOfFiles, "rasterTmp_", Sys.getpid(), "/")
+#      tmpDirName <- paste0(locOfFiles, "rasterTmp_", Sys.getpid(), "/")
       
-      rasterOptions(tmpdir =  "data/ISIMIP/") # need to use a relative path
+#      rasterOptions(tmpdir =  "data/ISIMIP/") # need to use a relative path
       # dir.create(tmpDirName)
       # 
       modelName.lower <- tolower(i)
@@ -54,18 +54,22 @@ for (k in sspChoices)  {
       fileNameIn <- paste(modelName.lower, k, j, "global_daily", yearSpan, sep = "_")
       fileNameIn <- paste0(fileNameIn, ".nc")
       
-      temp <- paste0(locOfFiles, k,"/", i, "/", fileNameIn)
+      tmaxIn <- paste0(locOfFiles, k,"/", i, "/", fileNameIn)
       print(paste0("Loading: ", temp, " pid: ", Sys.getpid()))
-      tmax <- readAll(brick(temp))
+#      tmax <- readAll(brick(temp))
       endTime <- Sys.time()
       print(paste0("tmax brick created, ", temp, ", creation time: ",  round(difftime(endTime, startTime, units = "mins"), digits = 2),  " min.,  pid: ", Sys.getpid()))
       
+      startTime <-  Sys.time()
       j <- "tasmin"
       fileNameIn <- paste(modelName.lower, k, j, "global_daily", yearSpan, sep = "_")
       fileNameIn <- paste0(fileNameIn, ".nc")
-      temp <- paste0(locOfFiles, k,"/", i, "/", fileNameIn)
-      tmin <- readAll(brick(temp))
+      tminIn <- paste0(locOfFiles, k,"/", i, "/", fileNameIn)
+ #      <- readAll(brick(temp))
+      startTime <-  Sys.time()
+      tmaxTminIn(tmaxIn, tminIn)
       endTime <- Sys.time()
+  endTime - startTime    
       print(paste0("tmin brick created, ", temp, ",  creation time: ",  round(difftime(endTime, startTime, units = "mins"), digits = 2),  " min.,  pid: ", Sys.getpid()))
       gddFilesCompleted <- list.files(gddsfileOutLoc)
       gddFilesCompleted <- gddFilesCompleted[!grepl("aux.xml", gddFilesCompleted, fixed = TRUE)]
@@ -82,9 +86,9 @@ for (k in sspChoices)  {
             startTime <-  Sys.time()
 #            system.time(gdd <- setValues(tmin, f.gdd(cropMask = values(cropMask), tmin = values(tmin), tmax = values(tmax), tbase = Tbase, tbase_max = Tbase_max)))
             gdd <- setValues(tmin, f.gdd(cropMask = values(cropMask), tmin = values(tmin), tmax = values(tmax), tbase = Tbase, tbase_max = Tbase_max))
-            function(cropMask, tmin, tmax, tbase, tbase_max) 
+       #     function(cropMask, tmin, tmax, tbase, tbase_max) 
             #         #system.time(gdd <- overlay(cropMask, tmin, tmax, fun=function(x, y, z) gdd.f1(x, y, z, tb = Tbase, tbm = Tbase_max)))
-            endTime <-  Sys.time()
+            endTime <- Sys.time()
             print(paste0("gdd created, ", "creation time: ", round(difftime(endTime, startTime, units = "mins"), digits = 2),  " min., pid: ", Sys.getpid()))
             print(paste0("gdd file out name: ", gddsfileOutLoc, fileNameOut, ".tif"))
             writeRaster(gdd, filename = paste0(gddsfileOutLoc, fileNameOut, ".tif"), format = "GTiff", overwrite = TRUE)  

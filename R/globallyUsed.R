@@ -19,6 +19,7 @@ library(rworldmap)
 library(lubridate)
 
 raster::rasterOptions(chunksize = 3e+09, maxmemory = 9e+09, tmptime = 2, progress = "text", timer = TRUE)
+rasterOptions(tmpdir =  "data/ISIMIP/") # need to use a relative path
 
 # starttime <- Sys.time()
 # tmin_clamped <- clamp(tmin, lower = Tbase_barley, upper = Tbase_max_barley, useValues = TRUE)
@@ -339,5 +340,11 @@ overlayfunction_mask <- function(x,y) {
 #   gdd <- overlay(x = tmax_clamped, y = tmin_clamped, fun = gddFunction2(z = Tbase))
 # }
 
+
+# load tmax and rh data from nc
+tmaxRhIn <- function(tmaxFile, rhFile) {
+  tmax <<- readAll(brick(tmaxFile))
+  rh <<- readAll(brick(rhFile))
+}
 
 
