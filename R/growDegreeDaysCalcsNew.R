@@ -58,7 +58,7 @@ for (k in sspChoices)  {
       print(paste0("Loading: ", temp, " pid: ", Sys.getpid()))
 #      tmax <- readAll(brick(temp))
       endTime <- Sys.time()
-      print(paste0("tmax brick created, ", temp, ", creation time: ",  round(difftime(endTime, startTime, units = "mins"), digits = 2),  " min.,  pid: ", Sys.getpid()))
+      print(paste0("tmax brick created, ", tmaxIn, ", creation time: ",  round(difftime(endTime, startTime, units = "mins"), digits = 2),  " min.,  pid: ", Sys.getpid()))
       
       startTime <-  Sys.time()
       j <- "tasmin"
@@ -70,7 +70,7 @@ for (k in sspChoices)  {
       tmaxTminIn(tmaxIn, tminIn)
       endTime <- Sys.time()
   endTime - startTime    
-      print(paste0("tmin brick created, ", temp, ",  creation time: ",  round(difftime(endTime, startTime, units = "mins"), digits = 2),  " min.,  pid: ", Sys.getpid()))
+      print(paste0("tmin brick created, ", tminIn, ",  creation time: ",  round(difftime(endTime, startTime, units = "mins"), digits = 2),  " min.,  pid: ", Sys.getpid()))
       gddFilesCompleted <- list.files(gddsfileOutLoc)
       gddFilesCompleted <- gddFilesCompleted[!grepl("aux.xml", gddFilesCompleted, fixed = TRUE)]
       for (o in 1:length(cropChoices)) {
