@@ -347,4 +347,9 @@ tmaxRhIn <- function(tmaxFile, rhFile) {
   rh <<- readAll(brick(rhFile))
 }
 
+tmaxTminIn <- function(tmaxIn, tminIn) {
+  tmax <<- readAll(brick(tmaxIn))
+  tmin <<- readAll(brick(tminIn))
+}
+
 
