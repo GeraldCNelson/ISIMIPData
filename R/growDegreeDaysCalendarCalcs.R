@@ -26,14 +26,17 @@ cropName <- m
 for (k in sspChoices)  {
   for (i in modelChoices)  {
     for (l in startyearChoices) {
+      yearSpan <- paste0(l, "_", l + yearRange)
+      
+      layerNames <- readRDS(paste0("data-raw/ISIMIP/ISIMIPLayerNames_", yearSpan, ".RDS"))
+      
       for (o in 1:length(cropChoices)) {
         for (m in get(cropChoices[o])) {
           print(paste0("crop: ", m))  
           modelName.lower <- tolower(i)
-          yearSpan <- paste0(l, "_", l + yearRange)
           gddIn_crop <- paste0(gddsfilesLoc, modelName.lower, "_", m, "_", k, "_gdd", "_global_daily_", yearSpan, ".tif")
-          gdd <- brick(gddIn_crop)
-          names(gdd) <- readRDS(paste0("data-raw/ISIMIP/ISIMIPLayerNames_", yearSpan, ".RDS"))
+          gdd <- readAll(brick(gddIn_crop))
+          names(gdd) <- layerNames
           indices <- format(as.Date(names(gdd), format = "X%Y.%m.%d"), format = "%j") # %j is day of the year
           indices <- as.numeric(indices)
           
@@ -82,7 +85,6 @@ for (k in sspChoices)  {
           fileNameMask.in <- paste0("data/crops/rasterMask_", tolower(m), ".tif")
           mask <- raster(fileNameMask.in)
           
-          
           cropCalendarName <- ann_crop_temp_table[crop %in% cropName, crop.calendar]
           cropCalFilesLoc <- paste0("data-raw/crops/cropCalendars/ALL_CROPS_netCDF_0.5deg_filled/")
           fileInName <- paste0(cropCalendarName, ".crop.calendar.fill.nc")
@@ -93,31 +95,30 @@ for (k in sspChoices)  {
           croppingCalendar_plant <- raster(locNFileIn, var = "plant")
           croppingCalendar_harvest <- raster(locNFileIn, var = "harvest")
           croppingCalendar_plant_crop <- mask(croppingCalendar_plant, mask)
+          croppingCalendar_harvest_crop <- mask(croppingCalendar_harvest, mask)
           
           unlink(locNFileIn) # delete the .nc file when no longer needed.
           
           croppingCalendar_plant_crop_north <- crop(croppingCalendar_plant_crop, extent(northerHemExtent))
           
-          croppingCalendar_harvest_crop <- mask(croppingCalendar_harvest, mask)
           croppingCalendar_harvest_crop_north <- crop(croppingCalendar_harvest_crop, extent(northerHemExtent))
           
-          croppingCalendar_plant_crop <- mask(croppingCalendar_plant, mask)
-          croppingCalendar_harvest_crop <- mask(croppingCalendar_harvest, mask)
           cal <- readAll(stack(croppingCalendar_plant_crop, croppingCalendar_harvest_crop))
           
           calN <- calS <- croppingCalendar_harvest_crop - croppingCalendar_plant_crop
           calN[calN <= 0] <- NA # raster where all non-NC values are where the harvest date is greater than the plant date
           calN[calN > 0] <- 1 # raster where all non-NC values are where the harvest date is greater than the plant date
-          calS[calS <= 0] <- NA # raster where all non-NC values are where the harvest date is less than the plant date, ie is in the new year
-          calS[calS > 0] <- 1 # raster where all non-NC values are where the harvest date is less than the plant date, ie is in the new year
+          calS[calS > 0] <- NA # raster where all non-NC values are where the harvest date is less than the plant date, ie is in the new year
+          calS[calS < 0] <- 1 # raster where all non-NC values are where the harvest date is less than the plant date, ie is in the new year
           
           
-          calN <- overlay(cal, calN, fun = overlayFunction, recycle = FALSE)
+          calN <- overlay(cal, calN, fun = overlayfunction_mask, recycle = FALSE)
+          calS <- overlay(cal, calS, fun = overlayfunction_mask, recycle = FALSE)
           
           
           # this function sums the number of degree days during the cropping calendar
           # i - is the stack cal; two rasters - when the crop is planted and when it is harvested
-          # v - is the set of 365 rasters in a year (or 366 in a leap year). It is called gddy_subset and generated below
+          # v - is the set of 365 rasters in a year (or 366 in a leap year). It is called gdd_year and generated below
           gddSum <- function(i, v) {
             j <- !is.na(i[,1])
             r <- rep(NA, nrow(i))
@@ -125,11 +126,31 @@ for (k in sspChoices)  {
             r[j] <- apply(x, 1, function(y) sum(y[ (y[1]:y[2])+2 ] )) 
             r
           }
+          #names edited
+          gddSum <- function(cal, gdd_year) {
+            j <- !is.na(cal[,1]) # test if there are entries in the first layer of cal; j is TRUE/FALSE
+            r <- rep(NA, nrow(cal)) # create r, a vector of NAs, one for each row in cal
+            x <- cbind(cal[j,,drop=FALSE], gdd_year[j,,drop=FALSE])
+            r[j] <- apply(x, 1, function(y) sum(y[ (y[1]:y[2])+2 ] )) 
+            r
+          }
           
-          gddy_subset <- readAll(gdd)
+          # return a year's worth of day layers from the yearHolder brick
+          yearSubsetter <- function(l, yearRange, yearHolder) {
+            yearSpan <- paste0(l, "_", l + yearRange)
+            layerNames <- readRDS(paste0("data-raw/ISIMIP/ISIMIPLayerNames_", yearSpan, ".RDS"))
+            indices <- format(as.Date(layerNames, format = "X%Y.%m.%d"), format = "%Y")
+            indexList <- which(!indices %in% l)
+            yearLayers <- dropLayer(yearHolder, indexList)
+          }
           
+          gdd_year <- yearSubsetter(l, yearRange, yearHolder = gdd)
           
-          # need to subset and run this by year. This means figuring out what are the leap years
+          x <- overlay(calN, gdd_year, fun = gddSum, recycle = FALSE)
+          
+          system.time(x <- setValues(gdd_year, gddSum(values(calN), values(gdd_year))))
+          
+          # need to subset and run this by year. 
           cumDays <- 0
           stack.temp <- stack() #, ..., bands=NULL, varname="", native=FALSE, RAT=TRUE, quick=FALSE)
           startTime <- Sys.time()
@@ -143,9 +164,9 @@ for (k in sspChoices)  {
             endTime1 <- Sys.time()
             endTime1 - startTime1
             endTime2 <- Sys.time()
-            gddy_subset <- readAll(subset(gdd, daysStart:daysEnd))
+            gdd_year <- readAll(dropLayer(gdd, daysStart:daysEnd))
             startTime <- Sys.time()
-            x <- overlay(calN, gddy_subset, fun = gddSum, recycle = FALSE)
+            x <- overlay(calN, gdd_year, fun = gddSum, recycle = FALSE)
             endTime <- Sys.time()
             round(difftime(endTime, startTime, units = "mins"), digits = 2)
             endTime3 - endTime2
@@ -153,6 +174,11 @@ for (k in sspChoices)  {
             stack.temp <- addLayer(stack.temp, x)
             cumDays <- cumDays + daysInYear
           }
+          
+          
+          
+          
+          
           endTime <- Sys.time()
           round(difftime(endTime, startTime,  units = "mins"), digits = 2)
           

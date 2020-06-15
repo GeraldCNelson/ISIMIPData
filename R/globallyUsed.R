@@ -352,4 +352,6 @@ tmaxTminIn <- function(tmaxIn, tminIn) {
   tmin <<- readAll(brick(tminIn))
 }
 
-
+overlayfunction_mask <- function(x,y) {
+  return(x * y)
+}

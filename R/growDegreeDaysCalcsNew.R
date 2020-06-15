@@ -25,7 +25,7 @@ gddsfileOutLoc <- "data/cmip6/growingDegreeDays/"
 i <- "IPSL-CM6A-LR"
 k <- "ssp585"
 l <- 2051
-m <- "Bean"
+m <- "Wheat"
 # useCores <- detectCores() - 2 # max number of cores
 # useCores <- 2 # better for memory intensive activities
 # 
@@ -55,10 +55,10 @@ for (k in sspChoices)  {
       fileNameIn <- paste0(fileNameIn, ".nc")
       
       tmaxIn <- paste0(locOfFiles, k,"/", i, "/", fileNameIn)
-      print(paste0("Loading: ", temp, " pid: ", Sys.getpid()))
+      print(paste0("Loading: ", tmaxIn, " pid: ", Sys.getpid()))
 #      tmax <- readAll(brick(temp))
-      endTime <- Sys.time()
-      print(paste0("tmax brick created, ", tmaxIn, ", creation time: ",  round(difftime(endTime, startTime, units = "mins"), digits = 2),  " min.,  pid: ", Sys.getpid()))
+      # endTime <- Sys.time()
+      # print(paste0("tmax brick created, ", tmaxIn, ", creation time: ",  round(difftime(endTime, startTime, units = "mins"), digits = 2),  " min.,  pid: ", Sys.getpid()))
       
       startTime <-  Sys.time()
       j <- "tasmin"

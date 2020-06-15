@@ -82,7 +82,7 @@ end_time - start_time
 thiListReduced <- thiList[!thiList %in% c("thi.yak", "thi.broiler", "thi.layer")]
 
 # the overlay function needs a user defined function on the relationship between the two rasters
-overlayfunction <- function(x,y) {
+overlayfunction_mask <- function(x,y) {
   return(x * y)
 }
 for (k in sspChoices) {
@@ -102,9 +102,9 @@ for (k in sspChoices) {
       meanData <- brick(fileNameMean.in)
       meanData[meanData < 0] <- 0 # set all negative THI values to 0
       CVData <- brick(fileNameCV.in)
-      mean.masked <- overlay(meanData, mask, fun = overlayfunction)
+      mean.masked <- overlay(meanData, mask, fun = overlayfunction_mask)
       names(mean.masked) <- month.abb
-      CV.masked <- overlay(CVData, mask, fun = overlayfunction)
+      CV.masked <- overlay(CVData, mask, fun = overlayfunction_mask)
       names(CV.masked) <- month.abb
       fileNameMean.masked <- paste0("data/cmip6/THI/THI_ensembleMean_masked_",speciesName, "_",  yearSpan, "_", k, ".tif")
       fileNameCV.masked <- paste0("data/cmip6/THI/THI_ensembleCV_masked_", speciesName, "_",  yearSpan, "_", k, ".tif")
@@ -128,7 +128,7 @@ for (j in 1:length(thiListReduced)) {
   mask <- raster(fileNameMask.in)
   meanData <- brick(fileNameMean.in)
   meanData[meanData < 0] <- 0 # set all negative THI values to 0
-  mean.masked <- overlay(meanData, mask, fun = overlayfunction)
+  mean.masked <- overlay(meanData, mask, fun = overlayfunction_mask)
   names(mean.masked) <- month.abb
   fileNameMean.masked <- paste0("data/cmip6/THI/THI_masked_",speciesName, "_observed_", yearSpan, ".tif")
   print(fileNameMean.masked)
