@@ -17,7 +17,7 @@ yearRange <- 9
 gddsfilesLoc <- "data/cmip6/growingDegreeDays/"
 
 #test values
-i <- "GFDL-ESM4"
+i <- "UKESM1-0-LL"
 k <- "ssp585"
 l <- 2051
 m <- "Wheat"
