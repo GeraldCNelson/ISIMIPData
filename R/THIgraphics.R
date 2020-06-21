@@ -31,8 +31,8 @@ for (k in sspChoices) {
       print(paste0("fileNameMean.masked: ", fileNameMean.masked))
       fileNameCV.masked <- paste0("data/cmip6/THI/THI_ensembleCV_masked_", speciesName, "_",  yearSpan, "_", k, ".tif")
       print(paste0("fileNameCV.masked: ", fileNameCV.masked))
-      meanData <- brick(fileNameMean.masked)
-      CVData <- brick(fileNameCV.masked)
+      meanData <- rastfileNameMean.masked)
+      CVData <- rastfileNameCV.masked)
       names(meanData) <- month.abb
       names(CVData) <- month.abb
       
@@ -81,7 +81,7 @@ for (j in 1:length(thiListReduced)) {
   
   fileNameMean.masked <- paste0("data/cmip6/THI/THI_masked_", speciesName, "_observed_", yearSpan, ".tif")
   print(paste0("filenamein ", fileNameMean.masked))
-  meanData <- brick(fileNameMean.masked)
+  meanData <- rastfileNameMean.masked)
   names(meanData) <- month.abb
   
   # plot Ensemble mean

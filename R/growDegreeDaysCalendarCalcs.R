@@ -35,13 +35,15 @@ for (k in sspChoices)  {
           print(paste0("crop: ", m))  
           modelName.lower <- tolower(i)
           gddIn_crop <- paste0(gddsfilesLoc, modelName.lower, "_", m, "_", k, "_gdd", "_global_daily_", yearSpan, ".tif")
-          gdd <- readAll(brick(gddIn_crop))
+          gdd <- rast(gddIn_crop)
           names(gdd) <- layerNames
           indices <- format(as.Date(names(gdd), format = "X%Y.%m.%d"), format = "%j") # %j is day of the year
           indices <- as.numeric(indices)
           
           startTime <-  Sys.time()
           gdd_north <- gdd[1:180, 1:720, drop = FALSE]
+          e = extent(northerHemExtent)
+          system.time(gdd_north <- crop(gdd, ext(1, 180, 1, 720)))
           endTime <-  Sys.time()
           round(difftime(endTime, startTime,  units = "mins"), digits = 2)
           
@@ -83,7 +85,7 @@ for (k in sspChoices)  {
           cropName <- m
           
           fileNameMask.in <- paste0("data/crops/rasterMask_", tolower(m), ".tif")
-          mask <- raster(fileNameMask.in)
+          mask <- rast(fileNameMask.in)
           
           cropCalendarName <- ann_crop_temp_table[crop %in% cropName, crop.calendar]
           cropCalFilesLoc <- paste0("data-raw/crops/cropCalendars/ALL_CROPS_netCDF_0.5deg_filled/")
@@ -103,11 +105,6 @@ for (k in sspChoices)  {
           
           croppingCalendar_harvest_crop_north <- crop(croppingCalendar_harvest_crop, extent(northerHemExtent))
           
-          cal <- readAll(stack(croppingCalendar_plant_crop, croppingCalendar_harvest_crop))
-          
-          calN <- calS <- croppingCalendar_harvest_crop - croppingCalendar_plant_crop
-          calN[calN <= 0] <- NA # raster where all non-NC values are where the harvest date is greater than the plant date
-          calN[calN > 0] <- 1 # raster where all non-NC values are where the harvest date is greater than the plant date
           calS[calS > 0] <- NA # raster where all non-NC values are where the harvest date is less than the plant date, ie is in the new year
           calS[calS < 0] <- 1 # raster where all non-NC values are where the harvest date is less than the plant date, ie is in the new year
           
@@ -199,14 +196,14 @@ for (k in sspChoices)  {
 #     end <- croppingCalendar_plantend[i,j] # get the ending day
 #     print(paste0("start: ", start, " end: ", end))
 #     
-#     datasum.sub1 <- stackApply(gdd[[start:end]], indices, fun = sum) 
+#     datasum.sub1 <- tapp(gdd[[start:end]], indices, fun = sum) 
 #     print(datasum.sub1)
 #   } 
 # }
 # 
 # indices <- format(as.Date(names(tmin), format = "X%Y.%m.%d"), format = "%m")
 # indices <- as.numeric(indices)
-# monthZeroCount <- stackApply(tmin, indices, fun = function(x, ...){sum(x <= 0)}) 
+# monthZeroCount <- tapp(tmin, indices, fun = function(x, ...){sum(x <= 0)}) 
 # names(monthZeroCount) <- month.abb
 # fileNameOutZero <- paste0("belowZeroCount_", modelName.lower, "_", k, "_", yearSpan, ".tif")
 # writeRaster(monthZeroCount, filename = paste0("data/cmip6/belowZero/", fileNameOutZero), format = "GTiff", overwrite = TRUE)

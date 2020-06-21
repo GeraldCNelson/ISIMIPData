@@ -57,7 +57,7 @@ foreach(i = modelChoices) %:%
     
     temp <- paste(locOfFiles, k, "/", i, "/", fileNameIn, sep = "")
     print(paste0("Working on : ", temp))
-    brick.pr <- brick(temp, varname = j) # because there is no explicit projection info in the netcdf files, this is assumed - +proj=longlat +datum=WGS84"
+    brick.pr <- rasttemp, varname = j) # because there is no explicit projection info in the netcdf files, this is assumed - +proj=longlat +datum=WGS84"
 
     # the overlay function needs a user defined function on the relationship between the two rasters
     overlayfunction <- function(x,y) {
@@ -68,7 +68,7 @@ foreach(i = modelChoices) %:%
       cropName <- cropChoices[m]
       fileNameMask.in <- paste0("data/crops/rasterMask_", tolower(cropName), ".tif")
       print(paste0("fileNameMaskIn: ", fileNameMask.in))
-      mask <- raster(fileNameMask.in)
+      mask <- rast(fileNameMask.in)
       startTime <- Sys.time()
       brick.pr.masked <- overlay(brick.pr, mask, fun = overlayfunction)
       endTime <- Sys.time()

@@ -44,7 +44,7 @@ foreach(l = startyearChoices) %:%
     
     tmaxFile <- paste0(locOfFiles, k,"/", i, "/", fileNameIn)
     # print(paste0("Working on : ", temp, " pid: ", Sys.getpid()))
-    # tmax <- brick(temp)
+    # tmax <- rasttemp)
     
     j <- "hurs"
     fileNameIn <- paste(modelName.lower, k, j, "global_daily", yearSpan, sep = "_")
@@ -52,7 +52,7 @@ foreach(l = startyearChoices) %:%
     
     rhFile <- paste0(locOfFiles, k,"/", i, "/", fileNameIn)
     print(paste0("Working on : ", temp, " pid: ", Sys.getpid()))
-    #      rh <- brick(temp)
+    #      rh <- rasttemp)
     hiFilesCompleted <- list.files(hifileOutLoc)
     hiFilesCompleted <- hiFilesCompleted[!grepl("aux.xml", hiFilesCompleted, fixed = TRUE)]
     
@@ -103,7 +103,7 @@ for (o in 1:length(cropChoices)) {
   for (m in get(cropChoices[o])) {
     cropName <- m
     fileNameMask.in <- paste0("data/crops/rasterMask_", tolower(m), ".tif")
-    cropMask <- raster(fileNameMask.in)
+    cropMask <- rast(fileNameMask.in)
     hiMasked <- overlay(hiSimple, cropMask, fun = overlayfunction_mask)
     names(hiMasked) <- names(hiSimple)
     indices <- format(as.Date(names(hiMasked), format = "X%Y.%m.%d"), format = "%j") # %j is day of the year
@@ -112,12 +112,11 @@ for (o in 1:length(cropChoices)) {
     cropCalendarName <- ann_crop_temp_table[crop %in% cropName, crop.calendar]
     cropCalFilesLoc <- paste0("data-raw/crops/cropCalendars/ALL_CROPS_netCDF_0.5deg_filled/")
     fileInName <- paste0(cropCalendarName, ".crop.calendar.fill.nc")
-    #    locNFileIn <- paste0(filesLoc, fileInName, ".gz")
     locNFileIn <- paste0(cropCalFilesLoc, fileInName)
     R.utils::gunzip(paste0(locNFileIn, ".gz"), remove = FALSE)
     
-    croppingCalendar_plant <- raster(locNFileIn, var = "plant")
-    croppingCalendar_harvest <- raster(locNFileIn, var = "harvest")
+    croppingCalendar_plant <- rast(locNFileIn, var = "plant")
+    croppingCalendar_harvest <- rast(locNFileIn, var = "harvest")
     calendarDelta <- croppingCalendar_harvest - croppingCalendar_plant
     calendarDeltaMasked <- overlay(calendarDelta, cropMask, fun = overlayfunction_mask)
 

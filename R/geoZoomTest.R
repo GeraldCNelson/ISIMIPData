@@ -31,8 +31,8 @@ fileNameMean.masked <- paste0("data/cmip6/THI/THI_ensembleMean_masked_", species
 print(paste0("fileNameMean.masked: ", fileNameMean.masked))
 fileNameCV.masked <- paste0("data/cmip6/THI/THI_ensembleCV_masked_", speciesName, "_",  yearSpan, "_", k, ".tif")
 print(paste0("fileNameCV.masked: ", fileNameCV.masked))
-meanData <- brick(fileNameMean.masked)
-CVData <- brick(fileNameCV.masked)
+meanData <- rastfileNameMean.masked)
+CVData <- rastfileNameCV.masked)
 names(meanData) <- month.abb
 names(CVData) <- month.abb
 
@@ -55,4 +55,4 @@ g <- g + latticeExtra::layer(sp.polygons(wrld_land, col = "black", lwd = 0.5))
 g
 
 
-test <- brick("data/cmip6/tmaxMonthlySums/tmaxGT_48_ukesm1-0-ll_ssp585_2021_2030.tif")
+test <- rast"data/cmip6/tmaxMonthlySums/tmaxGT_48_ukesm1-0-ll_ssp585_2021_2030.tif")

@@ -54,13 +54,13 @@ foreach(k = sspChoices) %:%
     
     temp <- paste(locOfFiles, k, "/", i, "/", fileNameIn, sep = "")
     print(paste0("Working on : ", temp))
-    ncin.brick <- brick(temp, varname = j) # because there is no explicit projection info in the netcdf files, this is assumed - +proj=longlat +datum=WGS84"
+    ncin.brick <- rasttemp, varname = j) # because there is no explicit projection info in the netcdf files, this is assumed - +proj=longlat +datum=WGS84"
     ncin.brick <- readAll(ncin.brick) # seems to speed up processing if ncin.brick is an nc file
     indices <- format(as.Date(names(ncin.brick), format = "X%Y.%m.%d"), format = "%m")
     indices <- as.numeric(indices)
     # ncin.brick <- fixUnits(var = j, ncin.brick = ncin.brick) # fixes temp and precip units; assumes ncin.brick values are raw units
-    ncin.brick.mean <- raster::stackApply(ncin.brick, indices, fun = mean, na.rm = TRUE)
-    ncin.brick.cv <- raster::stackApply(ncin.brick, indices, fun = cv, na.rm = TRUE)
+    ncin.brick.mean <- tapp(ncin.brick, indices, fun = mean, na.rm = TRUE)
+    ncin.brick.cv <- tapp(ncin.brick, indices, fun = cv, na.rm = TRUE)
     names(ncin.brick.mean) <- month.abb
     names(ncin.brick.cv) <- month.abb
     
@@ -89,14 +89,14 @@ for (j in observedlist) {
   print(paste0("Working on : ", filenameIn))
   
   #in the hurs file, the variable name is rhs
-  ncin.brick <- brick(filenameIn) # because there is no explicit projection info in the netcdf files, this is assumed - +proj=longlat +datum=WGS84"
+  ncin.brick <- rastfilenameIn) # because there is no explicit projection info in the netcdf files, this is assumed - +proj=longlat +datum=WGS84"
   ncin.brick <- readAll(ncin.brick) # seems to speed up processing if ncin.brick is an nc file
   # ncin.brick <- fixUnits(var = j, ncin.brick = ncin.brick) # fixes temp and precip units; assumes ncin.brick values are raw units
   
   indices <- format(as.Date(names(ncin.brick), format = "X%Y.%m.%d"), format = "%m")
   indices <- as.numeric(indices)
-  ncin.brick.mean <- raster::stackApply(ncin.brick, indices, fun = mean, na.rm = TRUE)
-  ncin.brick.cv <- raster::stackApply(ncin.brick, indices, fun = cv, na.rm = TRUE)
+  ncin.brick.mean <- tapp(ncin.brick, indices, fun = mean, na.rm = TRUE)
+  ncin.brick.cv <- tapp(ncin.brick, indices, fun = cv, na.rm = TRUE)
   names(ncin.brick.mean) <- month.abb
   names(ncin.brick.cv) <- month.abb
   

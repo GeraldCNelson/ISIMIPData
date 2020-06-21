@@ -1,7 +1,6 @@
 # combine 10 year rasters across models to get ensemble means and coeffients of variation
 
 source("R/globallyUsed.R")
-library(raster)
 library(doParallel) #Foreach Parallel Adaptor 
 library(foreach) #Provides foreach looping construct
 
@@ -31,10 +30,7 @@ libList <- c("raster", "data.table")
 start_time <- Sys.time()
 # x <- foreach(l = startyearChoices_ensemble, .combine = rbind) %:%
 #   foreach(k = sspChoices, .combine = rbind)  %dopar% {
-# require(data.table)
-# require(raster)
-# rasterOptions(tmpdir = tmpDirName)
-# dir.create(tmpDirName)
+
 for (k in sspChoices) {
   for (l in startyearChoices_ensemble) {
     yearSpan <- paste0(l, "_", l + yearRange)
@@ -48,17 +44,17 @@ for (k in sspChoices) {
       for (m in 1:length(modelChoices)) {
         fileNameIn <- paste0("data/cmip6/THI/", thiList[j], "_", modelChoices[m],  "_", yearSpan, "_", k, ".tif")
         print(paste0("raster file name in: ", fileNameIn,  ", pid number: ", Sys.getpid()))
-        rasterList[[m]] <- brick(fileNameIn)
+        rasterList[[m]] <- rast(fileNameIn)
         names(rasterList[[m]]) <- month.abb
       }
-      ras.test <- stack(rasterList)
+      ras.test <- rast(rasterList)
       ras.test[ras.test < 0] <- 0 # set all negative THI values to 0
       print(paste0( "Done setting negative THI values to 0 for species names: ", speciesName, ", start year: ", l))
       indices <- format(as.Date(names(ras.test), format = "%b.%d"), format = "%m")
       indices <- as.numeric(indices)
       print(paste0( "Done setting doing raster indices for ras.test stack for species: ", speciesName, ", start year: ", l))
-      ras.test.mean <- raster::stackApply(ras.test, indices, fun = mean, na.rm = TRUE)
-      ras.test.cv <- raster::stackApply(ras.test, indices, fun = cv, na.rm = TRUE)
+      ras.test.mean <- tapp(ras.test, indices, fun = mean, na.rm = TRUE)
+      ras.test.cv <- tapp(ras.test, indices, fun = cv, na.rm = TRUE)
       names(ras.test.mean) <- month.abb
       names(ras.test.cv) <- month.abb
       print(paste0( "Done updating raster names with month.abb for species: ", speciesName, ", start year: ", l))
@@ -98,10 +94,10 @@ for (k in sspChoices) {
       print(paste0("fileNameMean.in: ", fileNameMean.in))
       fileNameCV.in <- paste0("data/cmip6/THI/THI_ensembleCV_", speciesName, "_", yearSpan, "_", k, ".tif")
       print(paste0("fileNameCV.in: ", fileNameCV.in))
-      mask <- raster(fileNameMask.in)
-      meanData <- brick(fileNameMean.in)
+      mask <- rast(fileNameMask.in)
+      meanData <- rast(fileNameMean.in)
       meanData[meanData < 0] <- 0 # set all negative THI values to 0
-      CVData <- brick(fileNameCV.in)
+      CVData <- rast(fileNameCV.in)
       mean.masked <- overlay(meanData, mask, fun = overlayfunction_mask)
       names(mean.masked) <- month.abb
       CV.masked <- overlay(CVData, mask, fun = overlayfunction_mask)
@@ -125,8 +121,8 @@ for (j in 1:length(thiListReduced)) {
   print(paste0("fileNameMaskIn: ", fileNameMask.in))
   fileNameMean.in <- paste0("data/cmip6/THI/", thiListReduced[j], "_observed_", yearSpan, ".tif")
   print(paste("fileNameMean.in: ", fileNameMean.in))
-  mask <- raster(fileNameMask.in)
-  meanData <- brick(fileNameMean.in)
+  mask <- rast(fileNameMask.in)
+  meanData <- rastfileNameMean.in)
   meanData[meanData < 0] <- 0 # set all negative THI values to 0
   mean.masked <- overlay(meanData, mask, fun = overlayfunction_mask)
   names(mean.masked) <- month.abb

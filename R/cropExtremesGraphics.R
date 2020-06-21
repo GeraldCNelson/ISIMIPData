@@ -36,7 +36,7 @@ for (i in modelChoices) {
         }
         
         print(fileNameIn_damage)
-        temp <- brick(fileNameIn_damage)
+        temp <- rastfileNameIn_damage)
         temp <- readAll(temp)
         names(temp) <- month.abb
         yearSpan <- paste0(l, "_", l + yearRange)
@@ -81,7 +81,7 @@ for (i in modelChoices) {
         print(paste0(cropName, ", lower optimum: ", lowerOpt, ", upper optimum: ", upperOpt, " start year: ", l))
         print(fileNameIn)
         
-        temp <- brick(fileNameIn)
+        temp <- rastfileNameIn)
         names(temp) <- month.abb
         titleText <- paste0("Average number of days by month with optimum temp. range (", lowerOpt, " - ", upperOpt, "°C)\n", yearSpan, ", model = ", i, ", SSP = ", k)
         
@@ -118,9 +118,9 @@ for (k in sspChoices) {
       
       fileNameMean <- paste0("data/cmip6/damageTemp/tdamage_ensembleMean_masked_", cropName, "_", tdamage_mean, "C_", k, "_", yearSpan, ".tif")
       fileNameCV <- paste0("data/cmip6/damageTemp/tdamage_ensembleCV_masked_", cropName, "_", tdamage_mean, "C_", k, "_", yearSpan, ".tif")
-      temp.mean <- brick(fileNameMean)
+      temp.mean <- rastfileNameMean)
       names(temp.mean) <- month.abb
-      temp.cv <- brick(fileNameCV)
+      temp.cv <- rastfileNameCV)
       names(temp.cv) <- month.abb
       
       # plot Ensemble mean
@@ -156,7 +156,7 @@ for (k in sspChoices) {
     
     fileNameMean <- paste0("data/cmip6/damageTemp/tdamage_mean_masked_", cropName, "_", tdamage_mean, "C", "_observed_", yearSpan, ".tif")
     print(paste0("filenamein ", fileNameMean))
-    temp.mean <- brick(fileNameMean)
+    temp.mean <- rastfileNameMean)
     names(temp.mean) <- month.abb
     
     # plot Ensemble mean

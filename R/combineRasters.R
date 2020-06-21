@@ -35,14 +35,14 @@ for (k in sspChoices) {
       for (j in 1:length(modelChoices)) {
         fileNameIn <- paste0("data/cmip6/damageTemp/tdamage_mean_", cropName, "_", tdamage_mean, "C_",  modelChoices.lower[j], "_", k,  "_", yearSpan, ".tif")
         print("fileNameIn: ", fileNameIn)
-        rasterList[[j]] <- brick(fileNameIn)
+        rasterList[[j]] <- rastfileNameIn)
         names(rasterList[[j]]) <- month.abb
       }
       ras.test <- stack(rasterList)
       indices <- format(as.Date(names(ras.test), format = "%b.%d"), format = "%m")
       indices <- as.numeric(indices)
-      ras.test.mean <- raster::stackApply(ras.test, indices, fun = mean, na.rm = TRUE)
-      ras.test.cv <- raster::stackApply(ras.test, indices, fun = cv, na.rm = TRUE)
+      ras.test.mean <- tapp(ras.test, indices, fun = mean, na.rm = TRUE)
+      ras.test.cv <- tapp(ras.test, indices, fun = cv, na.rm = TRUE)
       names(ras.test.mean) <- month.abb
       names(ras.test.cv) <- month.abb
       fileNameMean <- paste0("data/cmip6/damageTemp/tdamage_ensembleMean_", cropName, "_", tdamage_mean, "C_",  modelName.lower, "_", k,  "_", yearSpan, ".tif")

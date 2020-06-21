@@ -56,7 +56,7 @@ for (k in sspChoices)  {
       
       tmaxIn <- paste0(locOfFiles, k,"/", i, "/", fileNameIn)
       print(paste0("Loading: ", tmaxIn, " pid: ", Sys.getpid()))
-#      tmax <- readAll(brick(temp))
+#      tmax <- readAll(rasttemp))
       # endTime <- Sys.time()
       # print(paste0("tmax brick created, ", tmaxIn, ", creation time: ",  round(difftime(endTime, startTime, units = "mins"), digits = 2),  " min.,  pid: ", Sys.getpid()))
       
@@ -65,7 +65,7 @@ for (k in sspChoices)  {
       fileNameIn <- paste(modelName.lower, k, j, "global_daily", yearSpan, sep = "_")
       fileNameIn <- paste0(fileNameIn, ".nc")
       tminIn <- paste0(locOfFiles, k,"/", i, "/", fileNameIn)
- #      <- readAll(brick(temp))
+ #      <- readAll(rasttemp))
       startTime <-  Sys.time()
       tmaxTminIn(tmaxIn, tminIn)
       endTime <- Sys.time()
@@ -82,7 +82,7 @@ for (k in sspChoices)  {
             Tbase <- ann_crop_temp_table[(crop %in% m), Tbase]
             Tbase_max <- ann_crop_temp_table[(crop %in% m), Tbase_max]
             fileNameMask.in <- paste0("data/crops/rasterMask_", tolower(m), ".tif")
-            cropMask <- raster(fileNameMask.in)
+            cropMask <- rast(fileNameMask.in)
             startTime <-  Sys.time()
 #            system.time(gdd <- setValues(tmin, f.gdd(cropMask = values(cropMask), tmin = values(tmin), tmax = values(tmax), tbase = Tbase, tbase_max = Tbase_max)))
             gdd <- setValues(tmin, f.gdd(cropMask = values(cropMask), tmin = values(tmin), tmax = values(tmax), tbase = Tbase, tbase_max = Tbase_max))
@@ -112,8 +112,8 @@ for (k in sspChoices)  {
 # do same calculations on observed data
 tmax <- tasmax.observed
 tmin <- tasmin.observed
-tmin <- readAll(brick(tmin))
-tmax <- readAll(brick(tmax))
+tmin <- readAll(rasttmin))
+tmax <- readAll(rasttmax))
 print("done with readAll tmin and tmax")
 yearSpan <- "2001_2010"
 

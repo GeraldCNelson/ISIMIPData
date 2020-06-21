@@ -3,7 +3,8 @@
 library(ncdf4)
 #library(PCICt)
 #library(ncdf4.helpers)
-library(raster)
+#library(raster)
+library(terra)
 #library(rgdal)
 library(gdalUtils)
 library(rgeos)
@@ -18,18 +19,17 @@ library(readxl)
 library(rworldmap)
 library(lubridate)
 
-raster::rasterOptions(chunksize = 3e+09, maxmemory = 9e+09, tmptime = 2, progress = "text", timer = TRUE)
-rasterOptions(tmpdir =  "data/ISIMIP/") # need to use a relative path
+terraOptions(memfrac = 0.7,  progress = 10, tempdir =  "data/ISIMIP/") # need to use a relative path
 
 # starttime <- Sys.time()
-# tmin_clamped <- clamp(tmin, lower = Tbase_barley, upper = Tbase_max_barley, useValues = TRUE)
+# tmin_clamped <- clamp(tmin, lower = Tbase_barley, upper = Tbase_max_barley, Values = TRUE)
 # endtime <- Sys.time()
 # endtime - starttime
 # 
 # rasterOptions(chunksize = 1e+09, maxmemory = 6e+09)
 # 
 # starttime <- Sys.time()
-# tmin_clamped <- clamp(tmin, lower = Tbase_barley, upper = Tbase_max_barley, useValues = TRUE)
+# tmin_clamped <- clamp(tmin, lower = Tbase_barley, upper = Tbase_max_barley, Values = TRUE)
 # endtime <- Sys.time()
 # endtime - starttime
 
@@ -95,39 +95,38 @@ for (j in c("dataDirs.csv", "graphicsDirs.csv")) {
 locOfCMIP6ncFiles <- "data-raw/ISIMIP/cmip6/unitsCorrected/"
 tmpDirName <- paste0(locOfCMIP6ncFiles, "rasterTmp", Sys.getpid(), "/")
 
-gdal_polygonizeR <- function(x, outshape=NULL, gdalformat = 'ESRI Shapefile',
-                             pypath=NULL, readpoly=TRUE, quiet=TRUE) {
-  if (isTRUE(readpoly)) require(rgdal)
-  if (is.null(pypath)) {
-    pypath <- Sys.which('gdal_polygonize.py')
-  }
-  if (!file.exists(pypath)) stop("Can't find gdal_polygonize.py on your system.")
-  owd <- getwd()
-  on.exit(setwd(owd))
-  setwd(dirname(pypath))
-  if (!is.null(outshape)) {
-    outshape <- sub('\\.shp$', '', outshape)
-    f.exists <- file.exists(paste(outshape, c('shp', 'shx', 'dbf'), sep = '.'))
-    if (any(f.exists))
-      stop(sprintf('File already exists: %s',
-                   toString(paste(outshape, c('shp', 'shx', 'dbf'),
-                                  sep = ' .')[f.exists])), call.=FALSE)
-  } else outshape <- tempfile()
-  if (is(x, 'Raster')) {
-    require(raster)
-    writeRaster(x, {f <- tempfile(fileext = '.tif')})
-    rastpath <- normalizePath(f)
-  } else if (is.character(x)) {
-    rastpath <- normalizePath(x)
-  } else stop('x must be a file path (character string), or a Raster object.')
-  system2('python', args = (sprintf('"%1$s" "%2$s" -f "%3$s" "%4$s.shp"',
-                                    pypath, rastpath, gdalformat, outshape)))
-  if (isTRUE(readpoly)) {
-    shp <- readOGR(dirname(outshape), layer = basename(outshape), verbose = !quiet)
-    return(shp) 
-  }
-  return(NULL)
-}
+# gdal_polygonizeR <- function(x, outshape=NULL, gdalformat = 'ESRI Shapefile',
+#                              pypath=NULL, readpoly=TRUE, quiet=TRUE) {
+#   if (isTRUE(readpoly)) require(rgdal)
+#   if (is.null(pypath)) {
+#     pypath <- Sys.which('gdal_polygonize.py')
+#   }
+#   if (!file.exists(pypath)) stop("Can't find gdal_polygonize.py on your system.")
+#   owd <- getwd()
+#   on.exit(setwd(owd))
+#   setwd(dirname(pypath))
+#   if (!is.null(outshape)) {
+#     outshape <- sub('\\.shp$', '', outshape)
+#     f.exists <- file.exists(paste(outshape, c('shp', 'shx', 'dbf'), sep = '.'))
+#     if (any(f.exists))
+#       stop(sprintf('File already exists: %s',
+#                    toString(paste(outshape, c('shp', 'shx', 'dbf'),
+#                                   sep = ' .')[f.exists])), call.=FALSE)
+#   } else outshape <- tempfile()
+#   if (is(x, 'Raster')) {
+#     writeRaster(x, {f <- tempfile(fileext = '.tif')})
+#     rastpath <- normalizePath(f)
+#   } else if (is.character(x)) {
+#     rastpath <- normalizePath(x)
+#   } else stop('x must be a file path (character string), or a Raster object.')
+#   system2('python', args = (sprintf('"%1$s" "%2$s" -f "%3$s" "%4$s.shp"',
+#                                     pypath, rastpath, gdalformat, outshape)))
+#   if (isTRUE(readpoly)) {
+#     shp <- readOGR(dirname(outshape), layer = basename(outshape), verbose = !quiet)
+#     return(shp) 
+#   }
+#   return(NULL)
+# }
 
 # source of crop temperature values
 ann_crop_temp_table <- as.data.table(read_excel("data-raw/crops/ann_crop_temp_table_summary_0506052020.xlsx", range = "A1:S26"))
@@ -259,28 +258,28 @@ getcropAreaYield <- function(cropName, dataType) {
 f.gdd <- function(cropMask, tmin, tmax, tbase, tbase_max) {
   tavg <- (tmax + tmin) / 2 - tbase
   tavg[tavg < 0] <- 0
-#  tbase_max <- tbase_max - tbase
+  #  tbase_max <- tbase_max - tbase
   tavg[tavg > tbase_max] <- tbase_max
   tavg[is.na(cropMask), ] <- NA
   tavg
 }
 
-# faster version with make loading included
+# faster version with mask loading included
 f.gdd_model <- function(cropMask, tmin, tmax, tbase, tbase_max, m) {
   fileNameMask.in <- paste0("data/crops/rasterMask_", tolower(m), ".tif")
-  cropMask <- raster(fileNameMask.in)
+  cropMask <- rast(fileNameMask.in)
   tavg <- (tmax + tmin) / 2 - tbase
   tavg[tavg < 0] <- 0
-#  tbase_max <- tbase_max - tbase
+  #  tbase_max <- tbase_max - tbase
   tavg[tavg > tbase_max] <- tbase_max
   tavg[cropMask == 0, ] <- NA
   tavg
 }
- 
+
 f.gdd.clamped <- function(cropMask, tmin, tmax, tbase, tbase_max) {
   #	tbase_max  <- ifelse(tbase_max > 0, tbase_max, Inf) 
-  tmax_clamped <- apply(tmax, 1, function(i) clamp(i, tbase, tbase_max, useValues = TRUE))
-  tmin_clamped <- apply(tmin, 1, function(i) clamp(i, tbase, tbase_max, useValues = TRUE))
+  tmax_clamped <- apply(tmax, 1, function(i) clamp(i, tbase, tbase_max, Values = TRUE))
+  tmin_clamped <- apply(tmin, 1, function(i) clamp(i, tbase, tbase_max, Values = TRUE))
   r <- t((tmax_clamped + tmin_clamped) / 2 - tbase)
   r[cropMask == 0, ] <- NA
   r
@@ -301,8 +300,8 @@ f.gdd.clamped_masked <- function(cropMask, tmin, tmax, tbase, tbase_max) {
   tmax[cropMask == 0, ] <- NA
   tmin[tmin < tbase] <- tbase
   tmin[tmax >  tbase_max] <- tbase_max
-  tmax_clamped <- apply(tmax, 1, function(i) clamp(i, tbase, tbase_max, useValues = TRUE))
-  tmin_clamped <- apply(tmin, 1, function(i) clamp(i, tbase, tbase_max, useValues = TRUE))
+  tmax_clamped <- apply(tmax, 1, function(i) clamp(i, tbase, tbase_max, Values = TRUE))
+  tmin_clamped <- apply(tmin, 1, function(i) clamp(i, tbase, tbase_max, Values = TRUE))
   r <- t((tmax_clamped + tmin_clamped) / 2 - tbase)
   r[cropMask == 0, ] <- NA
   r
@@ -318,21 +317,21 @@ overlayfunction_mask <- function(x,y) {
 
 # f.gdd.old <- function(tmin, tmax, tbase, tbase_max, crop) {
 #   fileNameMask.in <- paste0("data/crops/rasterMask_", tolower(crop), ".tif")
-#   mask <- raster(fileNameMask.in)
+#   mask <- rast(fileNameMask.in)
 #   paste0(fileNameOut, ".tif")
 #   tmin_cropArea <- overlay(tmin, mask, fun = overlayfunction_mask)
 #   #  print(paste0("tmin_cropArea created, ", temp, ", creation time: ", endTime -startTime,  ", pid: ", Sys.getpid()))
 #   tmax_cropArea <- overlay(tmax, mask, fun = overlayfunction_mask)
 #   if (tbase_max > 0) {
-#     tmax_clamped <- clamp(tmax_cropArea, lower = tbase, upper = tbase_max, useValues = TRUE)
+#     tmax_clamped <- clamp(tmax_cropArea, lower = tbase, upper = tbase_max, Values = TRUE)
 #   } else {
-#     tmax_clamped <- clamp(tmax_cropArea, lower = tbase, upper = Inf, useValues = TRUE)
+#     tmax_clamped <- clamp(tmax_cropArea, lower = tbase, upper = Inf, Values = TRUE)
 #   }
 #   
 #   if (tbase_max > 0) {
-#     tmin_clamped <- clamp(tmin_cropArea, lower = tbase, upper = tbase_max, useValues = TRUE)
+#     tmin_clamped <- clamp(tmin_cropArea, lower = tbase, upper = tbase_max, Values = TRUE)
 #   } else {
-#     tmin_clamped <- clamp(tmin_cropArea, lower = tbase, upper = Inf, useValues = TRUE)
+#     tmin_clamped <- clamp(tmin_cropArea, lower = tbase, upper = Inf, Values = TRUE)
 #   }
 #   gddFunction2 <- function(z) {
 #     function(x, y) (x + y) / 2 - z
@@ -343,13 +342,15 @@ overlayfunction_mask <- function(x,y) {
 
 # load tmax and rh data from nc
 tmaxRhIn <- function(tmaxFile, rhFile) {
-  tmax <<- readAll(brick(tmaxFile))
-  rh <<- readAll(brick(rhFile))
+  tmax <<- rast(tmaxFile)
+  rh <<- rast(rhFile)
 }
 
 tmaxTminIn <- function(tmaxIn, tminIn) {
-  tmax <<- readAll(brick(tmaxIn))
-  tmin <<- readAll(brick(tminIn))
+  # tmax <<- readAll(rasttmaxIn))
+  # tmin <<- readAll(rasttminIn))
+  tmax <<- rast(tmaxIn)
+  tmin <<- rast(tminIn)
 }
 
 overlayfunction_mask <- function(x,y) {

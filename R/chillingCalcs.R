@@ -55,7 +55,7 @@ foreach(l = startyearChoices) %:%
     
     temp <- paste0(locOfFiles, k,"/", i, "/", fileNameIn)
     print(paste0("Working on : ", temp, " pid: ", Sys.getpid()))
-    tmax <- readAll(brick(temp))
+    tmax <- readAll(rasttemp))
     
     j <- "tasmin"
     fileNameIn <- paste(modelName.lower, k, j, "global_daily", yearSpan, sep = "_")
@@ -63,7 +63,7 @@ foreach(l = startyearChoices) %:%
     
     temp <- paste0(locOfFiles, k,"/", i, "/", fileNameIn)
     print(paste0("Working on : ", temp, " pid: ", Sys.getpid()))
-    tmin <- readAll(brick(temp))
+    tmin <- readAll(rasttemp))
     
     startTime <-  Sys.time()
     
@@ -86,14 +86,14 @@ foreach(l = startyearChoices) %:%
     print(difftime(endTime, startTime, units = "mins"))
     indices <- format(as.Date(names(tmin), format = "X%Y.%m.%d"), format = "%m")
     indices <- as.numeric(indices)
-    monthZeroCount <- stackApply(tmin, indices, fun = function(x, ...){sum(x <= 0)})
+    monthZeroCount <- tapp(tmin, indices, fun = function(x, ...){sum(x <= 0)})
     names(monthZeroCount) <- month.abb
     fileNameOutZero <- paste0("belowZeroCount_", modelName.lower, "_", k, "_", yearSpan, ".tif")
     print(paste0("Writing out ", fileNameOutZero))
     writeRaster(monthZeroCount, filename = paste0("data/cmip6/belowZero/", fileNameOutZero), format = "GTiff", overwrite = TRUE)
  
     #   rm(list = c("tmax", "tmin"))
-    chillHrs.sumMonth <- stackApply(chillHrs, indices, fun = sum, na.rm = TRUE)
+    chillHrs.sumMonth <- tapp(chillHrs, indices, fun = sum, na.rm = TRUE)
     chillHrs.sumMonth <- chillHrs.sumMonth/10 # to get to the monthly average over 10 years
     names(chillHrs.sumMonth) <- month.abb
     chillHrsNorthernHem <- dropLayer(chillHrs.sumMonth, southernHemWinter) # note dropping layers for southern hemisphere winter
@@ -119,8 +119,8 @@ stopCluster(cl)
 # do same calculations on observed data
 tmin <- tasmin.observed
 tmax <- tasmax.observed
-tmin <- readAll(brick(tmin))
-tmax <- readAll(brick(tmax))
+tmin <- readAll(rasttmin))
+tmax <- readAll(rasttmax))
 print("done with readAll tmin and tmax")
 yearSpan <- "2001_2010"
 
@@ -133,14 +133,14 @@ names(chillHrs) <- names(tmax) # put the date info back into the names
 print("Done with chillHrs function")
 indices <- format(as.Date(names(tmin), format = "X%Y.%m.%d"), format = "%m")
 indices <- as.numeric(indices)
-monthZeroCount <- stackApply(tmin, indices, fun = function(x, ...){sum(x <= 0)}) 
+monthZeroCount <- tapp(tmin, indices, fun = function(x, ...){sum(x <= 0)}) 
 names(monthZeroCount) <- month.abb
 fileNameOutZero <- paste0("belowZeroCount", "_observed_", yearSpan, ".tif")
 writeRaster(monthZeroCount, filename = paste0("data/cmip6/belowZero/", fileNameOutZero), format = "GTiff", overwrite = TRUE)
 
 # # now do count above tmax limit
 # f.tmaxLimit <- function(tmax, tmaxLimit, indices) {
-#   tmaxSum <- stackApply(tmax, indices, fun = function(x, ...){sum(x >= tmaxLimit)}) 
+#   tmaxSum <- tapp(tmax, indices, fun = function(x, ...){sum(x >= tmaxLimit)}) 
 #   names(tmaxSum) <- month.abb
 #   fileNameOut <- paste0("tmaxGT_", tmaxLimit, "_observed_", yearSpan, ".tif")
 #   writeRaster(tmaxSum, filename = paste0("data/cmip6/tmaxMonthlySums/", fileNameOut), format = "GTiff", overwrite = TRUE)
@@ -160,7 +160,7 @@ writeRaster(monthZeroCount, filename = paste0("data/cmip6/belowZero/", fileNameO
 # print(paste("Completed tmaxlimit for 48C"))
 
 rm(list = c("tmax", "tmin"))
-chillHrs.sumMonth <- stackApply(chillHrs, indices, fun = sum, na.rm = TRUE)
+chillHrs.sumMonth <- tapp(chillHrs, indices, fun = sum, na.rm = TRUE)
 chillHrs.sumMonth <- chillHrs.sumMonth/10 # to get to the monthly average over 10 years
 names(chillHrs.sumMonth) <- month.abb
 chillHrsNorthernHem <- dropLayer(chillHrs.sumMonth, southernHemWinter) # note dropping layers for southern hemisphere winter

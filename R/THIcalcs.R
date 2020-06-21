@@ -36,11 +36,9 @@ x <- foreach(i = modelChoices, .combine = rbind) %:%
   foreach(l = startyearChoices, .combine = rbind) %:%
   foreach(m = sspChoices, .combine = rbind)  %dopar% {
      require(data.table)
-     require(raster)
+     require(terra)
     
     tmpDirName <- paste0(locOfFiles, "/rasterTmp_", Sys.getpid(), "/")
-    rasterOptions(tmpdir = tmpDirName)
-    dir.create(tmpDirName)
     #    yearRange <- 9
     yearSpan <- paste0(l, "_", l + yearRange)
     print(paste0("model: ", i, " start year: ", l, " ssp: ", k, " pid: ", Sys.getpid(), " systime: ", Sys.time()))
@@ -58,11 +56,11 @@ x <- foreach(i = modelChoices, .combine = rbind) %:%
     fileName.rh <- paste0(locOfFiles, filePrefix.rh, modelName.lower, fileSuffix)
     
     print(fileName.tmax)
-    tmax <- readAll(brick(fileName.tmax))
+    tmax <- rast(rastfileName.tmax)
     print(fileName.tmin)
-    tmin <- readAll(brick(fileName.tmin))
+    tmin <- rast(rastfileName.tmin)
     print(fileName.rh)
-    rh <- readAll(brick(fileName.rh))
+    rh <- rast(rastfileName.rh)
     names(tmax) <- names(tmin) <- names(rh) <- month.abb
     # # THI equations
     # mostly from Lallo
@@ -119,10 +117,9 @@ fileName.tmin <- paste0(locOfFiles, "monthMean_tasmin", "_observed_", "2001_2010
 print(fileName.tmin)
 fileName.tmax <- paste0(locOfFiles, "monthMean_tasmax", "_observed_", "2001_2010.tif")
 print(fileName.tmax)
-tmax <- readAll(brick(fileName.tmax))
-tmin <- readAll(brick(fileName.tmin))
-rh <- readAll(brick(fileName.rh))
-
+tmax <- rast(rastfileName.tmax)
+tmin <- rast(rastfileName.tmin)
+rh <- rast(rastfileName.rh)
 names(tmax) <- names(tmin) <- names(rh) <- month.abb
 
 thi.cattle <- eval(parse(text = formula.thi.cattle))

@@ -47,16 +47,16 @@ for (k in sspChoices) {
       fileNameNH_CV <- paste0("chillHrs_NorthernHem_ensembleCV_masked_", cropName, "_", yearSpan, "_", k, ".tif")
       fileNameSH_CV <- paste0("chillHrs_SouthernHem_ensembleCV_masked_",  cropName, "_", yearSpan, "_", k, ".tif")
       
-      chillHrsNorthernHem_mean <- brick(paste0("data/cmip6/chillingHours/", fileNameNH_mean))
+      chillHrsNorthernHem_mean <- rastpaste0("data/cmip6/chillingHours/", fileNameNH_mean))
       chillHrsNorthernHem_mean <- crop(chillHrsNorthernHem_mean, extent(northerHemExtent))
       
-      chillHrsSouthernHem_mean <- brick(paste0("data/cmip6/chillingHours/", fileNameSH_mean))
+      chillHrsSouthernHem_mean <- rastpaste0("data/cmip6/chillingHours/", fileNameSH_mean))
       chillHrsSouthernHem_mean <- crop(chillHrsSouthernHem_mean, extent(southernHemExtent))
       
-      chillHrsNorthernHem_CV <- brick( paste0("data/cmip6/chillingHours/", fileNameNH_CV))
+      chillHrsNorthernHem_CV <- rast paste0("data/cmip6/chillingHours/", fileNameNH_CV))
       chillHrsNorthernHem_CV <- crop(chillHrsNorthernHem_CV, extent(northerHemExtent))
       
-      chillHrsSouthernHem_CV <- brick( paste0("data/cmip6/chillingHours/", fileNameSH_CV))
+      chillHrsSouthernHem_CV <- rast paste0("data/cmip6/chillingHours/", fileNameSH_CV))
       chillHrsSouthernHem_CV <- crop(chillHrsSouthernHem_CV, extent(southernHemExtent))
       
       maxMean <- max(maxValue(chillHrsSouthernHem_mean), maxValue(chillHrsNorthernHem_mean))
@@ -154,8 +154,8 @@ for (m in fruits) {
   fileNameNH_mean <- paste0("chillHrs_NorthernHem_masked_", cropName, "_observed_", yearSpan, ".tif")
   fileNameSH_mean <- paste0("chillHrs_SouthernHem_masked_",  cropName, "_observed_", yearSpan, ".tif")
   
-  chillHrsNorthernHem_mean <- brick( paste0("data/cmip6/chillingHours/", fileNameNH_mean))
-  chillHrsSouthernHem_mean <- brick( paste0("data/cmip6/chillingHours/", fileNameSH_mean))
+  chillHrsNorthernHem_mean <- rast paste0("data/cmip6/chillingHours/", fileNameNH_mean))
+  chillHrsSouthernHem_mean <- rast paste0("data/cmip6/chillingHours/", fileNameSH_mean))
   
   chillHrsNorthernHem_mean <- crop(chillHrsNorthernHem_mean, extent(northerHemExtent))
   chillHrsSouthernHem_mean <- crop(chillHrsSouthernHem_mean, extent(southernHemExtent))
@@ -226,7 +226,7 @@ for (i in modelChoices) {
         print(paste0(cropName, ", lower optimum: ", lowerOpt, ", upper optimum: ", upperOpt, " start year: ", l))
         print(fileNameIn)
         
-        temp <- brick(fileNameIn)
+        temp <- rastfileNameIn)
         names(temp) <- month.abb
         titleText <- paste0("Average number of days by month with optimum temp. range (", lowerOpt, " - ", upperOpt, "°C)\n", yearSpan, ", model = ", i, ", SSP = ", k)
         

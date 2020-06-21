@@ -28,8 +28,6 @@ foreach(l = startyearChoices) %:%
   foreach(i = modelChoices) %:%
   foreach(j = thiList.animalCount ) %:%
   foreach(k = sspChoices) %dopar% {
-    rasterOptions(tmpdir = tmpDirName)
-    dir.create(tmpDirName)
     
     modelName.lower <- tolower(i)
     startTime <-  Sys.time()
@@ -38,7 +36,7 @@ foreach(l = startyearChoices) %:%
     speciesName <- gsub("thi.", "", j)
     extremeStress <- breakPoints[species %in% speciesName, extremeStress]
     fileNameIn <- paste0("data/cmip6/THI/", j, "_", i, "_", yearSpan, "_", k, ".tif")
-    temp <- readAll(brick(fileNameIn))
+    temp <- rast(fileNameIn))
     
     temp[temp < extremeStress] <- NA
     

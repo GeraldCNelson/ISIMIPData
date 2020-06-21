@@ -34,52 +34,44 @@ foreach(l = startyearChoices) %:%
   foreach(i = modelChoices) %:%
   #  foreach(j = variableChoices) %:%
   foreach(k = sspChoices) %dopar% {
-    rasterOptions(tmpdir = tmpDirName)
-    dir.create(tmpDirName)
     
     modelName.lower <- tolower(i)
     startTime <-  Sys.time()
     yearSpan <- paste0(l, "_", l + yearRange)
-   filename.tmax <- paste0(locOfFiles, "/", k, "/", i, "/", modelName.lower, "_", k, "_tasmax_global_daily_", yearSpan, ".nc")
+    filename.tmax <- paste0(locOfFiles, "/", k, "/", i, "/", modelName.lower, "_", k, "_tasmax_global_daily_", yearSpan, ".nc")
     
-    tmax <- brick(filename.tmax, varname = "tasmax") 
-    tmax <- readAll(tmax)
-    # tmax <- fixUnits(var = "tasmax", ncin.brick = tmax) # fixes temp and precip units; assumes ncin.brick values are raw units
-    
-    # tmin <- brick(filename.tmin, varname = "tasmin") 
-    # tmin <- readAll(tmin)
-    ## tmin <- fixUnits(var = "tasmin", ncin.brick = tmin) # fixes temp and precip units; assumes ncin.brick values are raw units
-    # 
-    indices <- format(as.Date(names(tmax), format = "X%Y.%m.%d"), format = "%m")
-    indices <- as.numeric(indices)
-    
-    for (m in 1:nrow(ann_crop_temp_table)) {
-      cropName <- as.character(ann_crop_temp_table[m, "crop"])
-      tdamage_mean <- as.numeric(ann_crop_temp_table[m, "tdamage mean"])
-      #     tLethal_min <- as.numeric(ann_crop_temp_table[m, "Tlethal_min"])
-      
-      upperOpt <- as.numeric(ann_crop_temp_table[m, "topt mean"])
-      lowerOpt <- as.numeric(ann_crop_temp_table[m, "topt lower"])
-      print(paste0(cropName, ", lower optimum: ", lowerOpt, ", upper optimum: ", upperOpt, ", damage temp: ", tdamage_mean, "\n"))
-      
-      fileNameOut_damage <- paste0("tdamage_mean_", cropName, "_", tdamage_mean, "C_", modelName.lower, "_", k, "_", yearSpan, ".tif")
-      fileNameOut_optTemp <- paste0("optTempRange_", cropName, "_", lowerOpt, "_", upperOpt, "_", modelName.lower, "_", k, "_", yearSpan, ".tif")
-      startTime <-  Sys.time()
-      numYears <- 10
-      monthDamageCount <- raster::stackApply(tmax, indices, fun = function(x, ...){sum(x > tdamage_mean)/numYears}, progress = "text") 
-      names(monthDamageCount) <- month.abb
-      print(paste0("time to calc monthly damage: ", difftime(Sys.time(), startTime, units = "mins")))
-      startTime <-  Sys.time()
-      monthOptTempRangeCount <- stackApply(tmax, indices, fun = function(x, ...){sum(x < upperOpt & x >  lowerOpt)/numYears}, progress = "text") 
-      names(monthOptTempRangeCount) <- month.abb
-      print(paste0("time to calc optimum range: ", difftime(Sys.time(), startTime, units = "mins")))
-      print(paste0("damage  file name out: ", fileNameOut_damage))
-      print(paste0("optTempRange file name out: ", fileNameOut_optTemp))
-      writeRaster(monthDamageCount, filename = paste0("data/cmip6/damageTemp/", fileNameOut_damage), format = "GTiff", overwrite = TRUE)
-      writeRaster(monthOptTempRangeCount, filename = paste0("data/cmip6/optTempRange/", fileNameOut_optTemp), format = "GTiff", overwrite = TRUE)
-    }
-    unlink(tmpDirName, recursive = TRUE)
-    gc(reset = FALSE, full = TRUE) 
+    tmax <- rastfilename.tmax, varname = "tasmax") 
+
+indices <- format(as.Date(names(tmax), format = "X%Y.%m.%d"), format = "%m")
+indices <- as.numeric(indices)
+
+for (m in 1:nrow(ann_crop_temp_table)) {
+  cropName <- as.character(ann_crop_temp_table[m, "crop"])
+  tdamage_mean <- as.numeric(ann_crop_temp_table[m, "tdamage mean"])
+  #     tLethal_min <- as.numeric(ann_crop_temp_table[m, "Tlethal_min"])
+  
+  upperOpt <- as.numeric(ann_crop_temp_table[m, "topt mean"])
+  lowerOpt <- as.numeric(ann_crop_temp_table[m, "topt lower"])
+  print(paste0(cropName, ", lower optimum: ", lowerOpt, ", upper optimum: ", upperOpt, ", damage temp: ", tdamage_mean, "\n"))
+  
+  fileNameOut_damage <- paste0("tdamage_mean_", cropName, "_", tdamage_mean, "C_", modelName.lower, "_", k, "_", yearSpan, ".tif")
+  fileNameOut_optTemp <- paste0("optTempRange_", cropName, "_", lowerOpt, "_", upperOpt, "_", modelName.lower, "_", k, "_", yearSpan, ".tif")
+  startTime <-  Sys.time()
+  numYears <- 10
+  monthDamageCount <- tapp(tmax, indices, fun = function(x, ...){sum(x > tdamage_mean)/numYears}, progress = "text") 
+  names(monthDamageCount) <- month.abb
+  print(paste0("time to calc monthly damage: ", difftime(Sys.time(), startTime, units = "mins")))
+  startTime <-  Sys.time()
+  monthOptTempRangeCount <- tapp(tmax, indices, fun = function(x, ...){sum(x < upperOpt & x >  lowerOpt)/numYears}, progress = "text") 
+  names(monthOptTempRangeCount) <- month.abb
+  print(paste0("time to calc optimum range: ", difftime(Sys.time(), startTime, units = "mins")))
+  print(paste0("damage  file name out: ", fileNameOut_damage))
+  print(paste0("optTempRange file name out: ", fileNameOut_optTemp))
+  writeRaster(monthDamageCount, filename = paste0("data/cmip6/damageTemp/", fileNameOut_damage), format = "GTiff", overwrite = TRUE)
+  writeRaster(monthOptTempRangeCount, filename = paste0("data/cmip6/optTempRange/", fileNameOut_optTemp), format = "GTiff", overwrite = TRUE)
+}
+unlink(tmpDirName, recursive = TRUE)
+gc(reset = FALSE, full = TRUE) 
   }
 stopCluster(cl)
 
@@ -87,15 +79,13 @@ stopCluster(cl)
 startTime <-  Sys.time()
 yearSpan <- "2001_2010"
 tmax <- tasmax.observed
-tmax <- readAll(brick(tmax))
-# tmax <- fixUnits(var = "tasmax", ncin.brick = tmax) # fixes temp and precip units; assumes ncin.brick values are raw units
 indices <- format(as.Date(names(tmax), format = "X%Y.%m.%d"), format = "%m")
 indices <- as.numeric(indices)
 
 for (m in 1:nrow(ann_crop_temp_table)) {
   cropName <- as.character(ann_crop_temp_table[m, "crop"])
   tdamage_mean <- as.numeric(ann_crop_temp_table[m, "tdamage mean"])
-
+  
   upperOpt <- as.numeric(ann_crop_temp_table[m, "topt mean"])
   lowerOpt <- as.numeric(ann_crop_temp_table[m, "topt lower"])
   #         print(paste0("years covered:", yearSpan)), 
@@ -105,11 +95,11 @@ for (m in 1:nrow(ann_crop_temp_table)) {
   fileNameOut_optTemp <- paste0("optTempRange_", cropName, "_", lowerOpt, "_", upperOpt, "_observed_", yearSpan, ".tif")
   startTime <-  Sys.time()
   numYears <- 10
-  monthDamageCount <- raster::stackApply(tmax, indices, fun = function(x, ...){sum(x > tdamage_mean)/numYears}, progress = "text") 
+  monthDamageCount <- tapp(tmax, indices, fun = function(x, ...){sum(x > tdamage_mean)/numYears}, progress = "text") 
   names(monthDamageCount) <- month.abb
   print(paste0("time to calc monthly damage: ", difftime(Sys.time(), startTime, units = "mins")))
   startTime <-  Sys.time()
-  monthOptTempRangeCount <- stackApply(tmax, indices, fun = function(x, ...){sum(x < upperOpt & x >  lowerOpt)/numYears}, progress = "text") 
+  monthOptTempRangeCount <- tapp(tmax, indices, fun = function(x, ...){sum(x < upperOpt & x >  lowerOpt)/numYears}, progress = "text") 
   names(monthOptTempRangeCount) <- month.abb
   #          raster::endCluster()
   print(paste0("time to calc monthly opt temp range: ", difftime(Sys.time(), startTime, units = "mins")))

@@ -13,11 +13,11 @@ f1.gdd <- function(tmin, tmax, tbase, tbase_max) {
 	tmin_cropArea <- overlay(tmin, mask, fun = overlayfunction_mask)
 	tmax_cropArea <- overlay(tmax, mask, fun = overlayfunction_mask)
 	if (tbase_max > 0) {
-		tmax_clamped <- clamp(tmax_cropArea, lower = tbase, upper = tbase_max, useValues = TRUE)
-		tmin_clamped <- clamp(tmin_cropArea, lower = tbase, upper = tbase_max, useValues = TRUE)
+		tmax_clamped <- clamp(tmax_cropArea, lower = tbase, upper = tbase_max, Values = TRUE)
+		tmin_clamped <- clamp(tmin_cropArea, lower = tbase, upper = tbase_max, Values = TRUE)
 	} else {
-		tmax_clamped <- clamp(tmax_cropArea, lower = tbase, upper = Inf, useValues = TRUE)
-		tmin_clamped <- clamp(tmin_cropArea, lower = tbase, upper = Inf, useValues = TRUE)
+		tmax_clamped <- clamp(tmax_cropArea, lower = tbase, upper = Inf, Values = TRUE)
+		tmin_clamped <- clamp(tmin_cropArea, lower = tbase, upper = Inf, Values = TRUE)
 	}
 	gdd <- overlay(x = tmax_clamped, y = tmin_clamped, fun = gddFunction2(x, y, z = tbase))
 	gdd
@@ -58,7 +58,7 @@ gdd.f3 <- function(mask, tmin, tmax, tbase, tbase_max) {
 
  
 fileNameMask.in <- paste0("data/crops/rasterMask_", tolower(m), ".tif")
-mask <- raster(fileNameMask.in)
+mask <- rast(fileNameMask.in)
 #paste0(fileNameOut, ".tif")
 # example data
 library(raster)
@@ -105,3 +105,5 @@ system.time(x1 <- setValues(tmin, gdd.f2(values(mask), values(tmin), values(tmax
 
 # if you know you can keep the values in memory. Creates x2 with the gdd.f1 function
 system.time(x2 <- setValues(tmin, gdd.f1(values(mask), values(tmin), values(tmax), tb, tbm)))
+
+

@@ -39,8 +39,8 @@ for (k in sspChoices)  {
         fileNameMean <- paste0("data/cmip6/tmaxMonthlySums/tmaxMonthlySums_ensembleMean_", m, "_", j,  "_", k, "_",  yearSpan, ".tif") 
         fileNameCV <- paste0("data/cmip6/tmaxMonthlySums/tmaxMonthlySums_ensembleCV_", m, "_", j,  "_", k, "_",  yearSpan, ".tif") 
         
-        meanData <- brick(fileNameMean)
-        CVData <- brick(fileNameCV)
+        meanData <- rastfileNameMean)
+        CVData <- rastfileNameCV)
         names(meanData) <- month.abb
         names(CVData) <- month.abb
         
@@ -93,7 +93,7 @@ for (o in 1:length(cropChoices)) {
     fileNameMean <- paste0("data/cmip6/tmaxMonthlySums/tmax_ensembleMean_masked",m, "_", j, "_observed_",  yearSpan, ".tif") 
     
     print(paste0("filenamein ", fileNameMean))
-    meanData <- brick(fileNameMean)
+    meanData <- rastfileNameMean)
     names(meanData) <- month.abb
     
     # plot Ensemble mean

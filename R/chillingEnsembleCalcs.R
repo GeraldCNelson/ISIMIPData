@@ -1,7 +1,6 @@
 # combine 10 year rasters across models to get ensemble means and coeffients of variation.
 
 source("R/globallyUsed.R")
-library(raster)
 library(doParallel) #Foreach Parallel Adaptor 
 library(foreach) #Provides foreach looping construct
 
@@ -34,8 +33,7 @@ start_time <- Sys.time()
 #   foreach(k = sspChoices, .combine = rbind)  %dopar% {
 # require(data.table)
 # require(raster)
-# rasterOptions(tmpdir = tmpDirName)
-# dir.create(tmpDirName)
+
 for (l in startyearChoices_ensemble) {
   for (k in sspChoices) {
     yearSpan <- paste0(l, "_", l + yearRange)
@@ -48,14 +46,13 @@ for (l in startyearChoices_ensemble) {
       for (m in 1:length(modelChoices.lower)) {
         fileNameIn <- paste0("data/cmip6/chillingHours/chillHrs_", hemisphereName, "_", modelChoices.lower[m], "_", k,  "_", yearSpan, ".tif")
         print(paste0("raster file name in: ", fileNameIn,  ", pid number: ", Sys.getpid()))
-        rasterList[[m]] <- brick(fileNameIn)
+        rasterList[[m]] <- rast(fileNameIn)
       }
-      ras.test <- stack(rasterList)
+      ras.test <- rast(rasterList)
       ras.test[ras.test < 0] <- 0 # set all negative  values to 0
       print(paste0( "Done setting negative values to 0 for hemisphere name: ", hemisphereName, ", start year: ", l))
-      #    ras.test.mean <- raster::stackApply(ras.test, indices, fun = mean, na.rm = TRUE)
-      ras.test.mean <- raster::calc(ras.test, fun = mean, na.rm = TRUE)
-      ras.test.cv <- raster::calc(ras.test, fun = cv, na.rm = TRUE)
+      ras.test.mean <- app(ras.test, fun = mean, na.rm = TRUE)
+      ras.test.cv <- app(ras.test, fun = cv, na.rm = TRUE)
       fileNameMean <- paste0("data/cmip6/chillingHours/chillHrs_", hemisphereName, "_ensembleMean_",yearSpan, "_", k, ".tif") 
       fileNameCV <- paste0("data/cmip6/chillingHours/chillHrs_", hemisphereName, "_ensembleCV_", yearSpan, "_", k, ".tif") 
       writeRaster(ras.test.mean, filename = fileNameMean, format = "GTiff", overwrite = TRUE)
@@ -64,7 +61,6 @@ for (l in startyearChoices_ensemble) {
       print(paste("fileNameCVOut: ", fileNameCV))
       print(paste0( "Done writing out files for hemisphere: ", hemisphereName, ", start year: ", l, ", pid number: ", Sys.getpid()))
     }
-    #    unlink(tmpDirName, recursive = TRUE)
     gc(reset = FALSE, full = TRUE) 
   }
 }
@@ -95,10 +91,10 @@ for (k in sspChoices) {
         print(paste0("fileNameMean.in: ", fileNameMean.in))
         fileNameCV.in <- paste0("data/cmip6/chillingHours/chillHrs_", hemisphereName, "_ensembleCV_",  yearSpan, "_", k, ".tif")
         print(paste0("fileNameCV.in: ", fileNameCV.in))
-        mask <- raster(fileNameMask.in)
-        meanData <- brick(fileNameMean.in)
+        mask <- rast(fileNameMask.in)
+        meanData <- rast(fileNameMean.in)
         meanData[meanData < 0] <- 0 # set all negative values to 0
-        CVData <- brick(fileNameCV.in)
+        CVData <- rast(fileNameCV.in)
         mean.masked <- overlay(meanData, mask, fun = overlayfunction_mask)
         CV.masked <- overlay(CVData, mask, fun = overlayfunction_mask)
         fileNameMean.masked <- paste0("data/cmip6/chillingHours/chillHrs_", hemisphereName, "_ensembleMean_masked_", cropName, "_",  yearSpan, "_", k, ".tif")
@@ -125,8 +121,8 @@ for (j in 1:length(fruits)) {
   fileNameMean.in <- paste0("data/cmip6/chillingHours/chillHrs_", hemisphereName, "_observed_", yearSpan, ".tif")
   
   print(paste("fileNameMean.in: ", fileNameMean.in))
-  mask <- raster(fileNameMask.in)
-  meanData <- brick(fileNameMean.in)
+  mask <- rast(fileNameMask.in)
+  meanData <- rast(fileNameMean.in)
   meanData[meanData < 0] <- 0 # set all negative  values to 0
   mean.masked <- overlay(meanData, mask, fun = overlayfunction_mask)
   fileNameMean.masked <- paste0("data/cmip6/chillingHours/chillHrs_", hemisphereName, "_masked_", cropName,  "_observed_", yearSpan, ".tif")

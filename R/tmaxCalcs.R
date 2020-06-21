@@ -19,7 +19,7 @@ l <- 2051
 
 # function to do count above tmax limit
 f.tmaxLimit <- function(tmax, tmaxLimit, indices) {
-  tmaxSum <- stackApply(tmax, indices, fun = function(x, ...){(sum(x >= tmaxLimit))/10})  # divide by 10 to get the annual average number of days above tmaxLimit
+  tmaxSum <- tapp(tmax, indices, fun = function(x, ...){(sum(x >= tmaxLimit))/10})  # divide by 10 to get the annual average number of days above tmaxLimit
   names(tmaxSum) <- month.abb
   fileNameOut <- paste0("tmaxGT_", tmaxLimit, "_", modelName.lower, "_", k, "_", yearSpan, ".tif")
   writeRaster(tmaxSum, filename = paste0("data/cmip6/tmaxMonthlySums/", fileNameOut), format = "GTiff", overwrite = TRUE)
@@ -38,7 +38,7 @@ for (k in sspChoices)  {
       
       temp <- paste0(locOfFiles, k,"/", i, "/", fileNameIn)
       print(paste0("Working on: ", temp, " pid: ", Sys.getpid()))
-      tmax <- readAll(brick(temp))
+      tmax <- readAll(rasttemp))
       endTime <- Sys.time()
       print(paste0("tmax brick created, ", temp, ", creation time: ", round(difftime(endTime, startTime, units = "mins"), digits = 2),  " pid: ", Sys.getpid()))
       indices <- format(as.Date(names(tmax), format = "X%Y.%m.%d"), format = "%m")
@@ -69,10 +69,10 @@ for (k in sspChoices)  {
           tmaxLimit <- ann_crop_temp_table[crop %in% m, tdamage.mean]
           
           fileNameIn <- paste0("tmaxGT_", tmaxLimit, "_", modelName.lower, "_", k, "_", yearSpan, ".tif")
-          tdamage <- brick(paste0("data/cmip6/tmaxMonthlySums/", fileNameIn))
+          tdamage <- rastpaste0("data/cmip6/tmaxMonthlySums/", fileNameIn))
           fileNameMask.in <- paste0("data/crops/rasterMask_", m, ".tif")
           print(paste0("fileNameMaskIn: ", fileNameMask.in))
-          mask <- raster(fileNameMask.in)
+          mask <- rast(fileNameMask.in)
           tdamage.masked <- overlay(tdamage, mask, fun = overlayfunction)
           fileNameOut <- paste0("tmaxGT_masked_", m, "_", tmaxLimit, "_", modelName.lower, "_", k, "_", yearSpan, ".tif")
           writeRaster(tdamage.masked, filename = paste0("data/cmip6/tmaxMonthlySums/", fileNameOut), format = "GTiff", overwrite = TRUE)
@@ -86,12 +86,12 @@ for (k in sspChoices)  {
 # now do count above tmax limit for observed period
 yearSpan <- "2001_2010"
 fileNameIn <- paste0(locOfFiles, "observed/gswp3-w5e5_obsclim_tasmax_global_daily_2001_2010.nc")
-tmax <- readAll(brick(fileNameIn))
+tmax <- readAll(rastfileNameIn))
 indices <- format(as.Date(names(tmax), format = "X%Y.%m.%d"), format = "%m")
 indices <- as.numeric(indices)
 
 f.tmaxLimit.observed <- function(tmax, tmaxLimit, indices) {
-  tmaxSum <- stackApply(tmax, indices, fun = function(x, ...){sum(x >= tmaxLimit)}) 
+  tmaxSum <- tapp(tmax, indices, fun = function(x, ...){sum(x >= tmaxLimit)}) 
   names(tmaxSum) <- month.abb
   fileNameOut <- paste0("tmaxGT_", tmaxLimit, "_observed_", yearSpan, ".tif")
   writeRaster(tmaxSum, filename = paste0("data/cmip6/tmaxMonthlySums/", fileNameOut), format = "GTiff", overwrite = TRUE)
@@ -112,10 +112,10 @@ for (o in 1:length(cropChoices)) {
     tmaxLimit <- ann_crop_temp_table[crop %in% m, tdamage.mean]
     
     fileNameIn <- paste0("tmaxGT_", tmaxLimit, "_observed_", yearSpan, ".tif")
-    tdamage <- brick(paste0("data/cmip6/tmaxMonthlySums/", fileNameIn))
+    tdamage <- rastpaste0("data/cmip6/tmaxMonthlySums/", fileNameIn))
     fileNameMask.in <- paste0("data/crops/rasterMask_", m, ".tif")
     print(paste0("fileNameMaskIn: ", fileNameMask.in))
-    mask <- raster(fileNameMask.in)
+    mask <- rast(fileNameMask.in)
     tdamage.masked <- overlay(tdamage, mask, fun = overlayfunction)
     fileNameOut <- paste0("tmaxGT_masked", m, "_", tmaxLimit, "_observed_", yearSpan, ".tif")
     writeRaster(tdamage.masked, filename = paste0("data/cmip6/tmaxMonthlySums/", fileNameOut), format = "GTiff", overwrite = TRUE)

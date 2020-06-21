@@ -1,8 +1,8 @@
 # this script converts the units of nc tmin, tmax, and pr
 #source("R/globallyUsed.R")
 library(data.table)
-library(raster)
-#library(terra)
+#library(raster)
+library(terra)
 
 pathPrefix <- getwd()
 
@@ -38,7 +38,7 @@ for (i in varsToKeep) {
       outFile <- renameFile(filestoKeep[j])
       cdoCommandMult <- paste("cdo -z zip_6 setunit,'mm/day' -mulc,86400 ", inFile, outFile)
       system(cdoCommandMult)
-      # temp.r <- readAll(brick(filestoKeep[j]))
+      # temp.r <- readAll(rastfilestoKeep[j]))
       # temp.r@data@unit <- "mm/day"
       # temp.r <- temp.r * 86400
       #    print(paste0("writing out ", outfiles[j]))
@@ -55,7 +55,7 @@ for (i in varsToKeep) {
       system(cdoCommandMult)
     }
     
-    # temp.r <- readAll(brick(filestoKeep[j]))
+    # temp.r <- readAll(rastfilestoKeep[j]))
     # temp.r@data@unit <- "C"
     # temp.r <- temp.r - 273.15
     # print(paste0("writing out ", outfiles[j]))
@@ -90,7 +90,7 @@ for (i in varsToKeep) {
       outFile <- renameFileObserved(filestoKeep[j])
       cdoCommandMult <- paste("cdo -z zip_6 setunit,'mm/day' -mulc,86400 ", inFile, outFile)
       system(cdoCommandMult)
-      # temp.r <- readAll(brick(filestoKeep[j]))
+      # temp.r <- readAll(rastfilestoKeep[j]))
       # temp.r@data@unit <- "mm/day"
       # temp.r <- temp.r * 86400
       #    print(paste0("writing out ", outfiles[j]))

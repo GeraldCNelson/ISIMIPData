@@ -43,15 +43,15 @@ for (k in sspChoices) {
           
           fileNameIn <- paste0("data/cmip6/tmaxMonthlySums/", fileName)
           print(paste0("raster file name in: ", fileNameIn,  ", pid number: ", Sys.getpid()))
-          rasterList[[n]] <- brick(fileNameIn)
+          rasterList[[n]] <- rastfileNameIn)
           names(rasterList[[n]]) <- month.abb
         }
         ras.test <- stack(rasterList)
         indices <- format(as.Date(names(ras.test), format = "%b.%d"), format = "%m")
         indices <- as.numeric(indices)
         print(paste0( "Done setting doing raster indices for ras.test stack for tmax: ", j, " for crop ", m, ", start year: ", l))
-        ras.test.mean <- raster::stackApply(ras.test, indices, fun = mean, na.rm = TRUE)
-        ras.test.cv <- raster::stackApply(ras.test, indices, fun = cv, na.rm = TRUE)
+        ras.test.mean <- tapp(ras.test, indices, fun = mean, na.rm = TRUE)
+        ras.test.cv <- tapp(ras.test, indices, fun = cv, na.rm = TRUE)
         names(ras.test.mean) <- month.abb
         names(ras.test.cv) <- month.abb
         fileNameMean <- paste0("data/cmip6/tmaxMonthlySums/tmaxMonthlySums_ensembleMean_", m, "_", j,  "_", k, "_",  yearSpan, ".tif") 
@@ -86,15 +86,15 @@ for (o in 1:length(cropChoices)) {
       
       fileNameIn <- paste0("data/cmip6/tmaxMonthlySums/", fileName)
       print(paste0("raster file name in: ", fileNameIn,  ", pid number: ", Sys.getpid()))
-      rasterList[[n]] <- brick(fileNameIn)
+      rasterList[[n]] <- rastfileNameIn)
       names(rasterList[[n]]) <- month.abb
     }
     ras.test <- stack(rasterList)
     indices <- format(as.Date(names(ras.test), format = "%b.%d"), format = "%m")
     indices <- as.numeric(indices)
     print(paste0( "Done setting doing raster indices for ras.test stack for tmax: ", j, " for crop ", m, ", start year: ", l))
-    ras.test.mean <- raster::stackApply(ras.test, indices, fun = mean, na.rm = TRUE)
-    ras.test.cv <- raster::stackApply(ras.test, indices, fun = cv, na.rm = TRUE)
+    ras.test.mean <- tapp(ras.test, indices, fun = mean, na.rm = TRUE)
+    ras.test.cv <- tapp(ras.test, indices, fun = cv, na.rm = TRUE)
     names(ras.test.mean) <- month.abb
     names(ras.test.cv) <- month.abb
     fileNameMean <- paste0("data/cmip6/tmaxMonthlySums/tmaxMonthlySums_ensembleMean_", m, "_", j, "_observed_",  yearSpan, ".tif") 
