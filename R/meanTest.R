@@ -45,4 +45,38 @@ for (k in sspChoices) {
     }
   }
 }
+
+# do same calculations on observed data
+
+tasmax <- tasmax.observed
+tasmin <- tasmin.observed
+pr <- pr.observed
+hurs <- hurs.observed
+observedlist <- c("hurs", "tasmax", "tasmin", "pr")
+
+for (j in observedlist) {
+  filenameIn <- get(j)
+  print(paste0("Working on : ", filenameIn))
   
+  #in the hurs file, the variable name is rhs
+  ncin <- rast(filenameIn) # because there is no explicit projection info in the netcdf files, this is assumed - +proj=longlat +datum=WGS84"
+  # ncin <- readAll(ncin) # seems to speed up processing if ncin is an nc file
+  # ncin <- fixUnits(var = j, ncin = ncin) # fixes temp and precip units; assumes ncin values are raw units
+  
+  indices <- format(as.Date(names(ncin), format = "X%Y.%m.%d"), format = "%m")
+  indices <- as.numeric(indices)
+  ncin.mean <- tapp(ncin, indices, fun = mean, na.rm = TRUE)
+  ncin.cv <- tapp(ncin, indices, fun = cv, na.rm = TRUE)
+  names(ncin.mean) <- month.abb
+  names(ncin.cv) <- month.abb
+  
+  yearSpan <- "2001_2010"
+  
+  fileNameOut_monthMean <- paste0("monthMean_", j, "_", "observed_", yearSpan, ".tif")
+  fileNameOut_monthCV <- paste0("monthCV_", j, "_", "observed_", yearSpan, ".tif")
+  
+  writeRaster(ncin.mean, filename = paste0("data/cmip6/monthMean/", fileNameOut_monthMean), format = "GTiff", overwrite = TRUE)
+  writeRaster(ncin.cv, filename = paste0("data/cmip6/monthMean/", fileNameOut_monthCV), format = "GTiff", overwrite = TRUE)
+  
+  gc(reset = FALSE, full = TRUE)
+}  
