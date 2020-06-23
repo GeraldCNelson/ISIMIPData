@@ -1,5 +1,5 @@
 # the sys.setenv command is wrong for the linux box so commenting it out for now.
-#Sys.setenv(PROJ_LIB = "/usr/local/Cellar/proj/7.0.0/share/proj") # use until the sf and gdal issues get sorted out. If you get the error pj_obj_create: Cannot find proj.db, check to see if the proj version (currently 7.0.0) has changed
+Sys.setenv(PROJ_LIB = "/usr/local/Cellar/proj/7.0.1/share/proj") # use until the sf and gdal issues get sorted out. If you get the error pj_obj_create: Cannot find proj.db, check to see if the proj version (currently 7.0.0) has changed
 library(ncdf4)
 #library(PCICt)
 #library(ncdf4.helpers)
@@ -256,6 +256,7 @@ getcropAreaYield <- function(cropName, dataType) {
 
 # faster version
 f.gdd <- function(cropMask, tmin, tmax, tbase, tbase_max) {
+  tavg <- app()
   tavg <- (tmax + tmin) / 2 - tbase
   tavg[tavg < 0] <- 0
   #  tbase_max <- tbase_max - tbase

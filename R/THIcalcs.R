@@ -1,8 +1,8 @@
 # this script reads in the monthly means of tmax, tmin and rh from data/cmip6/monthMean/ calculates the THI values for each animal type. These are 
 # written out to files in data/cmip6/THI/
 source("R/globallyUsed.R")
-library(doParallel) #Foreach Parallel Adaptor 
-library(foreach) #Provides foreach looping construct
+# library(doParallel) #Foreach Parallel Adaptor 
+# library(foreach) #Provides foreach looping construct
 
 locOfFiles <- "data/cmip6/monthMean/"
 startyearChoices <-  c(2021, 2051, 2091) #2021, 2051, 2091) # c(2091) # c(2006) #, 2041, 2051, 2081)
@@ -38,7 +38,7 @@ x <- foreach(i = modelChoices, .combine = rbind) %:%
      require(data.table)
      require(terra)
     
-    tmpDirName <- paste0(locOfFiles, "/rasterTmp_", Sys.getpid(), "/")
+#    tmpDirName <- paste0(locOfFiles, "/rasterTmp_", Sys.getpid(), "/")
     #    yearRange <- 9
     yearSpan <- paste0(l, "_", l + yearRange)
     print(paste0("model: ", i, " start year: ", l, " ssp: ", k, " pid: ", Sys.getpid(), " systime: ", Sys.time()))
@@ -56,11 +56,11 @@ x <- foreach(i = modelChoices, .combine = rbind) %:%
     fileName.rh <- paste0(locOfFiles, filePrefix.rh, modelName.lower, fileSuffix)
     
     print(fileName.tmax)
-    tmax <- rast(rastfileName.tmax)
+    tmax <- rast(fileName.tmax)
     print(fileName.tmin)
-    tmin <- rast(rastfileName.tmin)
+    tmin <- rast(fileName.tmin)
     print(fileName.rh)
-    rh <- rast(rastfileName.rh)
+    rh <- rast(fileName.rh)
     names(tmax) <- names(tmin) <- names(rh) <- month.abb
     # # THI equations
     # mostly from Lallo

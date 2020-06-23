@@ -67,7 +67,7 @@ for (k in sspChoices)  {
       tminIn <- paste0(locOfFiles, k,"/", i, "/", fileNameIn)
  #      <- readAll(rasttemp))
       startTime <-  Sys.time()
-      tmaxTminIn(tmaxIn, tminIn)
+      tmaxTminIn(tmaxIn, tminIn) # function to read in tmax and tmin with rast
       endTime <- Sys.time()
   endTime - startTime    
       print(paste0("tmin brick created, ", tminIn, ",  creation time: ",  round(difftime(endTime, startTime, units = "mins"), digits = 2),  " min.,  pid: ", Sys.getpid()))
@@ -79,8 +79,8 @@ for (k in sspChoices)  {
           fileNameOut <-    paste(modelName.lower, m, k, "gdd", "global_daily", yearSpan, sep = "_")
           print(paste0("Working on: ", fileNameOut))
           if (!paste0(fileNameOut, ".tif") %in% gddFilesCompleted) {
-            Tbase <- ann_crop_temp_table[(crop %in% m), Tbase]
-            Tbase_max <- ann_crop_temp_table[(crop %in% m), Tbase_max]
+            tbase <- ann_crop_temp_table[(crop %in% m), Tbase]
+            tbase_max <- ann_crop_temp_table[(crop %in% m), Tbase_max]
             fileNameMask.in <- paste0("data/crops/rasterMask_", tolower(m), ".tif")
             cropMask <- rast(fileNameMask.in)
             startTime <-  Sys.time()
