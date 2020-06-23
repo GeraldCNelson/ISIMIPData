@@ -7,7 +7,7 @@ library(raster)
 yearRange <- 9
 yearSpan <- 
   # observed data layer names 2001-2010
-  temp <- rast"data-raw/ISIMIP/cmip6/unitsCorrected/observed/gswp3-w5e5_obsclim_tasmax_global_daily_2001_2010.nc")
+  temp <- raster("data-raw/ISIMIP/cmip6/unitsCorrected/observed/gswp3-w5e5_obsclim_tasmax_global_daily_2001_2010.nc")
 namesList <- names(temp)
 saveRDS(namesList, "data-raw/ISIMIP/ISIMIPLayerNames_2001_2010.RDS")
 
@@ -15,7 +15,7 @@ for (l in c(2021, 2051, 2091)) {
   yearSpan <- paste0(l, "_", l + yearRange)
   # use tasmax from GFDL. Same layer names for all models
   inFile <- paste0("data-raw/ISIMIP/cmip6/unitsCorrected/ssp585/GFDL-ESM4/gfdl-esm4_ssp585_tasmax_global_daily_", yearSpan, ".nc")
-  temp <- rastinFile)
+  temp <- raster(inFile)
   namesList <- names(temp)
   saveRDS(namesList, paste0("data-raw/ISIMIP/ISIMIPLayerNames_", yearSpan, ".RDS"))
 }

@@ -52,31 +52,28 @@ tasmax <- tasmax.observed
 tasmin <- tasmin.observed
 pr <- pr.observed
 hurs <- hurs.observed
+yearSpan <- "2001_2010"
+
 observedlist <- c("hurs", "tasmax", "tasmin", "pr")
+layerNames <- readRDS(paste0("data-raw/ISIMIP/ISIMIPLayerNames_", yearSpan, ".RDS"))
 
 for (j in observedlist) {
-  filenameIn <- get(j)
+  filenameIn <- paste0("data-raw/ISIMIP/cmip6/unitsCorrected/observed/gswp3-w5e5_obsclim_", j, "_global_daily_2001_2010.nc")
   print(paste0("Working on : ", filenameIn))
+   ncin <- rast(temp) # because there is no explicit projection info in the netcdf files, this is assumed - +proj=longlat +datum=WGS84"
   
-  #in the hurs file, the variable name is rhs
-  ncin <- rast(filenameIn) # because there is no explicit projection info in the netcdf files, this is assumed - +proj=longlat +datum=WGS84"
-  # ncin <- readAll(ncin) # seems to speed up processing if ncin is an nc file
-  # ncin <- fixUnits(var = j, ncin = ncin) # fixes temp and precip units; assumes ncin values are raw units
-  
-  indices <- format(as.Date(names(ncin), format = "X%Y.%m.%d"), format = "%m")
+  names(ncin) <- layerNames
+  indices <- layerNames
+  indices <- format(as.Date(indices, format = "X%Y.%m.%d"), format = "%m")
   indices <- as.numeric(indices)
-  ncin.mean <- tapp(ncin, indices, fun = mean, na.rm = TRUE)
-  ncin.cv <- tapp(ncin, indices, fun = cv, na.rm = TRUE)
-  names(ncin.mean) <- month.abb
-  names(ncin.cv) <- month.abb
+  print(system.time(ncin.mean <- tapp(ncin, indices, fun = mean)))
   
-  yearSpan <- "2001_2010"
+  names(ncin.mean) <- month.abb
   
   fileNameOut_monthMean <- paste0("monthMean_", j, "_", "observed_", yearSpan, ".tif")
-  fileNameOut_monthCV <- paste0("monthCV_", j, "_", "observed_", yearSpan, ".tif")
+ # fileNameOut_monthCV <- paste0("monthCV_", j, "_", "observed_", yearSpan, ".tif")
   
   writeRaster(ncin.mean, filename = paste0("data/cmip6/monthMean/", fileNameOut_monthMean), format = "GTiff", overwrite = TRUE)
-  writeRaster(ncin.cv, filename = paste0("data/cmip6/monthMean/", fileNameOut_monthCV), format = "GTiff", overwrite = TRUE)
   
   gc(reset = FALSE, full = TRUE)
 }  
