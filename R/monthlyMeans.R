@@ -6,7 +6,7 @@ source("R/globallyUsed.R")
 
 sspChoices <- c("ssp585") #"ssp126", "ssp585"
 modelChoices <- c("GFDL-ESM4", "MRI-ESM2-0", "MPI-ESM1-2-HR", "UKESM1-0-LL",  "IPSL-CM6A-LR") #, "MPI-ESM1-2-HR", "MRI-ESM2-0") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM6A-LR"
-modelChoices <- c( "IPSL-CM6A-LR", "UKESM1-0-LL")
+#modelChoices <- c( "IPSL-CM6A-LR", "UKESM1-0-LL")
 variableChoices <- c( "hurs", "tasmax", "tasmin", "pr") # "tasmin", tasmax
 startyearChoices <-  c(2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
 locOfFiles <- locOfCMIP6ncFiles
