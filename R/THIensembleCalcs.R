@@ -40,28 +40,31 @@ for (k in sspChoices) {
       speciesName <- gsub("thi.", "", thiList[j])
       yearRange <- 9
       print(paste0("species names: ", speciesName, ", start year: ", l,  ", pid number: ", Sys.getpid()))
-      rasterList <- vector(mode = "list", length = length(modelChoices))
+     rasterList <- vector(mode = "list", length = length(modelChoices))
       for (m in 1:length(modelChoices)) {
         fileNameIn <- paste0("data/cmip6/THI/", thiList[j], "_", modelChoices[m],  "_", yearSpan, "_", k, ".tif")
         print(paste0("raster file name in: ", fileNameIn,  ", pid number: ", Sys.getpid()))
-        rasterList[[m]] <- rast(fileNameIn)
-        names(rasterList[[m]]) <- month.abb
+        rtemp <- rast(fileNameIn)
+        names(rtemp) <- month.abb
+        rasterList <- c(rasterList, rtemp)
       }
-      ras.test <- rast(rasterList)
-      ras.test[ras.test < 0] <- 0 # set all negative THI values to 0
+      names(rasterList) <- month.abb
+      rasterList <- rast(rasterList)
+      rasterList[rasterList < 0] <- 0 # set all negative THI values to 0
       print(paste0( "Done setting negative THI values to 0 for species names: ", speciesName, ", start year: ", l))
-      indices <- format(as.Date(names(ras.test), format = "%b.%d"), format = "%m")
-      indices <- as.numeric(indices)
-      print(paste0( "Done setting doing raster indices for ras.test stack for species: ", speciesName, ", start year: ", l))
-      ras.test.mean <- tapp(ras.test, indices, fun = mean, na.rm = TRUE)
-      ras.test.cv <- tapp(ras.test, indices, fun = cv, na.rm = TRUE)
-      names(ras.test.mean) <- month.abb
-      names(ras.test.cv) <- month.abb
+      indices <- format(as.Date(names(rasterList), format = "%b"), format = "%m")
+#      indices <- as.numeric(indices)
+      indices <- month.abb
+      print(paste0( "Done setting doing raster indices for rasterList stack for species: ", speciesName, ", start year: ", l))
+      rasterList.mean <- tapp(rasterList, indices, fun = mean)
+      rasterList.cv <- tapp(rasterList, indices, fun = cv, na.rm = TRUE)
+      names(rasterList.mean) <- month.abb
+      names(rasterList.cv) <- month.abb
       print(paste0( "Done updating raster names with month.abb for species: ", speciesName, ", start year: ", l))
       fileNameMean <- paste0("data/cmip6/THI/THI_ensembleMean_", speciesName,  "_",  yearSpan, "_", k, ".tif") 
       fileNameCV <- paste0("data/cmip6/THI/THI_ensembleCV_", speciesName,  "_",  yearSpan, "_", k, ".tif")
-      writeRaster(ras.test.mean, filename = fileNameMean, format = "GTiff", overwrite = TRUE)
-      writeRaster(ras.test.cv, filename = fileNameCV, format = "GTiff", overwrite = TRUE)
+      writeRaster(rasterList.mean, filename = fileNameMean, format = "GTiff", overwrite = TRUE)
+      writeRaster(rasterList.cv, filename = fileNameCV, format = "GTiff", overwrite = TRUE)
       print(paste("fileNameMeanOut: ", fileNameMean))
       print(paste0( "Done writing out files for species: ", speciesName, ", start year: ", l, ", pid number: ", Sys.getpid()))
     }
