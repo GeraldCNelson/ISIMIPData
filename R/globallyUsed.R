@@ -1,5 +1,4 @@
 # the sys.setenv command is wrong for the linux box so commenting it out for now.
-Sys.setenv(PROJ_LIB = "/usr/local/Cellar/proj/7.0.1/share/proj") # use until the sf and gdal issues get sorted out. If you get the error pj_obj_create: Cannot find proj.db, check to see if the proj version (currently 7.0.0) has changed
 library(ncdf4)
 #library(PCICt)
 #library(ncdf4.helpers)
@@ -80,6 +79,11 @@ get_os <- function() {
       os <- "linux"
   }
   tolower(os)
+}
+
+# set the proj path if on the mac. Hopefully it works ok on linux.
+if(get_os() %in% "osx") {
+Sys.setenv(PROJ_LIB = "/usr/local/Cellar/proj/7.0.1/share/proj") # use until the sf and gdal issues get sorted out. If you get the error pj_obj_create: Cannot find proj.db, check to see if the proj version (currently 7.0.0) has changed
 }
 
 
