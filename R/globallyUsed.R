@@ -6,7 +6,7 @@ library(ncdf4)
 #library(raster)
 library(terra)
 #library(rgdal)
-library(gdalUtils)
+#library(gdalUtils)
 library(rgeos)
 # library(sp)
 # library(sf)
@@ -256,8 +256,9 @@ getcropAreaYield <- function(cropName, dataType) {
 
 # faster version
 f.gdd <- function(cropMask, tmin, tmax, tbase, tbase_max) {
-  tavg <- app()
-  tavg <- (tmax + tmin) / 2 - tbase
+  testFun <- function(tmax, tmin){return((tmax+tmin)/2)}
+  system.time(tavg <-  lapp(tmin, fun=testFun))
+  system.time(tavg <- (tmax + tmin) / 2 - tbase)
   tavg[tavg < 0] <- 0
   #  tbase_max <- tbase_max - tbase
   tavg[tavg > tbase_max] <- tbase_max

@@ -65,7 +65,7 @@ layerNames <- readRDS(paste0("data-raw/ISIMIP/ISIMIPLayerNames_", yearSpan, ".RD
 modelName.lower <- tolower(i)
 gddIn_crop <- paste0(gddsfilesLoc, modelName.lower, "_", m, "_", k, "_gdd", "_global_daily_", yearSpan, ".tif")
 # use terra function
-gdd <- rast(gdddIn_crop)
+gdd <- rast(gddIn_crop)
 
 
 fileNameMask.in <- paste0("data/crops/rasterMask_", tolower(m), ".tif")

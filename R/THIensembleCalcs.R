@@ -1,8 +1,8 @@
 # combine 10 year rasters across models to get ensemble means and coeffients of variation
 
 source("R/globallyUsed.R")
-library(doParallel) #Foreach Parallel Adaptor 
-library(foreach) #Provides foreach looping construct
+# library(doParallel) #Foreach Parallel Adaptor 
+# library(foreach) #Provides foreach looping construct
 
 startyearChoices <-  c(2021, 2051, 2091) #2021, 2051, 2091) # c(2091) # c(2006) #, 2041, 2051, 2081)
 startyearChoices_ensemble <-  c(2021, 2051, 2091) # no multimodel results for observed data
@@ -20,8 +20,8 @@ thiList <- c("thi.cattle", "thi.sheep", "thi.goat", "thi.yak", "thi.broiler", "t
 # for (k in sspChoices) {
 #   for (l in startyearChoices_ensemble) {
 #     
-varList <- c("modelChoices", "thiList",  "startyearChoices_ensemble", "sspChoices", "tmpDirName")
-libList <- c("raster", "data.table")
+# varList <- c("modelChoices", "thiList",  "startyearChoices_ensemble", "sspChoices", "tmpDirName")
+# libList <- c("rast", "data.table")
 
 # UseCores <- detectCores() - 1 # max number of cores
 # useCores <- 3 # better for memory intensive activities
@@ -45,19 +45,19 @@ for (k in sspChoices) {
         fileNameIn <- paste0("data/cmip6/THI/", thiList[j], "_", modelChoices[m],  "_", yearSpan, "_", k, ".tif")
         print(paste0("raster file name in: ", fileNameIn,  ", pid number: ", Sys.getpid()))
         rtemp <- rast(fileNameIn)
-        names(rtemp) <- month.abb
+#        names(rtemp) <- month.abb
         rasterList <- c(rasterList, rtemp)
       }
-      names(rasterList) <- month.abb
       rasterList <- rast(rasterList)
+      names(rasterList) <- month.abb
       rasterList[rasterList < 0] <- 0 # set all negative THI values to 0
       print(paste0( "Done setting negative THI values to 0 for species names: ", speciesName, ", start year: ", l))
-      indices <- format(as.Date(names(rasterList), format = "%b"), format = "%m")
+ #     indices <- format(as.Date(names(rasterList), format = "%b"), format = "%m")
 #      indices <- as.numeric(indices)
-      indices <- month.abb
+      index <- month.abb
       print(paste0( "Done setting doing raster indices for rasterList stack for species: ", speciesName, ", start year: ", l))
-      rasterList.mean <- tapp(rasterList, indices, fun = mean)
-      rasterList.cv <- tapp(rasterList, indices, fun = cv, na.rm = TRUE)
+      rasterList.mean <- tapp(rasterList, index, fun = mean)
+      rasterList.cv <- tapp(rasterList, index, fun = raster::cv) #, na.rm = TRUE)
       names(rasterList.mean) <- month.abb
       names(rasterList.cv) <- month.abb
       print(paste0( "Done updating raster names with month.abb for species: ", speciesName, ", start year: ", l))

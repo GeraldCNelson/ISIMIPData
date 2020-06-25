@@ -1,4 +1,4 @@
-ibrary(terra)
+library(terra)
 r <- rast(nl=12)
 values(r) <- 1:12
 crs <- "+proj=robin +lon_0=0 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs"

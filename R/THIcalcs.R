@@ -25,7 +25,7 @@ l <- 2021
 
 thiList <- c("thi.cattle", "thi.sheep", "thi.goat", "thi.yak", "thi.broiler", "thi.layer", "thi.chicken", "thi.swine")
 varList <- c("modelChoices", "thiList",  "startyearChoices", "sspChoices", "tmpDirName")
-libList <- c("raster", "data.table")
+libList <- c("rast", "data.table")
 
 UseCores <- detectCores() - 1 # max number of cores
 useCores <- 2 # better for memory intensive activities
