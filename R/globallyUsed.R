@@ -20,6 +20,8 @@ library(lubridate)
 
 terraOptions(memfrac = 0.9,  progress = 10, tempdir =  "data/ISIMIP/") # need to use a relative path
 
+RobinsonProj <-  "+proj=robin +lon_0=0 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs"
+
 # starttime <- Sys.time()
 # tmin_clamped <- clamp(tmin, lower = Tbase_barley, upper = Tbase_max_barley, Values = TRUE)
 # endtime <- Sys.time()

@@ -81,10 +81,10 @@ end_time - start_time
 # apply masks, can only do this to animals we have in THIlist and that have area mask raster
 thiListReduced <- thiList[!thiList %in% c("thi.yak", "thi.broiler", "thi.layer")]
 
-# the lapp function needs a user defined function on the relationship between the two rasters
-lappfunction_mask <- function(x,y) {
-  return(x * y)
-}
+# # the lapp function needs a user defined function on the relationship between the two rasters
+# lappfunction_mask <- function(x,y) {
+#   return(x * y)
+# }
 for (k in sspChoices) {
   for (l in startyearChoices_ensemble) {
     yearSpan <- paste0(l, "_", l + yearRange)
@@ -102,9 +102,11 @@ for (k in sspChoices) {
       meanData <- rast(fileNameMean.in)
       meanData[meanData < 0] <- 0 # set all negative THI values to 0
       CVData <- rast(fileNameCV.in)
-      mean.masked <- lapp(meanData, mask, fun = lappfunction_mask)
+      mean.masked <- mask(meanData, mask)
+#      mean.masked <- lapp(meanData, mask, fun = lappfunction_mask)
       names(mean.masked) <- month.abb
-      CV.masked <- lapp(CVData, mask, fun = lappfunction_mask)
+      CV.masked <- mask(CVData, mask)
+   #   CV.masked <- lapp(CVData, mask, fun = lappfunction_mask)
       names(CV.masked) <- month.abb
       fileNameMean.masked <- paste0("data/cmip6/THI/THI_ensembleMean_masked_",speciesName, "_",  yearSpan, "_", k, ".tif")
       fileNameCV.masked <- paste0("data/cmip6/THI/THI_ensembleCV_masked_", speciesName, "_",  yearSpan, "_", k, ".tif")
@@ -126,9 +128,9 @@ for (j in 1:length(thiListReduced)) {
   fileNameMean.in <- paste0("data/cmip6/THI/", thiListReduced[j], "_observed_", yearSpan, ".tif")
   print(paste("fileNameMean.in: ", fileNameMean.in))
   mask <- rast(fileNameMask.in)
-  meanData <- rastfileNameMean.in)
+  meanData <- rast(fileNameMean.in)
   meanData[meanData < 0] <- 0 # set all negative THI values to 0
-  mean.masked <- lapp(meanData, mask, fun = lappfunction_mask)
+  mean.masked <- mask(meanData, mask)
   names(mean.masked) <- month.abb
   fileNameMean.masked <- paste0("data/cmip6/THI/THI_masked_",speciesName, "_observed_", yearSpan, ".tif")
   print(fileNameMean.masked)

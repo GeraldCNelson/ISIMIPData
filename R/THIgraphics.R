@@ -20,7 +20,7 @@ thiList <- c("thi.cattle", "thi.sheep", "thi.goat", "thi.yak", "thi.broiler", "t
 # apply masks, can only do this to animals we have in THIlist and that have area mask raster
 thiListReduced <- thiList[!thiList %in% c("thi.yak", "thi.broiler", "thi.layer")]
 startyearChoices_ensemble <-  c(2021, 2051, 2091) # no multimodel results for observed data
-
+crs <- RobinsonProj
 for (k in sspChoices) {
   for (l in startyearChoices_ensemble) {
     yearSpan <- paste0(l, "_", l + yearRange)
@@ -31,8 +31,10 @@ for (k in sspChoices) {
       print(paste0("fileNameMean.masked: ", fileNameMean.masked))
       fileNameCV.masked <- paste0("data/cmip6/THI/THI_ensembleCV_masked_", speciesName, "_",  yearSpan, "_", k, ".tif")
       print(paste0("fileNameCV.masked: ", fileNameCV.masked))
-      meanData <- rastfileNameMean.masked)
-      CVData <- rastfileNameCV.masked)
+      meanData <- rast(fileNameMean.masked)
+      meanData <- project(meanData, crs)
+      CVData <- rast(fileNameCV.masked)
+      CVData <- project(CVData, crs)
       names(meanData) <- month.abb
       names(CVData) <- month.abb
       
@@ -46,7 +48,9 @@ for (k in sspChoices) {
       mapTheme <- rasterTheme(region = col.l)  
       mapTheme$panel.background$col = 'white' 
       myat <- c(zeroLevel, noStress, moderateStress, extremeStress, 100)
-      g <- levelplot(meanData, main = titleText, col.regions = col.l, at = myat, par.settings = mapTheme, 
+      meanDataR <- as(meanData, "rasterBrick")
+      meanDataR <- raster::brick(meanData)
+      g <- levelplot(meanDataR, main = titleText, col.regions = col.l, at = myat, par.settings = mapTheme, 
                      colorkey = list(at = myat, col = col.l, labels = c( "","No stress", "moderate stress", "extreme stress", "maximum")),
                      xlab = "", ylab = "", scales  = list(x = list(draw = FALSE), y = list(draw = FALSE)))
       
@@ -81,7 +85,8 @@ for (j in 1:length(thiListReduced)) {
   
   fileNameMean.masked <- paste0("data/cmip6/THI/THI_masked_", speciesName, "_observed_", yearSpan, ".tif")
   print(paste0("filenamein ", fileNameMean.masked))
-  meanData <- rastfileNameMean.masked)
+  meanData <- rast(fileNameMean.masked)
+  meanData <- project(meanData, crs)
   names(meanData) <- month.abb
   
   # plot Ensemble mean
