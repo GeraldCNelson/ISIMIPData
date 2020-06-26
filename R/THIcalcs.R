@@ -25,7 +25,7 @@ l <- 2021
 
 thiList <- c("thi.cattle", "thi.sheep", "thi.goat", "thi.yak", "thi.broiler", "thi.layer", "thi.chicken", "thi.swine")
 varList <- c("modelChoices", "thiList",  "startyearChoices", "sspChoices", "tmpDirName")
-libList <- c("rast", "data.table")
+libList <- c("terra", "data.table")
 
 UseCores <- detectCores() - 1 # max number of cores
 useCores <- 2 # better for memory intensive activities
@@ -116,9 +116,9 @@ fileName.tmin <- paste0(locOfFiles, "monthMean_tasmin", "_observed_", "2001_2010
 print(fileName.tmin)
 fileName.tmax <- paste0(locOfFiles, "monthMean_tasmax", "_observed_", "2001_2010.tif")
 print(fileName.tmax)
-tmax <- rast(rastfileName.tmax)
-tmin <- rast(rastfileName.tmin)
-rh <- rast(rastfileName.rh)
+tmax <- rast(fileName.tmax)
+tmin <- rast(fileName.tmin)
+rh <- rast(fileName.rh)
 names(tmax) <- names(tmin) <- names(rh) <- month.abb
 
 thi.cattle <- eval(parse(text = formula.thi.cattle))

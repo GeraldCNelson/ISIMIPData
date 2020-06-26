@@ -40,21 +40,22 @@ for (k in sspChoices) {
       speciesName <- gsub("thi.", "", thiList[j])
       yearRange <- 9
       print(paste0("species names: ", speciesName, ", start year: ", l,  ", pid number: ", Sys.getpid()))
-     rasterList <- vector(mode = "list", length = length(modelChoices))
+     rasterList <- vector(length = 0)
       for (m in 1:length(modelChoices)) {
         fileNameIn <- paste0("data/cmip6/THI/", thiList[j], "_", modelChoices[m],  "_", yearSpan, "_", k, ".tif")
         print(paste0("raster file name in: ", fileNameIn,  ", pid number: ", Sys.getpid()))
         rtemp <- rast(fileNameIn)
-#        names(rtemp) <- month.abb
-        rasterList <- c(rasterList, rtemp)
+        names(rtemp) <- month.abb
+               rasterList <- c(rasterList, rtemp)
       }
       rasterList <- rast(rasterList)
-      names(rasterList) <- month.abb
-      rasterList[rasterList < 0] <- 0 # set all negative THI values to 0
+       rasterList[rasterList < 0] <- 0 # set all negative THI values to 0
       print(paste0( "Done setting negative THI values to 0 for species names: ", speciesName, ", start year: ", l))
  #     indices <- format(as.Date(names(rasterList), format = "%b"), format = "%m")
 #      indices <- as.numeric(indices)
-      index <- month.abb
+#      index <- month.abb
+      index <-c(1,2,3,4,5,6,7,8,9,10,11,12)
+      
       print(paste0( "Done setting doing raster indices for rasterList stack for species: ", speciesName, ", start year: ", l))
       rasterList.mean <- tapp(rasterList, index, fun = mean)
       rasterList.cv <- tapp(rasterList, index, fun = raster::cv) #, na.rm = TRUE)
@@ -80,8 +81,8 @@ end_time - start_time
 # apply masks, can only do this to animals we have in THIlist and that have area mask raster
 thiListReduced <- thiList[!thiList %in% c("thi.yak", "thi.broiler", "thi.layer")]
 
-# the overlay function needs a user defined function on the relationship between the two rasters
-overlayfunction_mask <- function(x,y) {
+# the lapp function needs a user defined function on the relationship between the two rasters
+lappfunction_mask <- function(x,y) {
   return(x * y)
 }
 for (k in sspChoices) {
@@ -101,9 +102,9 @@ for (k in sspChoices) {
       meanData <- rast(fileNameMean.in)
       meanData[meanData < 0] <- 0 # set all negative THI values to 0
       CVData <- rast(fileNameCV.in)
-      mean.masked <- overlay(meanData, mask, fun = overlayfunction_mask)
+      mean.masked <- lapp(meanData, mask, fun = lappfunction_mask)
       names(mean.masked) <- month.abb
-      CV.masked <- overlay(CVData, mask, fun = overlayfunction_mask)
+      CV.masked <- lapp(CVData, mask, fun = lappfunction_mask)
       names(CV.masked) <- month.abb
       fileNameMean.masked <- paste0("data/cmip6/THI/THI_ensembleMean_masked_",speciesName, "_",  yearSpan, "_", k, ".tif")
       fileNameCV.masked <- paste0("data/cmip6/THI/THI_ensembleCV_masked_", speciesName, "_",  yearSpan, "_", k, ".tif")
@@ -127,7 +128,7 @@ for (j in 1:length(thiListReduced)) {
   mask <- rast(fileNameMask.in)
   meanData <- rastfileNameMean.in)
   meanData[meanData < 0] <- 0 # set all negative THI values to 0
-  mean.masked <- overlay(meanData, mask, fun = overlayfunction_mask)
+  mean.masked <- lapp(meanData, mask, fun = lappfunction_mask)
   names(mean.masked) <- month.abb
   fileNameMean.masked <- paste0("data/cmip6/THI/THI_masked_",speciesName, "_observed_", yearSpan, ".tif")
   print(fileNameMean.masked)

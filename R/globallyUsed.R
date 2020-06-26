@@ -18,7 +18,7 @@ library(readxl)
 library(rworldmap)
 library(lubridate)
 
-terraOptions(memfrac = 0.7,  progress = 10, tempdir =  "data/ISIMIP/") # need to use a relative path
+terraOptions(memfrac = 0.9,  progress = 10, tempdir =  "data/ISIMIP/") # need to use a relative path
 
 # starttime <- Sys.time()
 # tmin_clamped <- clamp(tmin, lower = Tbase_barley, upper = Tbase_max_barley, Values = TRUE)
