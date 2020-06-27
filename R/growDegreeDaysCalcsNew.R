@@ -97,7 +97,8 @@ for (k in sspChoices)  {
             #         #system.time(gdd <- overlay(cropMask, tmin, tmax, fun=function(x, y, z) gdd.f1(x, y, z, tb = Tbase, tbm = Tbase_max)))
             terra:::.mem_info(tavg, 1) 
             print(system.time(gdd <- tavg - tbase))
-            print(system.time(gdd[is.na(cropMask), ] <- NA))
+            print("Working on mask")
+            system.time(gdd[is.na(cropMask), ] <- NA)
             terra:::.mem_info(tavg, 1) 
             endTime <- Sys.time()
             print(paste0("gdd created, ", "creation time: ", round(difftime(endTime, startTime, units = "mins"), digits = 2),  " min., pid: ", Sys.getpid()))
@@ -123,9 +124,7 @@ for (k in sspChoices)  {
 # do same calculations on observed data
 tmax <- tasmax.observed
 tmin <- tasmin.observed
-tmin <- readAll(rasttmin))
-tmax <- readAll(rasttmax))
-print("done with readAll tmin and tmax")
+
 yearSpan <- "2001_2010"
 
 for (o in 1:length(cropChoices)) {
