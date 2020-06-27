@@ -73,6 +73,7 @@ for (k in sspChoices)  {
       print(paste0("tmin brick created, ", tminIn, ",  creation time: ",  round(difftime(endTime, startTime, units = "mins"), digits = 2),  " min.,  pid: ", Sys.getpid()))
       gddFilesCompleted <- list.files(gddsfileOutLoc)
       gddFilesCompleted <- gddFilesCompleted[!grepl("aux.xml", gddFilesCompleted, fixed = TRUE)]
+      tavg <- (tmax + tmin) / 2 # do this calc once for each period and then adjust below to get to gdds
       for (o in 1:length(cropChoices)) {
         for (m in get(cropChoices[o])) {
           print(paste0("crop: ", m))
@@ -88,8 +89,10 @@ for (k in sspChoices)  {
             #          gdd <- f.gdd(cropMask = cropMask, tmin = tmin, tmax = tmax, tbase = tbase, tbase_max = tbase_max)
             #     function(cropMask, tmin, tmax, tbase, tbase_max) 
             #         #system.time(gdd <- overlay(cropMask, tmin, tmax, fun=function(x, y, z) gdd.f1(x, y, z, tb = Tbase, tbm = Tbase_max)))
-            print(system.time(gdd <- (tmax + tmin) / 2 - tbase))
+            terra:::.mem_info(tmin, 1) 
+            print(system.time(gdd <- tavg - tbase))
             print(system.time(gdd[is.na(cropMask), ] <- NA))
+            terra:::.mem_info(tmin, 1) 
             endTime <- Sys.time()
             print(paste0("gdd created, ", "creation time: ", round(difftime(endTime, startTime, units = "mins"), digits = 2),  " min., pid: ", Sys.getpid()))
             print(paste0("gdd file out name: ", gddsfileOutLoc, fileNameOut, ".tif"))
