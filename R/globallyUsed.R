@@ -264,13 +264,14 @@ getcropAreaYield <- function(cropName, dataType) {
 
 # faster version
 f.gdd <- function(cropMask, tmin, tmax, tbase, tbase_max) {
-  testFun <- function(tmax, tmin){return((tmax+tmin)/2)}
-  system.time(tavg <-  lapp(tmin, fun=testFun))
-  system.time(tavg <- (tmax + tmin) / 2 - tbase)
-  tavg[tavg < 0] <- 0
-  #  tbase_max <- tbase_max - tbase
-  tavg[tavg > tbase_max] <- tbase_max
-  tavg[is.na(cropMask), ] <- NA
+  # testFun <- function(tmax, tmin){return((tmax+tmin)/2)}
+  # system.time(tavg <-  lapp(tmin, fun=testFun))
+  # system.time(tavg <- (tmax + tmin) / 2 - tbase)
+  # tavg[tavg < 0] <- 0
+  # #  tbase_max <- tbase_max - tbase
+  # tavg[tavg > tbase_max] <- tbase_max
+  print(system.time(tavg <- (tmax + tmin) / 2 - tbase))
+  print(system.time(tavg[is.na(cropMask), ] <- NA))
   tavg
 }
 
