@@ -77,7 +77,9 @@ for (k in sspChoices)  {
       system.time(tavg <- (tmax + tmin) / 2) # do this calc once for each period and then adjust below to get to gdds
       terra:::.mem_info(tmin, 1) 
       tmin <- tmax <- NULL
-      terra:::.mem_info(tmin, 1) 
+      print("mem_info for tavg")
+      terra:::.mem_info(tavg, 1) 
+      
       for (o in 1:length(cropChoices)) {
         for (m in get(cropChoices[o])) {
           print(paste0("crop: ", m))
@@ -93,10 +95,10 @@ for (k in sspChoices)  {
             #          gdd <- f.gdd(cropMask = cropMask, tmin = tmin, tmax = tmax, tbase = tbase, tbase_max = tbase_max)
             #     function(cropMask, tmin, tmax, tbase, tbase_max) 
             #         #system.time(gdd <- overlay(cropMask, tmin, tmax, fun=function(x, y, z) gdd.f1(x, y, z, tb = Tbase, tbm = Tbase_max)))
-            terra:::.mem_info(tmin, 1) 
+            terra:::.mem_info(tavg, 1) 
             print(system.time(gdd <- tavg - tbase))
             print(system.time(gdd[is.na(cropMask), ] <- NA))
-            terra:::.mem_info(tmin, 1) 
+            terra:::.mem_info(tavg, 1) 
             endTime <- Sys.time()
             print(paste0("gdd created, ", "creation time: ", round(difftime(endTime, startTime, units = "mins"), digits = 2),  " min., pid: ", Sys.getpid()))
             print(paste0("gdd file out name: ", gddsfileOutLoc, fileNameOut, ".tif"))
