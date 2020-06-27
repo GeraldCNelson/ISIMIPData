@@ -85,7 +85,7 @@ for (k in sspChoices)  {
             cropMask <- rast(fileNameMask.in)
             startTime <-  Sys.time()
 #            system.time(gdd <- setValues(tmin, f.gdd(cropMask = values(cropMask), tmin = values(tmin), tmax = values(tmax), tbase = Tbase, tbase_max = Tbase_max)))
-            system.time(gdd <- f.gdd(cropMask = cropMask, tmin = tmin, tmax = tmax, tbase = Tbase, tbase_max = Tbase_max))
+            gdd <- f.gdd(cropMask = cropMask, tmin = tmin, tmax = tmax, tbase = tbase, tbase_max = tbase_max)
        #     function(cropMask, tmin, tmax, tbase, tbase_max) 
             #         #system.time(gdd <- overlay(cropMask, tmin, tmax, fun=function(x, y, z) gdd.f1(x, y, z, tb = Tbase, tbm = Tbase_max)))
             endTime <- Sys.time()
