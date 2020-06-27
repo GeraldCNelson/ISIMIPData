@@ -55,7 +55,6 @@ for (k in sspChoices)  {
       fileNameIn <- paste0(fileNameIn, ".nc")
       
       tmaxIn <- paste0(locOfFiles, k,"/", i, "/", fileNameIn)
-      print(paste0("Loading: ", tmaxIn, " pid: ", Sys.getpid()))
       #      tmax <- readAll(rasttemp))
       # endTime <- Sys.time()
       # print(paste0("tmax brick created, ", tmaxIn, ", creation time: ",  round(difftime(endTime, startTime, units = "mins"), digits = 2),  " min.,  pid: ", Sys.getpid()))
@@ -68,12 +67,17 @@ for (k in sspChoices)  {
       #      <- readAll(rasttemp))
       startTime <-  Sys.time()
       tmaxTminIn(tmaxIn, tminIn) # function to read in tmax and tmin with rast
+      terra:::.mem_info(tmin, 1) 
       endTime <- Sys.time()
       endTime - startTime    
-      print(paste0("tmin brick created, ", tminIn, ",  creation time: ",  round(difftime(endTime, startTime, units = "mins"), digits = 2),  " min.,  pid: ", Sys.getpid()))
+      print(paste0("tmin and tmax loaded, ", ",  creation time: ",  round(difftime(endTime, startTime, units = "mins"), digits = 2),  " min.,  pid: ", Sys.getpid()))
       gddFilesCompleted <- list.files(gddsfileOutLoc)
       gddFilesCompleted <- gddFilesCompleted[!grepl("aux.xml", gddFilesCompleted, fixed = TRUE)]
-      tavg <- (tmax + tmin) / 2 # do this calc once for each period and then adjust below to get to gdds
+      print("starting calculation of tavg")
+      system.time(tavg <- (tmax + tmin) / 2) # do this calc once for each period and then adjust below to get to gdds
+      terra:::.mem_info(tmin, 1) 
+      tmin <- tmax <- NULL
+      terra:::.mem_info(tmin, 1) 
       for (o in 1:length(cropChoices)) {
         for (m in get(cropChoices[o])) {
           print(paste0("crop: ", m))
