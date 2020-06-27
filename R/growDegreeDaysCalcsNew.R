@@ -42,9 +42,9 @@ for (k in sspChoices)  {
     for (l in startyearChoices) {
       
       print(paste0("start year: ", l, " ssp: ", k,  " model: ", i, " start year: ", l, " ssp choice: ", k, " pid: ", Sys.getpid(), " systime: ", Sys.time()))
-#      tmpDirName <- paste0(locOfFiles, "rasterTmp_", Sys.getpid(), "/")
+      #      tmpDirName <- paste0(locOfFiles, "rasterTmp_", Sys.getpid(), "/")
       
-#      rasterOptions(tmpdir =  "data/ISIMIP/") # need to use a relative path
+      #      rasterOptions(tmpdir =  "data/ISIMIP/") # need to use a relative path
       # dir.create(tmpDirName)
       # 
       modelName.lower <- tolower(i)
@@ -56,7 +56,7 @@ for (k in sspChoices)  {
       
       tmaxIn <- paste0(locOfFiles, k,"/", i, "/", fileNameIn)
       print(paste0("Loading: ", tmaxIn, " pid: ", Sys.getpid()))
-#      tmax <- readAll(rasttemp))
+      #      tmax <- readAll(rasttemp))
       # endTime <- Sys.time()
       # print(paste0("tmax brick created, ", tmaxIn, ", creation time: ",  round(difftime(endTime, startTime, units = "mins"), digits = 2),  " min.,  pid: ", Sys.getpid()))
       
@@ -65,11 +65,11 @@ for (k in sspChoices)  {
       fileNameIn <- paste(modelName.lower, k, j, "global_daily", yearSpan, sep = "_")
       fileNameIn <- paste0(fileNameIn, ".nc")
       tminIn <- paste0(locOfFiles, k,"/", i, "/", fileNameIn)
- #      <- readAll(rasttemp))
+      #      <- readAll(rasttemp))
       startTime <-  Sys.time()
       tmaxTminIn(tmaxIn, tminIn) # function to read in tmax and tmin with rast
       endTime <- Sys.time()
-  endTime - startTime    
+      endTime - startTime    
       print(paste0("tmin brick created, ", tminIn, ",  creation time: ",  round(difftime(endTime, startTime, units = "mins"), digits = 2),  " min.,  pid: ", Sys.getpid()))
       gddFilesCompleted <- list.files(gddsfileOutLoc)
       gddFilesCompleted <- gddFilesCompleted[!grepl("aux.xml", gddFilesCompleted, fixed = TRUE)]
@@ -84,10 +84,12 @@ for (k in sspChoices)  {
             fileNameMask.in <- paste0("data/crops/rasterMask_", tolower(m), ".tif")
             cropMask <- rast(fileNameMask.in)
             startTime <-  Sys.time()
-#            system.time(gdd <- setValues(tmin, f.gdd(cropMask = values(cropMask), tmin = values(tmin), tmax = values(tmax), tbase = Tbase, tbase_max = Tbase_max)))
-            gdd <- f.gdd(cropMask = cropMask, tmin = tmin, tmax = tmax, tbase = tbase, tbase_max = tbase_max)
-       #     function(cropMask, tmin, tmax, tbase, tbase_max) 
+            #            system.time(gdd <- setValues(tmin, f.gdd(cropMask = values(cropMask), tmin = values(tmin), tmax = values(tmax), tbase = Tbase, tbase_max = Tbase_max)))
+            #          gdd <- f.gdd(cropMask = cropMask, tmin = tmin, tmax = tmax, tbase = tbase, tbase_max = tbase_max)
+            #     function(cropMask, tmin, tmax, tbase, tbase_max) 
             #         #system.time(gdd <- overlay(cropMask, tmin, tmax, fun=function(x, y, z) gdd.f1(x, y, z, tb = Tbase, tbm = Tbase_max)))
+            print(system.time(gdd <- (tmax + tmin) / 2 - tbase))
+            print(system.time(gdd[is.na(cropMask), ] <- NA))
             endTime <- Sys.time()
             print(paste0("gdd created, ", "creation time: ", round(difftime(endTime, startTime, units = "mins"), digits = 2),  " min., pid: ", Sys.getpid()))
             print(paste0("gdd file out name: ", gddsfileOutLoc, fileNameOut, ".tif"))

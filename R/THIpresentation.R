@@ -18,8 +18,8 @@ thiList <- c("thi.cattle", "thi.sheep", "thi.goat", "thi.yak", "thi.broiler", "t
 # do ppt for ensemble means and CVs
 thiListReduced <- thiList[!thiList %in% c("thi.yak", "thi.broiler", "thi.layer")]
 
-titleString <- paste0("Global Effects to 2100 of Temperature and Humidity on Productivity of ", length(thiListReduced), " animal species")
-contentString <- paste0("Initial results: Monthly ensemble means and coefficients of variation by species for four time periods to 2100. Powerpoint produced on ", Sys.Date())
+titleString <- paste0("Global Effects to 2100 of Temperature and Humidity on Productivity of ", length(thiListReduced), " Animal Species")
+contentString <- paste0("Preliminary Results: Monthly ensemble means and coefficients of variation by species for four time periods to 2100. Powerpoint produced on ", Sys.Date())
 startyearChoices_ensemble <-  c(2021, 2051, 2091) # no multimodel results for observed data
 
 my_pres <- read_pptx() %>% 
