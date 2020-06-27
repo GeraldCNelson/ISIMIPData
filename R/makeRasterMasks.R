@@ -29,8 +29,8 @@ for (i in animalsList) {
   fileName <- paste0("data/animals/raster_", speciesName, ".tif")
   rIn <- raster(fileName)
   if (speciesName %in% "chicken") 
-  {cutoff <- 100000
-  }else{cutoff <- 1000}
+  {cutoff <- 1000
+  }else{cutoff <- 10}
   
   # rIn[rIn < cutoff] <- NA
   # rIn[rIn >= cutoff] <- 1

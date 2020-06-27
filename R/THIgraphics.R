@@ -12,6 +12,7 @@ yearRange <- 9
 i <- "GFDL-ESM4"
 k <- "ssp585"
 l <- 2091
+j = 1 # for cattle
 
 bpList <- as.data.table(read_excel("data-raw/animals/AnimalbreakpointslistRaw.xlsx"))
 thiList <- c("thi.cattle", "thi.sheep", "thi.goat", "thi.yak", "thi.broiler", "thi.layer", "thi.chicken", "thi.swine")
@@ -20,7 +21,6 @@ thiList <- c("thi.cattle", "thi.sheep", "thi.goat", "thi.yak", "thi.broiler", "t
 # apply masks, can only do this to animals we have in THIlist and that have area mask raster
 thiListReduced <- thiList[!thiList %in% c("thi.yak", "thi.broiler", "thi.layer")]
 startyearChoices_ensemble <-  c(2021, 2051, 2091) # no multimodel results for observed data
-crs <- RobinsonProj
 for (k in sspChoices) {
   for (l in startyearChoices_ensemble) {
     yearSpan <- paste0(l, "_", l + yearRange)
@@ -48,9 +48,12 @@ for (k in sspChoices) {
       mapTheme <- rasterTheme(region = col.l)  
       mapTheme$panel.background$col = 'white' 
       myat <- c(zeroLevel, noStress, moderateStress, extremeStress, 100)
-      meanDataR <- as(meanData, "rasterBrick")
-      meanDataR <- raster::brick(meanData)
-      g <- levelplot(meanDataR, main = titleText, col.regions = col.l, at = myat, par.settings = mapTheme, 
+ #     writeRaster(meanData, filename ="temp.tif", format = "GTiff", overwrite = TRUE)
+      meanData <- raster::brick(meanData)
+#      meanData <- as(meanData, "Raster")
+      # meanDataR <- as(meanData, "rasterBrick")
+      # meanDataR <- raster::brick(meanData)
+      g <- levelplot(meanData, main = titleText, col.regions = col.l, at = myat, par.settings = mapTheme, 
                      colorkey = list(at = myat, col = col.l, labels = c( "","No stress", "moderate stress", "extreme stress", "maximum")),
                      xlab = "", ylab = "", scales  = list(x = list(draw = FALSE), y = list(draw = FALSE)))
       
@@ -62,6 +65,7 @@ for (k in sspChoices) {
       dev.off()
       
       # plot Ensemble CV
+      CVData <- raster::brick(CVData)
       titleText <- paste0("THI CV by month, ", speciesName, "\n ", yearSpan, ", SSP = ", k, ", ensemble CV")
       myat <- c(0, .5, 1.0, 1.5, 2.0)
       g <- levelplot(CVData, main = titleText, col.regions = col.l, at = myat,
@@ -98,7 +102,8 @@ for (j in 1:length(thiListReduced)) {
   col.l <- c("darkslategray1", "blue", "yellow", "red")
   mapTheme <- rasterTheme(region = col.l)  
   mapTheme$panel.background$col = 'white' 
-  
+  meanData <- raster::brick(meanData)
+
   myat <- c(zeroLevel, noStress, moderateStress, extremeStress, 100)
   g <- levelplot(meanData, main = titleText, col.regions = col.l, at = myat, par.settings = mapTheme, 
                  colorkey = list(at = myat, col = col.l, labels = c( "","No stress", "moderate stress", "extreme stress", "maximum")),
