@@ -18,7 +18,7 @@ library(readxl)
 library(rworldmap)
 library(lubridate)
 
-terraOptions(memfrac = 0.9,  progress = 10, tempdir =  "data/ISIMIP/") # need to use a relative path
+terraOptions(memfrac =20,  progress = 10, tempdir =  "data/ISIMIP/") # need to use a relative path
 
 RobinsonProj <-  "+proj=robin +lon_0=0 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs"
 crs <- RobinsonProj
