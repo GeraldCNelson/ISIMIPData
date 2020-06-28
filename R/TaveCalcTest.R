@@ -24,3 +24,5 @@ tminAsRaster <- raster::brick(tmin)
 plot(tmin[[25]])
 
 plot(tminAsRaster[[25]])
+
+system.time(clamp(tmin, lower = tbase, upper = tbase_max, values = TRUE))
