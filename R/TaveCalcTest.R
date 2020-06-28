@@ -1,6 +1,13 @@
 library(terra)
 terraOptions(memfrac = 0.8,  progress = 10, tempdir =  "data/ISIMIP/")
 tmax <- rast("NAtemp/ukesm1-0-ll_ssp585_tasmax_global_daily_2051_2060.nc")
+
+terra:::.mem_info(tmax, 1)
+tmax <- NULL
+terraOptions(memfrac = 10,  progress = 10, tempdir =  "data/ISIMIP/")
+tmax <- rast("NAtemp/ukesm1-0-ll_ssp585_tasmax_global_daily_2051_2060.nc")
+terra:::.mem_info(tmax, 1)
+
 tmin <- rast("NAtemp/ukesm1-0-ll_ssp585_tasmin_global_daily_2051_2060.nc")
 
 tbase <- 2.6

@@ -5,7 +5,7 @@ source("R/globallyUsed.R")
 
 locOfFiles <- locOfCMIP6ncFiles
 sspChoices <- c("ssp585") #"ssp126", 
-modelChoices <- c( "UKESM1-0-LL") #"MPI-ESM1-2-HR", "MRI-ESM2-0")# "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM6A-LR") #, 
+modelChoices <- c( "GFDL-ESM4", "UKESM1-0-LL", "IPSL-CM6A-LR") #"MPI-ESM1-2-HR", "MRI-ESM2-0")# "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM6A-LR") #, 
 #modelChoices <- c("MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM6A-LR") #, "MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
 
 startyearChoices <-  c( 2021, 2051, 2091) #, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
@@ -103,7 +103,7 @@ for (k in sspChoices)  {
             endTime <- Sys.time()
             print(paste0("gdd created, ", "creation time: ", round(difftime(endTime, startTime, units = "mins"), digits = 2),  " min., pid: ", Sys.getpid()))
             print(paste0("gdd file out name: ", gddsfileOutLoc, fileNameOut, ".tif"))
-            writeRaster(gdd, filename = paste0(gddsfileOutLoc, fileNameOut, ".tif"), format = "GTiff", overwrite = TRUE)  
+            writeRaster(round(gdd, 1), filename = paste0(gddsfileOutLoc, fileNameOut, ".tif"), format = "GTiff", overwrite = TRUE, wopt=list(gdal=c("COMPRESS=LZW"))  )  
             cropMask <- NULL
             gdd <- NULL
             # gc(reset = FALSE, full = TRUE)
@@ -126,7 +126,10 @@ tmax <- tasmax.observed
 tmin <- tasmin.observed
 
 yearSpan <- "2001_2010"
-
+print("starting calculation of tavg")
+system.time(tavg <- (tmax + tmin) / 2) # do this calc once for each period and then adjust below to get to gdds
+terra:::.mem_info(tmin, 1) 
+tmax <- tmin <- NULL
 for (o in 1:length(cropChoices)) {
   for (m in get(cropChoices[o])) {
     print(paste0("crop: ", m))
@@ -136,8 +139,11 @@ for (o in 1:length(cropChoices)) {
       Tbase <- ann_crop_temp_table[(crop %in% m), Tbase]
       Tbase_max <- ann_crop_temp_table[(crop %in% m), Tbase_max]
       startTime <-  Sys.time()
-      #      gdd <- f.gdd(tmax = tmax, tmin = tmin, tbase = Tbase, tbase_max = Tbase_max, crop = m)
-      system.time(gdd <- setValues(tmin, gdd.f3(values(mask), values(tmin), values(tmax), tbase = Tbase, tbase_max = Tbase_max)))
+      terra:::.mem_info(tavg, 1) 
+      system.time(gdd <- tavg - tbase)
+      print("Working on mask")
+      system.time(gdd <- mask(gdd, cropMask))
+      terra:::.mem_info(tavg, 1) 
       endTime <-  Sys.time()
       print(paste0("gdd created, ", "creation time: ", round(difftime(endTime, startTime, units = "mins"), digits = 2),  " min., pid: ", Sys.getpid()))
       print(paste0("gdd file out name: ", gddsfileOutLoc, fileNameOut, ".tif"))
