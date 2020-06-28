@@ -32,7 +32,7 @@ useCores <- detectCores() - 2 # max number of cores
 useCores <- 2 # better for memory intensive activities
 
 varList <- c("startyearChoices", "sspChoices", "modelChoices", "locOfFiles")
-libList <- c("raster", "ncdf4")
+libList <- c("rast", "ncdf4")
 
 cl <- clusterSetup(varList, libList, useCores) # function created in globallyUsed.R
 foreach(l = startyearChoices) %:%
@@ -40,12 +40,7 @@ foreach(l = startyearChoices) %:%
   #  foreach(j = variableChoices) %:%
   foreach(k = sspChoices) %dopar% {
     print(paste0("start year: ", l, " ssp: ", k, " pid: ", Sys.getpid(), " systime: ", Sys.time()))
-    tmpDirName <- paste0(locOfFiles, "rasterTmp_", Sys.getpid(), "/")
-    
-    rasterOptions(tmpdir = tmpDirName)
-    dir.create(tmpDirName)
-    # rasterOptions(chunksize = 3e+09, maxmemory = 9e+09)
-    
+     
     modelName.lower <- tolower(i)
     startTime <-  Sys.time()
     yearSpan <- paste0(l, "_", l + yearRange)
@@ -53,29 +48,21 @@ foreach(l = startyearChoices) %:%
     fileNameIn <- paste(modelName.lower, k, j, "global_daily", yearSpan, sep = "_")
     fileNameIn <- paste0(fileNameIn, ".nc")
     
-    temp <- paste0(locOfFiles, k,"/", i, "/", fileNameIn)
-    print(paste0("Working on : ", temp, " pid: ", Sys.getpid()))
-    tmax <- readAll(rasttemp))
+    tmaxIn <- paste0(locOfFiles, k,"/", i, "/", fileNameIn)
+    #      tmax <- readAll(rasttemp))
+    # endTime <- Sys.time()
+    # print(paste0("tmax brick created, ", tmaxIn, ", creation time: ",  round(difftime(endTime, startTime, units = "mins"), digits = 2),  " min.,  pid: ", Sys.getpid()))
     
+    startTime <-  Sys.time()
     j <- "tasmin"
     fileNameIn <- paste(modelName.lower, k, j, "global_daily", yearSpan, sep = "_")
     fileNameIn <- paste0(fileNameIn, ".nc")
-    
-    temp <- paste0(locOfFiles, k,"/", i, "/", fileNameIn)
-    print(paste0("Working on : ", temp, " pid: ", Sys.getpid()))
-    tmin <- readAll(rasttemp))
-    
+    tminIn <- paste0(locOfFiles, k,"/", i, "/", fileNameIn)
+    #      <- readAll(rasttemp))
     startTime <-  Sys.time()
-    
-    print("Done with tmin readIn")
-    tminTime <- Sys.time()
-    print(paste0(tminTime - startTime, " pid: ", Sys.getpid()))
-    print(paste0(difftime(tminTime, startTime, units = "mins"), " pid: ", Sys.getpid()))
-    
-    tmaxTime <- Sys.time()
-    print("Done with tmax readIn")
-    tmaxTime - tminTime
-    chillHrs <- overlay(tmin, tmax, fun = f.chillhrs)
+    tmaxTminIn(tmaxIn, tminIn) # function to read in tmax and tmin with rast
+    terra:::.mem_info(tmax, 1)
+    system.time(chillHrs <- f.chillhrs(tmin, tmax))
     names(chillHrs) <- names(tmax) # put the date info back into the names
     # 
     # do several count days in a month
@@ -96,8 +83,8 @@ foreach(l = startyearChoices) %:%
     chillHrs.sumMonth <- tapp(chillHrs, indices, fun = sum, na.rm = TRUE)
     chillHrs.sumMonth <- chillHrs.sumMonth/10 # to get to the monthly average over 10 years
     names(chillHrs.sumMonth) <- month.abb
-    chillHrsNorthernHem <- dropLayer(chillHrs.sumMonth, southernHemWinter) # note dropping layers for southern hemisphere winter
-    chillHrsSouthernHem <- dropLayer(chillHrs.sumMonth, northernHemWinter) # note dropping layers for northern hemisphere winter
+    chillHrsNorthernHem <- subset(chillHrs.sumMonth, southernHemWinter) # note dropping layers for southern hemisphere winter
+    chillHrsSouthernHem <- subset(chillHrs.sumMonth, northernHemWinter) # note dropping layers for northern hemisphere winter
     chillHrsNorthernHem <- sum(chillHrsNorthernHem)
     chillHrsSouthernHem <- sum(chillHrsSouthernHem)
     endCompleteLoop <- Sys.time()
@@ -119,9 +106,6 @@ stopCluster(cl)
 # do same calculations on observed data
 tmin <- tasmin.observed
 tmax <- tasmax.observed
-tmin <- readAll(rasttmin))
-tmax <- readAll(rasttmax))
-print("done with readAll tmin and tmax")
 yearSpan <- "2001_2010"
 
 chillHrs <- overlay(tmin, tmax, fun = f.chillhrs)

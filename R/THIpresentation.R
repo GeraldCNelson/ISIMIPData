@@ -27,28 +27,37 @@ my_pres <- read_pptx() %>%
   ph_with(value = titleString, location = ph_location_type(type = "ctrTitle")) %>% 
   ph_with(value = contentString, location = ph_location_type(type = "subTitle"))
 
-IntroText0 <- "Animal productivity is affected by exposure to combined high levels of temperature and humidity. The THI (temperature and humidity index) is a species-specific measure of those effects with thresholds for low, medium and high negative productivity effects."
+IntroText0 <- "Animal productivity is affected by exposure to combined high levels of temperature and humidity. The THI (temperature and humidity index) is a species-specific measure of those effects with thresholds for low, medium and high negative productivity effects.  "
 IntroText0.5 <- "In the following figures 4 colors represent areas of different levels of stress to a particular species. Areas with one of these colors is where the animals were grown in the early 2000s."
-IntroText0.7 <- "/n"
-  IntroText1 <- "The climate data set used in these graphics of average monthly THI values was prepared initially by the ISIMIP project (www.isimip.org) using CMIP6 data." 
-IntroText2 <- "This analysis uses the ISIMIP3b output data sets (https://www.isimip.org/news/isimip3ab-protocol-released/)."
-IntroText3 <- "It includes data from 5 earth system models (GFDL-ESM4, UKESM1-0-LL, MPI-ESM1-2-HR, MRI-ESM2-0, and IPSL-CM6A-LR) and three scenarios (ssp126, ssp370 and ssp585). In this powerpoint, only results using ssp585 are presented." 
-IntroText4 <- "The THI values from for 10 year periods (2001-2010, 2021-2030, 2051-2060, and 2091-2100) for the individual models are averaged for each month and a coefficient of variation across the 5 models is calculated."
-IntroText <- c(IntroText0, IntroText1, IntroText2, IntroText3, IntroText4)
-
+IntroText1 <- "The climate data set used in these graphics of average monthly THI values was prepared initially by the ISIMIP project (www.isimip.org) using CMIP6 data. " 
+IntroText2 <- "This analysis uses the ISIMIP3b output data sets (https://www.isimip.org/news/isimip3ab-protocol-released/). "
+IntroText3 <- "It includes data from 5 earth system models (GFDL-ESM4, UKESM1-0-LL, MPI-ESM1-2-HR, MRI-ESM2-0, and IPSL-CM6A-LR) and three scenarios (ssp126, ssp370 and ssp585). "
+IntroText3.5 <- "In this powerpoint, only results using ssp585 are presented." 
+IntroText4 <- "The THI values are for 10 year periods (2001-2010, 2021-2030, 2051-2060, and 2091-2100) with results for the individual models averaged for each month and a coefficient of variation across the 5 models is calculated."
+IntroText5 <- "This powerpoint presents work in progress and should not be circulated without permission."
 fp_1 <- fp_text(bold = TRUE, color = "pink", font.size = 0)
 fp_2 <- fp_text(bold = FALSE, font.size = 12)
 fp_3 <- fp_text(italic = TRUE, color = "black", font.size = 14)
 
 bl <- block_list(
-  #  fpar(ftext("hello world", fp_1)),
   fpar(
     ftext(IntroText0, fp_2),
+    ftext(IntroText0.5, fp_2)),
+  fpar(),
+  fpar(
     ftext(IntroText1, fp_2),
     ftext(IntroText2, fp_2),
-    ftext(IntroText3, fp_2),
-    ftext(IntroText4, fp_2)
-  ))
+    ftext(IntroText3, fp_2)),
+  fpar(),
+  fpar(
+    ftext(IntroText3.5, fp_2)),
+  fpar(
+    ftext(IntroText4, fp_2)),
+  fpar(),
+  fpar(
+    ftext(IntroText5, fp_2))
+)
+
 
 # def_text <- fp_text(color = "black", italic = FALSE, font.size = 15)
 # TITLE = fpar(ftext(paste0(IntroText, collapse = " "), prop = def_text))
