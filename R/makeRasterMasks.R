@@ -6,40 +6,47 @@ sourceDir <- "data-raw/animals/arcrasters/"
 animalsList <- list.files(sourceDir)
 
 # run this code only when new animal data come in. This aggregates to 1/2 degree grids
-#  globeExtent   <- extent(c(-180, 180, -90, 90))
-# # 
-# for (i in animalsList) {
-#   species <- unlist(strsplit(i, "-"))[2]
-#   if (species %in% "recl.asc") species = "livestockSystem"
-#   fileName <- paste0("data/animals/raster_", species)
-#   rAnimal <- raster(paste0(sourceDir, i), format = "ascii")
-#   rAnimal <- extend(rAnimal, globeExtent)
-#   crs(rAnimal) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
-#   rAnimal <- aggregate(rAnimal, 6, fun = sum)
-#   rAnimal <- extend(rAnimal, globeExtent)
-#   print(fileName)
-#   writeRaster(rAnimal, filename = fileName, format = "GTiff", overwrite = TRUE)
-#   assign(fileName, rAnimal)
-# }
-
-# load the data for the number of animals in each 1/2 degree cell
+ globeExtent   <- ext(-180, 180, -90, 90)
+#
+ i = "glw3-cattle-numbers.asc" # for testing
 for (i in animalsList) {
-  speciesName <- unlist(strsplit(i, "-"))[2]
-  if (speciesName %in% "recl.asc") speciesName = "livestockSystem"
-  fileName <- paste0("data/animals/raster_", speciesName, ".tif")
-  rIn <- raster(fileName)
-  if (speciesName %in% "chicken") 
-  {cutoff <- 1000
-  }else{cutoff <- 10}
+  species <- unlist(strsplit(i, "-"))[2]
+  if (species %in% "recl.asc") species = "livestockSystem"
+  fileName <- paste0("data/animals/raster_ct_", species, ".tif")
+  rAnimal <- rast(paste0(sourceDir, i), format = "ascii")
+  rAnimal <- extend(rAnimal, globeExtent)
+    rAnimal <- aggregate(rAnimal, 6, fun = sum)
+  rAnimal <- extend(rAnimal, globeExtent)
+  print(paste0(fileName))
+  print(rAnimal)
+  writeRaster(rAnimal, filename = fileName, format = "GTiff", overwrite = TRUE)
+  rAnimal[rAnimal <= 100] <- NA
+  fileName_mask <- paste0("data/animals/rasterMask_", species, ".tif")
+  writeRaster(rAnimal, filename = fileName_mask, format = "GTiff", overwrite = TRUE)
+  print(paste0(fileName_mask))
+  print(rAnimal)
   
-  # rIn[rIn < cutoff] <- NA
-  # rIn[rIn >= cutoff] <- 1
-  r <- reclassify(rIn, rbind(c(-Inf, cutoff, NA), c(cutoff, Inf, 1)))
-  
-  fileNameout <- paste0("data/animals/rasterMask_", speciesName, ".tif")
-  print(fileNameout)
-  writeRaster(r, fileNameout, format = "GTiff", overwrite = TRUE)
 }
+# 
+# # load the data for the number of animals in each 1/2 degree cell
+# for (i in animalsList) {
+#   speciesName <- unlist(strsplit(i, "-"))[2]
+#   if (speciesName %in% "recl.asc") speciesName = "livestockSystem"
+#   fileName <- paste0("data/animals/raster_ct_", speciesName, ".tif")
+#   r <- rast(fileName)
+#   # if (speciesName %in% "chicken") 
+#   # {cutoff <- 1000
+#   # }else{cutoff <- 10}
+#   
+#   # rIn[rIn < cutoff] <- NA
+#   # rIn[rIn >= cutoff] <- 1
+#   r[r <= 0] <- NA
+#   r <- reclassify(rIn, rbind(c(-Inf, cutoff, NA), c(cutoff, Inf, 1)))
+#   
+#   fileNameout <- paste0("data/animals/rasterMask_", speciesName, ".tif")
+#   print(fileNameout)
+#   writeRaster(r, fileNameout, format = "GTiff", overwrite = TRUE)
+# }
 
 # now do plants
 
@@ -87,9 +94,8 @@ for (i in crops.new) {
   #  i <- "wheat"
   tempTifArea <- getcropAreaYield(i, "area")
   
-  rInArea <- raster(tempTifArea)
-  # rInYield <- raster(fileInYield)
-  
+  rInArea <- rast(tempTifArea)
+
   # Earthstat data (using its harvest area) has a pixel size of  5 minute resolution. Need to convert to 1/2 degree to get to cmip6 cell size
   # 5 min = 0.0833333 degree
   # 30 min = 0.5 degree

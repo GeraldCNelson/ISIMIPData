@@ -15,6 +15,7 @@ modelChoices <- c( "IPSL-CM6A-LR", "MRI-ESM2-0", "MPI-ESM1-2-HR", "UKESM1-0-LL",
 i <- "GFDL-ESM4"
 k <- "ssp585"
 l <- 2021
+m <-  "thi.cattle" 
 
 # create data table to hold all the breakpoints
 # bpListRaw <- as.data.table(read.csv("data-raw/animals/breakpointslistRaw.csv", stringsAsFactors = FALSE))
@@ -26,6 +27,7 @@ l <- 2021
 thiList <- c("thi.cattle", "thi.sheep", "thi.goat", "thi.yak", "thi.broiler", "thi.layer", "thi.chicken", "thi.swine")
 varList <- c("modelChoices", "thiList",  "startyearChoices", "sspChoices", "tmpDirName")
 libList <- c("terra", "data.table")
+libList <- c("terra")
 
 UseCores <- detectCores() - 1 # max number of cores
 useCores <- 2 # better for memory intensive activities
@@ -35,11 +37,9 @@ start_time <- Sys.time()
 x <- foreach(i = modelChoices, .combine = rbind) %:%
   foreach(l = startyearChoices, .combine = rbind) %:%
   foreach(k = sspChoices, .combine = rbind)  %dopar% {
-    require(data.table)
-    require(terra)
+    # require(data.table)
+    # require(terra)
     
-    #    tmpDirName <- paste0(locOfFiles, "/rasterTmp_", Sys.getpid(), "/")
-    #    yearRange <- 9
     yearSpan <- paste0(l, "_", l + yearRange)
     print(paste0("model: ", i, " start year: ", l, " ssp: ", k, " pid: ", Sys.getpid(), " systime: ", Sys.time()))
     
@@ -54,13 +54,17 @@ x <- foreach(i = modelChoices, .combine = rbind) %:%
     fileName.tmax <- paste0(locOfFiles, filePrefix.tmax, modelName.lower, fileSuffix)
     fileName.tmin <- paste0(locOfFiles, filePrefix.tmin, modelName.lower, fileSuffix)
     fileName.rh <- paste0(locOfFiles, filePrefix.rh, modelName.lower, fileSuffix)
-    print(fileName.tmax)
+#    print(fileName.tmax)
     tmax <- rast(fileName.tmax)
-    print(fileName.tmin)
+    print("tmax loaded")
+#    print(fileName.tmin)
     tmin <- rast(fileName.tmin)
+    print("tmin loaded")
     print(fileName.rh)
     rh <- rast(fileName.rh)
+    print("rh loaded")
     names(tmax) <- names(tmin) <- names(rh) <- month.abb
+    print("tmax, tmin, and rh loaded")
     # # THI equations
     # mostly from Lallo
     # note: The Dry Bulb temperature, usually referred to as "air temperature", is the air property that is most commonly used. 
@@ -68,6 +72,7 @@ x <- foreach(i = modelChoices, .combine = rbind) %:%
     # formulas are stored in globallyUsed.R
     
     thi.cattle <- eval(parse(text = formula.thi.cattle))
+    print("thi.cattle created")
     thi.sheep <- eval(parse(text = formula.thi.sheep))
     thi.goat <- eval(parse(text = formula.thi.goat))
     thi.broiler <- eval(parse(text = formula.thi.broiler))
@@ -75,11 +80,11 @@ x <- foreach(i = modelChoices, .combine = rbind) %:%
     thi.chicken <- eval(parse(text = formula.thi.chicken))
     thi.swine <- eval(parse(text = formula.thi.swine))
     thi.yak <- eval(parse(text = formula.thi.yak))
-    names(thi.cattle) <- names(thi.sheep) <- names(thi.goat) <- names(thi.yak) <- names(thi.broiler) <- names(thi.broiler) <- names(thi.layer) <- names(thi.swine) <- month.abb
+#    names(thi.cattle) <- names(thi.sheep) <- names(thi.goat) <- names(thi.yak) <- names(thi.broiler) <- names(thi.broiler) <- names(thi.layer) <- names(thi.swine) <- month.abb
     
     for (m in thiList) {
-      fileName <- paste0("data/cmip6/THI/", m, "_", i, "_", yearSpan, "_", m, ".tif")
-      print(fileName)
+      fileName <- paste0("data/cmip6/THI/", m, "_", i, "_", yearSpan, "_", k, ".tif")
+      print(paste0("fileName out: ", fileName))
       writeRaster(get(m), filename = fileName, format = "GTiff", overwrite = TRUE)
       
       # # THI breakpoints by species, four are needed - No stress, moderate stress, severe stress, extreme stress, max value in thi is given by the ceiling xxx code. Stored in data-raw//breakpointslistRaw.csv
@@ -131,9 +136,9 @@ thi.swine <- eval(parse(text = formula.thi.swine))
 thi.yak <- eval(parse(text = formula.thi.yak))
 names(thi.cattle) <- names(thi.sheep) <- names(thi.goat) <- names(thi.yak) <- names(thi.broiler) <- names(thi.broiler) <- names(thi.layer) <- names(thi.swine) <- month.abb
 
-for (k in thiList) {
-  fileName <- paste0("data/cmip6/THI/", k, "_observed_", "2001_2010.tif")
+for (m in thiList) {
+  fileName <- paste0("data/cmip6/THI/", m, "_observed_", "2001_2010.tif")
   print(fileName)
-  writeRaster(get(k), filename = fileName, format = "GTiff", overwrite = TRUE)
+  writeRaster(get(m), filename = fileName, format = "GTiff", overwrite = TRUE)
 }
 

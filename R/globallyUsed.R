@@ -2,9 +2,8 @@
 library(ncdf4)
 #library(PCICt)
 #library(ncdf4.helpers)
-#library(raster)
-library(terra)
-#library(rgdal)
+options("rgdal_show_exportToProj4_warnings"="none") # directions given with library(rgdal)
+# library(rgdal) - commented out because it has a project function
 #library(gdalUtils)
 library(rgeos)
 # library(sp)
@@ -12,6 +11,8 @@ library(rgeos)
 library(maps)
 library(maptools)
 library(data.table)
+library(terra)
+#library(raster)
 library(rasterVis)
 library(ggplot2)
 library(readxl)
@@ -20,8 +21,9 @@ library(lubridate)
 
 terraOptions(memfrac =3,  progress = 10, tempdir =  "data/ISIMIP/") # need to use a relative path
 
-RobinsonProj <-  "+proj=robin +lon_0=0 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs"
-crs <- RobinsonProj
+RobinsonProj <-  "+proj=robin +lon_0=0 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs"
+crsRob <- RobinsonProj
+crslatlong <- "+proj=longlat +datum=WGS84 +no_defs"
 # starttime <- Sys.time()
 # tmin_clamped <- clamp(tmin, lower = Tbase_barley, upper = Tbase_max_barley, Values = TRUE)
 # endtime <- Sys.time()
@@ -36,7 +38,9 @@ crs <- RobinsonProj
 
 data("coastsCoarse")
 crsLoc <- CRS(RobinsonProj)
-coastsCoarse <- sp::spTransform(coastsCoarse, crsLoc)
+#coastsCoarse <- sp::spTransform(coastsCoarse, crsLoc)
+coastsCoarse.Rob <- sp::spTransform(raster::crop(coastsCoarse, raster::extent(-179.95, 179.95, -60, 90)), crsLoc)
+
 
 data(wrld_simpl)
 wrld_land <- subset(wrld_simpl, !NAME == "Antarctica")
@@ -86,9 +90,9 @@ get_os <- function() {
 }
 
 # set the proj path if on the mac. Hopefully it works ok on linux.
-if(get_os() %in% "osx") {
-Sys.setenv(PROJ_LIB = "/usr/local/Cellar/proj/7.0.1/share/proj") # use until the sf and gdal issues get sorted out. If you get the error pj_obj_create: Cannot find proj.db, check to see if the proj version (currently 7.0.0) has changed
-}
+# if(get_os() %in% "osx") {
+# Sys.setenv(PROJ_LIB = "/usr/local/Cellar/proj/7.0.1/share/proj") # use until the sf and gdal issues get sorted out. If you get the error pj_obj_create: Cannot find proj.db, check to see if the proj version (currently 7.0.0) has changed
+# }
 
 
 for (j in c("dataDirs.csv", "graphicsDirs.csv")) {

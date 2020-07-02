@@ -48,8 +48,8 @@ for (i in crops) {
   #  i <- "wheat"
   tempTifArea <- getcropAreaYield(i, "area")
   
-  rInArea <- raster(tempTifArea)
-  # rInYield <- raster(fileInYield)
+  rInArea <- rast(tempTifArea)
+  # rInYield <- rast(fileInYield)
   
   # Earthstat data (using its harvest area) has a pixel size of  5 minute resolution. Need to convert to 1/2 degree to get to cmip6 cell size
   # 5 min = 0.0833333 degree

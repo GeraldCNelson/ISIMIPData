@@ -16,10 +16,46 @@ j = 1 # for cattle
 
 bpList <- as.data.table(read_excel("data-raw/animals/AnimalbreakpointslistRaw.xlsx"))
 thiList <- c("thi.cattle", "thi.sheep", "thi.goat", "thi.yak", "thi.broiler", "thi.layer", "thi.chicken", "thi.swine")
+thiListReduced <- thiList[!thiList %in% c("thi.yak", "thi.broiler", "thi.layer")]
+
+# create maps of where animals are located with cts
+for (j in 1:length(thiListReduced)) {
+  speciesName <- gsub("thi.", "", thiListReduced[j])
+  fileNameCt <- paste0("data/animals/raster_ct_", speciesName,  ".tif")
+  print(paste0("fileNameCt: ", fileNameCt))
+  countsIn <- rast(fileNameCt)
+  countsIn <- countsIn/1000 # convert to 1000s
+  fileNameMask.in <- paste0("data/animals/rasterMask_", tolower(speciesName), ".tif")
+  animalMask <- rast(fileNameMask.in)
+  countsIn <- mask(countsIn, animalMask)
+  
+  countsIn <- terra::project(countsIn, crsRob)
+  speciesNameCap <- paste0(toupper(substr(speciesName, 1, 1)), substr(speciesName, 2, nchar((speciesName))))
+  titleText <- paste0(speciesNameCap, " numbers by 1/2 degree cell\nearly 21st century (000)")
+  col.l <- c("darkslategray1", "blue", "yellow", "red")
+  maxVal <- max(minmax(countsIn))
+  maxVal <- round(maxVal)
+  myat <- round(seq.int(from = 0, to = maxVal, length = 5))
+  
+  mapTheme <- rasterTheme(region = col.l)  
+  mapTheme$panel.background$col = 'white' 
+  
+  countsIn <- raster::stack(countsIn)
+  
+  g <- levelplot(countsIn, main = titleText, col.regions = col.l, at = myat, par.settings = mapTheme, 
+                 colorkey = list(at = myat, col = col.l),
+                 xlab = "", ylab = "", scales  = list(x = list(draw = FALSE), y = list(draw = FALSE)))
+  g <- g + latticeExtra::layer(sp.polygons(coastsCoarse.Rob, col = "black", lwd = 0.5))
+  plotFileName <- paste0("graphics/cmip6/THI/counts_",  speciesName, ".jpg")
+  print(paste0("plot file name: ", plotFileName))
+  jpeg(plotFileName, width = 8, height = 8, quality = 100, units = "in", res = 300)
+  print(g)
+  dev.off()
+  }
+  
 
 # ensemble graphics
 # apply masks, can only do this to animals we have in THIlist and that have area mask raster
-thiListReduced <- thiList[!thiList %in% c("thi.yak", "thi.broiler", "thi.layer")]
 startyearChoices_ensemble <-  c(2021, 2051, 2091) # no multimodel results for observed data
 for (k in sspChoices) {
   for (l in startyearChoices_ensemble) {
@@ -32,9 +68,9 @@ for (k in sspChoices) {
       fileNameCV.masked <- paste0("data/cmip6/THI/THI_ensembleCV_masked_", speciesName, "_",  yearSpan, "_", k, ".tif")
       print(paste0("fileNameCV.masked: ", fileNameCV.masked))
       meanData <- rast(fileNameMean.masked)
-      meanData <- project(meanData, crs)
+      meanData <- terra::project(meanData, crsRob)
       CVData <- rast(fileNameCV.masked)
-      CVData <- project(CVData, crs)
+      CVData <- terra::project(CVData, crsRob)
       names(meanData) <- month.abb
       names(CVData) <- month.abb
       
@@ -57,7 +93,7 @@ for (k in sspChoices) {
                      colorkey = list(at = myat, col = col.l, labels = c( "","No stress", "moderate stress", "extreme stress", "maximum")),
                      xlab = "", ylab = "", scales  = list(x = list(draw = FALSE), y = list(draw = FALSE)))
       
-      g <- g + latticeExtra::layer(sp.polygons(coastsCoarse, col = "black", lwd = 0.5))
+      g <- g + latticeExtra::layer(sp.polygons(coastsCoarse.Rob, col = "black", lwd = 0.5))
       plotFileName <- paste0("graphics/cmip6/THI/THI_ensembleMean_masked_",  speciesName, "_",  yearSpan, "_", k, ".jpg")
       print(paste0("plot file name: ", plotFileName, " for species ", speciesName))
       jpeg(plotFileName, width = 8, height = 8, quality = 100, units = "in", res = 300)
@@ -67,12 +103,12 @@ for (k in sspChoices) {
       # plot Ensemble CV
       CVData <- raster::brick(CVData)
       titleText <- paste0("THI CV by month, ", speciesName, "\n ", yearSpan, ", SSP = ", k, ", ensemble CV")
-      myat <- c(0, .5, 1.0, 1.5, 2.0)
+      myat <- c(0, 1.0, 2.0, 3.0, max(maxValue(CVData)))
       g <- levelplot(CVData, main = titleText, col.regions = col.l, at = myat,
                      colorkey = list(at = myat, col = col.l),
                      xlab = "", ylab = "", scales  = list(x = list(draw = FALSE), y = list(draw = FALSE)))
       
-      g <- g + latticeExtra::layer(sp.polygons(coastsCoarse, col = "black", lwd = 0.5))
+      g <- g + latticeExtra::layer(sp.polygons(coastsCoarse.Rob, col = "black", lwd = 0.5))
       plotFileName <- paste0("graphics/cmip6/THI/THI_ensembleCV_masked_",   speciesName, "_",  yearSpan, "_", k, ".jpg")
       jpeg(plotFileName, width = 8, height = 8, quality = 100, units = "in", res = 300)
       print(g)
@@ -80,6 +116,7 @@ for (k in sspChoices) {
     }
   }
 }
+
 # do observed data
 yearRange <- 9
 yearSpan <- "2001_2010"
@@ -90,7 +127,7 @@ for (j in 1:length(thiListReduced)) {
   fileNameMean.masked <- paste0("data/cmip6/THI/THI_masked_", speciesName, "_observed_", yearSpan, ".tif")
   print(paste0("filenamein ", fileNameMean.masked))
   meanData <- rast(fileNameMean.masked)
-  meanData <- project(meanData, crs)
+  meanData <- terra::project(meanData, crsRob)
   names(meanData) <- month.abb
   
   # plot Ensemble mean
@@ -109,7 +146,7 @@ for (j in 1:length(thiListReduced)) {
                  colorkey = list(at = myat, col = col.l, labels = c( "","No stress", "moderate stress", "extreme stress", "maximum")),
                  xlab = "", ylab = "", scales  = list(x = list(draw = FALSE), y = list(draw = FALSE)))
   
-  g <- g + latticeExtra::layer(sp.polygons(coastsCoarse, col = "black", lwd = 0.5))
+  g <- g + latticeExtra::layer(sp.polygons(coastsCoarse.Rob, col = "black", lwd = 0.5))
   plotFileName <- paste0("graphics/cmip6/THI/masked_",  speciesName, "_observed_",  yearSpan, ".jpg")
   print(paste0("plot file name: ", plotFileName, " for species ", speciesName))
   jpeg(plotFileName, width = 8, height = 8, quality = 100, units = "in", res = 300)

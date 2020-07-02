@@ -57,3 +57,9 @@ tmp <- rstk(tmin, tmax)
 system.time(chillHrs1 <- f.chillhrs(tmin, tmax))
 system.time(chillHrs2 <- lapp(tmp, f.chillhrs2))
 system.time(chillHrs3 <- lapp(tmp, chill))
+
+croppingCalendar <- rast("NAtemp/Wheat.crop.calendar.fill.nc")
+wheatMask <- rast("NAtemp/rasterMask_wheat.tif")
+croppingCalendar_masked<- mask(croppingCalendar, wheatMask)
+crs(croppingCalendar) <- crs(wheatMask)
+

@@ -62,7 +62,7 @@ mask <- rast(fileNameMask.in)
 #paste0(fileNameOut, ".tif")
 # example data
 library(raster)
-r <- raster()
+r <- rast()
 tmp <- 25 * sin(seq(0,pi,1/365)) - 5
 tmin <- stack(lapply(1:365, function(i)setValues(r, tmp[i])))
 tmin[seq(1,ncell(tmin),111)] <- NA

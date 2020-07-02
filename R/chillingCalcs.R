@@ -14,12 +14,27 @@ startyearChoices <-  c(2021, 2051, 2091) #, 2051, 2091) #2011, 2041, 2051, 2081)
 
 yearRange <- 9
 
-f.chillhrs <- function(tmin, tmax) {
-  ch <- (7 - tmin)/(tmax - tmin)
-  ch[tmin > 7] <- 0
-  ch[tmax < 7 & tmin <= 7] <- 24
-  ch
+# f.chillhrs <- function(tmin, tmax) {
+#   ch <- (7 - tmin)/(tmax - tmin)
+#   ch[tmin > 7] <- 0
+#   ch[tmax < 7 & tmin <= 7] <- 24
+#   ch
+# }
+
+library(Rcpp)
+cppFunction('std::vector<double> chill(std::vector<double> tmn, std::vector<double> tmx) {
+size_t n = tmn.size();
+std::vector<double> out(n);
+for (size_t i=0; i<n; i++) {
+if (tmx[i] < 7) {
+out[i] = 24;
+} else if (tmn[i] < 7) {
+out[i] = (7 - tmn[i])/(tmx[i] - tmn[i]);
 }
+}
+return out;
+}')
+
 #test values
 i <- "IPSL-CM6A-LR"
 k <- "ssp585"
@@ -62,7 +77,9 @@ foreach(l = startyearChoices) %:%
     startTime <-  Sys.time()
     tmaxTminIn(tmaxIn, tminIn) # function to read in tmax and tmin with rast
     terra:::.mem_info(tmax, 1)
-    system.time(chillHrs <- f.chillhrs(tmin, tmax))
+    tmp <- rstk(tmin, tmax)
+#    system.time(chillHrs <- f.chillhrs(tmin, tmax))
+    system.time(chillHrs <- lapp(tmp, chill))
     names(chillHrs) <- names(tmax) # put the date info back into the names
     # 
     # do several count days in a month

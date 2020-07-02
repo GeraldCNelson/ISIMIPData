@@ -10,8 +10,10 @@ modelChoices <- c("UKESM1-0-LL", "IPSL-CM6A-LR") #"MPI-ESM1-2-HR", "MRI-ESM2-0")
 
 startyearChoices <-  c(2051) #, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
 hemisphereList <- c("Northern", "Southern")
-northerHemExtent <- c( -180, 180, 0, 90)
-southernHemExtent <-  c( -180, 180, -90, 0)
+northerHemExtent <- c( -180, 180, 0, 90) # this is latlong
+southernHemExtent <-  c( -180, 180, -90, 0) # this is latlong
+northerHemExtentRC <- c( -180, 180, 0, 90) # this is row column
+southernHemExtent <-  c( -180, 180, -90, 0) # this is row column
 
 yearRange <- 9
 gddsfilesLoc <- "data/cmip6/growingDegreeDays/"
@@ -40,27 +42,12 @@ for (k in sspChoices)  {
           indices <- format(as.Date(names(gdd), format = "X%Y.%m.%d"), format = "%j") # %j is day of the year
           indices <- as.numeric(indices)
           
-          startTime <-  Sys.time()
-          gdd_north <- gdd[1:180, 1:720, drop = FALSE]
-          e = extent(northerHemExtent)
-          system.time(gdd_north <- crop(gdd, ext(1, 180, 1, 720)))
-          endTime <-  Sys.time()
-          round(difftime(endTime, startTime,  units = "mins"), digits = 2)
-          
-          startTime <-  Sys.time()
-          gdd_south <- gdd[181:360, 1:720, drop = FALSE]
-          endTime <-  Sys.time()
-          round(difftime(endTime, startTime,  units = "mins"), digits = 2)
-          
-          
+           extent.north <- extent(northerHemExtent)
+          extent.south <- extent(southernHemExtent)
+          system.time(gdd_north <- crop(gdd, extent.north))
+          system.time(gdd_south <- crop(gdd, extent.south))
+ 
           # crop the gdd brick to just the area of the crop from the 
-          
-          # cropArea <- getcropAreaYield(cropName = tolower(m), dataType = "area")
-          # rInArea <- raster(cropArea)
-          # rInAreaAgg <- aggregate(rInArea, fact = 6, fun = "sum")
-          # cutoff <- 1000 # only include 1/2 cells where crop area is great than cutoff
-          # rInAreaAgg[rInAreaAgg < cutoff] <- NA
-          # rInAreaAgg[rInAreaAgg >= cutoff] <- 1
           
           #
           
@@ -85,7 +72,7 @@ for (k in sspChoices)  {
           cropName <- m
           
           fileNameMask.in <- paste0("data/crops/rasterMask_", tolower(m), ".tif")
-          mask <- rast(fileNameMask.in)
+          cropMask <- rast(fileNameMask.in)
           
           cropCalendarName <- ann_crop_temp_table[crop %in% cropName, crop.calendar]
           cropCalFilesLoc <- paste0("data-raw/crops/cropCalendars/ALL_CROPS_netCDF_0.5deg_filled/")
@@ -93,17 +80,17 @@ for (k in sspChoices)  {
           #    locNFileIn <- paste0(filesLoc, fileInName, ".gz")
           locNFileIn <- paste0(cropCalFilesLoc, fileInName)
           R.utils::gunzip(paste0(locNFileIn, ".gz"), remove = FALSE)
-          
-          croppingCalendar_plant <- raster(locNFileIn, var = "plant")
-          croppingCalendar_harvest <- raster(locNFileIn, var = "harvest")
-          croppingCalendar_plant_crop <- mask(croppingCalendar_plant, mask)
-          croppingCalendar_harvest_crop <- mask(croppingCalendar_harvest, mask)
+          croppingCalendar <- rast(locNFileIn)
+          crs(croppingCalendar) <- crs(cropMask) # needed because cropping calendar doesn't have an explicit crs
+          croppingCalendar_mask <- mask(croppingCalendar, cropMask)
+          croppingCalendar_plant <- croppingCalendar_mask$plant
+          croppingCalendar_harvest <- croppingCalendar_mask$harvest
           
           unlink(locNFileIn) # delete the .nc file when no longer needed.
           
-          croppingCalendar_plant_crop_north <- crop(croppingCalendar_plant_crop, extent(northerHemExtent))
-          
-          croppingCalendar_harvest_crop_north <- crop(croppingCalendar_harvest_crop, extent(northerHemExtent))
+          croppingCalendar_plant_crop_north <- crop(croppingCalendar_plant, extent(northerHemExtent))
+          croppingCalendar_harvest_crop_north <- crop(croppingCalendar_harvest, extent(northerHemExtent))
+          cal <- c(croppingCalendar_plant_crop, croppingCalendar_plant_crop)
           
           calS[calS > 0] <- NA # raster where all non-NC values are where the harvest date is less than the plant date, ie is in the new year
           calS[calS < 0] <- 1 # raster where all non-NC values are where the harvest date is less than the plant date, ie is in the new year

@@ -91,6 +91,13 @@ for (k in sspChoices) {
     ensembleTitle <- paste("Ensemble Mean and Coefficient of Variation for", speciesName)
     add_slide(my_pres, layout = 'Section Header', master = 'Office Theme')  %>% 
       ph_with(value = ensembleTitle, location = ph_location_type(type = "body"))
+    
+    fileNameCts <- paste0("graphics/cmip6/THI/counts_", speciesName, ".jpg")
+    extImgObs <- external_img(src = fileNameCts, width = 5, height = 8)
+    
+    add_slide(my_pres, layout = 'Title Only', master = 'Office Theme') %>% 
+      ph_with(value = extImgObs, location = ph_location(left = 2, top = 0, width = 5, height = 8) )
+    
     fileNameObserved <- paste0("graphics/cmip6/THI/masked_", speciesName, "_observed_",  "2001_2010", ".jpg")
     
     extImgObs <- external_img(src = fileNameObserved, width = 5, height = 8)

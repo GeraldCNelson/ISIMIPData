@@ -153,7 +153,7 @@ for (o in 1:length(cropChoices)) {
   #   if (species %in% "recl.asc") species = "livestockSystem"
   #   fileName <- paste0("data/raster_", species, ".tif")
   #   print(fileName)
-  #   rIn <- raster(fileName)
+  #   rIn <- rast(fileName)
   #   rName <- paste0("raster_", species)
   #   assign(rName, rIn)
   # }
