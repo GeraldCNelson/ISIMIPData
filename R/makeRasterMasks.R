@@ -6,17 +6,30 @@ sourceDir <- "data-raw/animals/arcrasters/"
 animalsList <- list.files(sourceDir)
 
 # run this code only when new animal data come in. This aggregates to 1/2 degree grids
- globeExtent   <- ext(-180, 180, -90, 90)
-#
- i = "glw3-cattle-numbers.asc" # for testing
+globeExtent   <- ext(-180, 180, -90, 90)
+
+pastureMask <-  rast("data-raw/crops/CroplandPastureArea2000_Geotiff/Pasture2000_5m.tif")
+pastureMask <- aggregate(pastureMask, 6, fun = max)
+pastureMask[pastureMask == 0] <- NA
+pastureMask[pastureMask > 0] <- 1
+fileName_mask <- paste0("data/animals/rasterMask_", "pasture", ".tif")
+writeRaster(pastureMask, filename = fileName_mask, format = "GTiff", overwrite = TRUE)
+
+i = "glw3-cattle-numbers.asc" # for testing
+animalStats <- data.table(species = character(), ct = numeric())
 for (i in animalsList) {
   species <- unlist(strsplit(i, "-"))[2]
   if (species %in% "recl.asc") species = "livestockSystem"
   fileName <- paste0("data/animals/raster_ct_", species, ".tif")
   rAnimal <- rast(paste0(sourceDir, i), format = "ascii")
   rAnimal <- extend(rAnimal, globeExtent)
-    rAnimal <- aggregate(rAnimal, 6, fun = sum)
+  rAnimal <- aggregate(rAnimal, 6, fun = sum)
   rAnimal <- extend(rAnimal, globeExtent)
+  ct <- global(rAnimal, fun = "sum", na.rm = TRUE)
+  if (!species %in% "livestockSystem") {
+    ct <- global(rAnimal, fun = "sum", na.rm = TRUE)
+    animalStats <- rbind(animalStats, list(species, ct$sum))
+  }
   print(paste0(fileName))
   print(rAnimal)
   writeRaster(rAnimal, filename = fileName, format = "GTiff", overwrite = TRUE)
@@ -25,8 +38,12 @@ for (i in animalsList) {
   writeRaster(rAnimal, filename = fileName_mask, format = "GTiff", overwrite = TRUE)
   print(paste0(fileName_mask))
   print(rAnimal)
-  
 }
+
+write.csv(animalStats, "data/animals/animalCt.csv")
+
+
+
 # 
 # # load the data for the number of animals in each 1/2 degree cell
 # for (i in animalsList) {
@@ -79,9 +96,9 @@ crops <- c("abaca", "agave", "alfalfa", "almond", "aniseetc", "apple", "apricot"
            "wheat", "yam", "yautia")
 
 fruitsOnly <-  c("almond", "apple", "apricot", "avocado", "berrynes", "blueberry", 
-             "cherry", "cranberry", "currant", "grape", 
-             "grapefruitetc", "lemonlime", "orange", "peachetc", "persimmon", "rasberry", "sourcherry", 
-             "stonefruitnes", "walnut")
+                 "cherry", "cranberry", "currant", "grape", 
+                 "grapefruitetc", "lemonlime", "orange", "peachetc", "persimmon", "rasberry", "sourcherry", 
+                 "stonefruitnes", "walnut")
 
 fruitsToAnalyse <- fruits
 
@@ -95,14 +112,14 @@ for (i in crops.new) {
   tempTifArea <- getcropAreaYield(i, "area")
   
   rInArea <- rast(tempTifArea)
-
+  
   # Earthstat data (using its harvest area) has a pixel size of  5 minute resolution. Need to convert to 1/2 degree to get to cmip6 cell size
   # 5 min = 0.0833333 degree
   # 30 min = 0.5 degree
   
   rInAreaAgg <- aggregate(rInArea, fact = 6, fun = "sum")
   if (i %in% fruitsToAnalyse) {
-  cutoff <- .001 # only include 1/2 degree cells where crop area is great than cutoff
+    cutoff <- .001 # only include 1/2 degree cells where crop area is great than cutoff
   }
   if (i %in% annCropsToAnalyze) {
     cutoff <- 500 # only include 1/2 degree cells where crop area is great than cutoff
