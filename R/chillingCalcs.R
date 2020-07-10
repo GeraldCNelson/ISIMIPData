@@ -36,18 +36,18 @@ southernHemSummer <- c("Nov", "Dec", "Jan", "Feb", "Mar", "Apr")
 varList <- c("startyearChoices", "sspChoices", "modelChoices", "locOfFiles")
 libList <- c("terra", "ncdf4")
 library(Rcpp)
-cppFunction('std::vector<double> chill(std::vector<double> tmin, std::vector<double> tmax) {
-size_t n = tmin.size();
-std::vector<double> out(n);
-for (size_t i=0; i<n; i++) {
-if (tmax[i] < 7) {
-out[i] = 24;
-} else if (tmin[i] < 7) {
-out[i] = (7 - tmin[i])/(tmax[i] - tmin[i]);
-}
-}
-return out;
-}')
+# cppFunction('std::vector<double> chill(std::vector<double> tmin, std::vector<double> tmax) {
+# size_t n = tmin.size();
+# std::vector<double> out(n);
+# for (size_t i=0; i<n; i++) {
+# if (tmax[i] < 7) {
+# out[i] = 24;
+# } else if (tmin[i] < 7) {
+# out[i] = (7 - tmin[i])/(tmax[i] - tmin[i]);
+# }
+# }
+# return out;
+# }')
 
 # cl <- clusterSetup(varList, libList, useCores) # function created in globallyUsed.R
 # foreach(l = startyearChoices) %:%
@@ -76,7 +76,9 @@ for (l in startyearChoices) {
       tmaxTminIn(tmaxIn, tminIn) # function to read in tmax and tmin with rast
       terra:::.mem_info(tmax, 1)
       tmp <- sds(tmin, tmax)
-      print(system.time(chillHrs <- lapp(tmp, chill)))
+      
+#      print(system.time(chillHrs <- lapp(tmp, chill)))
+      system.time(chillHrs <- clamp(tmin, lower = tbase, upper = tbase_max, values = TRUE))
       names(chillHrs) <- names(tmax) # put the date info back into the names
       # 
       # do several count days in a month
