@@ -114,6 +114,13 @@ for (i in varsToKeep) {
       system(cdoCommandMult)
     }
   }
+  
+  if (i %in% c("_hurs_")) {
+    for (j in 1:length(filestoKeep)) {
+      inFile <- filestoKeep[j]
+      outFile <- renameFile(filestoKeep[j])
+      file.copy(from = inFile, to = outFile)
+    }
 }
 
 # cdo -setunit="degC" -addc,-273.15 <infile> <outfile>
