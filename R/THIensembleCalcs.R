@@ -66,7 +66,7 @@ for (k in sspChoices) {
       
       
       # make a list of SpatRasters
-      x <- lapply(modelChoices, readRast)
+      x <- lapply(modelChoices.lower, readRast)
       
       # approach 1 (yours)
       startTime <- Sys.time()

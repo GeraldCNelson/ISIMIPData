@@ -19,8 +19,13 @@ cropChoices <- unique(ann_crop_temp_table$crop)
 i <- "GFDL-ESM4"
 k <- "ssp585"
 l <- 2051
-m <- "Broadbean"
+j <- 1
 
+readRast <- function(m) {
+  fileNameIn <- paste0("data/cmip6/growingDegreeDays/", m , "_", cropChoices[j], "_", k,  "_gdd_global_daily_", yearSpan, ".tif")
+  r <- rast(fileNameIn)
+  r
+}
 
 # UseCores <- detectCores() - 1 # max number of cores
 # useCores <- 3 # better for memory intensive activities
@@ -39,21 +44,15 @@ for (k in sspChoices) {
       cropName <- cropChoices[j]
       yearRange <- 9
       print(paste0("crop names: ", cropName, ", start year: ", l,  ", pid number: ", Sys.getpid()))
-      rasterList <- vector(mode = "list", length = length(modelChoices.lower))
-      for (m in 1:length(modelChoices.lower)) {
-        fileNameIn <- paste0("data/cmip6/growingDegreeDays/", modelChoices.lower[m], "_", cropName, "_", k, "_", "gdd_global_daily", "_", yearSpan,  ".tif")
-        print(paste0("raster file name in: ", fileNameIn,  ", pid number: ", Sys.getpid()))
-        rasterList[[m]] <- rast(fileNameIn)
-#        names(rasterList[[m]]) <- month.abb
-      }
-      ras.test <- rast(rasterList)
-  #    ras.test[ras.test < 0] <- 0 # set all negative THI values to 0
-   #   print(paste0( "Done setting negative THI values to 0 for species names: ", speciesName, ", start year: ", l))
-      indices <- format(as.Date(names(ras.test), format = "%b.%d"), format = "%m")
+      x <- lapply(modelChoices, readRast)
+      startDate <- paste0(l, "-01-01")
+      endDate <- paste0(l + yearRange, "-12-31")
+      indices <- seq(as.Date(startDate), as.Date(endDate), 1)
+      indices <- format(indices, format = "%j")
       indices <- as.numeric(indices)
       print(paste0( "Done setting doing raster indices for ras.test stack for crop: ", cropName, ", start year: ", l))
-      ras.test.mean <- tapp(ras.test, indices, fun = mean, na.rm = TRUE)
-      ras.test.cv <- tapp(ras.test, indices, fun = cv, na.rm = TRUE)
+      x.mean <- tapp(x, indices, fun = mean, na.rm = TRUE)
+      x.cv <- tapp(x, indices, fun = cv, na.rm = TRUE)
       names(ras.test.mean) <- month.abb
       names(ras.test.cv) <- month.abb
       print(paste0( "Done updating raster names with month.abb for crop: ", cropName, ", start year: ", l))

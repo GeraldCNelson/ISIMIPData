@@ -7,7 +7,7 @@ source("R/globallyUsed.R")
 sspChoices <- c("ssp585") #"ssp126", "ssp585"
 modelChoices <- c("GFDL-ESM4", "MRI-ESM2-0", "MPI-ESM1-2-HR", "UKESM1-0-LL",  "IPSL-CM6A-LR") #, "MPI-ESM1-2-HR", "MRI-ESM2-0") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM6A-LR"
 #modelChoices <- c( "IPSL-CM6A-LR", "UKESM1-0-LL")
-variableChoices <- c( "hurs", "tasmax", "tasmin", "pr") # "tasmin", tasmax
+variableChoices <- c( "tasmax", "tasmin", "pr", "hurs") # "tasmin", tasmax
 startyearChoices <-  c(2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
 locOfFiles <- locOfCMIP6ncFiles
 yearRange <- 9
@@ -46,19 +46,17 @@ for (k in sspChoices) {
         # dir.create(tmpDirName)
         # 
         modelName.lower <- tolower(i)
-        #    startTime <-  Sys.time()
         yearSpan <- paste0(l, "_", l + yearRange)
         layerNames <- readRDS(paste0("data-raw/ISIMIP/ISIMIPLayerNames_", yearSpan, ".RDS"))
         
         fileNameIn <- paste(modelName.lower, k, j, "global_daily", yearSpan, sep = "_")
-        fileNameOut_monthMean <- paste0("monthMean_", j, "_", modelName.lower, "_", k,  "_", yearSpan, ".tif")
+        fileNameOut_monthlyMean <- paste0("monthlyMean_", j, "_", modelName.lower, "_", k,  "_", yearSpan, ".tif")
         
-        #        fileNameIn <- paste0(fileNameIn, ".RDS")
-        fileNameIn <- paste0(fileNameIn, ".nc")
+       fileNameIn <- paste0(fileNameIn, ".tif")
         
         temp <- paste(locOfFiles, k, "/", i, "/", fileNameIn, sep = "")
         print(paste0("Working on : ", temp))
-        ncin <- rast(temp) # because there is no explicit projection info in the netcdf files, this is assumed - +proj=longlat +datum=WGS84"
+        ncin <- rast(temp)
         names(ncin) <- layerNames
         indices <- layerNames
         indices <- format(as.Date(indices, format = "X%Y.%m.%d"), format = "%m")
@@ -69,13 +67,13 @@ for (k in sspChoices) {
         names(ncin.mean) <- month.abb
         # names(ncin.cv) <- month.abb
         
-        fileNameOut_monthMean <- paste0("monthMean_", j, "_", modelName.lower, "_", k,  "_", yearSpan, ".tif")
+        fileNameOut_monthlyMean <- paste0("monthlyMean_", j, "_", modelName.lower, "_", k,  "_", yearSpan, ".tif")
         #        fileNameOut_monthCV <- paste0("monthCV_", j, "_", modelName.lower, "_", k,  "_", yearSpan, ".tif")
         
-        writeRaster(ncin.mean, filename = paste0("data/cmip6/monthMean/", fileNameOut_monthMean), format = "GTiff", overwrite = TRUE)
-        print(paste0("writing ncin.mean ", fileNameOut_monthMean))
-        #  writeRaster(ncin.cv, filename = paste0("data/cmip6/monthMean/", fileNameOut_monthCV), format = "GTiff", overwrite = TRUE)
-        print(paste("time to do one brick: ", difftime(Sys.time(), startTime, units = "mins")))
+        writeRaster(ncin.mean, filename = paste0("data/cmip6/monthlyMean/", fileNameOut_monthlyMean), format = "GTiff", overwrite = TRUE)
+        print(paste0("writing ncin.mean ", fileNameOut_monthlyMean))
+        #  writeRaster(ncin.cv, filename = paste0("data/cmip6/monthlyMean/", fileNameOut_monthCV), format = "GTiff", overwrite = TRUE)
+#        print(paste("time to do one brick: ", difftime(Sys.time(), startTime, units = "mins")))
         #    unlink(tmpDirName, recursive = TRUE)
         rm(ncin.mean)
         #   rm(ncin.cv)
@@ -91,30 +89,27 @@ tasmin <- tasmin.observed
 pr <- pr.observed
 hurs <- hurs.observed
 observedlist <- c("hurs", "tasmax", "tasmin", "pr")
+l = 2001
+yearSpan <- paste0(l, "_", l + yearRange)
+layerNames <- readRDS(paste0("data-raw/ISIMIP/ISIMIPLayerNames_", yearSpan, ".RDS"))
 
 for (j in observedlist) {
   filenameIn <- get(j)
   print(paste0("Working on : ", filenameIn))
   
   #in the hurs file, the variable name is rhs
-  ncin <- rast(filenameIn) # because there is no explicit projection info in the netcdf files, this is assumed - +proj=longlat +datum=WGS84"
-  # ncin <- readAll(ncin) # seems to speed up processing if ncin is an nc file
-  # ncin <- fixUnits(var = j, ncin = ncin) # fixes temp and precip units; assumes ncin values are raw units
-  
+  ncin <- rast(filenameIn) 
+  names(ncin) <- layerNames
   indices <- format(as.Date(names(ncin), format = "X%Y.%m.%d"), format = "%m")
   indices <- as.numeric(indices)
   ncin.mean <- tapp(ncin, indices, fun = mean, na.rm = TRUE)
-  ncin.cv <- tapp(ncin, indices, fun = cv, na.rm = TRUE)
   names(ncin.mean) <- month.abb
-  names(ncin.cv) <- month.abb
+ 
+  fileNameOut_monthlyMean <- paste0("monthlyMean_", j, "_", "observed_", yearSpan, ".tif")
+#  fileNameOut_monthCV <- paste0("monthCV_", j, "_", "observed_", yearSpan, ".tif")
   
-  yearSpan <- "2001_2010"
-  
-  fileNameOut_monthMean <- paste0("monthMean_", j, "_", "observed_", yearSpan, ".tif")
-  fileNameOut_monthCV <- paste0("monthCV_", j, "_", "observed_", yearSpan, ".tif")
-  
-  writeRaster(ncin.mean, filename = paste0("data/cmip6/monthMean/", fileNameOut_monthMean), format = "GTiff", overwrite = TRUE)
-  writeRaster(ncin.cv, filename = paste0("data/cmip6/monthMean/", fileNameOut_monthCV), format = "GTiff", overwrite = TRUE)
+  writeRaster(ncin.mean, filename = paste0("data/cmip6/monthlyMean/", fileNameOut_monthlyMean), format = "GTiff", overwrite = TRUE)
+#  writeRaster(ncin.cv, filename = paste0("data/cmip6/monthlyMean/", fileNameOut_monthCV), format = "GTiff", overwrite = TRUE)
   
   gc(reset = FALSE, full = TRUE)
 }

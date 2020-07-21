@@ -217,16 +217,16 @@ clusterSetup <- function(varList, libList, useCores) {
 
 # observed data names and locations
 
-hurs.observed <- paste0(locOfCMIP6ncFiles,   "observed/gswp3-w5e5_obsclim_hurs_global_daily_2001_2010.nc")
-tasmax.observed <- paste0(locOfCMIP6ncFiles, "observed/gswp3-w5e5_obsclim_tasmax_global_daily_2001_2010.nc")
-tasmin.observed <- paste0(locOfCMIP6ncFiles, "observed/gswp3-w5e5_obsclim_tasmin_global_daily_2001_2010.nc")
-pr.observed <- paste0(locOfCMIP6ncFiles, "observed/gswp3-w5e5_obsclim_pr_global_daily_2001_2010.nc")
+hurs.observed <- paste0(locOfCMIP6ncFiles,   "observed/gswp3-w5e5_obsclim_hurs_global_daily_2001_2010.tif")
+tasmax.observed <- paste0(locOfCMIP6ncFiles, "observed/gswp3-w5e5_obsclim_tasmax_global_daily_2001_2010.tif")
+tasmin.observed <- paste0(locOfCMIP6ncFiles, "observed/gswp3-w5e5_obsclim_tasmin_global_daily_2001_2010.tif")
+pr.observed <- paste0(locOfCMIP6ncFiles, "observed/gswp3-w5e5_obsclim_pr_global_daily_2001_2010.tif")
 observedlist <- c("hurs", "tasmax", "tasmin", "pr")
 
 # note that these don't have the path to the file
-rh.observed.cmip5 <- c("hurs_ewembi1_daily_1991_2000.nc", "hurs_ewembi1_daily_2001_2010.nc")
-tmax.observed.cmip5 <- c("tasmax_ewembi1_daily_1991_2000.nc", "tasmax_ewembi1_daily_2001_2010.nc") 
-tmin.observed.cmip5 <- c("tasmin_ewembi1_daily_1991_2000.nc", "tasmin_ewembi1_daily_2001_2010.nc")
+rh.observed.cmip5 <- c("hurs_ewembi1_daily_1991_2000.tif", "hurs_ewembi1_daily_2001_2010.tif")
+tmax.observed.cmip5 <- c("tasmax_ewembi1_daily_1991_2000.tif", "tasmax_ewembi1_daily_2001_2010.tif") 
+tmin.observed.cmip5 <- c("tasmin_ewembi1_daily_1991_2000.tif", "tasmin_ewembi1_daily_2001_2010.tif")
 observedlist <- c("rh.observed.cmip5", "tmax.observed.cmip5", "tmin.observed.cmip5")
 
 ##' To check if files (incl. directories) are symbolic links:

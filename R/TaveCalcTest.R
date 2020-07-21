@@ -14,9 +14,6 @@ system.time(tavg <- (tmax + tmin) / 2)
 
 system.time(tavg <- (tmax + tmin) / 2 - tbase)
 
-# tmp <- sds(list(tmin, tmax))
-# system.time( tavg <- lapp(tmp, function(mn, mx){ (mn + mx) / 2 - tbase})  )
-
 tminAsRaster <- raster::brick(tmin)
 
 plot(tmin[[25]])
@@ -67,4 +64,30 @@ croppingCalendar <- rast("NAtemp/Wheat.crop.calendar.fill.nc")
 wheatMask <- rast("NAtemp/rasterMask_wheat.tif")
 croppingCalendar_masked<- mask(croppingCalendar, wheatMask)
 crs(croppingCalendar) <- crs(wheatMask)
+
+system.time(rastOut <- tmax - 273.15)
+system.time(rastOut2 <- tmax  * 86400)
+
+library(ncdf4)
+nc_open("NAtemp/ukesm1-0-ll_ssp585_tasmax_global_daily_2051_2060.nc")
+
+
+
+s <- rast("NAtemp/ukesm1-0-ll_ssp585_tasmax_global_daily_2051_2060.nc")
+f <- "test.tif"
+zf <- "test.zip"
+
+print(system.time(a <- writeRaster(s, f, overwrite=TRUE))); file.info(f)$size; flush.console()
+zip(zf, f); file.info(zf)$size
+
+print(system.time(a <- writeRaster(s, f, overwrite=TRUE, wopt=list(gdal="COMPRESS=LZW")))); file.info(f)$size; flush.console()
+#[1] 34242
+zip(zf, f); file.info(zf)$size
+
+print(system.time(a <- writeRaster(s, f, overwrite=TRUE, wopt=list(gdal=c("COMPRESS=DEFLATE", "PREDICTOR=1", ZLEVEL = 1))))); file.info(f)$size; flush.console()
+zip(zf, f); file.info(zf)$size
+print(system.time(a <- writeRaster(s, f, overwrite=TRUE, wopt=list(gdal=c("COMPRESS=DEFLATE", "PREDICTOR=3", ZLEVEL = 6))))); file.info(f)$size; flush.console()
+zip(zf, f); file.info(zf)$size
+
+
 

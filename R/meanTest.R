@@ -4,21 +4,21 @@ terraOptions(progress = 20, tempdir =  "data/ISIMIP/") # need to use a relative 
 sspChoices <- c("ssp585") #"ssp126", "ssp585"
 modelChoices <- c("GFDL-ESM4", "MRI-ESM2-0", "MPI-ESM1-2-HR", "UKESM1-0-LL",  "IPSL-CM6A-LR") #, "MPI-ESM1-2-HR", "MRI-ESM2-0") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM6A-LR"
 modelChoices <- c( "IPSL-CM6A-LR", "UKESM1-0-LL")
-variableChoices <- c( "hurs", "tasmax", "tasmin", "pr") # "tasmin", tasmax
+variableChoices <- c( "tasmax", "tasmin", "pr", "hurs") # "tasmin", tasmax
 startyearChoices <-  c(2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
 locOfFiles <- "data-raw/ISIMIP/cmip6/unitsCorrected/"
 yearRange <- 9
 
-monthMeanCompleted <- list.files("data/cmip6/monthMean/")
+monthlyMeanCompleted <- list.files("data/cmip6/monthlyMean/")
 for (k in sspChoices) {
   for (i in modelChoices) {
     for (l in startyearChoices) {
       for (j in variableChoices) {
         yearSpan <- paste0(l, "_", l + yearRange)
         modelName.lower <- tolower(i)
-        fileNameOut_monthMean <- paste0("monthMean_", j, "_", modelName.lower, "_", k,  "_", yearSpan, ".tif")
+        fileNameOut_monthlyMean <- paste0("monthlyMean_", j, "_", modelName.lower, "_", k,  "_", yearSpan, ".tif")
         
-        if (!paste0(fileNameOut_monthMean) %in% monthMeanCompleted) {
+        if (!paste0(fileNameOut_monthlyMean) %in% monthlyMeanCompleted) {
           
           #       print(paste0("working on start year: ", l, " variable: ", j, " ssp choice: ", k, " model: ",   " start time: ", Sys.time()))
           layerNames <- readRDS(paste0("data-raw/ISIMIP/ISIMIPLayerNames_", yearSpan, ".RDS"))
@@ -35,11 +35,11 @@ for (k in sspChoices) {
           print(system.time(ncin.mean <- tapp(ncin, indices, fun = mean)))
           # ncin.cv <- tapp(ncin, indices, fun = cv, na.rm = TRUE)
           names(ncin.mean) <- month.abb
-          fileNameOut_monthMean <- paste0("monthMean_", j, "_", modelName.lower, "_", k,  "_", yearSpan, ".tif")
-          writeRaster(ncin.mean, filename = paste0("data/cmip6/monthMean/", fileNameOut_monthMean), format = "GTiff", overwrite = TRUE)
-          print(paste0("Done with :" , fileNameOut_monthMean))
+          fileNameOut_monthlyMean <- paste0("monthlyMean_", j, "_", modelName.lower, "_", k,  "_", yearSpan, ".tif")
+          writeRaster(ncin.mean, filename = paste0("data/cmip6/monthlyMean/", fileNameOut_monthlyMean), format = "GTiff", overwrite = TRUE)
+          print(paste0("Done with :" , fileNameOut_monthlyMean))
         }else{
-          print(paste("This file has already been created: ", fileNameOut_monthMean))
+          print(paste("This file has already been created: ", fileNameOut_monthlyMean))
         }
       }
     }
@@ -70,10 +70,10 @@ for (j in observedlist) {
   
   names(ncin.mean) <- month.abb
   
-  fileNameOut_monthMean <- paste0("monthMean_", j, "_", "observed_", yearSpan, ".tif")
+  fileNameOut_monthlyMean <- paste0("monthlyMean_", j, "_", "observed_", yearSpan, ".tif")
  # fileNameOut_monthCV <- paste0("monthCV_", j, "_", "observed_", yearSpan, ".tif")
   
-  writeRaster(ncin.mean, filename = paste0("data/cmip6/monthMean/", fileNameOut_monthMean), format = "GTiff", overwrite = TRUE)
+  writeRaster(ncin.mean, filename = paste0("data/cmip6/monthlyMean/", fileNameOut_monthlyMean), format = "GTiff", overwrite = TRUE)
   
   gc(reset = FALSE, full = TRUE)
 }  

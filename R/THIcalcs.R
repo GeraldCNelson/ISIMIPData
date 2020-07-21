@@ -1,10 +1,10 @@
-# this script reads in the monthly means of tmax, tmin and rh from data/cmip6/monthMean/ calculates the THI values for each animal type. These are 
+# this script reads in the monthly means of tmax, tmin and rh from data/cmip6/monthlyMean/ calculates the THI values for each animal type. These are 
 # written out to files in data/cmip6/THI/
 source("R/globallyUsed.R")
 library(doParallel) #Foreach Parallel Adaptor 
 library(foreach) #Provides foreach looping construct
 
-locOfFiles <- "data/cmip6/monthMean/"
+locOfFiles <- "data/cmip6/monthlyMean/"
 startyearChoices <-  c(2021, 2051, 2091) #2021, 2051, 2091) # c(2091) # c(2006) #, 2041, 2051, 2081)
 yearRange <- 9
 sspChoices <- c("ssp585") #"ssp126", 
@@ -46,9 +46,9 @@ x <- foreach(i = modelChoices, .combine = rbind) %:%
     modelName.lower <- tolower(i)
     yearSpan <- paste0(l, "_", l + yearRange)
     
-    filePrefix.tmax <- "monthMean_tasmax_"
-    filePrefix.tmin <- "monthMean_tasmin_"
-    filePrefix.rh <- "monthMean_hurs_"
+    filePrefix.tmax <- "monthlyMean_tasmax_"
+    filePrefix.tmin <- "monthlyMean_tasmin_"
+    filePrefix.rh <- "monthlyMean_hurs_"
     
     fileSuffix <- paste0("_", k, "_", yearSpan, ".tif")
     fileName.tmax <- paste0(locOfFiles, filePrefix.tmax, modelName.lower, fileSuffix)
@@ -115,11 +115,11 @@ end_time - start_time
 # observed data calcs
 
 # load observed data and calculate THI values
-fileName.rh <- paste0(locOfFiles, "monthMean_hurs", "_observed_", "2001_2010.tif")
+fileName.rh <- paste0(locOfFiles, "monthlyMean_hurs", "_observed_", "2001_2010.tif")
 print(fileName.rh)
-fileName.tmin <- paste0(locOfFiles, "monthMean_tasmin", "_observed_", "2001_2010.tif")
+fileName.tmin <- paste0(locOfFiles, "monthlyMean_tasmin", "_observed_", "2001_2010.tif")
 print(fileName.tmin)
-fileName.tmax <- paste0(locOfFiles, "monthMean_tasmax", "_observed_", "2001_2010.tif")
+fileName.tmax <- paste0(locOfFiles, "monthlyMean_tasmax", "_observed_", "2001_2010.tif")
 print(fileName.tmax)
 tmax <- rast(fileName.tmax)
 tmin <- rast(fileName.tmin)
