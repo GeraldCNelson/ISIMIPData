@@ -43,7 +43,7 @@ for (k in sspChoices)  {
       
       for (o in 1:length(cropChoices)) {
         for (m in get(cropChoices[o])) {
-          print("start time: ", Sys.time())
+          print(paste("start time: ", Sys.time()))
           
           print(paste0("crop: ", m))
           fileNameOut <-    paste(modelName.lower, m, k, "gdd", "global_daily", yearSpan, sep = "_")
@@ -85,7 +85,7 @@ terra:::.mem_info(tave, 1)
 
 for (o in 1:length(cropChoices)) {
   for (m in get(cropChoices[o])) {
-    print("start time: ", Sys.time())
+    print(paste("start time: ", Sys.time()))
     print(paste0("crop: ", m))
     fileNameOut <-    paste("observed", m, "gdd", "global_daily", yearSpan, sep = "_")
     print(paste0("Working on: ", fileNameOut))
