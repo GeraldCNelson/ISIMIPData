@@ -57,8 +57,8 @@ for (k in sspChoices)  {
             print(paste0("gdd file out name: ", gddsfileOutLoc, fileNameOut, ".tif"))
             writeRaster(round(gdd, 1), filename = paste0(gddsfileOutLoc, fileNameOut, ".tif"), format = "GTiff", overwrite = TRUE, wopt=list(gdal=c("COMPRESS=LZW"))  )  
             gdd <- NULL
-            # gc(reset = FALSE, full = TRUE)
-            
+MGN1adn2
+
           }else{
             print(paste("This file has already been created: ", fileNameOut))
           }
@@ -70,39 +70,41 @@ for (k in sspChoices)  {
 #    stopCluster(cl)
 
 # do same calculations on observed data
-tmax <- tasmax.observed
-tmin <- tasmin.observed
-
+l <- 2001
 yearSpan <- paste0(l, "_", l + yearRange)
-print("starting calculation of tave")
-system.time(tave <- (tmax + tmin) / 2) # do this calc once for each period and then adjust below to get to gdds
-terra:::.mem_info(tmin, 1) 
-tmax <- tmin <- NULL
+fileIn.tave <- paste0("data-raw/ISIMIP/cmip6/unitsCorrected/", k, "/", i, "/", modelName.lower, k, "_tave_global_daily_", yearSpan, "tif")
+tave <- rast("data-raw/ISIMIP/cmip6/unitsCorrected/ssp585/UKESM1-0-LL/ukesm1-0-ll_ssp585_tave_global_daily_2051_2060.tif")
+tave <- tave * 1
+
+print("mem_info for tave")
+terra:::.mem_info(tave, 1) 
+
+gddFilesCompleted <- list.files(gddsfileOutLoc)
+gddFilesCompleted <- gddFilesCompleted[!grepl("aux.xml", gddFilesCompleted, fixed = TRUE)]
+
 for (o in 1:length(cropChoices)) {
   for (m in get(cropChoices[o])) {
+    print("start time: ", Sys.time())
     print(paste0("crop: ", m))
     fileNameOut <-    paste("observed", m, "gdd", "global_daily", yearSpan, sep = "_")
     print(paste0("Working on: ", fileNameOut))
     if (!paste0(fileNameOut, ".tif") %in% gddFilesCompleted) {
       Tbase <- ann_crop_temp_table[(crop %in% m), Tbase]
       Tbase_max <- ann_crop_temp_table[(crop %in% m), Tbase_max]
-      fileNameMask.in <- paste0("data/crops/rasterMask_", tolower(m), ".tif")
-      cropMask <- rast(fileNameMask.in)
-      
-      startTime <-  Sys.time()
-      terra:::.mem_info(tave, 1) 
       system.time(gdd <- tave - tbase)
-      print("Working on mask")
-      system.time(gdd <- mask(gdd, cropMask))
-      terra:::.mem_info(tave, 1) 
-      endTime <-  Sys.time()
-      print(paste0("gdd created, ", "creation time: ", round(difftime(endTime, startTime, units = "mins"), digits = 2),  " min., pid: ", Sys.getpid()))
+      print(system.time(gdd <- app(tave, fun=function(x){ 
+        x[x > tbase_max] <- tbase_max
+        y <- x - tbase
+        y[y < 0] <- 0
+        return(y)} ))); flush.console
       print(paste0("gdd file out name: ", gddsfileOutLoc, fileNameOut, ".tif"))
       writeRaster(gdd, filename = paste0(gddsfileOutLoc, fileNameOut, ".tif"), format = "GTiff", overwrite = TRUE)  
+      gdd <- NULL
+      gc()
     }else{
       print(paste("This file has already been created: ", fileNameOut))
     }
-    #   gc(reset = FALSE, full = TRUE)
+       gc(reset = FALSE, full = TRUE)
   }
 }
 
