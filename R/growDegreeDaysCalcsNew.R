@@ -43,6 +43,8 @@ for (k in sspChoices)  {
       
       for (o in 1:length(cropChoices)) {
         for (m in get(cropChoices[o])) {
+          print("start time: ", Sys.time())
+          
           print(paste0("crop: ", m))
           fileNameOut <-    paste(modelName.lower, m, k, "gdd", "global_daily", yearSpan, sep = "_")
           print(paste0("Working on: ", fileNameOut))
@@ -57,11 +59,13 @@ for (k in sspChoices)  {
             print(paste0("gdd file out name: ", gddsfileOutLoc, fileNameOut, ".tif"))
             writeRaster(round(gdd, 1), filename = paste0(gddsfileOutLoc, fileNameOut, ".tif"), format = "GTiff", overwrite = TRUE, wopt=list(gdal=c("COMPRESS=LZW"))  )  
             gdd <- NULL
-MGN1adn2
-
+             gc(reset = FALSE, full = TRUE)
+            
           }else{
             print(paste("This file has already been created: ", fileNameOut))
           }
+          gc(reset = FALSE, full = TRUE)
+          
         }
       }
     }
@@ -78,9 +82,6 @@ tave <- tave * 1
 
 print("mem_info for tave")
 terra:::.mem_info(tave, 1) 
-
-gddFilesCompleted <- list.files(gddsfileOutLoc)
-gddFilesCompleted <- gddFilesCompleted[!grepl("aux.xml", gddFilesCompleted, fixed = TRUE)]
 
 for (o in 1:length(cropChoices)) {
   for (m in get(cropChoices[o])) {
@@ -100,7 +101,6 @@ for (o in 1:length(cropChoices)) {
       print(paste0("gdd file out name: ", gddsfileOutLoc, fileNameOut, ".tif"))
       writeRaster(gdd, filename = paste0(gddsfileOutLoc, fileNameOut, ".tif"), format = "GTiff", overwrite = TRUE)  
       gdd <- NULL
-      gc()
     }else{
       print(paste("This file has already been created: ", fileNameOut))
     }
