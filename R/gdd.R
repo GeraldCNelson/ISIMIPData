@@ -1,3 +1,44 @@
+#test of gdd formulas
+library(terra)
+terraOptions(memfrac = 1,  progress = 10, tempdir =  "data/ISIMIP/", verbose = TRUE)
+tbase <- 2.6
+tbase_max <- 18.4
+
+tmax <- rast("NAtemp/ukesm1-0-ll_ssp585_tasmax_global_daily_2051_2060.nc")
+terra:::.mem_info(tmax, 1)
+tmax <- tmax * 1
+
+tmin <- rast("NAtemp/ukesm1-0-ll_ssp585_tasmin_global_daily_2051_2060.nc")
+
+terra:::.mem_info(tmin, 1)
+tmin <- tmin * 1
+
+tave <- rast("data-raw/ISIMIP/cmip6/unitsCorrected/ssp585/UKESM1-0-LL/ukesm1-0-ll_ssp585_tave_global_daily_2051_2060.tif")
+tave <- tave * 1
+
+system.time(gdd1 <- tave - tbase)
+
+# Final formula to use
+# 
+# tave = (tmax+tmin)/2
+# gdd_mean = MAX(0, MIN(tave, tbase_max)-tbase)
+# gdd_mean 
+
+# int result 1 - I1 <- MIN(tave, tbase_max) - tbase
+#gdd - MAX(0, I1)
+
+taveC <- tave
+
+system.time(gdd <- app(tave, fun=function(x){ 
+  x[x > tbase_max] <- tbase_max
+  y <- x - tbase
+  y[y < 0] <- 0
+  return(y)} ))
+
+
+
+
+
 
 # original function 
 f1.gdd <- function(tmin, tmax, tbase, tbase_max) {
@@ -6,7 +47,7 @@ f1.gdd <- function(tmin, tmax, tbase, tbase_max) {
 	  return(x * y)
 	}
 
-	gddFunction2 <- function(x, y, z) {
+	gddFunction2 <- function(tave, z) {
 	   function(x, y) (x + y) / 2 - z
 	}
 
@@ -40,20 +81,20 @@ gdd.f1 <- function(mask, tmin, tmax, tbase, tbase_max) {
 # clamping between 0 and (tbase_max - tbase)
 gdd.f2 <- function(mask, tmin, tmax, tbase, tbase_max) {
 #	tbase_max  <- ifelse(tbase_max > 0, tbase_max, Inf) 
-	tavg <- (tmax + tmin) / 2 - tbase
-	r <- t(apply(tavg, 1, function(i) clamp(i, 0, tbase_max - tbase)))
+	tave <- (tmax + tmin) / 2 - tbase
+	r <- t(apply(tave, 1, function(i) clamp(i, 0, tbase_max - tbase)))
 	r[is.na(mask), ] <- NA
 	r
 }
 
 # faster version
 gdd.f3 <- function(mask, tmin, tmax, tbase, tbase_max) {
-	tavg <- (tmax + tmin) / 2 - tbase
-	tavg[tavg < 0] <- 0
+	tave <- (tmax + tmin) / 2 - tbase
+	tave[tave < 0] <- 0
 	tbase_max <- tbase_max - tbase
-	tavg[tavg > tbase_max] <- tbase_max
-	tavg[is.na(mask), ] <- NA
-	tavg
+	tave[tave > tbase_max] <- tbase_max
+	tave[is.na(mask), ] <- NA
+	tave
 }
 
  

@@ -84,9 +84,9 @@ for (k in sspChoices)  {
 
 # observed results
 # now do count above tmax limit for observed period
-yearSpan <- "2001_2010"
+yearSpan <- paste0(l, "_", l + yearRange)
 fileNameIn <- paste0(locOfFiles, "observed/gswp3-w5e5_obsclim_tasmax_global_daily_2001_2010.nc")
-tmax <- readAll(rastfileNameIn))
+tmax <- rast((rastfileNameIn))
 indices <- format(as.Date(names(tmax), format = "X%Y.%m.%d"), format = "%m")
 indices <- as.numeric(indices)
 
@@ -112,7 +112,7 @@ for (o in 1:length(cropChoices)) {
     tmaxLimit <- ann_crop_temp_table[crop %in% m, tdamage.mean]
     
     fileNameIn <- paste0("tmaxGT_", tmaxLimit, "_observed_", yearSpan, ".tif")
-    tdamage <- rastpaste0("data/cmip6/tmaxMonthlySums/", fileNameIn))
+    tdamage <- rast(paste0("data/cmip6/tmaxMonthlySums/", fileNameIn))
     fileNameMask.in <- paste0("data/crops/rasterMask_", m, ".tif")
     print(paste0("fileNameMaskIn: ", fileNameMask.in))
     mask <- rast(fileNameMask.in)

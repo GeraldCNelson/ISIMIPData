@@ -77,7 +77,7 @@ stopCluster(cl)
 
 # do same calculations on observed data
 startTime <-  Sys.time()
-yearSpan <- "2001_2010"
+yearSpan <- paste0(l, "_", l + yearRange)
 tmax <- tasmax.observed
 indices <- format(as.Date(names(tmax), format = "X%Y.%m.%d"), format = "%m")
 indices <- as.numeric(indices)

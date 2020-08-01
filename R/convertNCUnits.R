@@ -3,8 +3,6 @@
 library(data.table)
 #library(raster)
 library(terra)
-terraOptions(memfrac = 3,  progress = 10, tempdir =  "data/ISIMIP/", verbose = TRUE)
-
 
 pathPrefix <- getwd()
 
@@ -77,8 +75,6 @@ for (i in varsToKeep) {
     }
   }
 }
-# endtime <- Sys.time()
-# endtime - starttime
 
 # Now do the observed data
 
@@ -141,6 +137,9 @@ for (i in varsToKeep) {
     }
   }
 }
+
+# generate tave - added July 30, 2020
+
   
   # cdo -setunit="degC" -addc,-273.15 <infile> <outfile>
   # cdo -setunit="mm/day" -mulc,86400 <infile> <outfile>

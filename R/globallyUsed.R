@@ -19,7 +19,7 @@ library(readxl)
 library(rworldmap)
 library(lubridate)
 
-terraOptions(memfrac =3,  progress = 10, tempdir =  "data/ISIMIP/", verbose = TRUE) # need to use a relative path
+terraOptions(memfrac = 2,  progress = 10, tempdir =  "data/ISIMIP/", verbose = TRUE) # need to use a relative path
 
 RobinsonProj <-  "+proj=robin +lon_0=0 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs"
 crsRob <- RobinsonProj
@@ -267,28 +267,28 @@ getcropAreaYield <- function(cropName, dataType) {
 # }
 
 # faster version
-f.gdd <- function(cropMask, tmin, tmax, tbase, tbase_max) {
+f.gdd <- function(cropMask, tave, tbase, tbase_max) {
   # testFun <- function(tmax, tmin){return((tmax+tmin)/2)}
-  # system.time(tavg <-  lapp(tmin, fun=testFun))
-  # system.time(tavg <- (tmax + tmin) / 2 - tbase)
-  # tavg[tavg < 0] <- 0
+  # system.time(tave <-  lapp(tmin, fun=testFun))
+  # system.time(tave <- (tmax + tmin) / 2 - tbase)
+  # tave[tave < 0] <- 0
   # #  tbase_max <- tbase_max - tbase
-  # tavg[tavg > tbase_max] <- tbase_max
-  print(system.time(tavg <- (tmax + tmin) / 2 - tbase))
-  print(system.time(tavg[is.na(cropMask), ] <- NA))
-  tavg
+  # tave[tave > tbase_max] <- tbase_max
+  print(system.time(gdd <- tave - tbase))
+  print(system.time(gdd[is.na(cropMask), ] <- NA))
+  gdd
 }
 
 # faster version with mask loading included
-f.gdd_model <- function(cropMask, tmin, tmax, tbase, tbase_max, m) {
+f.gdd_model <- function(cropMask, tave, tbase, tbase_max, m) {
   fileNameMask.in <- paste0("data/crops/rasterMask_", tolower(m), ".tif")
   cropMask <- rast(fileNameMask.in)
-  tavg <- (tmax + tmin) / 2 - tbase
-  tavg[tavg < 0] <- 0
+  gdd <- tave - tbase
+  gdd[gdd < 0] <- 0
   #  tbase_max <- tbase_max - tbase
-  tavg[tavg > tbase_max] <- tbase_max
-  tavg[cropMask == 0, ] <- NA
-  tavg
+  gdd[gdd > tbase_max] <- tbase_max
+  gdd[cropMask == 0, ] <- NA
+  gdd
 }
 
 f.gdd.clamped <- function(cropMask, tmin, tmax, tbase, tbase_max) {
@@ -321,10 +321,7 @@ f.gdd.clamped_masked <- function(cropMask, tmin, tmax, tbase, tbase_max) {
   r[cropMask == 0, ] <- NA
   r
 }
-# the overlay function needs a user defined function on the relationship between the two rasters. this function is used to set areas outside crop area to NA, by multiplication
-overlayfunction_mask <- function(x,y) {
-  return(x * y)
-}
+
 
 # growing degree days functions
 

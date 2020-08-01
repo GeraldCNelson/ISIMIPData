@@ -119,7 +119,7 @@ for (k in sspChoices) {
 
 # do observed data
 yearRange <- 9
-yearSpan <- "2001_2010"
+yearSpan <- paste0(l, "_", l + yearRange)
 
 for (j in 1:length(thiListReduced)) {  
   speciesName <- gsub("thi.", "", thiListReduced[j])

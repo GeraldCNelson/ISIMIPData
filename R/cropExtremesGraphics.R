@@ -151,12 +151,12 @@ for (k in sspChoices) {
     cropName <- as.character(ann_crop_temp_table[m, "crop"])
     tdamage_mean <- as.numeric(ann_crop_temp_table[m, "tdamage mean"])
     yearRange <- 9
-    yearSpan <- "2001_2010"
+    yearSpan <- paste0(l, "_", l + yearRange)
     print(paste0(cropName, ", damage temp: ", tdamage_mean, ", start year: ", "2001"))
     
     fileNameMean <- paste0("data/cmip6/damageTemp/tdamage_mean_masked_", cropName, "_", tdamage_mean, "C", "_observed_", yearSpan, ".tif")
     print(paste0("filenamein ", fileNameMean))
-    temp.mean <- rastfileNameMean)
+    temp.mean <- rast(fileNameMean)
     names(temp.mean) <- month.abb
     
     # plot Ensemble mean

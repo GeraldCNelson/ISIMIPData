@@ -10,7 +10,7 @@ modelChoices <- c("IPSL-CM6A-LR")#
 modelChoices <- c("IPSL-CM6A-LR", "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL") #, "MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
 #modelChoices <- c("GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0") #, "MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
 
-startyearChoices <-  c(2091) #, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
+startyearChoices <-  c(2021, 2051, 2091) #, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
 
 yearRange <- 9
 
@@ -33,21 +33,21 @@ southernHemSummer <- c("Nov", "Dec", "Jan", "Feb", "Mar", "Apr")
 # useCores <- detectCores() - 2 # max number of cores
 # useCores <- 2 # better for memory intensive activities
 
-varList <- c("startyearChoices", "sspChoices", "modelChoices", "locOfFiles")
-libList <- c("terra", "ncdf4")
+# varList <- c("startyearChoices", "sspChoices", "modelChoices", "locOfFiles")
+# libList <- c("terra", "ncdf4")
 library(Rcpp)
-# cppFunction('std::vector<double> chill(std::vector<double> tmin, std::vector<double> tmax) {
-# size_t n = tmin.size();
-# std::vector<double> out(n);
-# for (size_t i=0; i<n; i++) {
-# if (tmax[i] < 7) {
-# out[i] = 24;
-# } else if (tmin[i] < 7) {
-# out[i] = (7 - tmin[i])/(tmax[i] - tmin[i]);
-# }
-# }
-# return out;
-# }')
+cppFunction('std::vector<double> chill(std::vector<double> tmin, std::vector<double> tmax) {
+size_t n = tmin.size();
+std::vector<double> out(n);
+for (size_t i=0; i<n; i++) {
+if (tmax[i] < 7) {
+out[i] = 24;
+} else if (tmin[i] < 7) {
+out[i] = (7 - tmin[i])/(tmax[i] - tmin[i]);
+}
+}
+return out;
+}')
 
 # cl <- clusterSetup(varList, libList, useCores) # function created in globallyUsed.R
 # foreach(l = startyearChoices) %:%
@@ -65,20 +65,21 @@ for (l in startyearChoices) {
       yearSpan <- paste0(l, "_", l + yearRange)
       j <- "tasmax"
       fileNameIn <- paste(modelName.lower, k, j, "global_daily", yearSpan, sep = "_")
-      fileNameIn <- paste0(fileNameIn, ".nc")
+      fileNameIn <- paste0(fileNameIn, ".tif")
       
       tmaxIn <- paste0(locOfFiles, k,"/", i, "/", fileNameIn)
       
       j <- "tasmin"
       fileNameIn <- paste(modelName.lower, k, j, "global_daily", yearSpan, sep = "_")
-      fileNameIn <- paste0(fileNameIn, ".nc")
+      fileNameIn <- paste0(fileNameIn, ".tif")
       tminIn <- paste0(locOfFiles, k,"/", i, "/", fileNameIn)
       tmaxTminIn(tmaxIn, tminIn) # function to read in tmax and tmin with rast
       terra:::.mem_info(tmax, 1)
       tmp <- sds(tmin, tmax)
       
-#      print(system.time(chillHrs <- lapp(tmp, chill)))
-      system.time(chillHrs <- clamp(tmin, lower = tbase, upper = tbase_max, values = TRUE))
+      print(system.time(chillHrs <- lapp(tmp, chill)))
+      # tbase <- 7
+      # system.time(chillHrs <- clamp(tmin, lower = tbase, upper = tbase_max, values = TRUE))
       names(chillHrs) <- names(tmax) # put the date info back into the names
       # 
       # do several count days in a month
@@ -119,9 +120,12 @@ for (l in startyearChoices) {
 # do same calculations on observed data
 tmin <- tasmin.observed
 tmax <- tasmax.observed
-yearSpan <- "2001_2010"
+yearSpan <- paste0(l, "_", l + yearRange)
 
-chillHrs <- overlay(tmin, tmax, fun = f.chillhrs)
+tmp <- sds(tmin, tmax)
+print(system.time(chillHrs <- lapp(tmp, chill)))
+
+#chillHrs <- overlay(tmin, tmax, fun = f.chillhrs)
 print("Done with chillHrs function")
 startDate <- paste0(2001, "-01-01")
 endDate <- paste0(l + yearRange, "-12-31")

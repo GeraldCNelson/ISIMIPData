@@ -82,7 +82,7 @@ for (k in sspChoices)  {
 
 # do observed data
 yearRange <- 9
-yearSpan <- "2001_2010"
+yearSpan <- paste0(l, "_", l + yearRange)
 
 for (o in 1:length(cropChoices)) {
   for (m in get(cropChoices[o])) {
@@ -93,7 +93,7 @@ for (o in 1:length(cropChoices)) {
     fileNameMean <- paste0("data/cmip6/tmaxMonthlySums/tmax_ensembleMean_masked",m, "_", j, "_observed_",  yearSpan, ".tif") 
     
     print(paste0("filenamein ", fileNameMean))
-    meanData <- rastfileNameMean)
+    meanData <- rast(fileNameMean)
     names(meanData) <- month.abb
     
     # plot Ensemble mean

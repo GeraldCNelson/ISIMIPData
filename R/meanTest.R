@@ -52,7 +52,7 @@ tasmax <- tasmax.observed
 tasmin <- tasmin.observed
 pr <- pr.observed
 hurs <- hurs.observed
-yearSpan <- "2001_2010"
+yearSpan <- paste0(l, "_", l + yearRange)
 
 observedlist <- c("hurs", "tasmax", "tasmin", "pr")
 layerNames <- readRDS(paste0("data-raw/ISIMIP/ISIMIPLayerNames_", yearSpan, ".RDS"))

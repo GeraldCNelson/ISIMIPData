@@ -9,7 +9,7 @@ startyearChoices <-  c(2001, 2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091
 chillRequirements <- as.data.table(read_excel("data-raw/crops/chillRequirements.xlsx", range = "a1:e16"))
 
 defaultWidth = 5
-defaultHeight = 5
+defaultHeight = 4
 defaultLeft = 0
 
 yearRange <- 9
@@ -80,8 +80,8 @@ for (k in sspChoices) {
    
     # my_pres <- ph_with(x = my_pres, value = extImgObs_NH, location = ph_location_type(type = "body"),
     #         use_loc_size = FALSE )
-    my_pres <- ph_with( x = my_pres, value = extImgObs_NH, location = ph_location(left = defaultLeft, top = 1.2 ))
-    my_pres <- ph_with( x = my_pres, value = extImgObs_SH, location = ph_location(left = defaultLeft, top = 4.2) )
+    my_pres <- ph_with( x = my_pres, value = extImgObs_NH, location = ph_location(left = defaultLeft, top = 1.2, width = 5, height = 4 ))
+    my_pres <- ph_with( x = my_pres, value = extImgObs_SH, location = ph_location(left = defaultLeft, top = 4.2, width = 5, height = 4 ))
     
     for (l in startyearChoices_ensemble) {
       yearSpan <- paste0(l, "_", l + yearRange)
@@ -98,10 +98,10 @@ for (k in sspChoices) {
       titleTextFuture <- paste0("Ensemble mean and CoV chilling hours, ", k, ", ", yearSpan, ", ", cropName , "; Required chilling hours - min. ", minChillHours, ", max. ", maxChillHours)
       
       my_pres <- ph_with( x = my_pres, value = fpar(ftext(titleTextFuture, fp_3)), location = ph_location_type(type = "title") )
-      my_pres <- ph_with(x = my_pres, value = extImgMean_NH, location = ph_location(left = defaultLeft, top = 1.2) )
-      my_pres <- ph_with(x = my_pres, value = extImgMean_SH, location = ph_location(left = defaultLeft, top = 4.2) )
-      my_pres <- ph_with(x = my_pres, value = extImgCV_NH, location = ph_location(left = 5, top = 1.2))
-      my_pres <- ph_with(x = my_pres, value = extImgCV_SH, location = ph_location(left = 5, top = 4.2))
+      my_pres <- ph_with(x = my_pres, value = extImgMean_NH, location = ph_location(left = defaultLeft, top = 1.2, width = 5, height = 4) )
+      my_pres <- ph_with(x = my_pres, value = extImgMean_SH, location = ph_location(left = defaultLeft, top = 4.2, width = 5, height = 4) )
+      my_pres <- ph_with(x = my_pres, value = extImgCV_NH, location = ph_location(left = 5, top = 1.2, width = 5, height = 4))
+      my_pres <- ph_with(x = my_pres, value = extImgCV_SH, location = ph_location(left = 5, top = 4.2, width = 5, height = 4))
       
     }
   }
