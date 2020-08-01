@@ -47,8 +47,8 @@ for (k in sspChoices)  {
           
           print(paste0("crop: ", m))
           fileNameOut <-    paste(modelName.lower, m, k, "gdd", "global_daily", yearSpan, sep = "_")
-          print(paste0("Working on: ", fileNameOut))
           if (!paste0(fileNameOut, ".tif") %in% gddFilesCompleted) {
+            print(paste0("Working on: ", fileNameOut))
             tbase <- ann_crop_temp_table[(crop %in% m), Tbase]
             tbase_max <- ann_crop_temp_table[(crop %in% m), Tbase_max]
             print(system.time(gdd <- app(tave, fun=function(x){ 
@@ -83,13 +83,17 @@ tave <- tave * 1
 print("mem_info for tave")
 terra:::.mem_info(tave, 1) 
 
+gddFilesCompleted <- list.files(gddsfileOutLoc)
+gddFilesCompleted <- gddFilesCompleted[!grepl("aux.xml", gddFilesCompleted, fixed = TRUE)]
+
 for (o in 1:length(cropChoices)) {
   for (m in get(cropChoices[o])) {
-    print(paste("start time: ", Sys.time()))
-    print(paste0("crop: ", m))
+   print(paste0("crop: ", m))
     fileNameOut <-    paste("observed", m, "gdd", "global_daily", yearSpan, sep = "_")
     print(paste0("Working on: ", fileNameOut))
     if (!paste0(fileNameOut, ".tif") %in% gddFilesCompleted) {
+      print(paste("start time: ", Sys.time()))
+      
       Tbase <- ann_crop_temp_table[(crop %in% m), Tbase]
       Tbase_max <- ann_crop_temp_table[(crop %in% m), Tbase_max]
       system.time(gdd <- tave - tbase)
