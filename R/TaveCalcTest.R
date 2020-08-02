@@ -126,3 +126,18 @@ tmax_proj <- terra::project(tmax[[50]], crsRob)
 plot(tmax_proj[[50]])
 scalebar(10000, xy = NULL, type = "bar", divs = 4, below = "kilometers", 
          lonlat = TRUE, adj=c(0.7, -0.7), lwd = 2)
+
+#growing degree days problem on linux
+library(terra)
+i <- "UKESM1-0-LL"
+k <- "ssp585"
+l <- 2051
+m <- "Wheat"
+tbase <- 2.6
+tbase_max <-  18.4
+tave <- rast("data-raw/ISIMIP/cmip6/unitsCorrected/ssp585/UKESM1-0-LL/ukesm1-0-ll_ssp585_tave_global_daily_2051_2060.tif")
+print(system.time(gdd <- app(tave, fun=function(x){ 
+  x[x > tbase_max] <- tbase_max
+  y <- x - tbase
+  y[y < 0] <- 0
+  return(y)} ))); flush.console
