@@ -1,5 +1,7 @@
 #  Calculate the number of growing degrees per day for specific crops in specific areas. Main function is globallyUsed.R
-source("R/globallyUsed.R")
+#source("R/globallyUsed.R")
+library(terra)
+library(data.table)
 #library(doParallel) #Foreach Parallel Adapter 
 # library(foreach) #Provides foreach looping construct, called with doParallel
 
@@ -13,9 +15,11 @@ yearRange <- 9
 gddsfileOutLoc <- "data/cmip6/growingDegreeDays/"
 
 # commented out, now in the globallyUsed.R script
-#ann_crop_temp_table <- as.data.table(read_excel("data-raw/crops/ann_crop_temp_table_summary_02052020.xlsx", range = "A1:S26"))
+ann_crop_temp_table <- as.data.table(read_excel("data-raw/crops/ann_crop_temp_table_summary_02052020.xlsx", range = "A1:S26"))
+cropChoice_cereals <- ann_crop_temp_table[ICC.crop.classification %in% "Cereal", crop]
 
-cropChoices <- c("cropChoice_cereals")
+#cropChoices <- c("cropChoice_cereals")
+cropChoices <- cropChoice_cereals
 #test values
 i <- "UKESM1-0-LL"
 k <- "ssp585"
@@ -33,7 +37,7 @@ for (k in sspChoices)  {
       gddFilesCompleted <- list.files(gddsfileOutLoc)
       gddFilesCompleted <- gddFilesCompleted[!grepl("aux.xml", gddFilesCompleted, fixed = TRUE)]
       
-      fileIn.tave <- paste0("data-raw/ISIMIP/cmip6/unitsCorrected/", k, "/", i, "/", modelName.lower, k, "_tave_global_daily_", yearSpan, "tif")
+      fileIn.tave <- paste0("data-raw/ISIMIP/cmip6/unitsCorrected/", k, "/", i, "/", modelName.lower, "_", k, "_tave_global_daily_", yearSpan, ".tif")
       tave <- rast(fileIn.tave)
      #  tave <- tave * 1
       
