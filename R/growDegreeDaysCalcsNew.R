@@ -5,7 +5,7 @@ source("R/globallyUsed.R")
 
 locOfFiles <- locOfCMIP6ncFiles
 sspChoices <- c("ssp585") #"ssp126", 
-modelChoices <- c(  "IPSL-CM6A-LR", "MPI-ESM1-2-HR", "MRI-ESM2-0", "GFDL-ESM4", "UKESM1-0-LL") #, 
+modelChoices <- c(   "MPI-ESM1-2-HR", "MRI-ESM2-0", "GFDL-ESM4", "UKESM1-0-LL") #, "IPSL-CM6A-LR",
 
 startyearChoices <-  c(  2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
 
@@ -15,8 +15,7 @@ gddsfileOutLoc <- "data/cmip6/growingDegreeDays/"
 # commented out, now in the globallyUsed.R script
 #ann_crop_temp_table <- as.data.table(read_excel("data-raw/crops/ann_crop_temp_table_summary_02052020.xlsx", range = "A1:S26"))
 
-# cropChoices <- c("Cassava", "Chickpea", "Cotton")
-# cropChoices <- c( "Rye"  , "Sorghum" , "Soybean",  "Sugarbeet" , "Sunflower")
+cropChoices <- c("cropChoice_cereals")
 #test values
 i <- "UKESM1-0-LL"
 k <- "ssp585"
@@ -90,8 +89,8 @@ for (o in 1:length(cropChoices)) {
   for (m in get(cropChoices[o])) {
    print(paste0("crop: ", m))
     fileNameOut <-    paste("observed", m, "gdd", "global_daily", yearSpan, sep = "_")
-    print(paste0("Working on: ", fileNameOut))
     if (!paste0(fileNameOut, ".tif") %in% gddFilesCompleted) {
+      print(paste0("Working on: ", fileNameOut))
       print(paste("start time: ", Sys.time()))
       
       Tbase <- ann_crop_temp_table[(crop %in% m), Tbase]
