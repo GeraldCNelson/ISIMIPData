@@ -34,8 +34,8 @@ for (k in sspChoices)  {
       gddFilesCompleted <- gddFilesCompleted[!grepl("aux.xml", gddFilesCompleted, fixed = TRUE)]
       
       fileIn.tave <- paste0("data-raw/ISIMIP/cmip6/unitsCorrected/", k, "/", i, "/", modelName.lower, k, "_tave_global_daily_", yearSpan, "tif")
-      tave <- rast("data-raw/ISIMIP/cmip6/unitsCorrected/ssp585/UKESM1-0-LL/ukesm1-0-ll_ssp585_tave_global_daily_2051_2060.tif")
-      tave <- tave * 1
+      tave <- rast(fileIn.tave)
+     #  tave <- tave * 1
       
       print("mem_info for tave")
       terra:::.mem_info(tave, 1) 

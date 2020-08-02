@@ -19,7 +19,28 @@ library(readxl)
 library(rworldmap)
 library(lubridate)
 
-terraOptions(memfrac = .5,  progress = 10, tempdir =  "data/ISIMIP", verbose = TRUE) # need to use a relative path
+# function to identify operating system
+get_os <- function() {
+  sysinf <- Sys.info()
+  if (!is.null(sysinf)) {
+    os <- sysinf['sysname']
+    if (os == 'Darwin')
+      os <- "osx"
+  } else {## mystery machine
+    os <- .Platform$OS.type
+    if (grepl("^darwin", R.version$os))
+      os <- "osx"
+    if (grepl("linux-gnu", R.version$os))
+      os <- "linux"
+  }
+  tolower(os)
+}
+if (get_os() %in% osx) {
+  terraOptions(memfrac = 1,  progress = 10, tempdir =  "data/ISIMIP", verbose = TRUE) # need to use a relative path
+}else{
+  terraOptions(memfrac = 1,  progress = 10, tempdir =  "data/ISIMIP", verbose = TRUE) # need to use a relative path
+}
+
 
 RobinsonProj <-  "+proj=robin +lon_0=0 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs"
 crsRob <- RobinsonProj

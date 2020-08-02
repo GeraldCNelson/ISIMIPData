@@ -150,9 +150,7 @@ gdd.f3 <- function(tave, tbase, tbase_max) {
   tave
 }
 
-print(system.time(gdd <- app(tave, fun=gdd.f3(tave, tbase, tbase_max)))); flush.console()
-
-
+print(system.time(gdd <- app(tave,  fun = function(x) gdd.f3(x, tbase, tbase_max)))); flush.console()
 
 print(system.time(gdd <- app(tave, fun=function(x){ 
   x[x > tbase_max] <- tbase_max
