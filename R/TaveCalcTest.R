@@ -131,8 +131,10 @@ scalebar(10000, xy = NULL, type = "bar", divs = 4, below = "kilometers",
 library(terra)
 terraOptions(memfrac = 1,  progress = 10, tempdir =  "data/ISIMIP/", verbose = TRUE)
 tave <- rast("data-raw/ISIMIP/cmip6/unitsCorrected/ssp585/UKESM1-0-LL/ukesm1-0-ll_ssp585_tave_global_daily_2051_2060.tif")
-print(system.time(tave <- tave * 1)); flush.console
 terra:::.mem_info(tave, 1)
+print(system.time(tave <- tave * 1)); flush.console()
+terra:::.mem_info(tave, 1)
+
 i <- "UKESM1-0-LL"
 k <- "ssp585"
 l <- 2051
@@ -148,17 +150,20 @@ gdd.f3 <- function(tave, tbase, tbase_max) {
   tave
 }
 
-print(system.time(gdd <- app(tave, fun=gdd.f3(tave, tbase, tbase_max)))); flush.console
+print(system.time(gdd <- app(tave, fun=gdd.f3(tave, tbase, tbase_max)))); flush.console()
+
+
 
 print(system.time(gdd <- app(tave, fun=function(x){ 
   x[x > tbase_max] <- tbase_max
   y <- x - tbase
   y[y < 0] <- 0
-  return(y)} ))); flush.console
+  return(y)} ))); flush.console()
+
 #do function elements separately
-print(system.time(tave[tave > tbase_max] <- tbase_max)); flush.console
-print(system.time(gdd <- tave - tbase)); flush.console
-print(system.time(gdd[gdd < 0] <- 0)); flush.console
+print(system.time(tave[tave > tbase_max] <- tbase_max)); flush.console()
+print(system.time(gdd <- tave - tbase)); flush.console()
+print(system.time(gdd[gdd < 0] <- 0)); flush.console()
 
 
 
