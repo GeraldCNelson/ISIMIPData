@@ -15,7 +15,9 @@ yearRange <- 9
 gddsfileOutLoc <- "data/cmip6/growingDegreeDays/"
 
 # commented out, now in the globallyUsed.R script
-ann_crop_temp_table <- as.data.table(read_excel("data-raw/crops/ann_crop_temp_table_summary_02052020.xlsx", range = "A1:S26"))
+library(readxl)
+ann_crop_temp_table <- as.data.table(read_excel("data-raw/crops/ann_crop_temp_table_summary_0506052020.xlsx", range = "A1:S26"))
+data.table::setnames(ann_crop_temp_table, old = names(ann_crop_temp_table), new = make.names(names(ann_crop_temp_table)))
 cropChoice_cereals <- ann_crop_temp_table[ICC.crop.classification %in% "Cereal", crop]
 
 #cropChoices <- c("cropChoice_cereals")
@@ -39,41 +41,42 @@ for (k in sspChoices)  {
       
       fileIn.tave <- paste0("data-raw/ISIMIP/cmip6/unitsCorrected/", k, "/", i, "/", modelName.lower, "_", k, "_tave_global_daily_", yearSpan, ".tif")
       tave <- rast(fileIn.tave)
-     #  tave <- tave * 1
+      print(system.time(tave <- tave * 1)); flush.console
       
       print("mem_info for tave")
       terra:::.mem_info(tave, 1) 
       
-      for (o in 1:length(cropChoices)) {
-        for (m in get(cropChoices[o])) {
-          print(paste("start time: ", Sys.time()))
-          
-          print(paste0("crop: ", m))
-          fileNameOut <-    paste(modelName.lower, m, k, "gdd", "global_daily", yearSpan, sep = "_")
-          if (!paste0(fileNameOut, ".tif") %in% gddFilesCompleted) {
-            print(paste0("Working on: ", fileNameOut))
-            tbase <- ann_crop_temp_table[(crop %in% m), Tbase]
-            tbase_max <- ann_crop_temp_table[(crop %in% m), Tbase_max]
-            print(system.time(gdd <- app(tave, fun=function(x){ 
-              x[x > tbase_max] <- tbase_max
-              y <- x - tbase
-              y[y < 0] <- 0
-              return(y)} ))); flush.console
-            print(paste0("gdd file out name: ", gddsfileOutLoc, fileNameOut, ".tif"))
-            writeRaster(round(gdd, 1), filename = paste0(gddsfileOutLoc, fileNameOut, ".tif"), format = "GTiff", overwrite = TRUE, wopt=list(gdal=c("COMPRESS=LZW"))  )  
-            gdd <- NULL
-             gc(reset = FALSE, full = TRUE)
-            
-          }else{
-            print(paste("This file has already been created: ", fileNameOut))
-          }
+      #      for (o in 1:length(cropChoices)) {
+#      for (m in get(cropChoices[o])) {
+      for (m in cropChoices) {
+        print(paste("start time: ", Sys.time()))
+        
+        print(paste0("crop: ", m))
+        fileNameOut <-    paste(modelName.lower, m, k, "gdd", "global_daily", yearSpan, sep = "_")
+        if (!paste0(fileNameOut, ".tif") %in% gddFilesCompleted) {
+          print(paste0("Working on: ", fileNameOut))
+          tbase <- ann_crop_temp_table[(crop %in% m), Tbase]
+          tbase_max <- ann_crop_temp_table[(crop %in% m), Tbase_max]
+          print(system.time(gdd <- app(tave, fun=function(x){ 
+            x[x > tbase_max] <- tbase_max
+            y <- x - tbase
+            y[y < 0] <- 0
+            return(y)} ))); flush.console
+          print(paste0("gdd file out name: ", gddsfileOutLoc, fileNameOut, ".tif"))
+          writeRaster(round(gdd, 1), filename = paste0(gddsfileOutLoc, fileNameOut, ".tif"), format = "GTiff", overwrite = TRUE, wopt=list(gdal=c("COMPRESS=LZW"))  )  
+          gdd <- NULL
           gc(reset = FALSE, full = TRUE)
           
+        }else{
+          print(paste("This file has already been created: ", fileNameOut))
         }
+        gc(reset = FALSE, full = TRUE)
+        s
       }
     }
   }
 }
+#}
 #    stopCluster(cl)
 
 # do same calculations on observed data
@@ -91,7 +94,7 @@ gddFilesCompleted <- gddFilesCompleted[!grepl("aux.xml", gddFilesCompleted, fixe
 
 for (o in 1:length(cropChoices)) {
   for (m in get(cropChoices[o])) {
-   print(paste0("crop: ", m))
+    print(paste0("crop: ", m))
     fileNameOut <-    paste("observed", m, "gdd", "global_daily", yearSpan, sep = "_")
     if (!paste0(fileNameOut, ".tif") %in% gddFilesCompleted) {
       print(paste0("Working on: ", fileNameOut))
@@ -111,7 +114,7 @@ for (o in 1:length(cropChoices)) {
     }else{
       print(paste("This file has already been created: ", fileNameOut))
     }
-       gc(reset = FALSE, full = TRUE)
+    gc(reset = FALSE, full = TRUE)
   }
 }
 
