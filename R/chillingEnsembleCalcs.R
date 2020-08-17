@@ -55,8 +55,8 @@ for (l in startyearChoices_ensemble) {
       ras.test.cv <- app(ras.test, fun = cv, na.rm = TRUE)
       fileNameMean <- paste0("data/cmip6/chillingHours/chillHrs_", hemisphereName, "_ensembleMean_",yearSpan, "_", k, ".tif") 
       fileNameCV <- paste0("data/cmip6/chillingHours/chillHrs_", hemisphereName, "_ensembleCV_", yearSpan, "_", k, ".tif") 
-      writeRaster(ras.test.mean, filename = fileNameMean, format = "GTiff", overwrite = TRUE)
-      writeRaster(ras.test.cv, filename = fileNameCV, format = "GTiff", overwrite = TRUE)
+      writeRaster(ras.test.mean, filename = fileNameMean, format = "GTiff", overwrite = TRUE, wopt=list(gdal="COMPRESS=LZW"))
+      writeRaster(ras.test.cv, filename = fileNameCV, format = "GTiff", overwrite = TRUE, wopt=list(gdal="COMPRESS=LZW"))
       print(paste("fileNameMeanOut: ", fileNameMean))
       print(paste("fileNameCVOut: ", fileNameCV))
       print(paste0( "Done writing out files for hemisphere: ", hemisphereName, ", start year: ", l, ", pid number: ", Sys.getpid()))
@@ -94,8 +94,8 @@ for (k in sspChoices) {
         fileNameMean.masked <- paste0("data/cmip6/chillingHours/chillHrs_", hemisphereName, "_ensembleMean_masked_", cropName, "_",  yearSpan, "_", k, ".tif")
         fileNameCV.masked <- paste0("data/cmip6/chillingHours/chillHrs_", hemisphereName, "_ensembleCV_masked_", cropName, "_",  yearSpan, "_", k, ".tif")
         print(paste("fileNameMean.masked: ", fileNameMean.masked))
-        writeRaster(mean.masked, filename = fileNameMean.masked, format = "GTiff", overwrite = TRUE)
-        writeRaster(CV.masked, filename = fileNameCV.masked, format = "GTiff", overwrite = TRUE)
+        writeRaster(mean.masked, filename = fileNameMean.masked, format = "GTiff", overwrite = TRUE, wopt=list(gdal="COMPRESS=LZW"))
+        writeRaster(CV.masked, filename = fileNameCV.masked, format = "GTiff", overwrite = TRUE, wopt=list(gdal="COMPRESS=LZW"))
       }
     }
   }
@@ -121,6 +121,6 @@ for (j in 1:length(fruits)) {
   mean.masked <- mask(meanData, mask)
   fileNameMean.masked <- paste0("data/cmip6/chillingHours/chillHrs_", hemisphereName, "_masked_", cropName,  "_observed_", yearSpan, ".tif")
   print(fileNameMean.masked)
-  writeRaster(mean.masked, filename = fileNameMean.masked, format = "GTiff", overwrite = TRUE)
+  writeRaster(mean.masked, filename = fileNameMean.masked, format = "GTiff", overwrite = TRUE, wopt=list(gdal="COMPRESS=LZW"))
   }
 }

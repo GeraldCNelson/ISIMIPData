@@ -84,7 +84,7 @@ for (k in sspChoices) {
       mapTheme <- rasterTheme(region = col.l)  
       mapTheme$panel.background$col = 'white' 
       myat <- c(zeroLevel, noStress, moderateStress, extremeStress, 100)
- #     writeRaster(meanData, filename ="temp.tif", format = "GTiff", overwrite = TRUE)
+ #     writeRaster(meanData, filename ="temp.tif", format = "GTiff", overwrite = TRUE, wopt=list(gdal="COMPRESS=LZW")) )
       meanData <- raster::brick(meanData)
 #      meanData <- as(meanData, "Raster")
       # meanDataR <- as(meanData, "rasterBrick")

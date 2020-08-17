@@ -85,7 +85,7 @@ x <- foreach(i = modelChoices, .combine = rbind) %:%
     for (m in thiList) {
       fileName <- paste0("data/cmip6/THI/", m, "_", i, "_", yearSpan, "_", k, ".tif")
       print(paste0("fileName out: ", fileName))
-      writeRaster(get(m), filename = fileName, format = "GTiff", overwrite = TRUE)
+      writeRaster(get(m), filename = fileName, format = "GTiff", overwrite = TRUE, wopt=list(gdal="COMPRESS=LZW"))
       
       # # THI breakpoints by species, four are needed - No stress, moderate stress, severe stress, extreme stress, max value in thi is given by the ceiling xxx code. Stored in data-raw//breakpointslistRaw.csv
       # speciesName <- gsub("thi.", "", k)
@@ -139,6 +139,6 @@ names(thi.cattle) <- names(thi.sheep) <- names(thi.goat) <- names(thi.yak) <- na
 for (m in thiList) {
   fileName <- paste0("data/cmip6/THI/", m, "_observed_", "2001_2010.tif")
   print(fileName)
-  writeRaster(get(m), filename = fileName, format = "GTiff", overwrite = TRUE)
+  writeRaster(get(m), filename = fileName, format = "GTiff", overwrite = TRUE, wopt=list(gdal="COMPRESS=LZW"))
 }
 
