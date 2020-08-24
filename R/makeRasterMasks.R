@@ -42,8 +42,6 @@ for (i in animalsList) {
 
 write.csv(animalStats, "data/animals/animalCt.csv")
 
-
-
 # 
 # # load the data for the number of animals in each 1/2 degree cell
 # for (i in animalsList) {
@@ -100,20 +98,19 @@ fruitsOnly <-  c("almond", "apple", "apricot", "avocado", "berrynes", "blueberry
                  "grapefruitetc", "lemonlime", "orange", "peachetc", "persimmon", "rasberry", "sourcherry", 
                  "stonefruitnes", "walnut")
 
-fruitsToAnalyse <- fruits
+fruitsToAnalyse <- fruits # from globallyUsed.R
 
 otherCrops <- crops[!crops %in% fruitsOnly]
 
-crops.new <- c(cropsToAnalyze, fruitsToAnalyse)
+crops.new <- c(annCropsToAnalyze, fruitsToAnalyse)
 
 for (i in crops.new) {
   print(i)
   #  i <- "wheat"
-  tempTifArea <- getcropAreaYield(i, "area")
+  rInArea <- getcropAreaYield(i, "area") # returns a spatRaster
   
-  rInArea <- rast(tempTifArea)
-  
-  # Earthstat data (using its harvest area) has a pixel size of  5 minute resolution. Need to convert to 1/2 degree to get to cmip6 cell size
+
+  # Earthstat data (using its harvest area) has a pixel size of 5 minute resolution. Need to convert to 1/2 degree to get to cmip6 cell size
   # 5 min = 0.0833333 degree
   # 30 min = 0.5 degree
   
@@ -122,11 +119,11 @@ for (i in crops.new) {
     cutoff <- .001 # only include 1/2 degree cells where crop area is great than cutoff
   }
   if (i %in% annCropsToAnalyze) {
-    cutoff <- 500 # only include 1/2 degree cells where crop area is great than cutoff
+    cutoff <- 5 # only include 1/2 degree cells where crop area is great than cutoff
   }
   # rInAreaAgg[rInAreaAgg < cutoff] <- NA
   # rInAreaAgg[rInAreaAgg > cutoff] <- 1
-  r <- reclassify(rInAreaAgg, rbind(c(-Inf, cutoff, NA), c(cutoff, Inf, 1)))
+  r <- classify(rInAreaAgg, rbind(c(-Inf, cutoff, NA), c(cutoff, Inf, 1)))
   
   fileNameout <- paste0("data/crops/rasterMask_", i, ".tif")
   print(fileNameout)

@@ -40,7 +40,7 @@ foreach(l = startyearChoices) %:%
     yearSpan <- paste0(l, "_", l + yearRange)
     filename.tmax <- paste0(locOfFiles, "/", k, "/", i, "/", modelName.lower, "_", k, "_tasmax_global_daily_", yearSpan, ".nc")
     
-    tmax <- rastfilename.tmax, varname = "tasmax") 
+    tmax <- rast(filename.tmax, varname = "tasmax") 
 
 indices <- format(as.Date(names(tmax), format = "X%Y.%m.%d"), format = "%m")
 indices <- as.numeric(indices)

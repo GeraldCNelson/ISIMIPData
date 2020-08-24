@@ -14,10 +14,8 @@ varNamesInfo <- as.data.table(read_excel("data-raw/varNamesLookup.xlsx"))
 #test value
 k <- "ssp585"
 
-
 jpgHeight = 8
 jpgWidth = 8
-
 
 # ensemble graphics
 # apply masks, can only do this to animals we have in THIlist and that have area mask raster

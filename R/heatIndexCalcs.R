@@ -90,30 +90,30 @@ foreach(l = startyearChoices) %:%
       
     }
     
- #    for (o in 1:length(cropChoices)) {
- #      for (m in get(cropChoices[o])) {
- #        cropName <- m
- #        fileNameMask.in <- paste0("data/crops/rasterMask_", tolower(m), ".tif")
- #        cropMask <- rast(fileNameMask.in)
- #        print(system.time(hiMasked <- crop(hiSimple, cropMask)))
- # #       names(hiMasked) <- names(hiSimple)
- #        indices <- format(as.Date(names(hiMasked), format = "X%Y.%m.%d"), format = "%j") # %j is day of the year
- #        indices <- as.numeric(indices)
- #        
- #        cropCalendarName <- ann_crop_temp_table[crop %in% cropName, crop.calendar]
- #        cropCalFilesLoc <- paste0("data-raw/crops/cropCalendars/ALL_CROPS_netCDF_0.5deg_filled/")
- #        fileInName <- paste0(cropCalendarName, ".crop.calendar.fill.nc")
- #        locNFileIn <- paste0(cropCalFilesLoc, fileInName)
- #        R.utils::gunzip(paste0(locNFileIn, ".gz"), remove = FALSE, overwrite = TRUE)
- #        
- #        temp <- rast(locNFileIn)
- #        croppingCalendar_plant <- temp$plant
- #        croppingCalendar_harvest <- temp$harvest
- #        calendarDelta <- croppingCalendar_harvest - croppingCalendar_plant
- #        calendarDeltaMasked <- mask(calendarDelta, cropMask)
- #        
- #      }
- #    }
+    #    for (o in 1:length(cropChoices)) {
+    #      for (m in get(cropChoices[o])) {
+    #        cropName <- m
+    #        fileNameMask.in <- paste0("data/crops/rasterMask_", tolower(m), ".tif")
+    #        cropMask <- rast(fileNameMask.in)
+    #        print(system.time(hiMasked <- crop(hiSimple, cropMask)))
+    # #       names(hiMasked) <- names(hiSimple)
+    #        indices <- format(as.Date(names(hiMasked), format = "X%Y.%m.%d"), format = "%j") # %j is day of the year
+    #        indices <- as.numeric(indices)
+    #        
+    #        cropCalendarName <- ann_crop_temp_table[crop %in% cropName, crop.calendar]
+    #        cropCalFilesLoc <- paste0("data-raw/crops/cropCalendars/ALL_CROPS_netCDF_0.5deg_filled/")
+    #        fileInName <- paste0(cropCalendarName, ".crop.calendar.fill.nc")
+    #        locNFileIn <- paste0(cropCalFilesLoc, fileInName)
+    #        R.utils::gunzip(paste0(locNFileIn, ".gz"), remove = FALSE, overwrite = TRUE)
+    #        
+    #        temp <- rast(locNFileIn)
+    #        croppingCalendar_plant <- temp$plant
+    #        croppingCalendar_harvest <- temp$harvest
+    #        calendarDelta <- croppingCalendar_harvest - croppingCalendar_plant
+    #        calendarDeltaMasked <- mask(calendarDelta, cropMask)
+    #        
+    #      }
+    #    }
   }
 stopCluster(cl)
 
@@ -122,59 +122,59 @@ yearRange <- 9
 l = 2001
 yearSpan <- paste0(l, "_", l + yearRange)
 
-    print(paste0("start year: ", l, " ssp: ", k, " pid: ", Sys.getpid(), " systime: ", Sys.time()))
-    
-    yearSpan <- paste0(l, "_", l + yearRange)
-    # j <- tasmax.observed
-    # fileNameIn <- paste(modelName.lower, k, j, "global_daily", yearSpan, sep = "_")
-    # fileNameIn <- paste0(fileNameIn, ".tif")
-    tmaxFile <- tasmax.observed
-    
-    # j <- "hurs"
-    # fileNameIn <- paste(modelName.lower, k, j, "global_daily", yearSpan, sep = "_")
-    # fileNameIn <- paste0(fileNameIn, ".tif")
-    rhFile <-hurs.observed
-    hiFilesCompleted <- list.files(hifileOutLoc)
-    hiFilesCompleted <- hiFilesCompleted[!grepl("aux.xml", hiFilesCompleted, fixed = TRUE)]
-    
-    # check if global daily HI file already exists
-    fileNameOut <-    paste(modelName.lower, "_heatIndexSimple_", "global_daily_", yearSpan, ".tif")
-    if (!paste0(hifileOutLoc, fileNameOut) %in% hiFilesCompleted) {
-      
-      print(system.time(tmaxRhIn(tmaxFile, rhFile)))
-      
-      # heat index formulas use temperature in fahrenheit. Need to convert tmax to farenheit. Not needed for the moment. Have converted formula to use tmax in c.
-      #    tmax_F <- tmax * 9/5 + 32
-      # startTime <-  Sys.time()
-      # f.tmaxF <- function(tmax) {
-      #   tmax_F <- tmax * 9/5 + 32
-      # }
-      # system.time(tmax_F <- setValues(tmax, f.tmaxF(values(tmax))))
-      
-      # endTime <-  Sys.time()
-      # print(paste("time to create F version of Tmax: ", round(difftime(endTime, startTime, units = "mins")), " mins"))
-      
-      #  hiSimple = 0.5 * (tmax_F + 61.0 + ((tmax_F - 68.0)*1.2) + (rh * 0.094))
-      #   hiSimple <- 0.5 * (-20.6 + 2.2 * t) + (rh * 0.094))
-      # hiSimple <- -10.3 + 1.1 * tmax_F + rh * 0.047 # simplified math version
-      
-      f.hiSimple <- function(tmax, rh){
-        hiSimple <-  24.9 + 0.047 * rh + 1.98 * tmax
-      }
-      print(system.time(hiSimple <- f.hiSimple(tmax, rh)))
-      startDate <- paste0(l, "-01-01"); endDate <- paste0(l + yearRange, "-12-31")
-      indices <- seq(as.Date(startDate), as.Date(endDate), 1)
-      indices <- paste0("X", as.character(indices))
-      names(hiSimple) <- indices
-      
-      #    hiSimple <- overlay(tmax_F, rh, fun = function(x,y) {-10.3 + 1.1 * (x * 9/5 + 32) + y * 0.047}) # note: x * 9/5 + 32 converts celsius to fahrenheit
-      
-      # hi = -42.379 + 2.04901523 *  tmax + 10.14333127 * rh - .22475541 *  tmax * rh - .00683783 *  tmax^2 - .05481717 * rh^2 + 
-      #   .00122874 *  tmax^2 * rh + .00085282 *  tmax * rh^2 - .00000199 *  tmax^2 * rh^2
-      # 
-      fileOutLoc <- "data/cmip6/heatIndex/"
-      print(paste0("Writing out ": paste0(fileOutLoc, fileNameOut)))
-      writeRaster(hiSimple, filename = paste0(fileOutLoc, fileNameOut), format = "GTiff", overwrite = TRUE, wopt=list(gdal="COMPRESS=LZW"))
-    }
+print(paste0("start year: ", l, " ssp: ", k, " pid: ", Sys.getpid(), " systime: ", Sys.time()))
+
+yearSpan <- paste0(l, "_", l + yearRange)
+# j <- tasmax.observed
+# fileNameIn <- paste(modelName.lower, k, j, "global_daily", yearSpan, sep = "_")
+# fileNameIn <- paste0(fileNameIn, ".tif")
+tmaxFile <- tasmax.observed
+
+# j <- "hurs"
+# fileNameIn <- paste(modelName.lower, k, j, "global_daily", yearSpan, sep = "_")
+# fileNameIn <- paste0(fileNameIn, ".tif")
+rhFile <-hurs.observed
+hiFilesCompleted <- list.files(hifileOutLoc)
+hiFilesCompleted <- hiFilesCompleted[!grepl("aux.xml", hiFilesCompleted, fixed = TRUE)]
+
+# check if global daily HI file already exists
+fileNameOut <-    paste("observed", "_heatIndexSimple_", "global_daily_", yearSpan, ".tif")
+if (!paste0(hifileOutLoc, fileNameOut) %in% hiFilesCompleted) {
+  
+  print(system.time(tmaxRhIn(tmaxFile, rhFile)))
+  
+  # heat index formulas use temperature in fahrenheit. Need to convert tmax to farenheit. Not needed for the moment. Have converted formula to use tmax in c.
+  #    tmax_F <- tmax * 9/5 + 32
+  # startTime <-  Sys.time()
+  # f.tmaxF <- function(tmax) {
+  #   tmax_F <- tmax * 9/5 + 32
+  # }
+  # system.time(tmax_F <- setValues(tmax, f.tmaxF(values(tmax))))
+  
+  # endTime <-  Sys.time()
+  # print(paste("time to create F version of Tmax: ", round(difftime(endTime, startTime, units = "mins")), " mins"))
+  
+  #  hiSimple = 0.5 * (tmax_F + 61.0 + ((tmax_F - 68.0)*1.2) + (rh * 0.094))
+  #   hiSimple <- 0.5 * (-20.6 + 2.2 * t) + (rh * 0.094))
+  # hiSimple <- -10.3 + 1.1 * tmax_F + rh * 0.047 # simplified math version
+  
+  f.hiSimple <- function(tmax, rh){
+    hiSimple <-  24.9 + 0.047 * rh + 1.98 * tmax
+  }
+  print(system.time(hiSimple <- f.hiSimple(tmax, rh)))
+  startDate <- paste0(l, "-01-01"); endDate <- paste0(l + yearRange, "-12-31")
+  indices <- seq(as.Date(startDate), as.Date(endDate), 1)
+  indices <- paste0("X", as.character(indices))
+  names(hiSimple) <- indices
+  
+  #    hiSimple <- overlay(tmax_F, rh, fun = function(x,y) {-10.3 + 1.1 * (x * 9/5 + 32) + y * 0.047}) # note: x * 9/5 + 32 converts celsius to fahrenheit
+  
+  # hi = -42.379 + 2.04901523 *  tmax + 10.14333127 * rh - .22475541 *  tmax * rh - .00683783 *  tmax^2 - .05481717 * rh^2 + 
+  #   .00122874 *  tmax^2 * rh + .00085282 *  tmax * rh^2 - .00000199 *  tmax^2 * rh^2
+  # 
+  fileOutLoc <- "data/cmip6/heatIndex/"
+  print(paste0("Writing out : ", paste0(fileOutLoc, fileNameOut)))
+  writeRaster(hiSimple, filename = paste0(fileOutLoc, fileNameOut), format = "GTiff", overwrite = TRUE, wopt=list(gdal="COMPRESS=LZW"))
+}
 
 

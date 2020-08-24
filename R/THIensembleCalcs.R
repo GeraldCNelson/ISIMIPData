@@ -97,7 +97,7 @@ for (k in sspChoices) {
       fileNameMean <- paste0("data/cmip6/THI/THI_ensembleMean_", speciesName,  "_",  yearSpan, "_", k, ".tif") 
       fileNameCV <- paste0("data/cmip6/THI/THI_ensembleCV_", speciesName,  "_",  yearSpan, "_", k, ".tif")
       writeRaster(r.mean, filename = fileNameMean, format = "GTiff", overwrite = TRUE, wopt=list(gdal="COMPRESS=LZW"))
-      writeRaster(r.cv, filename = fileNameCV, format = "GTiff", overwrite = TRUE, wopt=list(gdal="COMPRESS=LZW")))
+      writeRaster(r.cv, filename = fileNameCV, format = "GTiff", overwrite = TRUE, wopt=list(gdal="COMPRESS=LZW"))
       print(paste("fileNameMeanOut: ", fileNameMean))
       print(paste0( "Done writing out files for species: ", speciesName, ", start year: ", l, ", pid number: ", Sys.getpid()))
     }

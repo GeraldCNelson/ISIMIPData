@@ -47,10 +47,8 @@ for (k in sspChoices)  {
           system.time(gdd_north <- crop(gdd, extent.north))
           system.time(gdd_south <- crop(gdd, extent.south))
  
-          # crop the gdd brick to just the area of the crop from the 
           
-          #
-          
+          #Sage cropping calendar info
           # cropping calendar ncs have the following variables - index, filled.index, plant, plant.start, plant.end, plant.range, harvest, harvest.start, harvest.end, harvest.range, tot.days
           # The following variables are included in all files:
           #   - plant: mean planting day of year
@@ -64,10 +62,13 @@ for (k in sspChoices)  {
           # - tot.days: number of days between planting and harvest
           # Source: https://nelson.wisc.edu/sage/data-and-models/crop-calendar-dataset/netCDF0-5degree.php
           
-          # the overlay function needs a user defined function on the relationship between the two rasters
-          overlayFunction <- function(x,y) {
-            return(x * y)
-          }
+          # ggcmi cropping calendar info
+          # The ggcmi data include planting day, maturity day, and growing season length. The SAGE cropping calendar data have plant and harvest days (these are mean of plant.start to plant.end and same for harvest). Is there some use for the maturity day numbers?
+          
+          # # the overlay function needs a user defined function on the relationship between the two rasters
+          # overlayFunction <- function(x,y) {
+          #   return(x * y)
+          # }
           
           cropName <- m
           

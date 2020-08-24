@@ -1,4 +1,3 @@
-# the sys.setenv command is wrong for the linux box so commenting it out for now.
 library(ncdf4)
 #library(PCICt)
 #library(ncdf4.helpers)
@@ -162,7 +161,7 @@ tmpDirName <- paste0(locOfCMIP6ncFiles, "rasterTmp", Sys.getpid(), "/")
 # }
 
 # source of crop temperature values
-ann_crop_temp_table <- as.data.table(read_excel("data-raw/crops/ann_crop_temp_table_summary_0506052020.xlsx", range = "A1:S26"))
+ann_crop_temp_table <- as.data.table(read_excel("data-raw/crops/ann_crop_temp_table_summary_22082020.xlsx", range = "A1:S26"))
 ann_crop_temp_table[, `...16` := NULL]
 data.table::setnames(ann_crop_temp_table, old = names(ann_crop_temp_table), new = make.names(names(ann_crop_temp_table)))
 
@@ -264,16 +263,18 @@ gddSum <- function(i, v) {
   r
 }
 
-getcropAreaYield <- function(cropName, dataType) {
+getcropAreaYield <- function(cropName, dataType) { #dataType is area or yield
   tifZipUrl <-  " https://s3.us-east-2.amazonaws.com/earthstatdata/HarvestedAreaYield175Crops_Geotiff.zip"
   tifzipFile <- paste0("data-raw/crops/HarvestedAreaYield175Crops_Geotiff.zip")
+  tifFileLoc <- "data-raw/crops/HarvestedAreaYield175Crops_Geotiff/GeoTiff/"
   tiffilecrop <- cropName
   if (dataType %in% "area") {
     tifcropFile <- paste0(tiffilecrop, "_HarvestedAreaHectares.tif")
   } else {tifcropFile <- paste0(tiffilecrop, "_YieldPerHectare.tif")
   }
   tifzipFilePath <- paste0("HarvestedAreaYield175Crops_Geotiff/GeoTiff/", tiffilecrop, "/", tifcropFile)
-  tifOut <- unzip(zipfile = tifzipFile, files = tifzipFilePath)
+  #  tifOut <- unzip(zipfile = tifzipFile, files = tifzipFilePath)
+  tifOut <- rast(paste0(tifFileLoc, tiffilecrop, "/", tifcropFile))
   return(tifOut)
 }
 
@@ -386,6 +387,44 @@ tmaxTminIn <- function(tmaxIn, tminIn) {
   tmin <<- rast(tminIn)
 }
 
-overlayfunction_mask <- function(x,y) {
-  return(x * y)
+# overlayfunction_mask <- function(x,y) {
+#   return(x * y)
+# }
+
+loadSpatialData <- function(dataVar) {
+  require(sf)
+  if(!exists(dataVar))
+    switch(dataVar,
+           world = {outvar <- st_read("data-raw/regioninformation/ne_10m_admin_1_states_provinces/ne_10m_admin_1_states_provinces.shp")},
+           lakes = {outvar <- st_read("data-raw/regioninformation/lakes10.shp")},
+           rivers = {outvar <- st_read("data-raw/regioninformation/rivers10.shp")},
+           roads = {outvar <- st_read("data-raw/regioninformation/roads10.shp")},
+           cities = {outvar <- st_read("data-raw/regioninformation/cities10.shp")},
+           populatedAreas = {outvar <- st_read("data-raw/regioninformation/ne_10m_populated_places/ne_10m_populated_places.shp")},
+#           urbanAreas = {outvar <- st_read("data-raw/regioninformation/ne_10m_urban_areas/ne_10m_urban_areas.shp") },
+           protectedAreas2 = {outvar <- st_read("data-raw/regioninformation/WDPA_Aug2020-shapefile/WDPA_Aug2020-shapefile2/WDPA_Aug2020-shapefile-polygons.shp")},
+           protectedAreas1 = {outvar <- st_read("data-raw/regioninformation/WDPA_Aug2020-shapefile/WDPA_Aug2020-shapefile1/WDPA_Aug2020-shapefile-polygons.shp")},
+           protectedAreas0 = {outvar <- st_read("data-raw/regioninformation/WDPA_Aug2020-shapefile/WDPA_Aug2020-shapefile0/WDPA_Aug2020-shapefile-polygons.shp")},
+           
+    )
+  return(outvar)
+}
+
+createRegionSpatialData <- function(dataVar, regionBox) { # needs to be run after loadSpatialData
+  require(sf)
+  if (!exists("regionBox")) stop("regionBox is missing")
+    switch(dataVar,
+           world =          {outvar <- st_crop(world, regionBox)},
+           lakes =          {outvar <- st_crop(lakes, regionBox)},
+           rivers =         {outvar <- st_crop(rivers, regionBox)},
+           roads =          {outvar <- st_crop(roads, regionBox)},
+           cities =          {outvar <- st_crop(cities, regionBox)},
+           populatedAreas =  {outvar <- st_crop(populatedAreas, regionBox)},
+           urbanAreas =      {outvar <- st_crop(urbanAreas, regionBox)},
+           protectedAreas2 = {outvar <- st_crop(protectedAreas2, regionBox)},
+           protectedAreas1 = {outvar <- st_crop(protectedAreas1, regionBox)},
+           protectedAreas0 = {outvar <- st_crop(protectedAreas0, regionBox)},
+           
+    )
+    return(outvar)
 }

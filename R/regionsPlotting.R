@@ -8,32 +8,34 @@ library(data.table)
 library(readxl)
 library(ggplot2)
 library(terra)
+library(sf)
+library(dplyr)
 locOfCMIP6ncFiles <- "data-raw/ISIMIP/cmip6/unitsCorrected/"
 sspChoices <- c("ssp585") #"ssp126", 
 modelChoices <- c( "GFDL-ESM4", "UKESM1-0-LL", "MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
 #modelChoices <- c("IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
 startyearChoices <-  c(2001, 2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
+startyearChoicesEnsemble <-  c(2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
 yearRange <- 9
 pal <- colorRampPalette(c("green","red"))
 extentRange <- 2 # a value of 2 means 2 of the units of the raster; if it is 1/2 degree cells, this would be 1 degree
 
-#test values
-i <- "GFDL"
-k <- "ssp585"
-l <- 2091
-j = 1 # for cattle
-
-fileName_rtave_observed <- "data/cmip6/annualMean/annualMean_tave_observed_2001_2010.tif"
-fileName_rtave_2021_2030_ssp585 <- "data/cmip6/annualMean/ensembleAnnualMean_tave_2021_2030_ssp585.tif"
-fileName_rtave_2091_2100_ssp585 <- "data/cmip6/annualMean/ensembleAnnualMean_tave_2091_2100_ssp585.tif"
-fileLoc_annualMean <- paste("data/cmip6/annualMean/annualMean")
-
-fileName_tave_in <- paste()
-
 regionInfoLookup <- as.data.table(read_excel("data-raw/regionInformation/regionInfoLookup.xlsx"))
 #regionInfoLookup <- as.data.table(read_excel("data-raw/regionInformation/CSVs2016_geocoordinates.xlsx", range = "F7:J47"))
 regionInfoLookup[, ctyRegion := paste0(region , "\n", country)]
-regionInfoLookup[, ctyRegion := paste0(`region` , "\n", country)]
+
+world <- loadSpatialData("world")
+lakes <- loadSpatialData("lakes")
+rivers <- loadSpatialData("rivers")
+roads <- loadSpatialData("roads")
+cities <- loadSpatialData("cities")
+
+fileName_rtave_observed <- "data/cmip6/annualMean/annualMean_tave_observed_2001_2010.tif"
+fileName_rtave_2021_2030_ssp585 <- "data/cmip6/annualMean/ensembleAnnualMean_tave_2021_2030_ssp585.tif"
+fileName_rtave_2051_2060_ssp585 <- "data/cmip6/annualMean/ensembleAnnualMean_tave_2051_2060_ssp585.tif"
+fileName_rtave_2091_2100_ssp585 <- "data/cmip6/annualMean/ensembleAnnualMean_tave_2091_2100_ssp585.tif"
+
+fileLoc_annualMean <- paste("data/cmip6/annualMean/")
 
 #      world <- ne_countries(scale = "large", returnclass = "sf")
 # lakes10 <- ne_download(scale = 10, type = 'lakes', category = 'physical', returnclass = "sf")
@@ -47,84 +49,111 @@ regionInfoLookup[, ctyRegion := paste0(`region` , "\n", country)]
 # st_write(roads10, "data-raw/regioninformation/roads10.shp", layer_options = "ENCODING=UTF-8")
 # st_write(cities10, "data-raw/regioninformation/cities10.shp", layer_options = "ENCODING=UTF-8")
 
-world <- st_read("data-raw/regioninformation/ne_10m_admin_1_states_provinces/ne_10m_admin_1_states_provinces.shp")
-lakes10 <-  st_read("data-raw/regioninformation/lakes10.shp")
-rivers10 <- st_read("data-raw/regioninformation/rivers10.shp")
-roads10 <- st_read("data-raw/regioninformation/roads10.shp")
-cities10 <- st_read("data-raw/regioninformation/cities10.shp")
-
-populatedAreas10 <- st_read("data-raw/regioninformation/ne_10m_populated_places/ne_10m_populated_places.shp")
-protectedAreas2 <- st_read("data-raw/regioninformation/WDPA_Aug2020-shapefile/WDPA_Aug2020-shapefile2/WDPA_Aug2020-shapefile-polygons.shp")
-protectedAreas1 <- st_read("data-raw/regioninformation/WDPA_Aug2020-shapefile/WDPA_Aug2020-shapefile1/WDPA_Aug2020-shapefile-polygons.shp")
-protectedAreas0 <- st_read("data-raw/regioninformation/WDPA_Aug2020-shapefile/WDPA_Aug2020-shapefile0/WDPA_Aug2020-shapefile-polygons.shp")
 #shadedRelief <- rast("data-raw/regioninformation/SR_HR/SR_HR.tif")
 
-
-for (k in sspChoices) {
-  for (l in startyearChoices_ensemble) {
-    yearSpan <- paste0(l, "_", l + yearRange))
-    r_tave <- paste0(fileLoc_annualMean, "_tave_", yearRange <- 9
-                     
-    for (i in 1:(nrow(regionInfoLookup) - 1)) {
+for (i in 1:(nrow(regionInfoLookup) - 1)) {
+  region <- regionInfoLookup[i, region]
+  country <- regionInfoLookup[i, country]
+  iso3Code <- regionInfoLookup[i, ISO3]
+  locLat <- regionInfoLookup[i, latitude]
+  locLong <- regionInfoLookup[i, longitude]
+  bb <- c(regionInfoLookup[i, ll.lat], regionInfoLookup[i, ll.lon], regionInfoLookup[i, ur.lat], regionInfoLookup[i, ur.lon])  
+  xlim <- c( regionInfoLookup[i, ll.lon], regionInfoLookup[i, ur.lon])
+  ylim <- c(regionInfoLookup[i, ll.lat], regionInfoLookup[i, ur.lat])
+  regionExt <- ext(c(xlim, ylim))
+  
+  pa0 <- protectedAreas0[protectedAreas0$PARENT_ISO == iso3Code,]
+  pa1 <- protectedAreas1[protectedAreas1$PARENT_ISO == iso3Code,]
+  pa2 <- protectedAreas2[protectedAreas2$PARENT_ISO == iso3Code,]
+  #     world_region <- world[world$sov_a3 == iso3Code,]
+  regionBox <- c(xmin = regionInfoLookup[i, ll.lon], ymin = regionInfoLookup[i, ll.lat], xmax = regionInfoLookup[i, ur.lon], ymax = regionInfoLookup[i, ur.lat])
+  world_region <- createRegionSpatialData("world", regionBox)
+  lakes_region <- createRegionSpatialData("lakes", regionBox)
+  rivers_region <- createRegionSpatialData("rivers", regionBox)
+  roads_region <- createRegionSpatialData("roads", regionBox)
+  cities_region <- createRegionSpatialData("cities", regionBox)
+  populatedAreas_region <- createRegionSpatialData("populatedAreas", regionBox)
+  urbanAreas_region <- createRegionSpatialData("urbanAreas", regionBox)
+  
+  for (k in sspChoices) {
+    
+    rtave <- rast(c(fileName_rtave_observed, fileName_rtave_2021_2030_ssp585, fileName_rtave_2051_2060_ssp585, fileName_rtave_2091_2100_ssp585))
+    rtave_crop <- crop(rtave, regionExt)
+    taveMin <- min(global(rtave_crop, fun = "min", na.rm = TRUE))
+    taveMax <- max(global(rtave_crop, fun = "max", na.rm = TRUE))
+    taveMax <- ceiling(taveMax)
+    taveMin <- floor(taveMin)
+    
+    custom_bins <- round(seq.int(from = taveMin, to = taveMax, length = 5))
+    
+    dataHolder <- data.table(x = numeric(), y = numeric(), mean = numeric())
+    for (l in startyearChoicesEnsemble) {
+      yearSpan <- paste0(l, "_", l + yearRange)
+      r_tave <- paste0(fileLoc_annualMean, "ensembleAnnualMean_", "tave", "_", yearSpan,"_", k, ".tif")
+      r_tave <- rast(r_tave)
       print(i)
-      locLat <- regionInfoLookup[i, latitude]
-      locLong <- regionInfoLookup[i, longitude]
-      bb <- c(regionInfoLookup[i, ll.lat], regionInfoLookup[i, ll.lon], regionInfoLookup[i, ur.lat], regionInfoLookup[i, ur.lon])  
-      xlim <- c( regionInfoLookup[i, ll.lon], regionInfoLookup[i, ur.lon])
-      ylim <- c(regionInfoLookup[i, ll.lat], regionInfoLookup[i, ur.lat])
-      regionExt <- ext(c(xlim, ylim))
       #        relief <- crop(shadedRelief, regionExt)
       r_tave_region <- crop(r_tave, regionExt)
       r_tave_region <- as.data.frame(r_tave_region, xy = TRUE)
-      my_col <-  heat.colors(5)
+      if (l %in% startyearChoicesEnsemble[1]) {
+        dataHolder <- as.data.table(r_tave_region)
+        dataHolder[, mean := round(mean, 2)]
+        setnames(dataHolder, old = c("x", "y", "mean"), new = c("longitude", "latitude", paste0("meanTemp_", l)))
+      } else {
+        newColName <- paste0("meanTemp_", l)
+        dataHolder[, c(newColName) := r_tave_region$mean]
+      }
       
-      titleText <- paste0("Location of ", regionInfoLookup[i, ctyRegion])
-      titleText <- paste0("Annual mean temperature, 2090-2100 ", regionInfoLookup[i, ctyRegion])
-      iso3Code <- regionInfoLookup[i, ISO3]
-      pa0 <- protectedAreas0[protectedAreas0$PARENT_ISO == iso3Code,]
-      pa1 <- protectedAreas1[protectedAreas1$PARENT_ISO == iso3Code,]
-      pa2 <- protectedAreas2[protectedAreas2$PARENT_ISO == iso3Code,]
-      world_region <- world[world$sov_a3 == iso3Code,]
-      popArea_region <- populatedAreas10[populatedAreas10$ADM0_A3 == iso3Code, ]
-      r_tave_region <- r_tave_region %>% mutate(mean_breaks = cut(mean, breaks = 5))
+      # get 5 color palatte
+      p <- colorspace::sequential_hcl(n = 5, palette = "Terrain 2", rev = TRUE)
+      
+      my_col <-  heat.colors(5, rev = TRUE)
+      
+      titleText <- paste0("Annual mean temperature, ", gsub("_", "-", yearSpan), ", ",  "scenario ", k, ", ", regionInfoLookup[i, ctyRegion])
+      legendTitle <- "°C"
+      print(titleText)
       g <- ggplot(data = world_region) +
-        geom_sf() + 
-        labs(title = titleText) + theme(plot.title = element_text(size = 12, hjust = 0.5)) +
-        geom_raster(data = r_tave_region , aes(x = x, y = y, fill = mean_breaks)) + 
+        labs(title = titleText, fill = legendTitle) + theme(plot.title = element_text(size = 12, hjust = 0.5)) +
+        labs(x = "", y = "") +
+        #       geom_raster(data = r_tave_region, aes(x = x, y = y, fill = mean_breaks)) + 
+        geom_raster(data = r_tave_region, aes(x, y, fill = mean)) + 
+        # scale_fill_gradientn(colors = p, # name = legendText,
+        #                      na.value = "grey50",
+        #                      guide = "colorbar") +
+        scale_fill_gradientn(colours=topo.colors(7),na.value = "transparent",
+                             breaks=custom_bins,labels = custom_bins,
+                             limits=c(taveMin, taveMax)) +
+        geom_sf(fill = NA, color = "gray") + 
+        
+        geom_sf(data = roads_region, color = "red", lwd = 0.5, fill = NA)
+      if (nrow(populatedAreas_region) > 0) { 
+        g <- g + geom_sf(data = populatedAreas_region, color = "black", lwd = 0.5, fill = NA) +
+        geom_sf_label(data = populatedAreas_region, aes(label = NAME), size = 2, fill = NA)
+      }
+      g <- g + geom_sf(data = lakes_region, color = "darkblue", fill = NA) +
+        geom_sf(data = rivers_region, color = "blue", lwd = 0.5, fill = NA) +
+        # geom_sf(data = pa0_region) +
+        # geom_sf(data = pa1_region) +
+        # geom_sf(data = pa2_region) +
+        
+        # geom_sf_label(data = pa0_region, aes(label = NAME), color = "green") + 
+        # geom_sf_label(data = pa1_region, aes(label = NAME), color = "green") + 
+        # geom_sf_label(data = pa2_region, aes(label = NAME), color = "green") + 
         geom_sf(data = world_region, fill = NA, color = gray(.5)) +
-        geom_sf(data = roads10, color = "red", lwd = 1) +
-        geom_sf(data = populatedAreas10) +
-        geom_sf_label(data = popArea_region,  aes(label = NAME), size = 5) +
-        # theme(axis.title = element_blank()) + 
-        scale_fill_manual(values = my_col, name = "Mean Temperature (°C)") + 
-        coord_sf(xlim = xlim, ylim = ylim, expand = FALSE) +
-        
-        geom_sf(data = lakes10, color = "darkblue") +
-        geom_sf(data = rivers10, color = "blue") +
-        geom_sf(data = pa0) +
-        geom_sf(data = pa1) +
-        geom_sf(data = pa2) +
-        geom_sf(data = populatedAreas10) +
-        
-        geom_sf_label(data = pa0, aes(label = NAME), color = "green") + 
-        geom_sf_label(data = pa1, aes(label = NAME), color = "green") + 
-        geom_sf_label(data = pa2, aes(label = NAME), color = "green") + 
-        geom_sf_label(data = popArea_region,  aes(label = NAME), size = 5) +
-        
-        coord_sf(xlim = xlim, ylim = ylim, expand = FALSE) +
-        guides(color = guide_legend(override.aes = list(size = 6))) +
-        theme_bw() + 
         
         annotation_scale(location = "bl", width_hint = 0.5) +
         annotation_north_arrow(location = "bl", which_north = "true", 
                                pad_x = unit(0.75, "in"), pad_y = unit(0.5, "in"),
-                               style = north_arrow_fancy_orienteering) 
+                               style = north_arrow_minimal) 
       
       print(g)
-      outFilename <- paste0("graphics/cmip6/regionInfo/", regionInfoLookup[i, region], ".png")
-      ggsave(outFilename, plot = last_plot(), device = "png")
+      outFilename <- paste0("graphics/cmip6/regionInfo/tave", "_", k, "_", yearSpan, "_", regionInfoLookup[i, region], ".png")
+      ggsave(outFilename, plot = last_plot(), device = "png", width = 6, height = 6)
       # ggsave("map_web.png", width = 6, height = 6, dpi = "screen")
     }
+    write.csv(dataHolder, file = paste0("data/regionResults/meanTemp_", region, "_", country, ".csv"))
   }
 }
-  
+
+
+
