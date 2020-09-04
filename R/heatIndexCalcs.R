@@ -30,7 +30,6 @@ libList <- c("terra", "ncdf4")
 cl <- clusterSetup(varList, libList, useCores) # function created in globallyUsed.R
 foreach(l = startyearChoices) %:%
   foreach(i = modelChoices) %:%
-  #  foreach(j = variableChoices) %:%
   foreach(k = sspChoices)  %:%
   foreach(m = cropChoices) %dopar% {
     print(paste0("start year: ", l, " ssp: ", k, " pid: ", Sys.getpid(), " systime: ", Sys.time()))

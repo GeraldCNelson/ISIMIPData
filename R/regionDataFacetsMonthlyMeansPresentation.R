@@ -19,7 +19,9 @@ l <- 2091
 j <- "tave"
 
 regionInfoLookup <- as.data.table(read_excel("data-raw/regionInformation/regionInfoLookup.xlsx", range = "A1:k7"))
-regionInfoLookup <- as.data.table(read_excel("data-raw/regionInformation/regionInfoLookupCSVs.xlsx", range = "F7:P43"))
+# regionInfoLookup <- as.data.table(read_excel("data-raw/regionInformation/regionInfoLookupCSVs.xlsx", range = "F7:P43")) # climate smart villages
+# regionInfoLookup <- as.data.table(read_excel("data-raw/regionInformation/regionInfoPerennialCrops.xlsx",range = "A1:K9")) #perennial crop author locations
+
 regionInfoLookup[, ctyRegion := paste0("\n", region, ", " , country)]
 
 for (i in 1:(nrow(regionInfoLookup))) {
@@ -32,7 +34,7 @@ for (i in 1:(nrow(regionInfoLookup))) {
   # setorder(regionMeanHolder,  -climVar)
   # regionMeanHolder[varNamesInfo, climVar := variableLongName, on = c(climVar = "variableShortName")]
   # setnames(regionMeanHolder, old = c("climVar", "scenario"), new = c("Climate variable", "Scenario"))
-  titleString <- paste0("Ensemble mean annual climate variable averages for ", region, ", ", country)
+  titleString <- paste0("Ensemble mean monthly climate variable averages for ", region, ", ", country)
   contentString <- paste0("Ensemble means for four time periods to 2100. Powerpoint produced ", Sys.Date())
   my_pres <- read_pptx() %>% 
     add_slide(layout = 'Title Slide', master = 'Office Theme')  %>% 
@@ -46,7 +48,7 @@ for (i in 1:(nrow(regionInfoLookup))) {
   IntroText3.5 <- "In this powerpoint, only results using ssp585 are presented." 
   # IntroText4 <- "The values are average means for observed data for 2001-2010 and  ensemble means and coefficients of variation for four 10 year periods (2002-2010, 2021-2030, 2051-2060, and 2091-2100)."
   IntroText5 <- "This powerpoint presents work in progress and should not be circulated without permission."
-#  IntroText6 <- "The next slide presents the 10-year annual mean temperature for all 1/2 degree pixels included in this region for each of the 10 year periods."
+#  IntroText6 <- "The next slide presents the 10-year monthly mean temperature for all 1/2 degree pixels included in this region for each of the 10 year periods."
   
   format_page_title <- fp_text( font.size=24)
   
@@ -82,38 +84,37 @@ for (i in 1:(nrow(regionInfoLookup))) {
       varName <- j
       varNameLong <- as.character(varNamesInfo[variableShortName %in% varName, variableLongName])
       varNameLongUnits <- as.character(varNamesInfo[variableShortName %in% varName, units])
-      annualMeanDataFile = paste0("data/regionResults/", j, "_", region, "_",k, ".csv")
-      print(annualMeanDataFile)
-      regionMeanHolder <- as.data.table( read.csv(annualMeanDataFile))
+      # monthlyMeanDataFile = paste0("data/regionResults/", j, "_", region, "_",k, ".csv")
+      # print(monthlyMeanDataFile)
+      # regionMeanHolder <- as.data.table( read.csv(monthlyMeanDataFile))
+      # 
+      # myft <- flextable(regionMeanHolder, col_keys = names(regionMeanHolder))
+      # myft <- fontsize(myft, part = "header", size = 12)
+      # myft <- fontsize(myft, part = "body", size = 8)
+      # myft <- padding( myft, padding = 10, part = "all" )
+      # myft <- theme_vanilla(myft)
+      # myft <- width(myft, width = 1.5)
+      # print(myft)
       
-      myft <- flextable(regionMeanHolder, col_keys = names(regionMeanHolder))
-      myft <- fontsize(myft, part = "header", size = 12)
-      myft <- fontsize(myft, part = "body", size = 8)
-      myft <- padding( myft, padding = 10, part = "all" )
-      myft <- theme_vanilla(myft)
-      myft <- width(myft, width = 1.5)
-      print(myft)
-      
-      
-      ensembleTitle <- paste0("Ensemble mean for average annual ", varNameLong)
+      ensembleTitle <- paste0("Ensemble mean for average monthly ", varNameLong)
       add_slide(my_pres, layout = 'Section Header', master = 'Office Theme')  %>% 
         ph_with(value = ensembleTitle, location = ph_location_type(type = "body"))
       
-      titleText <- paste0("Ensemble-based annual mean values, ", varNameLong)
-      my_pres <- add_slide(my_pres, layout = "Title and Content", master = "Office Theme") %>%
-        ph_with(block_list(fpar(ftext(titleText, prop = fp_text(font.size = 28, color = "black")))),
-                location = ph_location_type(type = "title") ) %>%
- #       ph_with(value = paste0("Ensemble-based annual mean values, ", varNameLong), location = ph_location_type(type = "title")) %>%
-        ph_with(value = myft, location = ph_location_type(type = "body")) #ph_location(left = .5, top = 1.5, width = 10, height = 4)) #location = ph_location_types(type = "body"))
-      
+ #      titleText <- paste0("Ensemble-based monthly mean values, ", varNameLong)
+ #      my_pres <- add_slide(my_pres, layout = "Title and Content", master = "Office Theme") %>%
+ #        ph_with(block_list(fpar(ftext(titleText, prop = fp_text(font.size = 28, color = "black")))),
+ #                location = ph_location_type(type = "title") ) %>%
+ # #       ph_with(value = paste0("Ensemble-based monthly mean values, ", varNameLong), location = ph_location_type(type = "title")) %>%
+ #        ph_with(value = myft, location = ph_location_type(type = "body")) #ph_location(left = .5, top = 1.5, width = 10, height = 4)) #location = ph_location_types(type = "body"))
+ #      
       # 
-      # fileNameCts <- paste0("graphics/cmip6/annualMean_", varName, ".jpg")
+      # fileNameCts <- paste0("graphics/cmip6/monthlyMean_", varName, ".jpg")
       # extImgObs <- external_img(src = fileNameCts, width = 5, height = 8)
       # 
       # add_slide(my_pres, layout = 'Title Only', master = 'Office Theme') %>% 
       # ph_with(value = extImgObs, location = ph_location(left = 2, top = 0, width = 5, height = 8) )
       # 
-      # fileNameObserved <- paste0("graphics/cmip6/annualMean/annualMean_",  varName, "_observed_",  "2001_2010", ".jpg")
+      # fileNameObserved <- paste0("graphics/cmip6/monthlyMean/monthlyMean_",  varName, "_observed_",  "2001_2010", ".jpg")
       # 
       # extImgObs <- external_img(src = fileNameObserved, width = 5, height = 8)
       # add_slide(my_pres, layout = 'Title Only', master = 'Office Theme') %>% 
@@ -121,8 +122,8 @@ for (i in 1:(nrow(regionInfoLookup))) {
       # 
       for (l in startyearChoices) {
         yearSpan <- paste0(l, "_", l + yearRange)
-        #      fileNameCV <- paste0("graphics/cmip6/annualMean/ensembleAnnualCV_",   varName, "_",  yearSpan, "_", k, ".jpg")
-        fileNameMean <- paste0("graphics/cmip6/regionInfo/", j, "_", k, "_",  yearSpan, "_", region, ".png")
+        #      fileNameCV <- paste0("graphics/cmip6/monthlyMean/ensemblemonthlyCV_",   varName, "_",  yearSpan, "_", k, ".jpg")
+        fileNameMean <- paste0("graphics/cmip6/regionInfo/", j, "MonthlyAve_", k, "_",  yearSpan, "_", region, ".png")
         extImgMean <- external_img(src = fileNameMean, width = 5, height = 5)
         #     extImgCV <- external_img(src = fileNameCV, width = 5, height = 8)
         
@@ -138,7 +139,7 @@ for (i in 1:(nrow(regionInfoLookup))) {
       }
     }
   }
-  outFilename <- paste0("presentations/cmip6/regionInfo/annualMeans", "_", region, ", ", country, ".pptx")
+  outFilename <- paste0("presentations/cmip6/regionInfo/monthlyMeans", "_", region, ", ", country, ".pptx")
   print(outFilename)
   print(my_pres, target = outFilename) # %>% browseURL()
 }

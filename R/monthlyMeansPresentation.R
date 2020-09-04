@@ -6,7 +6,7 @@ sspChoices <- c("ssp585") #"ssp126",
 modelChoices <- c( "GFDL-ESM4", "UKESM1-0-LL", "MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
 #modelChoices <- c("IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
 startyearChoices <-  c(2001, 2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
-variableChoices <- c( "tasmax", "tasmin", "pr", "hurs") 
+climateVars <- c("tave", "tasmax", "tasmin", "pr", "hurs") 
 varNamesInfo <- as.data.table(read_excel("data-raw/varNamesLookup.xlsx"))
 
 yearRange <- 9
@@ -83,7 +83,7 @@ my_pres <- ph_with(x = my_pres, value = bl, location = ph_location_type(type = "
 for (k in sspChoices) {
   yearSpan <- paste0(l, "_", l + yearRange)
   print(paste0("ssp choice: ", k, ", start year: ", l))
-  for (j in variableChoices) {
+  for (j in climateVars) {
     varName <- j
     varNameLong <- as.character(varNamesInfo[variableShortName %in% varName, variableLongName])
     varNameLongUnits <- as.character(varNamesInfo[variableShortName %in% varName, units])

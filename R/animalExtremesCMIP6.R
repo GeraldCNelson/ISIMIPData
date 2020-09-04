@@ -6,7 +6,7 @@ library(stringr)
 
 sspChoices <- c("ssp585") #"ssp126", 
 modelChoices <- c( "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL"
-variableChoices <- c("tasmax", "tasmin", "pr", "tmpDirName") # "tasmax", "pr" "tasmin"
+climateVars <- c("tasmax", "tasmin", "pr", "tmpDirName") # "tasmax", "pr" "tasmin"
 locOfFiles <- locOfCMIP6ncFiles
 
 # startday <- "0101"
@@ -36,7 +36,7 @@ foreach(l = startyearChoices) %:%
     speciesName <- gsub("thi.", "", j)
     extremeStress <- breakPoints[species %in% speciesName, extremeStress]
     fileNameIn <- paste0("data/cmip6/THI/", j, "_", i, "_", yearSpan, "_", k, ".tif")
-    temp <- rast(fileNameIn))
+    temp <- rast(fileNameIn)
     
     temp[temp < extremeStress] <- NA
     

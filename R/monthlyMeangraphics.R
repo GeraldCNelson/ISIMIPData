@@ -7,7 +7,7 @@ sspChoices <- c("ssp585") #"ssp126",
 startyearChoices <-  c(2001, 2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
 yearRange <- 9
 
-variableChoices <- c( "tasmax", "tasmin", "pr", "hurs") 
+climateVars <- c( "tasmax", "tasmin", "pr", "hurs") 
 varNamesInfo <- as.data.table(read_excel("data-raw/varNamesLookup.xlsx"))
 
 #test values
@@ -25,7 +25,7 @@ startyearChoices_ensemble <-  c(2021, 2051, 2091) # no multimodel results for ob
 # get max values for the legends
 l = 2091
 yearSpan <- paste0(l, "_", l + yearRange)
-for (j in variableChoices) {
+for (j in climateVars) {
   varName <- j
   print(paste0("varname: ", varName))
   fileNameMean <- paste0("data/cmip6/monthlyMean/ensembleMonthMean_", j,  "_",  yearSpan, "_", k, ".tif") 
@@ -52,7 +52,7 @@ for (k in sspChoices) {
   for (l in startyearChoices_ensemble) {
     yearSpan <- paste0(l, "_", l + yearRange)
     print(paste0("ssp choice: ", k, ", start year: ", l))
-    for (j in variableChoices) {
+    for (j in climateVars) {
       varName <- j
       print(paste0("varname: ", varName))
       fileNameMean <- paste0("data/cmip6/monthlyMean/ensembleMonthMean_", j,  "_",  yearSpan, "_", k, ".tif") 
@@ -133,7 +133,7 @@ for (k in sspChoices) {
 yearRange <- 9
 yearSpan <- paste0(l, "_", l + yearRange)
 
-for (j in variableChoices) {
+for (j in climateVars) {
   varName <- j
   varNameLong <- as.character(varNamesInfo[variableShortName %in% varName, variableLongName])
   varNameLongUnits <- as.character(varNamesInfo[variableShortName %in% varName, units])

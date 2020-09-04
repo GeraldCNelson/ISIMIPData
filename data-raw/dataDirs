@@ -6,7 +6,7 @@
 "5","data/cmip6/belowZero"
 "6","data/cmip6/chillingHours"
 "7","data/cmip6/damageTemp"
-"8","data/cmip6/monthMean"
+"8","data/cmip6/monthlyMean"
 "9","data/cmip6/optTempRange"
 "10","data/cmip6/precip_max"
 "11","data/cmip6/precip_zero"

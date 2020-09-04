@@ -6,7 +6,8 @@ source("R/globallyUsed.R")
 
 startyearChoices <-  c(2021, 2051, 2091) #2021, 2051, 2091) # c(2091) # c(2006) #, 2041, 2051, 2081)
 startyearChoices_ensemble <-  c(2021, 2051, 2091) # no multimodel results for observed data
-variableChoices <- c( "tasmax", "tasmin", "pr", "hurs") 
+climateVars <- c( "tasmax", "tasmin", "pr", "hurs", "tave") 
+climateVars <- c(  "pr") 
 
 yearRange <- 9
 sspChoices <- c("ssp585") #"ssp126", 
@@ -16,7 +17,6 @@ modelChoices.lower <- tolower(modelChoices)
 k <- "ssp585"
 l <- 2021
 j <- "pr"
-
 
 # varList <- c("modelChoices", "thiList",  "startyearChoices_ensemble", "sspChoices", "tmpDirName")
 # libList <- c("rast", "data.table")
@@ -39,20 +39,21 @@ for (k in sspChoices) {
     yearSpan <- paste0(l, "_", l + yearRange)
     print(paste0("ssp choice: ", k, ", start year: ", l, ", pid number: ", Sys.getpid()))
     
-    for (j in variableChoices) {
+    for (j in climateVars) {
       
       # make a list of SpatRasters
       x <- lapply(modelChoices.lower, readRast)
       r <- rast(x)
       system.time(r.mean <- tapp(r, 1:12, fun = mean))
+      names(r.mean) <- month.abb
       print(paste0("climate var.: ", j, ", start year: ", l,  ", pid number: ", Sys.getpid()))
       print(r.mean)
-      if (j %in% c("tasmin", "tasmax")) {
+      if (j %in% c("tasmin", "tasmax", "tave")) {
         rKel <- r + 273.15 # convert temp to Kelvin for cv calc on temps
         system.time(r.cv <- tapp(rKel, 1:12, fun = raster::cv))
       }
       if (j %in% "pr") {
-       rPrecip <- r + 10
+       rPrecip <- r + 100 # add 10 for cv calc on rain
         system.time(r.cv <- tapp(rPrecip, 1:12, fun = raster::cv))
       }
       if (j %in% "hurs") {
@@ -64,16 +65,6 @@ for (k in sspChoices) {
       # system.time(r.sd <- tapp(r, 1:12, fun = sd))
       # print(r.sd)
        names(r.mean) <- names(r.cv) <-month.abb
-
-      
-      
-      # # approach 2
-      # startTime <- Sys.time()
-      # rs <- rstk(x)
-      # rs.mean2 <- lapp(rs, fun = terra::mean)
-      # rs.cv2 <- lapp(rs, fun = raster::cv)
-      # endTime <- Sys.time()
-      # endTime - startTime
       
       # print(paste0( "Done setting doing raster indices for rasterList stack for species: ", speciesName, ", start year: ", l))
       # rasterList.mean <- tapp(rasterList, index, fun = mean)
@@ -83,7 +74,7 @@ for (k in sspChoices) {
       # print(paste0( "Done updating raster names with month.abb for species: ", speciesName, ", start year: ", l))
       fileNameMean <- paste0("data/cmip6/monthlyMean/ensembleMonthlyMean_", j,  "_",  yearSpan, "_", k, ".tif") 
       fileNameCV <- paste0("data/cmip6/monthlyMean/ensembleMonthlyCV_", j,  "_",  yearSpan, "_", k, ".tif")
-      fileNameSD <- paste0("data/cmip6/monthlyMean/ensembleMonthlySD_", j,  "_",  yearSpan, "_", k, ".tif")
+ #     fileNameSD <- paste0("data/cmip6/monthlyMean/ensembleMonthlySD_", j,  "_",  yearSpan, "_", k, ".tif")
       writeRaster(r.mean, filename = fileNameMean, format = "GTiff", overwrite = TRUE, wopt=list(gdal="COMPRESS=LZW"))
       writeRaster(r.cv, filename = fileNameCV, format = "GTiff", overwrite = TRUE, wopt=list(gdal="COMPRESS=LZW"))
 #      writeRaster(r.sd, filename = fileNameSD, format = "GTiff", overwrite = TRUE, wopt=list(gdal="COMPRESS=LZW"))

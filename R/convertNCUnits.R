@@ -6,7 +6,6 @@ library(terra)
 woptList <- list(gdal=c("COMPRESS=LZW"))
 
 dirList <- c("GFDL-ESM4", "IPSL-CM6A-LR", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL")
-dirList <- c("GFDL-ESM4")
 #dirs.needed <- paste0("data-raw/ISIMIP/cmip6/unitsCorrected/ssp585/", dirList)
 dirs.needed <- paste0("/Volumes/PassportMac/ISIMIP/cmip6/unitsCorrectedMean/ssp126/", dirList)
 existingDirs <- list.dirs("/Volumes/PassportMac/ISIMIP/cmip6/unitsCorrectedMean/ssp126/")
@@ -15,8 +14,8 @@ for (i in missingDirs) dir.create(i, recursive = TRUE)
 
 #filesInDir <- list.files("data-raw/ISIMIP/cmip6/original/ssp585", full.names = TRUE, recursive = TRUE)
 #filesInDir <- list.files("/Volumes/PassportMac/ISIMIP/cmip6/ssp585", full.names = TRUE, recursive = TRUE)
-filesInDir <- list.files("/Volumes/PassportMac/ISIMIP/cmip6/ssp126", full.names = TRUE, recursive = TRUE)
-# filesInDir <- list.files("/Volumes/PassportMac/ISIMIP/cmip6/ssp126", full.names = TRUE, recursive = TRUE)
+filesInDir <- list.files("/Volumes/PassportMac/ISIMIP/cmip6/ssp585", full.names = TRUE, recursive = TRUE)
+ filesInDir <- list.files("/Volumes/PassportMac/ISIMIP/cmip6/ssp126", full.names = TRUE, recursive = TRUE)
 filesInDir <- gsub("//", "/", filesInDir)
 renameFile <- function(inNCfile){
   inNCfile <- gsub("r1i1p1f1_w5e5_", "", inNCfile, fixed = TRUE)
@@ -26,8 +25,8 @@ renameFile <- function(inNCfile){
   return(outfile)
 }
 
-varsToKeep <- c("_tasmax_", "_tasmin_", "_pr_", "_hurs_")
-varsToKeep <- c( "_hurs_")
+varsToKeep <- c("_tasmax_", "_tasmin_", "_pr_", "_hurs_", "_rsds_", "_sfcwind_")
+varsToKeep <- c( "_sfcwind_")
 
 #filestoKeep <- data.table(v1 = character())
 for (i in varsToKeep) {
@@ -87,7 +86,7 @@ for (i in varsToKeep) {
       # }
     }
   }
-  if (i %in% "_hurs_") {
+  if (i %in% c("_hurs_","_rsds_", "_sfcwind_")) {
     for (j in 1:length(filestoKeep)) {
       inFile <- filestoKeep[j]
       startYear <- substr(inFile, (nchar(inFile))-11 ,nchar(inFile)-8)
@@ -103,7 +102,7 @@ for (i in varsToKeep) {
       indices <- format(as.Date(indices, format = "X%Y-%m-%d"), format = "%m") # %n is month of the year
       indices <- as.numeric(indices)
       system.time(rastIn_mean <- tapp(rastIn, indices, fun = mean))
-      
+      print(paste0("outfile name: ", outFile))
       print(system.time(writeRaster(rastIn_mean, outFile, overwrite = TRUE, format = "GTiff", wopt= woptList))); flush.console()
     }
   }
@@ -117,7 +116,7 @@ test3 <- c(test, test2)
 
 # Now do the observed data
 
-filesInDir <- list.files("data-raw/ISIMIP/cmip6/observed", full.names = TRUE, recursive = TRUE)
+filesInDir <- list.files("/Volumes/PassportMac/ISIMIP/cmip6/observed", full.names = TRUE, recursive = TRUE)
 filesInDir <- gsub("//", "/", filesInDir)
 
 renameFileObserved <- function(inNCfile){
@@ -190,7 +189,7 @@ for (i in varsToKeep) {
     }
   }
   
-  if (i %in% c("_hurs_")) {
+  if (i %in% c("_hurs_", "_rsds_", "_sfcwind_")) {
     for (j in 1:length(filestoKeep)) {
       inFile <- filestoKeep[j]
       startYear <- substr(inFile, (nchar(inFile))-11 ,nchar(inFile)-8)
@@ -208,6 +207,8 @@ for (i in varsToKeep) {
       
       system.time(rastIn_mean <- tapp(rastIn, indices, fun = mean))
       print(system.time(rastOut <- rastIn)); flush.console()
+      print(paste0("outfile name: ", outFile))
+      
       print(system.time(writeRaster(rastOut, outFile,  overwrite = TRUE, wopt= woptList))); flush.console()
     }
   }

@@ -45,6 +45,8 @@ for (j in 1:length(thiListReduced)) {
   g <- levelplot(countsIn, main = titleText, col.regions = col.l, at = myat, par.settings = mapTheme, 
                  colorkey = list(at = myat, col = col.l),
                  xlab = "", ylab = "", scales  = list(x = list(draw = FALSE), y = list(draw = FALSE)))
+  g$legend$top <- g$legend$right <-  NULL # get rid of the graphs above and to the right of a single layer levelplot
+  
   g <- g + latticeExtra::layer(sp.polygons(coastsCoarse.Rob, col = "black", lwd = 0.5))
   plotFileName <- paste0("graphics/cmip6/THI/counts_",  speciesName, ".jpg")
   print(paste0("plot file name: ", plotFileName))
@@ -84,7 +86,7 @@ for (k in sspChoices) {
       mapTheme <- rasterTheme(region = col.l)  
       mapTheme$panel.background$col = 'white' 
       myat <- c(zeroLevel, noStress, moderateStress, extremeStress, 100)
- #     writeRaster(meanData, filename ="temp.tif", format = "GTiff", overwrite = TRUE, wopt=list(gdal="COMPRESS=LZW")) )
+     writeRaster(meanData, filename ="temp.tif", format = "GTiff", overwrite = TRUE, wopt=list(gdal="COMPRESS=LZW")) 
       meanData <- raster::brick(meanData)
 #      meanData <- as(meanData, "Raster")
       # meanDataR <- as(meanData, "rasterBrick")
@@ -96,7 +98,7 @@ for (k in sspChoices) {
       g <- g + latticeExtra::layer(sp.polygons(coastsCoarse.Rob, col = "black", lwd = 0.5))
       plotFileName <- paste0("graphics/cmip6/THI/THI_ensembleMean_masked_",  speciesName, "_",  yearSpan, "_", k, ".jpg")
       print(paste0("plot file name: ", plotFileName, " for species ", speciesName))
-      jpeg(plotFileName, width = 8, height = 8, quality = 100, units = "in", res = 300)
+      jpeg(plotFileName, width = 6, height = 6, quality = 100, units = "in", res = 300)
       print(g)
       dev.off()
       
@@ -110,7 +112,7 @@ for (k in sspChoices) {
       
       g <- g + latticeExtra::layer(sp.polygons(coastsCoarse.Rob, col = "black", lwd = 0.5))
       plotFileName <- paste0("graphics/cmip6/THI/THI_ensembleCV_masked_",   speciesName, "_",  yearSpan, "_", k, ".jpg")
-      jpeg(plotFileName, width = 8, height = 8, quality = 100, units = "in", res = 300)
+      jpeg(plotFileName, width = 6, height = 6, quality = 100, units = "in", res = 300)
       print(g)
       dev.off()
     }
@@ -119,6 +121,7 @@ for (k in sspChoices) {
 
 # do observed data
 yearRange <- 9
+l <- 2001
 yearSpan <- paste0(l, "_", l + yearRange)
 
 for (j in 1:length(thiListReduced)) {  
@@ -149,7 +152,7 @@ for (j in 1:length(thiListReduced)) {
   g <- g + latticeExtra::layer(sp.polygons(coastsCoarse.Rob, col = "black", lwd = 0.5))
   plotFileName <- paste0("graphics/cmip6/THI/masked_",  speciesName, "_observed_",  yearSpan, ".jpg")
   print(paste0("plot file name: ", plotFileName, " for species ", speciesName))
-  jpeg(plotFileName, width = 8, height = 8, quality = 100, units = "in", res = 300)
+  jpeg(plotFileName, width = 6, height = 6, quality = 100, units = "in", res = 300)
   print(g)
   dev.off()
 }

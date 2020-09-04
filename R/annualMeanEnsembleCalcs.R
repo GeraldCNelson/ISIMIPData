@@ -6,7 +6,7 @@ source("R/globallyUsed.R")
 
 startyearChoices <-  c(2021, 2051, 2091) #2021, 2051, 2091) # c(2091) # c(2006) #, 2041, 2051, 2081)
 startyearChoices_ensemble <-  c(2021, 2051, 2091) # no multimodel results for observed data
-variableChoices <- c( "tasmax", "tasmin", "tave", "pr", "hurs") 
+climateVars <- c( "tasmax", "tasmin", "tave", "pr", "hurs") 
 
 yearRange <- 9
 sspChoices <- c("ssp585") #"ssp126", 
@@ -43,7 +43,7 @@ for (k in sspChoices) {
     yearSpan <- paste0(l, "_", l + yearRange)
     print(paste0("ssp choice: ", k, ", start year: ", l, ", pid number: ", Sys.getpid()))
     
-    for (j in variableChoices) {
+    for (j in climateVars) {
       
       # make a list of SpatRasters
       x <- lapply(modelChoices.lower, readRast)
@@ -111,7 +111,7 @@ for (k in sspChoices) {
 l <- 2001
 yearSpan <- paste0(l, "_", l + yearRange)
 
-for (j in variableChoices) {
+for (j in climateVars) {
   fileNameIn <- paste0("data/cmip6/annualMean/annualMean_", j, "_", "observed",  "_", yearSpan, ".tif")
   r <- rast(fileNameIn)
   r <- 

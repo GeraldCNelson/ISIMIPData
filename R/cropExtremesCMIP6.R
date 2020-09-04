@@ -6,7 +6,7 @@ library(stringr)
 
 sspChoices <- c("ssp585") #"ssp126", 
 modelChoices <- c( "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL"
-variableChoices <- c("tasmax", "tasmin", "pr") # "tasmax", "pr" "tasmin"
+climateVars <- c("tasmax", "tasmin", "pr") # "tasmax", "pr" "tasmin"
 locOfFiles <- locOfCMIP6ncFiles
 locOfFiles <- "data-raw/ISIMIP/cmip6/unitsCorrected"
 
@@ -32,7 +32,7 @@ cl <- clusterSetup(varList, libList, useCores) # function created in globallyUse
 
 foreach(l = startyearChoices) %:%
   foreach(i = modelChoices) %:%
-  #  foreach(j = variableChoices) %:%
+  #  foreach(j = climateVars) %:%
   foreach(k = sspChoices) %dopar% {
     
     modelName.lower <- tolower(i)

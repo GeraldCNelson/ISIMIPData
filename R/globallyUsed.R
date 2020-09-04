@@ -44,6 +44,10 @@ if (get_os() %in% "osx") {
 RobinsonProj <-  "+proj=robin +lon_0=0 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs"
 crsRob <- RobinsonProj
 crslatlong <- "+proj=longlat +datum=WGS84 +no_defs"
+
+varNamesInfo <- as.data.table(read_excel("data-raw/varNamesLookup.xlsx"))
+
+
 # starttime <- Sys.time()
 # tmin_clamped <- clamp(tmin, lower = Tbase_barley, upper = Tbase_max_barley, Values = TRUE)
 # endtime <- Sys.time()
@@ -81,7 +85,7 @@ wrld_land@bbox <- bbox(rbind(c(-180, -90), c(180, 90)))
 # rcpChoices <- c("rcp45", "rcp85") 
 # modelChoices <- c("HadGEM2-ES", "GFDL-ESM2M",  "MIROC5", "IPSL-CM5A-LR", "modMean")
 # modelChoices_short <- unlist(lapply(strsplit(modelChoices, "-"), `[[`, 1))
-# variableChoices <- c( "hurs_day", "tasmin_day", "tasmax_day")
+# climateVars <- c( "hurs_day", "tasmin_day", "tasmax_day")
 # spatialCoverageChoices <- "landonly"
 # startday <- "0101"
 # endday <- "1231"
@@ -115,10 +119,10 @@ get_os <- function() {
 # }
 
 
-for (j in c("dataDirs.csv", "graphicsDirs.csv")) {
-  dirList <- read.csv(paste0("data-raw/", j), header = FALSE)
+for (q in c("dataDirs.csv", "graphicsDirs.csv")) {
+  dirList <- read.csv(paste0("data-raw/", q), header = FALSE)
   temp <- as.character(dirList$V1)
-  for (i in 1:length(temp)) if (!dir.exists(temp[i])) dir.create(temp[i])
+  for (r in 1:length(temp)) if (!dir.exists(temp[r])) dir.create(temp[r])
 }
 
 # paths to manage large data sets across machines. I don't think this is needed anymore
@@ -241,13 +245,14 @@ hurs.observed <- paste0(locOfCMIP6ncFiles,   "observed/gswp3-w5e5_obsclim_hurs_g
 tasmax.observed <- paste0(locOfCMIP6ncFiles, "observed/gswp3-w5e5_obsclim_tasmax_global_daily_2001_2010.tif")
 tasmin.observed <- paste0(locOfCMIP6ncFiles, "observed/gswp3-w5e5_obsclim_tasmin_global_daily_2001_2010.tif")
 pr.observed <- paste0(locOfCMIP6ncFiles, "observed/gswp3-w5e5_obsclim_pr_global_daily_2001_2010.tif")
-observedlist <- c("hurs", "tasmax", "tasmin", "pr")
+tave.observed <- paste0(locOfCMIP6ncFiles, "observed/gswp3-w5e5_obsclim_tave_global_daily_2001_2010.tif")
+observedlist <- c("hurs", "tasmax", "tasmin", "pr", "tave")
 
 # note that these don't have the path to the file
 rh.observed.cmip5 <- c("hurs_ewembi1_daily_1991_2000.tif", "hurs_ewembi1_daily_2001_2010.tif")
 tmax.observed.cmip5 <- c("tasmax_ewembi1_daily_1991_2000.tif", "tasmax_ewembi1_daily_2001_2010.tif") 
 tmin.observed.cmip5 <- c("tasmin_ewembi1_daily_1991_2000.tif", "tasmin_ewembi1_daily_2001_2010.tif")
-observedlist <- c("rh.observed.cmip5", "tmax.observed.cmip5", "tmin.observed.cmip5")
+observedlist.cmip5 <- c("rh.observed.cmip5", "tmax.observed.cmip5", "tmin.observed.cmip5")
 
 ##' To check if files (incl. directories) are symbolic links:
 is.symlink <- function(paths) isTRUE(nzchar(Sys.readlink(paths), keepNA = TRUE))
@@ -392,27 +397,29 @@ tmaxTminIn <- function(tmaxIn, tminIn) {
 # }
 
 loadSpatialData <- function(dataVar) {
+  print(dataVar)
   require(sf)
-  if(!exists(dataVar))
+  #  browser()
+  
     switch(dataVar,
            world = {outvar <- st_read("data-raw/regioninformation/ne_10m_admin_1_states_provinces/ne_10m_admin_1_states_provinces.shp")},
            lakes = {outvar <- st_read("data-raw/regioninformation/lakes10.shp")},
-           rivers = {outvar <- st_read("data-raw/regioninformation/rivers10.shp")},
-           roads = {outvar <- st_read("data-raw/regioninformation/roads10.shp")},
+ #          roads = {outvar <- st_read("data-raw/regioninformation/roads10.shp")},
+           roads = {outvar <- st_read("data-raw/regioninformation/ne_10m_roads/ne_10m_roads.shp")},
            cities = {outvar <- st_read("data-raw/regioninformation/cities10.shp")},
            populatedAreas = {outvar <- st_read("data-raw/regioninformation/ne_10m_populated_places/ne_10m_populated_places.shp")},
-#           urbanAreas = {outvar <- st_read("data-raw/regioninformation/ne_10m_urban_areas/ne_10m_urban_areas.shp") },
+           #           urbanAreas = {outvar <- st_read("data-raw/regioninformation/ne_10m_urban_areas/ne_10m_urban_areas.shp") },
            protectedAreas2 = {outvar <- st_read("data-raw/regioninformation/WDPA_Aug2020-shapefile/WDPA_Aug2020-shapefile2/WDPA_Aug2020-shapefile-polygons.shp")},
            protectedAreas1 = {outvar <- st_read("data-raw/regioninformation/WDPA_Aug2020-shapefile/WDPA_Aug2020-shapefile1/WDPA_Aug2020-shapefile-polygons.shp")},
            protectedAreas0 = {outvar <- st_read("data-raw/regioninformation/WDPA_Aug2020-shapefile/WDPA_Aug2020-shapefile0/WDPA_Aug2020-shapefile-polygons.shp")},
-           
+           rivers = {outvar <- st_read("data-raw/regioninformation/rivers10.shp")}
     )
-  return(outvar)
+    return(outvar)
 }
 
 createRegionSpatialData <- function(dataVar, regionBox) { # needs to be run after loadSpatialData
   require(sf)
-  if (!exists("regionBox")) stop("regionBox is missing")
+  if (exists("regionBox")) {
     switch(dataVar,
            world =          {outvar <- st_crop(world, regionBox)},
            lakes =          {outvar <- st_crop(lakes, regionBox)},
@@ -427,4 +434,5 @@ createRegionSpatialData <- function(dataVar, regionBox) { # needs to be run afte
            
     )
     return(outvar)
+  } else {stop("regionbox doesn't exist")}
 }

@@ -7,8 +7,8 @@ sspChoices <- c("ssp585") #"ssp126",
 startyearChoices <-  c(2001, 2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
 yearRange <- 9
 
-variableChoices <- c( "tasmax", "tasmin", "tave", "pr", "hurs") 
-#variableChoices <- c( "tave") 
+climateVars <- c( "tasmax", "tasmin", "tave", "pr", "hurs") 
+#climateVars <- c( "tave") 
 varNamesInfo <- as.data.table(read_excel("data-raw/varNamesLookup.xlsx"))
 
 #test value
@@ -18,30 +18,29 @@ jpgHeight = 8
 jpgWidth = 8
 
 # ensemble graphics
-# apply masks, can only do this to animals we have in THIlist and that have area mask raster
 startyearChoices_ensemble <-  c(2021, 2051, 2091) # no multimodel results for observed data
-# get max values for the legends
-l = 2091
-yearSpan <- paste0(l, "_", l + yearRange)
-for (j in variableChoices) {
+# get max and min values for the legends
+
+for (j in climateVars) {
   varName <- j
   print(paste0("varname: ", varName))
-  fileNameMean <- paste0("data/cmip6/annualMean/ensembleAnnualMean_", j,  "_",  yearSpan, "_", k, ".tif") 
-  fileNameCV <- paste0("data/cmip6/annualMean/ensembleAnnualCV_", j,  "_",  yearSpan, "_", k, ".tif")
-#  fileNameSD <- paste0("data/cmip6/annualMean/ensembleAnnualSD_", j,  "_",  yearSpan, "_", k, ".tif")
-  meanData <- rast(fileNameMean)
-  CVData <- rast(fileNameCV)
- # SDData <- rast(fileNameSD)
+  meanData <- c()
+  CVData <- c()
+  for (l in startyearChoices_ensemble) { # note that this code results in 3 layers (the number of years in startyearChoices_ensemble)
+    yearSpan <- paste0(startyearChoices_ensemble, "_", startyearChoices_ensemble + yearRange)
+    meanData <- rast(paste0("data/cmip6/annualMean/ensembleAnnualMean_", j,  "_",  yearSpan, "_", k, ".tif"))
+    CVData <- rast(paste0("data/cmip6/annualMean/ensembleAnnualCV_", j,  "_",  yearSpan, "_", k, ".tif"))
+  }
   maxVal_mean <- max(minmax(meanData))
-  maxVal_mean <- round(maxVal_mean)
+  maxVal_mean <- ceiling(maxVal_mean)
   minVal_mean <- min(minmax(meanData))
-  minVal_mean <- round(minVal_mean)
+  minVal_mean <- floor(minVal_mean)
   assign(paste0("maxVal_mean_", j), maxVal_mean)
   assign(paste0("minVal_mean_", j), minVal_mean)
   maxVal_CV <- max(minmax(CVData))
-  maxVal_CV <- round(maxVal_CV)
+  maxVal_CV <- ceiling(maxVal_CV)
   minVal_CV <- min(minmax(CVData))
-  minVal_CV <- round(minVal_CV)
+  minVal_CV <- floor(minVal_CV)
   assign(paste0("maxVal_CV_", j), maxVal_CV)
   assign(paste0("minVal_CV_", j), minVal_CV)
 }
@@ -55,7 +54,7 @@ for (k in sspChoices) {
   for (l in startyearChoices_ensemble) {
     yearSpan <- paste0(l, "_", l + yearRange)
     print(paste0("ssp choice: ", k, ", start year: ", l))
-    for (j in variableChoices) {
+    for (j in climateVars) {
       varName <- j
       print(paste0("varname: ", varName))
       fileNameMean <- paste0("data/cmip6/annualMean/ensembleAnnualMean_", j,  "_",  yearSpan, "_", k, ".tif") 
@@ -133,7 +132,7 @@ yearRange <- 9
 l = 2001
 yearSpan <- paste0(l, "_", l + yearRange)
 
-for (j in variableChoices) {
+for (j in climateVars) {
   varName <- j
   varNameLong <- as.character(varNamesInfo[variableShortName %in% varName, variableLongName])
   varNameLongUnits <- as.character(varNamesInfo[variableShortName %in% varName, units])

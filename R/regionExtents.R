@@ -344,7 +344,7 @@ for (k in sspChoices) {
         
         print(g)
         outFilename <- paste0("graphics/cmip6/regionInfo/", regionInfoLookup[i, region], ".png")
-        ggsave(outFilename, plot = last_plot(), device = "png")
+        ggsave(outFilename, plot = last_plot(), device = "png", overwrite = TRUE)
         # ggsave("map_web.png", width = 6, height = 6, dpi = "screen")
       }
       
