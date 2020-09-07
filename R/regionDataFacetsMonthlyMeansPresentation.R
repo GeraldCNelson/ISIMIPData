@@ -18,9 +18,10 @@ k <- "ssp585"
 l <- 2091
 j <- "tave"
 
-regionInfoLookup <- as.data.table(read_excel("data-raw/regionInformation/regionInfoLookup.xlsx", range = "A1:k7"))
-# regionInfoLookup <- as.data.table(read_excel("data-raw/regionInformation/regionInfoLookupCSVs.xlsx", range = "F7:P43")) # climate smart villages
-# regionInfoLookup <- as.data.table(read_excel("data-raw/regionInformation/regionInfoPerennialCrops.xlsx",range = "A1:K9")) #perennial crop author locations
+#regionInfoLookup <- as.data.table(read_excel("data-raw/regionInformation/regionInfoLookup.xlsx", range = "A1:k7"))
+regionInfoLookup <- as.data.table(read_excel("data-raw/regionInformation/wg2ch5Locations.xlsx", range = "a1:k16")) # climate smart villages
+#regionInfoLookup <- as.data.table(read_excel("data-raw/regionInformation/regionInfoLookupCSVs.xlsx",range = "F7:P43")) #perennial crop author locations
+# regionInfoLookup <- as.data.table(read_excel("data-raw/regionInformation/PerennialCrops.xlsx",range = "A1:K6")) #perennial crop author locations
 
 regionInfoLookup[, ctyRegion := paste0("\n", region, ", " , country)]
 

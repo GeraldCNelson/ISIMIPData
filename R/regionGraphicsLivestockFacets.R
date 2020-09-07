@@ -27,8 +27,10 @@ pal <- colorRampPalette(c("green","red"))
 extentRange <- 2 # a value of 2 means 2 of the units of the raster; if it is 1/2 degree cells, this would be 1 degree
 fileLoc_monthlyMean <- "data/cmip6/monthlyMean/"
 
-regionInfoLookup <- as.data.table(read_excel("data-raw/regionInformation/regionInfoLookup.xlsx", range = "A1:k7"))
-#regionInfoLookup <- as.data.table(read_excel("data-raw/regionInformation/CSVs2016_geocoordinates.xlsx", range = "F7:J47"))
+#regionInfoLookup <- as.data.table(read_excel("data-raw/regionInformation/regionInfoLookup.xlsx", range = "A1:k7"))
+regionInfoLookup <- as.data.table(read_excel("data-raw/regionInformation/wg2ch5Locations.xlsx", range = "a1:k16")) # climate smart villages
+#regionInfoLookup <- as.data.table(read_excel("data-raw/regionInformation/regionInfoLookupCSVs.xlsx",range = "F7:P43")) #perennial crop author locations
+# regionInfoLookup <- as.data.table(read_excel("data-raw/regionInformation/PerennialCrops.xlsx",range = "A1:K6")) #perennial crop author locations
 regionInfoLookup[, ctyRegion := paste0("\n", region, ", " , country)]
 
 world <- loadSpatialData("world")
@@ -45,9 +47,13 @@ for (j in thiListReduced) {
   speciesName <- gsub("thi.", "", j)
   for (k in sspChoices) {
     for (i in 1:nrow(regionInfoLookup)) {
+      gc()
+      
       region <- regionInfoLookup[i, region]
       country <- regionInfoLookup[i, country]
       iso3Code <- regionInfoLookup[i, ISO3]
+      print(system.time(adminRegions <- readRDS(paste0("data-raw/regionInformation/regionsISO3/ISO3_", iso3Code, "1.RDS"))))
+      adminRegions <- st_as_sf(adminRegions)
       locLat <- regionInfoLookup[i, latitude]
       locLong <- regionInfoLookup[i, longitude]
       bb <- c(regionInfoLookup[i, ll.lat], regionInfoLookup[i, ll.lon], regionInfoLookup[i, ur.lat], regionInfoLookup[i, ur.lon])  
@@ -56,17 +62,20 @@ for (j in thiListReduced) {
       regionExt <- ext(c(xlim, ylim))
       regionBox <- c(xmin = regionInfoLookup[i, ll.lon], ymin = regionInfoLookup[i, ll.lat], xmax = regionInfoLookup[i, ur.lon], ymax = regionInfoLookup[i, ur.lat])
       
-      pa0 <- protectedAreas0[protectedAreas0$PARENT_ISO == iso3Code,]
-      pa1 <- protectedAreas1[protectedAreas1$PARENT_ISO == iso3Code,]
-      pa2 <- protectedAreas2[protectedAreas2$PARENT_ISO == iso3Code,]
+      # pa0 <- protectedAreas0[protectedAreas0$PARENT_ISO == iso3Code,]
+      # pa1 <- protectedAreas1[protectedAreas1$PARENT_ISO == iso3Code,]
+      # pa2 <- protectedAreas2[protectedAreas2$PARENT_ISO == iso3Code,]
       #     world_region <- world[world$sov_a3 == iso3Code,]
+      
       world_region <- createRegionSpatialData("world", regionBox)
       lakes_region <- createRegionSpatialData("lakes", regionBox)
       rivers_region <- createRegionSpatialData("rivers", regionBox)
       roads_region <- createRegionSpatialData("roads", regionBox)
       # cities_region <- createRegionSpatialData("cities", regionBox)
+      print(system.time(adminRegions_region <- st_crop(adminRegions, regionBox)))
       populatedAreas_region <- createRegionSpatialData("populatedAreas", regionBox)
       # urbanAreas_region <- createRegionSpatialData("urbanAreas", regionBox)
+      
       
       # code to get min and max values across all periods
       meanData <- c()
@@ -77,12 +86,13 @@ for (j in thiListReduced) {
       }
       
       climVar_crop <- crop(meanData, regionExt)
+      climVar_crop[is.nan(climVar_crop)] <- NA
       climVarMin <- min(global(climVar_crop, fun = "min", na.rm = TRUE))
       climVarMax <- max(global(climVar_crop, fun = "max", na.rm = TRUE))
       climVarMax <- ceiling(climVarMax)
       climVarMin <- floor(climVarMin)
-      
-      custom_bins <- round(seq.int(from = climVarMin, to = climVarMax, length = 6))
+      nbins <- 7
+      custom_bins <- round(seq.int(from = climVarMin, to = climVarMax, length = nbins))
       
       # from https://stackoverflow.com/questions/37376398/how-to-create-an-empty-datatable-with-columns-names-and-then-append-datatables-t
       #      dataHolder <- data.table(1)[,`:=`(c(j, "yearSpan", "x", "y", month.abb),NA)][,V1:=NULL][.0]
@@ -170,7 +180,7 @@ for (j in thiListReduced) {
         print(g)
         dev.off()
         outFilename <- paste0("graphics/cmip6/regionInfo/", j,"MonthlyAve_", k, "_", yearSpan, "_", regionInfoLookup[i, region], ".png", overwrite = TRUE)
-        ggsave(outFilename, plot = last_plot(), device = "png", width = 6, height = 6)
+        ggsave(outFilename, plot = g, device = "png", width = 6, height = 6)
         # ggsave("map_web.png", width = 6, height = 6, dpi = "screen")
         outFilename_csv <- paste0("data/regionResults/monthlyFacet_", j, "_", regionInfoLookup[i, region], "_", k, "_", yearSpan, ".csv")
         print(paste0("writing out ", outFilename_csv))
