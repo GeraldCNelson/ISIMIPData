@@ -20,7 +20,7 @@ for (k in sspChoices) {
         
         if (!paste0(fileNameOut_monthlyMean) %in% monthlyMeanCompleted) {
           
-          #       print(paste0("working on start year: ", l, " variable: ", j, " ssp choice: ", k, " model: ",   " start time: ", Sys.time()))
+          #       print(paste0("working on start year: ", l, ", variable: ", j, ", ssp choice: ", k, ", model: ",   ", start time: ", Sys.time()))
           layerNames <- readRDS(paste0("data-raw/ISIMIP/ISIMIPLayerNames_", yearSpan, ".RDS"))
           fileNameIn <- paste(modelName.lower, k, j, "global_daily", yearSpan, sep = "_")
           fileNameIn <- paste0(fileNameIn, ".nc")

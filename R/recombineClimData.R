@@ -11,9 +11,11 @@ sspChoice <- c("ssp126") #"ssp126", "ssp585"
 varsToCombine <- c("tasmax", "tasmin", "pr", "hurs")
 varsToCombine <- c("rsds", "sfcwind")
 # filesInDir <- list.files("/Volumes/PassportMac/ISIMIP/cmip6/", full.names = TRUE, recursive = TRUE)
-startYearChoices <- c(2031, 2071)
+#startYearChoices <- c(2031, 2071)
+startYearChoices <- c(2031, 2081)
 yearRangeOld <- 9
-yearRangeNew <- 29
+#yearRangeNew <- 29
+yearRangeNew <- 19
 woptList <- list(gdal=c("COMPRESS=LZW"))
 
 #testvalues

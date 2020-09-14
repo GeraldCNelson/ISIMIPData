@@ -126,10 +126,11 @@ for (q in c("dataDirs.csv", "graphicsDirs.csv")) {
 }
 
 # paths to manage large data sets across machines. I don't think this is needed anymore
-# if (get_os() %in% "osx") locOfCMIP6ncFiles <- "/Volumes/ExtremeSSD/ISIMIP/cmip6/"
-# if (get_os() %in% c("Linux", "linux")) locOfCMIP6ncFiles <- "data-raw/ISIMIP/cmip6/"
-locOfCMIP6ncFiles <- "data-raw/ISIMIP/cmip6/unitsCorrected/"
-tmpDirName <- paste0(locOfCMIP6ncFiles, "rasterTmp", Sys.getpid(), "/")
+# if (get_os() %in% "osx") locOfCMIP6tifFiles <- "/Volumes/ExtremeSSD/ISIMIP/cmip6/"
+# if (get_os() %in% c("Linux", "linux")) locOfCMIP6tifFiles <- "data-raw/ISIMIP/cmip6/"
+#locOfCMIP6tifFiles <- "data-raw/ISIMIP/cmip6/unitsCorrected/"
+locOfCMIP6tifFiles <- "/Volumes/ExtremeSSD2/climate_land_only/unitsCorrected/"
+tmpDirName <- paste0(locOfCMIP6tifFiles, "rasterTmp", Sys.getpid(), "/")
 
 # gdal_polygonizeR <- function(x, outshape=NULL, gdalformat = 'ESRI Shapefile',
 #                              pypath=NULL, readpoly=TRUE, quiet=TRUE) {
@@ -241,11 +242,11 @@ clusterSetup <- function(varList, libList, useCores) {
 
 # observed data names and locations
 
-hurs.observed <- paste0(locOfCMIP6ncFiles,   "observed/gswp3-w5e5_obsclim_hurs_global_daily_2001_2010.tif")
-tasmax.observed <- paste0(locOfCMIP6ncFiles, "observed/gswp3-w5e5_obsclim_tasmax_global_daily_2001_2010.tif")
-tasmin.observed <- paste0(locOfCMIP6ncFiles, "observed/gswp3-w5e5_obsclim_tasmin_global_daily_2001_2010.tif")
-pr.observed <- paste0(locOfCMIP6ncFiles, "observed/gswp3-w5e5_obsclim_pr_global_daily_2001_2010.tif")
-tave.observed <- paste0(locOfCMIP6ncFiles, "observed/gswp3-w5e5_obsclim_tave_global_daily_2001_2010.tif")
+hurs.observed <- paste0(locOfCMIP6tifFiles,   "observed/gswp3-w5e5_obsclim_hurs_global_daily_2001_2010.tif")
+tasmax.observed <- paste0(locOfCMIP6tifFiles, "observed/gswp3-w5e5_obsclim_tasmax_global_daily_2001_2010.tif")
+tasmin.observed <- paste0(locOfCMIP6tifFiles, "observed/gswp3-w5e5_obsclim_tasmin_global_daily_2001_2010.tif")
+pr.observed <- paste0(locOfCMIP6tifFiles, "observed/gswp3-w5e5_obsclim_pr_global_daily_2001_2010.tif")
+tave.observed <- paste0(locOfCMIP6tifFiles, "observed/gswp3-w5e5_obsclim_tave_global_daily_2001_2010.tif")
 observedlist <- c("hurs", "tasmax", "tasmin", "pr", "tave")
 
 # note that these don't have the path to the file

@@ -25,7 +25,7 @@ regionInfoLookup <- as.data.table(read_excel("data-raw/regionInformation/wg2ch5L
 
 regionInfoLookup[, ctyRegion := paste0("\n", region, ", " , country)]
 
-for (i in 1:(nrow(regionInfoLookup))) {
+for (i in 10:(nrow(regionInfoLookup))) {
   region <- regionInfoLookup[i, region]
   country <- regionInfoLookup[i, country]
   

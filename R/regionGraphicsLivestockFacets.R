@@ -9,6 +9,7 @@ thiList <- c("thi.cattle", "thi.sheep", "thi.goat", "thi.yak", "thi.broiler", "t
 thiListReduced <- thiList[!thiList %in% c("thi.yak", "thi.broiler", "thi.layer")]
 
 varNamesInfo <- as.data.table(read_excel("data-raw/varNamesLookup.xlsx"))
+bpList <- as.data.table(read_excel("data-raw/animals/animalBreakpointslistRaw.xlsx"))
 
 #test vars
 j <- "pr"
@@ -27,20 +28,20 @@ pal <- colorRampPalette(c("green","red"))
 extentRange <- 2 # a value of 2 means 2 of the units of the raster; if it is 1/2 degree cells, this would be 1 degree
 fileLoc_monthlyMean <- "data/cmip6/monthlyMean/"
 
-#regionInfoLookup <- as.data.table(read_excel("data-raw/regionInformation/regionInfoLookup.xlsx", range = "A1:k7"))
-regionInfoLookup <- as.data.table(read_excel("data-raw/regionInformation/wg2ch5Locations.xlsx", range = "a1:k16")) # climate smart villages
+regionInfoLookup <- as.data.table(read_excel("data-raw/regionInformation/regionInfoLookup.xlsx", range = "A1:k7"))
+#regionInfoLookup <- as.data.table(read_excel("data-raw/regionInformation/wg2ch5Locations.xlsx", range = "a1:k16")) # climate smart villages
 #regionInfoLookup <- as.data.table(read_excel("data-raw/regionInformation/regionInfoLookupCSVs.xlsx",range = "F7:P43")) #perennial crop author locations
-# regionInfoLookup <- as.data.table(read_excel("data-raw/regionInformation/PerennialCrops.xlsx",range = "A1:K6")) #perennial crop author locations
+#regionInfoLookup <- as.data.table(read_excel("data-raw/regionInformation/PerennialCrops.xlsx",range = "A1:K6")) #perennial crop author locations
 regionInfoLookup[, ctyRegion := paste0("\n", region, ", " , country)]
 
 world <- loadSpatialData("world")
 lakes <- loadSpatialData("lakes")
 rivers <- loadSpatialData("rivers")
-roads <- loadSpatialData("roads")
-cities <- loadSpatialData("cities")
-protectedAreas0 <- loadSpatialData("protectedAreas0")
-protectedAreas1 <- loadSpatialData("protectedAreas1")
-protectedAreas2 <- loadSpatialData("protectedAreas2")
+#roads <- loadSpatialData("roads")
+#cities <- loadSpatialData("cities")
+# protectedAreas0 <- loadSpatialData("protectedAreas0")
+# protectedAreas1 <- loadSpatialData("protectedAreas1")
+# protectedAreas2 <- loadSpatialData("protectedAreas2")
 populatedAreas <- loadSpatialData("populatedAreas")
 
 for (j in thiListReduced) {
@@ -70,13 +71,18 @@ for (j in thiListReduced) {
       world_region <- createRegionSpatialData("world", regionBox)
       lakes_region <- createRegionSpatialData("lakes", regionBox)
       rivers_region <- createRegionSpatialData("rivers", regionBox)
-      roads_region <- createRegionSpatialData("roads", regionBox)
+      #     roads_region <- createRegionSpatialData("roads", regionBox)
       # cities_region <- createRegionSpatialData("cities", regionBox)
       print(system.time(adminRegions_region <- st_crop(adminRegions, regionBox)))
       populatedAreas_region <- createRegionSpatialData("populatedAreas", regionBox)
       # urbanAreas_region <- createRegionSpatialData("urbanAreas", regionBox)
       
+      zeroLevel <- bpList[species %in% speciesName, zeroLevel]
+      noStress <- bpList[species %in% speciesName, noStress]
+      moderateStress <- bpList[species %in% speciesName, moderateStress]
+      extremeStress <- bpList[species %in% speciesName, extremeStress]
       
+      custom_bins <- c(zeroLevel, noStress, moderateStress, extremeStress, 100)
       # code to get min and max values across all periods
       meanData <- c()
       meanData <- rast(paste0("data/cmip6/THI/THI_masked_", speciesName, "_observed_2001_2010.tif"))
@@ -87,39 +93,56 @@ for (j in thiListReduced) {
       
       climVar_crop <- crop(meanData, regionExt)
       climVar_crop[is.nan(climVar_crop)] <- NA
-      climVarMin <- min(global(climVar_crop, fun = "min", na.rm = TRUE))
-      climVarMax <- max(global(climVar_crop, fun = "max", na.rm = TRUE))
-      climVarMax <- ceiling(climVarMax)
-      climVarMin <- floor(climVarMin)
-      nbins <- 7
-      custom_bins <- round(seq.int(from = climVarMin, to = climVarMax, length = nbins))
+      #  climVarMin <- min(global(climVar_crop, fun = "min", na.rm = TRUE))
+      #  climVarMax <- max(global(climVar_crop, fun = "max", na.rm = TRUE))
+      #  climVarMax <- ceiling(climVarMax)
+      #  climVarMin <- floor(climVarMin)
+      #  nbins <- 7
+      # # custom_bins <- round(seq.int(from = climVarMin, to = climVarMax, length = nbins))
+      
+      legendTitle <- varNamesInfo[variableShortName %in% j, units]
+      unit_category <- "metric" # for the scale bar
+      if (iso3Code == "USA") { 
+        unit_category <- "imperial" # for the scale bar
+        if (j %in% c("tasmax", "tasmin", "tave")) {
+          legendTitle <- "°F"
+          custom_bins <- round(custom_bins * 9/5 + 32)
+          climVarMax <- max(custom_bins)
+          climVarMin <- min(custom_bins)
+        }
+        if (j %in% "pr") {
+          legendTitle <- "in"
+          custom_bins <- round(custom_bins * 0.039370)
+          climVarMax <- max(custom_bins)
+          climVarMin <- min(custom_bins)
+        }
+      }
+      
       
       # from https://stackoverflow.com/questions/37376398/how-to-create-an-empty-datatable-with-columns-names-and-then-append-datatables-t
       #      dataHolder <- data.table(1)[,`:=`(c(j, "yearSpan", "x", "y", month.abb),NA)][,V1:=NULL][.0]
       for (l in startyearChoices) { 
         yearSpan <- paste0(l, "_", l + yearRange)
         if (l == 2001) {
-          r_climVar <- paste0("data/cmip6/THI/THI_ensembleMean_masked_", speciesName, "_observed_2001_2010.tif")
+          r_climVar <- paste0("data/cmip6/THI/THI_masked_", speciesName, "_observed_2001_2010.tif")
         } else {
           r_climVar <- paste0("data/cmip6/THI/THI_ensembleMean_masked_", speciesName, "_", yearSpan,"_", k, ".tif")
         }
         r_climVar <- rast(r_climVar)
+        names(r_climVar) <- month.abb
         
         #        relief <- crop(shadedRelief, regionExt)
-        r_climVar_region <- crop(r_climVar, regionExt)
+        print(system.time(r_climVar_region <- crop(r_climVar, regionExt)))
         r_climVar_region <- as.data.frame(r_climVar_region, xy = TRUE)
-        r_climVar_region[month.abb] <- round(r_climVar_region[month.abb], 2)
+        r_climVar_region[month.abb] <- round(r_climVar_region[all_of(month.abb)], 2) 
         r_climVar_region$yearSpan <- yearSpan
         r_climVar_region$climVar <- j
-        colorder_df <- c("climVar", "yearSpan", "x", "y", month.abb)
+        colorder_df <- c("climVar", "yearSpan", "x", "y", month.abb) # maybe should be all_of(month.abb)
         r_climVar_region <- r_climVar_region[colorder_df]
         names(r_climVar_region)[names(r_climVar_region) == "x"] <- "longitude"
         names(r_climVar_region)[names(r_climVar_region) == "y"] <- "latitude"
-        
-        gatherCols <- tidyselect::all_of(month.abb)
-        valueCol <- "value"
-        keyCol <- j
-        r_climVar_region_long <- tidyr::gather(r_climVar_region, valueCol, keyCol, gatherCols, factor_key=TRUE)
+        r_climVar_region_long <- tidyr::pivot_longer(r_climVar_region, all_of(month.abb), names_to = "month", values_to = "value")
+        r_climVar_region_long$month = factor(r_climVar_region_long$month, levels = all_of(month.abb))
         
         
         # if (l %in% startyearChoices[1]) {
@@ -130,56 +153,48 @@ for (j in thiListReduced) {
         #   dataHolder[, c(newColName) := r_climVar_region$mean]
         # }
         # 
+        titleText <- paste0("HI stress levels by month, ", varNamesInfo[variableShortName %in% j, variableLongName], ", ", gsub("_", "-", yearSpan), ", ",  "scenario ", k, ", ", regionInfoLookup[i, ctyRegion])
         
-        titleText <- paste0("THI stress levels by month, ", speciesName, "\n ", yearSpan, ", SSP = ", k, ", ensemble mean")
-        legendTitle <- "Stress level"
-        print(titleText)
-        
-        zeroLevel <- bpList[species %in% speciesName, zeroLevel]
-        noStress <- bpList[species %in% speciesName, noStress]
-        moderateStress <- bpList[species %in% speciesName, moderateStress]
-        extremeStress <- bpList[species %in% speciesName, extremeStress]
-        col.l <- c("darkslategray1", "blue", "yellow", "red")
-        mapTheme <- rasterTheme(region = col.l)  
-        mapTheme$panel.background$col = 'white' 
-        myat <- c(zeroLevel, noStress, moderateStress, extremeStress, 100)
-        
-        
+        # g <- levelplot(meanData, main = titleText, col.regions = col.l, at = myat, par.settings = mapTheme, 
+        #                colorkey = list(at = myat, col = col.l, labels = c( "","No stress", "moderate stress", "extreme stress", "maximum")),
+        #                xlab = "", ylab = "", scales  = list(x = list(draw = FALSE), y = list(draw = FALSE)))
+        # 
         g <- ggplot(data = world_region) +
           labs(title = titleText, fill = legendTitle) + theme(plot.title = element_text(size = 12, hjust = 0.5)) +
           labs(x = "", y = "") +
-          geom_raster(data = r_climVar_region_long, aes(longitude, latitude, fill = keyCol)) + 
+          geom_raster(data = r_climVar_region_long, aes(longitude, latitude, fill = value)) + 
           # scale_fill_gradientn(colors = p, # name = legendText,
           #                      na.value = "grey50",
           #                      guide = "colorbar") +
           scale_fill_gradientn(colours = topo.colors(7), na.value = "transparent",
-                               breaks=custom_bins,labels = custom_bins,
+                               breaks=custom_bins,labels = c( "","No stress", "moderate stress", "extreme stress", "maximum"),
                                limits=c(climVarMin, climVarMax)) +
- #         geom_sf(fill = NA, color = "gray") + 
+          #         geom_sf(fill = NA, color = "gray") + 
           theme(axis.text.x=element_text(size=rel(0.6))) + #, angle=90
-          theme(axis.text.y=element_text(size=rel(0.6))) +
-          
-          geom_sf(data = roads_region, color = "red", lwd = 0.3, fill = NA)
+          theme(axis.text.y=element_text(size=rel(0.6))) 
+        
+        #  geom_sf(data = roads_region, color = "red", lwd = 0.3, fill = NA)
         # if (nrow(populatedAreas_region) > 0) { 
         #   g <- g + geom_sf(data = populatedAreas_region, color = "black", lwd = 0.5, fill = NA) +
         #     geom_sf_label(data = populatedAreas_region, aes(label = NAME), size = 2, fill = NA)
         # }
         # if (nrow(rivers_region) > 0) { 
-        #   g <- g + geom_sf(data = rivers_region, color = "blue", lwd = 0.5, fill = NA) 
+        #   g <- g + geom_sf(data = rivers_region, color = "blue", lwd = 0a.5, fill = NA) 
         # }
-        g <- g + geom_point(aes(x = locLong, y= locLat), colour="blue", size = .2, fill = NA) +
-          annotate("text", label = region, x = locLong + .35 , y= locLat, size = 3) +
+        g <- g + 
+          # geom_point(aes(x = locLong, y= locLat), colour="blue", size = .2, fill = NA) +
+          # annotate("text", label = region, x = locLong + .35 , y= locLat, size = 3) +
           # geom_label(x = locLong + .35 , y= locLat, label = region, color = "black",
           #            fill = NA) 
           
-          annotation_scale(location = "bl", width_hint = 0.5, height = unit(.2, "mm"), text_cex = 0.3,) +
+          annotation_scale(location = "bl", width_hint = 0.5, height = unit(.3, "mm"), text_cex = 0.5, unit_category = unit_category) +
           # annotation_north_arrow(location = "bl", which_north = "true", 
           #                        pad_x = unit(0.75, "in"), pad_y = unit(0.5, "in"),
           #                        style = north_arrow_minimal) +
-          facet_wrap(vars(valueCol))
+          facet_wrap(vars(month))
         print(g)
-        dev.off()
-        outFilename <- paste0("graphics/cmip6/regionInfo/", j,"MonthlyAve_", k, "_", yearSpan, "_", regionInfoLookup[i, region], ".png", overwrite = TRUE)
+        # dev.off()
+        outFilename <- paste0("graphics/cmip6/regionInfo/", j,"_MonthlyAve_", k, "_", yearSpan, "_", regionInfoLookup[i, region], ".png")
         ggsave(outFilename, plot = g, device = "png", width = 6, height = 6)
         # ggsave("map_web.png", width = 6, height = 6, dpi = "screen")
         outFilename_csv <- paste0("data/regionResults/monthlyFacet_", j, "_", regionInfoLookup[i, region], "_", k, "_", yearSpan, ".csv")
@@ -189,3 +204,4 @@ for (j in thiListReduced) {
     }
   }
 }
+

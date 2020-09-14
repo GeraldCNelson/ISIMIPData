@@ -17,13 +17,14 @@ startyearChoices <-  c(2001, 2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091
 startyearChoices_ensemble <-  c(2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
 yearRange <- 9
 
-climateVars <- c("pr", "hurs", "tasmax", "tasmin", "tave")
+climateVars <- c("pr", "hurs", "tasmax", "tave", "tasmin") #""pr", "hurs", tasmax",   "tasmin", "tave"
+#climateVars <- c("hurs") #""pr", "hurs", tasmax",   "tasmin", "tave"
 fileLoc_monthlyMean <- "data/cmip6/monthlyMean/"
 
 #regionInfoLookup <- as.data.table(read_excel("data-raw/regionInformation/regionInfoLookup.xlsx", range = "A1:k7"))
 regionInfoLookup <- as.data.table(read_excel("data-raw/regionInformation/wg2ch5Locations.xlsx", range = "a1:k16")) # climate smart villages
 #regionInfoLookup <- as.data.table(read_excel("data-raw/regionInformation/regionInfoLookupCSVs.xlsx",range = "F7:P43")) #perennial crop author locations
-# regionInfoLookup <- as.data.table(read_excel("data-raw/regionInformation/PerennialCrops.xlsx",range = "A1:K6")) #perennial crop author locations
+#regionInfoLookup <- as.data.table(read_excel("data-raw/regionInformation/PerennialCrops.xlsx",range = "A1:K6")) #perennial crop author locations
 regionInfoLookup[, ctyRegion := paste0("\n", region, ", " , country)]
 
 world <- loadSpatialData("world")
@@ -39,7 +40,7 @@ populatedAreas <- loadSpatialData("populatedAreas")
 for (j in climateVars) {
   print(j)
   for (k in sspChoices) {
-    for (i in 4:nrow(regionInfoLookup)) {
+    for (i in 11){ #1:nrow(regionInfoLookup)) {
       gc()
       
       region <- regionInfoLookup[i, region]
@@ -72,8 +73,8 @@ for (j in climateVars) {
       # code to get min and max values across all periods
       meanData <- c()
       meanData <- rast(paste0("data/cmip6/monthlyMean/monthlyMean_", j, "_observed_2001_2010.tif"))
-      for (l in startyearChoices_ensemble) {
-        yearSpan <- paste0(l, "_", l + yearRange)
+      for (q in startyearChoices_ensemble) {
+        yearSpan <- paste0(q, "_", q + yearRange)
         meanData <- c(meanData, rast(paste0("data/cmip6/monthlyMean/ensemblemonthlyMean_", j,  "_",  yearSpan, "_", k, ".tif")))
       }
       
@@ -191,6 +192,7 @@ for (j in climateVars) {
         #      dev.off()
         outFilename <- paste0("graphics/cmip6/regionInfo/", j,"MonthlyAve_", k, "_", yearSpan, "_", regionInfoLookup[i, region], ".png")
         ggsave(outFilename, plot = g, device = "png", width = 6, height = 6)
+        print(paste0("writing out ", outFilename))
         # ggsave("map_web.png", width = 6, height = 6, dpi = "screen")
         outFilename_csv <- paste0("data/regionResults/monthlyFacet_", j, "_", regionInfoLookup[i, region], "_", k, "_", yearSpan, ".csv")
         print(paste0("writing out ", outFilename_csv))

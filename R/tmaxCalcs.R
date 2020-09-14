@@ -37,7 +37,7 @@ for (k in sspChoices)  {
       fileNameIn <- paste0(fileNameIn, ".tif")
       
       temp <- paste0(locOfFiles, k,"/", i, "/", fileNameIn)
-      print(paste0("Working on: ", temp, " pid: ", Sys.getpid()))
+      print(paste0("Working on: ", temp, ", pid: ", Sys.getpid()))
       tmax <- rast(temp)
       endTime <- Sys.time()
       print(paste0("tmax brick created, ", temp, ", creation time: ", round(difftime(endTime, startTime, units = "mins"), digits = 2),  " pid: ", Sys.getpid()))

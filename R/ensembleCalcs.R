@@ -15,10 +15,6 @@ modelChoices.lower <- tolower(modelChoices)
 k <- "ssp585"
 l <- 2021
 
-# commented out, now in the globallyUsed.R script
-#ann_crop_temp_table <- as.data.table(read_excel("data-raw/crops/ann_crop_temp_table_summary_02052020.xlsx", range = "A1:S26"))
-#setnames(ann_crop_temp_table, old = names(ann_crop_temp_table), new = make.names(names(ann_crop_temp_table)))
-
 for (k in sspChoices) {
   for (l in startyearChoices) {
     yearSpan <- paste0(l, "_", l + yearRange)
@@ -35,7 +31,7 @@ for (k in sspChoices) {
       for (j in 1:length(modelChoices)) {
         fileNameIn <- paste0("data/cmip6/damageTemp/tdamage_mean_", cropName, "_", tdamage_mean, "C_",  modelChoices.lower[j], "_", k,  "_", yearSpan, ".tif")
         print(paste("fileNameIn: ", fileNameIn))
-        rasterList[[j]] <- rastfileNameIn)
+        rasterList[[j]] <- rast(fileNameIn)
         names(rasterList[[j]]) <- month.abb
       }
       ras.test <- stack(rasterList)
@@ -52,6 +48,7 @@ for (k in sspChoices) {
     }
   }
 }
+
 
 # apply masks, can only do this to crops we have in the temperature lookup table
 # the overlay function needs a user defined function on the relationship between the two rasters
@@ -72,8 +69,8 @@ for (k in sspChoices) {
       fileNameCV.in <- paste0("data/cmip6/damageTemp/tdamage_ensembleCV_", cropName, "_", tdamage_mean, "C_", k, "_", yearSpan, ".tif")
       print(paste("fileNameCV.in: ", fileNameCV.in))
       mask <- rast(fileNameMask.in)
-      meanData <- rastfileNameMean.in)
-      CVData <- rastfileNameCV.in)
+      meanData <- rast(fileNameMean.in)
+      CVData <- rast(fileNameCV.in)
       mean.masked <- overlay(meanData, mask, fun = overlayfunction)
       names(mean.masked) <- month.abb
       CV.masked <- overlay(CVData, mask, fun = overlayfunction)
@@ -97,11 +94,32 @@ for (k in sspChoices) {
     fileNameMean.in <- paste0("data/cmip6/damageTemp/tdamage_mean_", cropName, "_", tdamage_mean, "C",  "_observed_", yearSpan, ".tif")
     print(paste("fileNameMean.in: ", fileNameMean.in))
     mask <- rast(fileNameMask.in)
-    meanData <- rastfileNameMean.in)
+    meanData <- rast(fileNameMean.in)
     mean.masked <- overlay(meanData, mask, fun = overlayfunction)
     names(mean.masked) <- month.abb
     fileNameMean.masked <- paste0("data/cmip6/damageTemp/tdamage_mean_masked_", cropName, "_", tdamage_mean, "C",  "_observed_", yearSpan, ".tif")
     writeRaster(mean.masked, filename = fileNameMean.masked, format = "GTiff", overwrite = TRUE)
   }
 }
+
+# ensemble calcs for historical data
+l <- 2001
+yearSpan <- paste0(l, "_", l + yearRange)
+print(paste0("ssp choice: ", k, "start year: ", l))
+for (m in 1:nrow(ann_crop_temp_table)) {
+  cropName <- as.character(ann_crop_temp_table[m, "crop"])
+  tdamage_mean <- as.numeric(ann_crop_temp_table[m, "tdamage mean"])
+  fileNameMask.in <- paste0("data/crops/rasterMask_", tolower(cropName), ".tif")
+  print(paste("fileNameMaskIn: ", fileNameMask.in))
+  fileNameMean.in <- paste0("data/cmip6/damageTemp/tdamage_mean_", cropName, "_", tdamage_mean, "C",  "_observed_", yearSpan, ".tif")
+  print(paste("fileNameMean.in: ", fileNameMean.in))
+  mask <- rast(fileNameMask.in)
+  meanData <- rast(fileNameMean.in)
+  mean.masked <- overlay(meanData, mask, fun = overlayfunction)
+  names(mean.masked) <- month.abb
+  fileNameMean.masked <- paste0("data/cmip6/damageTemp/tdamage_mean_masked_", cropName, "_", tdamage_mean, "C",  "_observed_", yearSpan, ".tif")
+  writeRaster(mean.masked, filename = fileNameMean.masked, format = "GTiff", overwrite = TRUE)
+}
+}
+
 

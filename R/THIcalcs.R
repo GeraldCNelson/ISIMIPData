@@ -7,7 +7,7 @@ library(foreach) #Provides foreach looping construct
 locOfFiles <- "data/cmip6/monthlyMean/"
 startyearChoices <-  c(2021, 2051, 2091) #2021, 2051, 2091) # c(2091) # c(2006) #, 2041, 2051, 2081)
 yearRange <- 9
-sspChoices <- c("ssp585") #"ssp126", 
+sspChoices <- c("ssp126","ssp585") #"ssp126", 
 modelChoices <- c( "IPSL-CM6A-LR", "MRI-ESM2-0", "MPI-ESM1-2-HR", "UKESM1-0-LL", "GFDL-ESM4") #, "MPI-ESM1-2-HR", "MRI-ESM2-0") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM6A-LR"
 #modelChoices <- c(  "IPSL-CM6A-LR") #, "MPI-ESM1-2-HR", "MRI-ESM2-0") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM6A-LR"
 
@@ -115,6 +115,35 @@ end_time - start_time
 # observed data calcs
 
 # load observed data and calculate THI values
+fileName.rh <- paste0(locOfFiles, "monthlyMean_hurs", "_observed_", "2001_2010.tif")
+print(fileName.rh)
+fileName.tmin <- paste0(locOfFiles, "monthlyMean_tasmin", "_observed_", "2001_2010.tif")
+print(fileName.tmin)
+fileName.tmax <- paste0(locOfFiles, "monthlyMean_tasmax", "_observed_", "2001_2010.tif")
+print(fileName.tmax)
+tmax <- rast(fileName.tmax)
+tmin <- rast(fileName.tmin)
+rh <- rast(fileName.rh)
+names(tmax) <- names(tmin) <- names(rh) <- month.abb
+
+thi.cattle <- eval(parse(text = formula.thi.cattle))
+thi.sheep <- eval(parse(text = formula.thi.sheep))
+thi.goat <- eval(parse(text = formula.thi.goat))
+thi.broiler <- eval(parse(text = formula.thi.broiler))
+thi.layer <- eval(parse(text = formula.thi.layer))
+thi.chicken <- eval(parse(text = formula.thi.chicken))
+thi.swine <- eval(parse(text = formula.thi.swine))
+thi.yak <- eval(parse(text = formula.thi.yak))
+names(thi.cattle) <- names(thi.sheep) <- names(thi.goat) <- names(thi.yak) <- names(thi.broiler) <- names(thi.broiler) <- names(thi.layer) <- names(thi.swine) <- month.abb
+
+for (m in thiList) {
+  fileName <- paste0("data/cmip6/THI/", m, "_observed_", "2001_2010.tif")
+  print(fileName)
+  writeRaster(get(m), filename = fileName, format = "GTiff", overwrite = TRUE, wopt=list(gdal="COMPRESS=LZW"))
+}
+
+# historical ensemble data calcs
+
 fileName.rh <- paste0(locOfFiles, "monthlyMean_hurs", "_observed_", "2001_2010.tif")
 print(fileName.rh)
 fileName.tmin <- paste0(locOfFiles, "monthlyMean_tasmin", "_observed_", "2001_2010.tif")

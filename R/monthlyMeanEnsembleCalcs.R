@@ -3,6 +3,7 @@
 source("R/globallyUsed.R")
 # library(doParallel) #Foreach Parallel Adaptor 
 # library(foreach) #Provides foreach looping construct
+woptList <- list(gdal=c("COMPRESS=LZW"))
 
 startyearChoices <-  c(2021, 2051, 2091) #2021, 2051, 2091) # c(2091) # c(2006) #, 2041, 2051, 2081)
 startyearChoices_ensemble <-  c(2021, 2051, 2091) # no multimodel results for observed data
@@ -36,8 +37,6 @@ readRast <- function(m) {
 
 for (k in sspChoices) {
   for (l in startyearChoices_ensemble) {
-    yearSpan <- paste0(l, "_", l + yearRange)
-    print(paste0("ssp choice: ", k, ", start year: ", l, ", pid number: ", Sys.getpid()))
     
     for (j in climateVars) {
       

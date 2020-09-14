@@ -47,7 +47,7 @@ foreach(i = modelChoices) %:%
     rasterOptions(tmpdir = tmpDirName)
     dir.create(tmpDirName)
     
-    print(paste0("working on start year: ", l, " variable: ", j, " ssp choice: ", k, " model: ", " pid: ", Sys.getpid(), " systime: ", Sys.time()))
+    print(paste0("working on start year: ", l, ", variable: ", j, ", ssp choice: ", k, ", model: ", i,  ", pid: ", Sys.getpid(), ", systime: ", Sys.time()))
     modelName.lower <- tolower(i)
     startTime <-  Sys.time()
     yearSpan <- paste0(l, "_", l + yearRange)
