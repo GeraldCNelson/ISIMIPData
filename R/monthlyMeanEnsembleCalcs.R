@@ -8,16 +8,16 @@ woptList <- list(gdal=c("COMPRESS=LZW"))
 startyearChoices <-  c(2021, 2051, 2091) #2021, 2051, 2091) # c(2091) # c(2006) #, 2041, 2051, 2081)
 startyearChoices_ensemble <-  c(2021, 2051, 2091) # no multimodel results for observed data
 climateVars <- c( "tasmax", "tasmin", "pr", "hurs", "tave") 
-climateVars <- c(  "pr") 
+#climateVars <- c(  "pr") 
 
 yearRange <- 9
-sspChoices <- c("ssp585") #"ssp126", 
+sspChoices <- c("ssp126","ssp585") #"ssp126", 
 modelChoices <- c( "MPI-ESM1-2-HR", "MRI-ESM2-0", "GFDL-ESM4", "UKESM1-0-LL", "IPSL-CM6A-LR")
 modelChoices.lower <- tolower(modelChoices)
 #test values
 k <- "ssp585"
 l <- 2021
-j <- "pr"
+j <- "tave"
 
 # varList <- c("modelChoices", "thiList",  "startyearChoices_ensemble", "sspChoices", "tmpDirName")
 # libList <- c("rast", "data.table")
@@ -37,15 +37,16 @@ readRast <- function(m) {
 
 for (k in sspChoices) {
   for (l in startyearChoices_ensemble) {
+    yearSpan <- paste0(l, "_", l + yearRange)
     
     for (j in climateVars) {
+      print(paste0("climate var.: ", j, ", start year: ", l,  ", pid number: ", Sys.getpid()))
       
       # make a list of SpatRasters
       x <- lapply(modelChoices.lower, readRast)
       r <- rast(x)
       system.time(r.mean <- tapp(r, 1:12, fun = mean))
       names(r.mean) <- month.abb
-      print(paste0("climate var.: ", j, ", start year: ", l,  ", pid number: ", Sys.getpid()))
       print(r.mean)
       if (j %in% c("tasmin", "tasmax", "tave")) {
         rKel <- r + 273.15 # convert temp to Kelvin for cv calc on temps

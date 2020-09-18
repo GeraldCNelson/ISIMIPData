@@ -195,9 +195,11 @@ for (j in thiListReduced) {
         print(g)
         # dev.off()
         outFilename <- paste0("graphics/cmip6/regionInfo/", j,"_MonthlyAve_", k, "_", yearSpan, "_", regionInfoLookup[i, region], ".png")
+        unlink(outFilename)
         ggsave(outFilename, plot = g, device = "png", width = 6, height = 6)
         # ggsave("map_web.png", width = 6, height = 6, dpi = "screen")
         outFilename_csv <- paste0("data/regionResults/monthlyFacet_", j, "_", regionInfoLookup[i, region], "_", k, "_", yearSpan, ".csv")
+        unlink(outFilename_csv)
         print(paste0("writing out ", outFilename_csv))
         write.csv(r_climVar_region, file = outFilename_csv, row.names = FALSE)  
       }

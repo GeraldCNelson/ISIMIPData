@@ -168,6 +168,7 @@ for (j in climateVars) {
         
         print(g)
         outFilename <- paste0("graphics/cmip6/regionInfo/", j, "_", k, "_", yearSpan, "_", regionInfoLookup[i, region], ".png")
+        unlink(outFilename)
         ggsave(outFilename, plot = last_plot(), device = "png", width = 6, height = 6, overwrite = TRUE)
         # ggsave("map_web.png", width = 6, height = 6, dpi = "screen")
       }

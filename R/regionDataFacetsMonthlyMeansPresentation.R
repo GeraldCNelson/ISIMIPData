@@ -4,7 +4,7 @@ library(officer)
 library(magrittr)
 library(flextable)
 
-sspChoices <- c("ssp585") #"ssp126", 
+sspChoices <- c("ssp126", "ssp585") #"ssp126", 
 startyearChoices <-  c(2001, 2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
 startyearChoices_ensemble <-  c(2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
 climateVars <- c("tave", "tasmax", "tasmin", "pr", "hurs") 
@@ -18,14 +18,14 @@ k <- "ssp585"
 l <- 2091
 j <- "tave"
 
-#regionInfoLookup <- as.data.table(read_excel("data-raw/regionInformation/regionInfoLookup.xlsx", range = "A1:k7"))
-regionInfoLookup <- as.data.table(read_excel("data-raw/regionInformation/wg2ch5Locations.xlsx", range = "a1:k16")) # climate smart villages
+regionInfoLookup <- as.data.table(read_excel("data-raw/regionInformation/regionInfoLookup.xlsx", range = "A1:k7"))
+#regionInfoLookup <- as.data.table(read_excel("data-raw/regionInformation/wg2ch5Locations.xlsx", range = "a1:k16")) # climate smart villages
 #regionInfoLookup <- as.data.table(read_excel("data-raw/regionInformation/regionInfoLookupCSVs.xlsx",range = "F7:P43")) #perennial crop author locations
 # regionInfoLookup <- as.data.table(read_excel("data-raw/regionInformation/PerennialCrops.xlsx",range = "A1:K6")) #perennial crop author locations
 
 regionInfoLookup[, ctyRegion := paste0("\n", region, ", " , country)]
 
-for (i in 10:(nrow(regionInfoLookup))) {
+for (i in 1:nrow(regionInfoLookup)) {
   region <- regionInfoLookup[i, region]
   country <- regionInfoLookup[i, country]
   
@@ -46,7 +46,7 @@ for (i in 10:(nrow(regionInfoLookup))) {
   IntroText1 <- "The climate data set used in these graphics was prepared initially by the ISIMIP project (www.isimip.org) using CMIP6 data. " 
   IntroText2 <- "This analysis uses the ISIMIP3b output data sets (https://www.isimip.org/news/isimip3ab-protocol-released/). "
   IntroText3 <- "It includes modeling results from 5 earth system models (GFDL-ESM4, UKESM1-0-LL, MPI-ESM1-2-HR, MRI-ESM2-0, and IPSL-CM6A-LR) and three GHG emission scenarios (ssp126, ssp370 and ssp585). "
-  IntroText3.5 <- "In this powerpoint, only results using ssp585 are presented." 
+  IntroText3.5 <- "In this powerpoint, results using ssp126 and ssp585 are presented." 
   # IntroText4 <- "The values are average means for observed data for 2001-2010 and  ensemble means and coefficients of variation for four 10 year periods (2002-2010, 2021-2030, 2051-2060, and 2091-2100)."
   IntroText5 <- "This powerpoint presents work in progress and should not be circulated without permission."
 #  IntroText6 <- "The next slide presents the 10-year monthly mean temperature for all 1/2 degree pixels included in this region for each of the 10 year periods."

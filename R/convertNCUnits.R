@@ -1,12 +1,12 @@
-# this script converts the units of nc tmin, tmax, and pr
+# this script converts the units of nc tmin, tmax, and pr and all varibles to geotifs
 #source("R/globallyUsed.R")
 library(data.table)
 #library(raster)
 library(terra)
 woptList <- list(gdal=c("COMPRESS=LZW"))
 
-dirList <- c( "GFDL-ESM4", "IPSL-CM6A-LR", "MPI-ESM1-2-HR", "UKESM1-0-LL") #"observed",  "historical",
-dirList <- "UKESM1-0-LL"
+dirList <- c( "MRI-ESM2-0", "GFDL-ESM4", "IPSL-CM6A-LR", "MPI-ESM1-2-HR", "UKESM1-0-LL") #"observed",  "historical",
+# dirList <- "MRI-ESM2-0"
 dirList <- c( "historical")
 
 # # only needed when setting up directories
@@ -38,17 +38,17 @@ renameFile <- function(inNCfile) {
 }
 
 varListComplete <- c("_tasmax_", "_tasmin_", "_pr_", "_hurs_", "huss", "rlds", "_rsds_", "_sfcwind_", "_ps_", "_tas_", "_tave_")
-varsToKeep <- c(  "_tasmax_", "_tasmin_", "_pr_", "_hurs_" )
-varsToKeep <- c("_pr_")
+varsToKeep <- c(  "_tasmax_", "_tasmin_", "tave")
+varsToKeep <- c("_tasmax_", "_tasmin_")
 varsToRemove <- varListComplete[!varListComplete %in% varsToKeep]
 
 for (cntr in dirList) {
-filestoKeep <- filesInDir[grepl(cntr, filesInDir, fixed = TRUE)] # keep only file names with climate vars included in varsToKeep
+  filestoKeep <- filesInDir[grepl(cntr, filesInDir, fixed = TRUE)] # keep only file names with climate vars included in varsToKeep
 }
 for (cntr in varsToRemove) {
   filestoKeep <- filestoKeep[!grepl(cntr, filestoKeep, fixed = TRUE)] # keep only file names with ESM names in dirList
 }
-yearToRemove <- c(1951, 1961, 1971, 2001)
+yearToRemove <- c(1951, 1961, 1971, 1981, 2016)
 for (cntr in yearToRemove) {
   filestoKeep <- filestoKeep[!grepl(cntr, filestoKeep, fixed = TRUE)] # keep only file names with ESM names in dirList
 }
@@ -68,24 +68,26 @@ for (i in varsToKeep) {
     for (j in 1:length(filestoKeep)) {
       gc()
       inFile <- filestoKeep[j]
+      print(paste0("infile: ", inFile))
       startYear <- substr(inFile, (nchar(inFile))-11 ,nchar(inFile)-8)
       yearRange <- 9
       outFile <- renameFile(inFile)
       print(paste0("outFile: ", outFile))
-            rastIn <- rast(inFile)
-            
-            #rename raster names
-            startDate <- paste0(startYear, "-01-01"); endDate <- paste0(as.numeric(startYear) + yearRange, "-12-31")
-            indices <- seq(as.Date(startDate), as.Date(endDate), 1)
-            indices <- paste0("X", as.character(indices))
-            indices <- format(as.Date(indices, format = "X%Y-%m-%d"), format = "%m") # %m is month of the year
-            indices <- as.numeric(indices)
-            
-            #     system.time(rastIn_mean <- tapp(rastIn, indices, fun = mean))
-            print(system.time(rastOut <- rastIn * 86400)); flush.console()
-            print(system.time(writeRaster(rastOut, outFile,  overwrite = TRUE, wopt= woptList))); flush.console()
-            
-     }
+      rastIn <- rast(inFile)
+  #    rastIn <- setMinMax(rastIn) # add min max values
+      print(rastIn)
+      #rename raster names
+      startDate <- paste0(startYear, "-01-01"); endDate <- paste0(as.numeric(startYear) + yearRange, "-12-31")
+      indices <- seq(as.Date(startDate), as.Date(endDate), 1)
+      indices <- paste0("X", as.character(indices))
+      indices <- format(as.Date(indices, format = "X%Y-%m-%d"), format = "%m") # %m is month of the year
+      indices <- as.numeric(indices)
+      
+      #     system.time(rastIn_mean <- tapp(rastIn, indices, fun = mean))
+      print(system.time(rastOut <- rastIn * 86400)); flush.console()
+      print(system.time(writeRaster(rastOut, outFile,  overwrite = TRUE, wopt= woptList))); flush.console()
+      
+    }
   }
   if (i %in% c("_tasmax_", "_tasmin_", "_tas_")) {
     for (j in 1:length(filestoKeep)) {
@@ -94,18 +96,20 @@ for (i in varsToKeep) {
       yearRange <- 9
       outFile <- renameFile(inFile)
       print(paste0("outFile: ", outFile))
-             rastIn <- rast(inFile)
-             
-             #rename raster names
-             startDate <- paste0(startYear, "-01-01"); endDate <- paste0(as.numeric(startYear) + yearRange, "-12-31")
-             indices <- seq(as.Date(startDate), as.Date(endDate), 1)
-             indices <- paste0("X", as.character(indices))
-             indices <- format(as.Date(indices, format = "X%Y-%m-%d"), format = "%m") # %n is month of the year
-             indices <- as.numeric(indices)
-             
-             print(system.time(rastOut <- rastIn - 273.15)); flush.console()
-             print(system.time(writeRaster(rastOut, outFile, overwrite = TRUE, format = "GTiff", wopt= woptList))); flush.console()
-     }
+      rastIn <- rast(inFile)
+      # rastIn <- setMinMax(rastIn) # add min max values
+      rastIn
+      #rename raster names
+      startDate <- paste0(startYear, "-01-01"); endDate <- paste0(as.numeric(startYear) + yearRange, "-12-31")
+      indices <- seq(as.Date(startDate), as.Date(endDate), 1)
+      indices <- paste0("X", as.character(indices))
+      indices <- format(as.Date(indices, format = "X%Y-%m-%d"), format = "%m") # %n is month of the year
+      indices <- as.numeric(indices)
+      
+      print(system.time(rastOut <- rastIn - 273.15)); flush.console()
+      print(rastOut)
+      print(system.time(writeRaster(rastOut, outFile, overwrite = TRUE, format = "GTiff", wopt= woptList))); flush.console()
+    }
   }
   if (i %in% c("_hurs_", "_huss_", "_rsds_", "_sfcwind_", "_ps")) {
     for (j in 1:length(filestoKeep)) {
@@ -115,6 +119,8 @@ for (i in varsToKeep) {
       outFile <- renameFile(inFile)
       print(paste0("variable: ", i, ", outfile: ", outFile))
       rastIn <- rast(inFile)
+      #      rastIn <- setMinMax(rastIn) # add min max values
+      print(rastIn)
       
       #rename raster names
       startDate <- paste0(startYear, "-01-01"); endDate <- paste0(as.numeric(startYear) + yearRange, "-12-31")

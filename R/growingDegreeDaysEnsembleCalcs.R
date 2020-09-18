@@ -39,7 +39,7 @@ for (k in sspChoices) {
       indices <- seq(as.Date(startDate), as.Date(endDate), 1)
       indices <- format(indices, format = "%j")
       indices <- as.numeric(indices)
-      print(paste0( "Done setting doing raster indices for ras.test stack for crop: ", cropName, ", start year: ", l))
+      print(paste0( "Done setting raster indices for ras.test stack for crop: ", cropName, ", start year: ", l))
       x.mean <- tapp(x, indices, fun = mean, na.rm = TRUE)
       x.cv <- tapp(x, indices, fun = cv, na.rm = TRUE)
       names(ras.test.mean) <- month.abb

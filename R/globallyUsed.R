@@ -402,20 +402,21 @@ loadSpatialData <- function(dataVar) {
   require(sf)
   #  browser()
   
-    switch(dataVar,
-           world = {outvar <- st_read("data-raw/regioninformation/ne_10m_admin_1_states_provinces/ne_10m_admin_1_states_provinces.shp")},
-           lakes = {outvar <- st_read("data-raw/regioninformation/lakes10.shp")},
- #          roads = {outvar <- st_read("data-raw/regioninformation/roads10.shp")},
-           roads = {outvar <- st_read("data-raw/regioninformation/ne_10m_roads/ne_10m_roads.shp")},
-           cities = {outvar <- st_read("data-raw/regioninformation/cities10.shp")},
-           populatedAreas = {outvar <- st_read("data-raw/regioninformation/ne_10m_populated_places/ne_10m_populated_places.shp")},
-           #           urbanAreas = {outvar <- st_read("data-raw/regioninformation/ne_10m_urban_areas/ne_10m_urban_areas.shp") },
-           protectedAreas2 = {outvar <- st_read("data-raw/regioninformation/WDPA_Aug2020-shapefile/WDPA_Aug2020-shapefile2/WDPA_Aug2020-shapefile-polygons.shp")},
-           protectedAreas1 = {outvar <- st_read("data-raw/regioninformation/WDPA_Aug2020-shapefile/WDPA_Aug2020-shapefile1/WDPA_Aug2020-shapefile-polygons.shp")},
-           protectedAreas0 = {outvar <- st_read("data-raw/regioninformation/WDPA_Aug2020-shapefile/WDPA_Aug2020-shapefile0/WDPA_Aug2020-shapefile-polygons.shp")},
-           rivers = {outvar <- st_read("data-raw/regioninformation/rivers10.shp")}
-    )
-    return(outvar)
+  switch(dataVar,
+         world = {outvar <- st_read("data-raw/regionInformation/ne_10m_admin_1_states_provinces/ne_10m_admin_1_states_provinces.shp")},
+         lakes = {outvar <- st_read("data-raw/regionInformation/ne_10m_lakes/ne_10m_lakes.shp")},
+         #          roads = {outvar <- st_read("data-raw/regioninformation/roads10.shp")},
+         roads = {outvar <- st_read("data-raw/regionInformation/ne_10m_roads/ne_10m_roads.shp")},
+         #           cities = {outvar <- st_read("data-raw/regionInformation/cities10.shp")},
+         populatedAreas = {outvar <- st_read("data-raw/regionInformation/ne_10m_populated_places/ne_10m_populated_places.shp")},
+         #           urbanAreas = {outvar <- st_read("data-raw/regioninformation/ne_10m_urban_areas/ne_10m_urban_areas.shp") },
+         protectedAreas2 = {outvar <- st_read("data-raw/regionInformation/WDPA_Aug2020-shapefile/WDPA_Aug2020-shapefile2/WDPA_Aug2020-shapefile-polygons.shp")},
+         protectedAreas1 = {outvar <- st_read("data-raw/regionInformation/WDPA_Aug2020-shapefile/WDPA_Aug2020-shapefile1/WDPA_Aug2020-shapefile-polygons.shp")},
+         protectedAreas0 = {outvar <- st_read("data-raw/regionInformation/WDPA_Aug2020-shapefile/WDPA_Aug2020-shapefile0/WDPA_Aug2020-shapefile-polygons.shp")},
+         rivers = {outvar <- st_read("data-raw/regionInformation/ne_10m_rivers_lake_centerlines/ne_10m_rivers_lake_centerlines.shp")}
+         #           rivers = {outvar <- st_read("data-raw/regioninformation/rivers10.shp")}
+  )
+  return(outvar)
 }
 
 createRegionSpatialData <- function(dataVar, regionBox) { # needs to be run after loadSpatialData
