@@ -6,7 +6,7 @@ library(terra)
 woptList <- list(gdal=c("COMPRESS=LZW"))
 
 dirList <- c( "MRI-ESM2-0", "GFDL-ESM4", "IPSL-CM6A-LR", "MPI-ESM1-2-HR", "UKESM1-0-LL") #"observed",  "historical",
-# dirList <- "MRI-ESM2-0"
+dirList <- "UKESM1-0-LL"
 dirList <- c( "historical")
 
 # # only needed when setting up directories
@@ -37,9 +37,9 @@ renameFile <- function(inNCfile) {
   return(outfile)
 }
 
-varListComplete <- c("_tasmax_", "_tasmin_", "_pr_", "_hurs_", "huss", "rlds", "_rsds_", "_sfcwind_", "_ps_", "_tas_", "_tave_")
+varListComplete <- c("_tasmax_", "_tasmin_", "_pr_", "_hurs_", "huss", "rlds", "_rsds_", "_sfcwind_", "_ps_", "_tas_", "_tave_", "prsn")
 varsToKeep <- c(  "_tasmax_", "_tasmin_", "tave")
-varsToKeep <- c("_tasmax_", "_tasmin_")
+varsToKeep <- c("_hurs_")
 varsToRemove <- varListComplete[!varListComplete %in% varsToKeep]
 
 for (cntr in dirList) {

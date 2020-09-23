@@ -27,7 +27,6 @@ m <-  "thi.cattle"
 thiList <- c("thi.cattle", "thi.sheep", "thi.goat", "thi.yak", "thi.broiler", "thi.layer", "thi.chicken", "thi.swine")
 varList <- c("modelChoices", "thiList",  "startyearChoices", "sspChoices", "tmpDirName")
 libList <- c("terra", "data.table")
-libList <- c("terra")
 
 UseCores <- detectCores() - 1 # max number of cores
 useCores <- 2 # better for memory intensive activities
@@ -56,15 +55,8 @@ x <- foreach(i = modelChoices, .combine = rbind) %:%
     fileName.rh <- paste0(locOfFiles, filePrefix.rh, modelName.lower, fileSuffix)
 #    print(fileName.tmax)
     tmax <- rast(fileName.tmax)
-    print("tmax loaded")
-#    print(fileName.tmin)
     tmin <- rast(fileName.tmin)
-    print("tmin loaded")
-    print(fileName.rh)
     rh <- rast(fileName.rh)
-    print("rh loaded")
-    names(tmax) <- names(tmin) <- names(rh) <- month.abb
-    print("tmax, tmin, and rh loaded")
     # # THI equations
     # mostly from Lallo
     # note: The Dry Bulb temperature, usually referred to as "air temperature", is the air property that is most commonly used. 
@@ -106,7 +98,7 @@ x <- foreach(i = modelChoices, .combine = rbind) %:%
       # bpList <- rbind(bpList, bp.cattle, bp.sheep, bp.goat, bp.yak, bp.swine, bp.layer, bp.broiler)
     }
     
-    gc(reset = FALSE, full = TRUE) 
+    gc() 
   }
 stopCluster(cl)
 end_time <- Sys.time()
@@ -115,16 +107,45 @@ end_time - start_time
 # observed data calcs
 
 # load observed data and calculate THI values
-fileName.rh <- paste0(locOfFiles, "monthlyMean_hurs", "_observed_", "2001_2010.tif")
+# fileName.rh <- paste0(locOfFiles, "monthlyMean_hurs", "_observed_", "2001_2010.tif")
+# print(fileName.rh)
+# fileName.tmin <- paste0(locOfFiles, "monthlyMean_tasmin", "_observed_", "2001_2010.tif")
+# print(fileName.tmin)
+# fileName.tmax <- paste0(locOfFiles, "monthlyMean_tasmax", "_observed_", "2001_2010.tif")
+# print(fileName.tmax)
+# tmax <- rast(fileName.tmax)
+# tmin <- rast(fileName.tmin)
+# rh <- rast(fileName.rh)
+# names(tmax) <- names(tmin) <- names(rh) <- month.abb
+# 
+# thi.cattle <- eval(parse(text = formula.thi.cattle))
+# thi.sheep <- eval(parse(text = formula.thi.sheep))
+# thi.goat <- eval(parse(text = formula.thi.goat))
+# thi.broiler <- eval(parse(text = formula.thi.broiler))
+# thi.layer <- eval(parse(text = formula.thi.layer))
+# thi.chicken <- eval(parse(text = formula.thi.chicken))
+# thi.swine <- eval(parse(text = formula.thi.swine))
+# thi.yak <- eval(parse(text = formula.thi.yak))
+# names(thi.cattle) <- names(thi.sheep) <- names(thi.goat) <- names(thi.yak) <- names(thi.broiler) <- names(thi.broiler) <- names(thi.layer) <- names(thi.swine) <- month.abb
+# 
+# for (m in thiList) {
+#   fileName <- paste0("data/cmip6/THI/", m, "_observed_", "2001_2010.tif")
+#   print(fileName)
+#   writeRaster(get(m), filename = fileName, format = "GTiff", overwrite = TRUE, wopt=list(gdal="COMPRESS=LZW"))
+# }
+
+
+# do historical instead of 'observed'
+locOfFiles <- "data/cmip6/monthlyMean/"
+fileName.rh <- paste0(locOfFiles, "ensembleMonthlyMean_hurs", "_historical_", "2001_2010.tif")
 print(fileName.rh)
-fileName.tmin <- paste0(locOfFiles, "monthlyMean_tasmin", "_observed_", "2001_2010.tif")
+fileName.tmin <- paste0(locOfFiles, "ensembleMonthlyMean_tasmin", "_historical_", "2001_2010.tif")
 print(fileName.tmin)
-fileName.tmax <- paste0(locOfFiles, "monthlyMean_tasmax", "_observed_", "2001_2010.tif")
+fileName.tmax <- paste0(locOfFiles, "ensembleMonthlyMean_tasmax", "_historical_", "2001_2010.tif")
 print(fileName.tmax)
 tmax <- rast(fileName.tmax)
 tmin <- rast(fileName.tmin)
 rh <- rast(fileName.rh)
-names(tmax) <- names(tmin) <- names(rh) <- month.abb
 
 thi.cattle <- eval(parse(text = formula.thi.cattle))
 thi.sheep <- eval(parse(text = formula.thi.sheep))
@@ -137,36 +158,7 @@ thi.yak <- eval(parse(text = formula.thi.yak))
 names(thi.cattle) <- names(thi.sheep) <- names(thi.goat) <- names(thi.yak) <- names(thi.broiler) <- names(thi.broiler) <- names(thi.layer) <- names(thi.swine) <- month.abb
 
 for (m in thiList) {
-  fileName <- paste0("data/cmip6/THI/", m, "_observed_", "2001_2010.tif")
-  print(fileName)
-  writeRaster(get(m), filename = fileName, format = "GTiff", overwrite = TRUE, wopt=list(gdal="COMPRESS=LZW"))
-}
-
-# historical ensemble data calcs
-
-fileName.rh <- paste0(locOfFiles, "monthlyMean_hurs", "_observed_", "2001_2010.tif")
-print(fileName.rh)
-fileName.tmin <- paste0(locOfFiles, "monthlyMean_tasmin", "_observed_", "2001_2010.tif")
-print(fileName.tmin)
-fileName.tmax <- paste0(locOfFiles, "monthlyMean_tasmax", "_observed_", "2001_2010.tif")
-print(fileName.tmax)
-tmax <- rast(fileName.tmax)
-tmin <- rast(fileName.tmin)
-rh <- rast(fileName.rh)
-names(tmax) <- names(tmin) <- names(rh) <- month.abb
-
-thi.cattle <- eval(parse(text = formula.thi.cattle))
-thi.sheep <- eval(parse(text = formula.thi.sheep))
-thi.goat <- eval(parse(text = formula.thi.goat))
-thi.broiler <- eval(parse(text = formula.thi.broiler))
-thi.layer <- eval(parse(text = formula.thi.layer))
-thi.chicken <- eval(parse(text = formula.thi.chicken))
-thi.swine <- eval(parse(text = formula.thi.swine))
-thi.yak <- eval(parse(text = formula.thi.yak))
-names(thi.cattle) <- names(thi.sheep) <- names(thi.goat) <- names(thi.yak) <- names(thi.broiler) <- names(thi.broiler) <- names(thi.layer) <- names(thi.swine) <- month.abb
-
-for (m in thiList) {
-  fileName <- paste0("data/cmip6/THI/", m, "_observed_", "2001_2010.tif")
+  fileName <- paste0("data/cmip6/THI/", m, "_historical_", "2001_2010.tif")
   print(fileName)
   writeRaster(get(m), filename = fileName, format = "GTiff", overwrite = TRUE, wopt=list(gdal="COMPRESS=LZW"))
 }

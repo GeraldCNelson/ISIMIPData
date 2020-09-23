@@ -1,4 +1,5 @@
-# ensemble calcs for historical data, to be used in place of 'observed' data
+# ensemble calcs for historical data, to be used in place of 'observed' data. 
+#The end result is a single file that has daily weather data for 'yearRange' years with each observation being the mean of the equivalent observations in the ESM data.
 # combine 10 year rasters across models to get ensemble means and coeffients of variation
 
 source("R/globallyUsed.R")
@@ -9,14 +10,15 @@ woptList <- list(gdal=c("COMPRESS=LZW"))
 # library(foreach) #Provides foreach looping construct
 yearRange <- 9
 startyearChoices <-  c(1991, 2001)#, 1991, 2001) #1981, 1991, 2001) 
+startyearChoices <-  c(2001)#, 1991, 2001) #1981, 1991, 2001) 
 locOfFiles <- "/Volumes/ExtremeSSD2/climate_land_only/unitsCorrected/historical/"
 climateVars <- c("tasmax", "tasmin",  "tave", "pr", "hurs", "rsds", "sfcwind") # "tasmax", "tasmin" 
-#climateVars <- "tave"
+climateVars <- "hurs"
 modelChoices <- c( "MPI-ESM1-2-HR", "MRI-ESM2-0", "GFDL-ESM4", "UKESM1-0-LL", "IPSL-CM6A-LR")
 modelChoices.lower <- tolower(modelChoices)
 #test values
 l <- 2001
-j = "tave"
+j = "hurs"
 
 readRast <- function(m) {
   model.name <- toupper(m)

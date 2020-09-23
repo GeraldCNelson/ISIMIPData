@@ -167,7 +167,6 @@ tmpDirName <- paste0(locOfCMIP6tifFiles, "rasterTmp", Sys.getpid(), "/")
 
 # source of crop temperature values
 ann_crop_temp_table <- as.data.table(read_excel("data-raw/crops/ann_crop_temp_table_summary_22082020.xlsx", range = "A1:S26"))
-ann_crop_temp_table[, `...16` := NULL]
 data.table::setnames(ann_crop_temp_table, old = names(ann_crop_temp_table), new = make.names(names(ann_crop_temp_table)))
 
 perennial_crop_temp_table <- as.data.table(read_excel("data-raw/crops/perennnial_crop_temp_table_summary_29_52020.xlsx", range = "A1:S10"))
@@ -240,20 +239,29 @@ clusterSetup <- function(varList, libList, useCores) {
 #   return(ncin.brick)
 # }
 
+# historical data names and locations
+
+hurs.historical <- paste0(locOfCMIP6tifFiles,   "historical/ensemble_historical_hurs_global_daily_2001_2010.tif")
+tasmax.historical <- paste0(locOfCMIP6tifFiles, "historical/ensemble_historical_tasmax_global_daily_2001_2010.tif")
+tasmin.historical <- paste0(locOfCMIP6tifFiles, "historical/ensemble_historical_tasmin_global_daily_2001_2010.tif")
+pr.historical <- paste0(locOfCMIP6tifFiles, "historical/ensemble_historical_pr_global_daily_2001_2010.tif")
+tave.historical <- paste0(locOfCMIP6tifFiles, "historical/ensemble_historical_tave_global_daily_2001_2010.tif")
+historicallist <- c("hurs", "tasmax", "tasmin", "pr", "tave")
+
 # observed data names and locations
 
-hurs.observed <- paste0(locOfCMIP6tifFiles,   "observed/gswp3-w5e5_obsclim_hurs_global_daily_2001_2010.tif")
-tasmax.observed <- paste0(locOfCMIP6tifFiles, "observed/gswp3-w5e5_obsclim_tasmax_global_daily_2001_2010.tif")
-tasmin.observed <- paste0(locOfCMIP6tifFiles, "observed/gswp3-w5e5_obsclim_tasmin_global_daily_2001_2010.tif")
-pr.observed <- paste0(locOfCMIP6tifFiles, "observed/gswp3-w5e5_obsclim_pr_global_daily_2001_2010.tif")
-tave.observed <- paste0(locOfCMIP6tifFiles, "observed/gswp3-w5e5_obsclim_tave_global_daily_2001_2010.tif")
-observedlist <- c("hurs", "tasmax", "tasmin", "pr", "tave")
-
-# note that these don't have the path to the file
-rh.observed.cmip5 <- c("hurs_ewembi1_daily_1991_2000.tif", "hurs_ewembi1_daily_2001_2010.tif")
-tmax.observed.cmip5 <- c("tasmax_ewembi1_daily_1991_2000.tif", "tasmax_ewembi1_daily_2001_2010.tif") 
-tmin.observed.cmip5 <- c("tasmin_ewembi1_daily_1991_2000.tif", "tasmin_ewembi1_daily_2001_2010.tif")
-observedlist.cmip5 <- c("rh.observed.cmip5", "tmax.observed.cmip5", "tmin.observed.cmip5")
+# hurs.observed <- paste0(locOfCMIP6tifFiles,   "observed/gswp3-w5e5_obsclim_hurs_global_daily_2001_2010.tif")
+# tasmax.observed <- paste0(locOfCMIP6tifFiles, "observed/gswp3-w5e5_obsclim_tasmax_global_daily_2001_2010.tif")
+# tasmin.observed <- paste0(locOfCMIP6tifFiles, "observed/gswp3-w5e5_obsclim_tasmin_global_daily_2001_2010.tif")
+# pr.observed <- paste0(locOfCMIP6tifFiles, "observed/gswp3-w5e5_obsclim_pr_global_daily_2001_2010.tif")
+# tave.observed <- paste0(locOfCMIP6tifFiles, "observed/gswp3-w5e5_obsclim_tave_global_daily_2001_2010.tif")
+# observedlist <- c("hurs", "tasmax", "tasmin", "pr", "tave")
+# 
+# # note that these don't have the path to the file
+# rh.observed.cmip5 <- c("hurs_ewembi1_daily_1991_2000.tif", "hurs_ewembi1_daily_2001_2010.tif")
+# tmax.observed.cmip5 <- c("tasmax_ewembi1_daily_1991_2000.tif", "tasmax_ewembi1_daily_2001_2010.tif") 
+# tmin.observed.cmip5 <- c("tasmin_ewembi1_daily_1991_2000.tif", "tasmin_ewembi1_daily_2001_2010.tif")
+# observedlist.cmip5 <- c("rh.observed.cmip5", "tmax.observed.cmip5", "tmin.observed.cmip5")
 
 ##' To check if files (incl. directories) are symbolic links:
 is.symlink <- function(paths) isTRUE(nzchar(Sys.readlink(paths), keepNA = TRUE))

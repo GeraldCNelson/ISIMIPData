@@ -2,7 +2,7 @@
 source("R/globallyUsed.R")
 library(RColorBrewer)
 library(colorspace)# use pal <- choose_palette() to see what this is about
-sspChoices <- c("ssp585") #"ssp126", 
+sspChoices <- c("ssp126", "ssp585") #"ssp126", 
 modelChoices <- c( "GFDL-ESM4", "UKESM1-0-LL", "MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
 #modelChoices <- c("IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
 startyearChoices <-  c(2001, 2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
@@ -73,9 +73,7 @@ for (k in sspChoices) {
       meanData <- terra::project(meanData, crsRob)
       CVData <- rast(fileNameCV.masked)
       CVData <- terra::project(CVData, crsRob)
-      names(meanData) <- month.abb
-      names(CVData) <- month.abb
-      
+     
        # plot Ensemble mean
       titleText <- paste0("THI stress levels by month, ", speciesName, "\n ", yearSpan, ", SSP = ", k, ", ensemble mean")
       zeroLevel <- bpList[species %in% speciesName, zeroLevel]
@@ -119,7 +117,7 @@ for (k in sspChoices) {
   }
 }
 
-# do observed data
+# do historical data
 yearRange <- 9
 l <- 2001
 yearSpan <- paste0(l, "_", l + yearRange)
@@ -127,7 +125,7 @@ yearSpan <- paste0(l, "_", l + yearRange)
 for (j in 1:length(thiListReduced)) {  
   speciesName <- gsub("thi.", "", thiListReduced[j])
   
-  fileNameMean.masked <- paste0("data/cmip6/THI/THI_masked_", speciesName, "_observed_", yearSpan, ".tif")
+  fileNameMean.masked <- paste0("data/cmip6/THI/THI_masked_", speciesName, "_historical_", yearSpan, ".tif")
   print(paste0("filenamein ", fileNameMean.masked))
   meanData <- rast(fileNameMean.masked)
   meanData <- terra::project(meanData, crsRob)
@@ -150,12 +148,50 @@ for (j in 1:length(thiListReduced)) {
                  xlab = "", ylab = "", scales  = list(x = list(draw = FALSE), y = list(draw = FALSE)))
   
   g <- g + latticeExtra::layer(sp.polygons(coastsCoarse.Rob, col = "black", lwd = 0.5))
-  plotFileName <- paste0("graphics/cmip6/THI/masked_",  speciesName, "_observed_",  yearSpan, ".jpg")
+  plotFileName <- paste0("graphics/cmip6/THI/masked_",  speciesName, "_historical_",  yearSpan, ".jpg")
   print(paste0("plot file name: ", plotFileName, " for species ", speciesName))
   jpeg(plotFileName, width = 6, height = 6, quality = 100, units = "in", res = 300)
   print(g)
   dev.off()
 }
+
+# # do observed data
+# yearRange <- 9
+# l <- 2001
+# yearSpan <- paste0(l, "_", l + yearRange)
+# 
+# for (j in 1:length(thiListReduced)) {  
+#   speciesName <- gsub("thi.", "", thiListReduced[j])
+#   
+#   fileNameMean.masked <- paste0("data/cmip6/THI/THI_masked_", speciesName, "_observed_", yearSpan, ".tif")
+#   print(paste0("filenamein ", fileNameMean.masked))
+#   meanData <- rast(fileNameMean.masked)
+#   meanData <- terra::project(meanData, crsRob)
+#   names(meanData) <- month.abb
+#   
+#   # plot Ensemble mean
+#   titleText <- paste0("THI stress levels by month, ", speciesName, "\n ", yearSpan)
+#   zeroLevel <- bpList[species %in% speciesName, zeroLevel]
+#   noStress <- bpList[species %in% speciesName, noStress]
+#   moderateStress <- bpList[species %in% speciesName, moderateStress]
+#   extremeStress <- bpList[species %in% speciesName, extremeStress]
+#   col.l <- c("darkslategray1", "blue", "yellow", "red")
+#   mapTheme <- rasterTheme(region = col.l)  
+#   mapTheme$panel.background$col = 'white' 
+#   meanData <- raster::brick(meanData)
+#   
+#   myat <- c(zeroLevel, noStress, moderateStress, extremeStress, 100)
+#   g <- levelplot(meanData, main = titleText, col.regions = col.l, at = myat, par.settings = mapTheme, 
+#                  colorkey = list(at = myat, col = col.l, labels = c( "","No stress", "moderate stress", "extreme stress", "maximum")),
+#                  xlab = "", ylab = "", scales  = list(x = list(draw = FALSE), y = list(draw = FALSE)))
+#   
+#   g <- g + latticeExtra::layer(sp.polygons(coastsCoarse.Rob, col = "black", lwd = 0.5))
+#   plotFileName <- paste0("graphics/cmip6/THI/masked_",  speciesName, "_observed_",  yearSpan, ".jpg")
+#   print(paste0("plot file name: ", plotFileName, " for species ", speciesName))
+#   jpeg(plotFileName, width = 6, height = 6, quality = 100, units = "in", res = 300)
+#   print(g)
+#   dev.off()
+# }
 
 
 
