@@ -35,9 +35,9 @@ get_os <- function() {
   tolower(os)
 }
 if (get_os() %in% "osx") {
-  terraOptions(memfrac = 2,  progress = 10, tempdir =  "data/ISIMIP", verbose = TRUE) # need to use a relative path
-}else{
   terraOptions(memfrac = 1,  progress = 10, tempdir =  "data/ISIMIP", verbose = TRUE) # need to use a relative path
+}else{
+  terraOptions(memfrac = .6,  progress = 10, tempdir =  "data/ISIMIP", verbose = TRUE) # need to use a relative path
 }
 
 
@@ -241,11 +241,11 @@ clusterSetup <- function(varList, libList, useCores) {
 
 # historical data names and locations
 
-hurs.historical <- paste0(locOfCMIP6tifFiles,   "historical/ensemble_historical_hurs_global_daily_2001_2010.tif")
-tasmax.historical <- paste0(locOfCMIP6tifFiles, "historical/ensemble_historical_tasmax_global_daily_2001_2010.tif")
-tasmin.historical <- paste0(locOfCMIP6tifFiles, "historical/ensemble_historical_tasmin_global_daily_2001_2010.tif")
-pr.historical <- paste0(locOfCMIP6tifFiles, "historical/ensemble_historical_pr_global_daily_2001_2010.tif")
-tave.historical <- paste0(locOfCMIP6tifFiles, "historical/ensemble_historical_tave_global_daily_2001_2010.tif")
+hurs.historical <- paste0(locOfCMIP6tifFiles,   "historical/ensemble/ensemble_historical_hurs_2001_2010.tif")
+tasmax.historical <- paste0(locOfCMIP6tifFiles, "historical/ensemble/ensemble_historical_tasmax_2001_2010.tif")
+tasmin.historical <- paste0(locOfCMIP6tifFiles, "historical/ensemble/ensemble_historical_tasmin_2001_2010.tif")
+pr.historical <- paste0(locOfCMIP6tifFiles, "historical/ensemble/ensemble_historical_pr_2001_2010.tif")
+tave.historical <- paste0(locOfCMIP6tifFiles, "historical/ensemble/ensemble_historical_tave_2001_2010.tif")
 historicallist <- c("hurs", "tasmax", "tasmin", "pr", "tave")
 
 # observed data names and locations

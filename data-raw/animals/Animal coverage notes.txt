@@ -1,0 +1,13 @@
+These are ASCII arcrasters  – these are number of cattle, chicken, goats, pigs, sheep by grid cell (5 arcminutes), and the Sere and Steinfeld v5 livestock systems map with this legend (LG is grazing based systems, MR is mixed rainfed, MI is mixed irrigated, A is arid-semiarid, H is humid-subhumid, T is tropical highlands / temperate):
+     1 : LGA
+     2 : LGH
+     3 : LGT
+     4 : MRA
+     5 : MRH
+     6 : MRT
+     7 : MIA
+     8 : MIH
+     9 : MIT
+    10 : Urban
+    11 : Other
+ 

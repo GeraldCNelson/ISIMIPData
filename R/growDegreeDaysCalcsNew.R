@@ -16,9 +16,8 @@ gddsfileOutLoc <- "data/cmip6/growingDegreeDays/"
 
 # commented out, now in the globallyUsed.R script
 library(readxl)
-ann_crop_temp_table <- as.data.table(read_excel("data-raw/crops/ann_crop_temp_table_summary_0506052020.xlsx", range = "A1:S26"))
-data.table::setnames(ann_crop_temp_table, old = names(ann_crop_temp_table), new = make.names(names(ann_crop_temp_table)))
-cropChoice_cereals <- ann_crop_temp_table[ICC.crop.classification %in% "Cereal", crop]
+# ann_crop_temp_table read in in globallyUsed.R
+cropChoice_cereals <- ann_crop_temp_table[ICC.crop.classification %in% "Cereal", crop] # other choices defined in globallyUsed.R
 
 #cropChoices <- c("cropChoice_cereals")
 cropChoices <- cropChoice_cereals
@@ -108,7 +107,7 @@ for (o in 1:length(cropChoices)) {
         y[y < 0] <- 0
         return(y)} ))); flush.console
       print(paste0("gdd file out name: ", gddsfileOutLoc, fileNameOut, ".tif"))
-      writeRaster(round(gdd, 1), filename = paste0(gddsfileOutLoc, fileNameOut, ".tif"), format = "GTiff", overwrite = TRUE, wopt=list(gdal=c("COMPRESS=LZW"))  
+      writeRaster(round(gdd, 1), filename = paste0(gddsfileOutLoc, fileNameOut, ".tif"), format = "GTiff", overwrite = TRUE, wopt=list(gdal=c("COMPRESS=LZW"))  )  
       gdd <- NULL
     }else{
       print(paste("This file has already been created: ", fileNameOut))
