@@ -40,7 +40,7 @@ yearNumber <- 2043
 
 # it looks like this could be done using multiple processors since the memory load is small for each iteration.
 
-#work on northern hemisphere
+#work on northern hemisphere ------
 
 for (k in sspChoices) {
   for (i in modelChoices) {
@@ -70,7 +70,7 @@ for (k in sspChoices) {
   }
 }
 
-# northern hemisphere historical by model
+# northern hemisphere historical by model -----
 k = "historical"
 for (i in modelChoices) {
   for (l in startyearChoices_historical) {
@@ -128,7 +128,7 @@ for (k in sspChoices) {
         print(system.time(growingSeasonSH <- app(tmin_yr_SH, fun)))
         names(growingSeasonSH) <- c("growingSeason_start", "growingSeason_end")
         
-        fileName_out <- paste0("data/cmip6/growingSeasons/growSeasonSH_",  i, "_", k, "_", yearNumber, ".tif")
+        fileName_out <- paste0("data/cmip6/growingSeasons/growingSeasonSH_",  i, "_", k, "_", yearNumber, ".tif")
         writeRaster(growingSeasonSH, fileName_out, overwrite = TRUE, woptList = woptList)
       }
     }
@@ -164,6 +164,53 @@ for (i in modelChoices) {
   }
 }
 
+# combine growing seasons into spatRasters by 20 year windows, by ESM and by ssp
+hemisphere <- c("NH", "SH")
+
+readRast <- function(yearNumber) {
+  fileNameIn <- paste0("data/cmip6/growingSeasons/growingSeason", m, "_", i, "_", k,  "_", yearNumber, ".tif")
+  r <- rast(fileNameIn)
+}
+
+for (k in sspChoices) {
+  for (i in modelChoices) {
+    modelName.lower <- tolower(i)
+    for (m in hemisphere)
+      for (l in startyearChoices) {
+        yearSpan <- paste0(l, "_", l + yearRange)
+        print(m)
+        yearRange <- 19
+        if (m %in% "SH") yearRange <- 18
+        yearnumberRange <- seq(l, (l + yearRange), 1)
+        gc()
+        print(m)
+        x <- lapply(yearnumberRange, readRast)
+        r <- rast(x)
+        fileNameOut <- paste0("data/cmip6/growingSeasons/growingSeason", m, "_", i, "_", k,  "_", yearSpan, ".tif")
+        print(system.time(writeRaster(r, fileNameOut, overwrite=TRUE, wopt=list(gdal="COMPRESS=LZW")))); flush.console()
+      }
+  }
+}
+
+# 20 year stuff historical
+k <- "historical"
+for (i in modelChoices) {
+  modelName.lower <- tolower(i)
+  for (m in hemisphere)
+    for (l in startyearChoices_historical) {
+      yearSpan <- paste0(l, "_", l + yearRange)
+      print(m)
+      yearRange <- 19
+      if (m %in% "SH") yearRange <- 18
+      yearnumberRange <- seq(l, (l + yearRange), 1)
+      gc()
+      print(m)
+      x <- lapply(yearnumberRange, readRast)
+      r <- rast(x)
+      fileNameOut <- paste0("data/cmip6/growingSeasons/growingSeason", m, "_", i, "_", k,  "_", yearSpan, ".tif")
+      print(system.time(writeRaster(r, fileNameOut, overwrite=TRUE, wopt=list(gdal="COMPRESS=LZW")))); flush.console()
+    }
+}
 
 # graphing stuff
 test_df <- as.data.frame(growingSeasonSH, xy = TRUE)
@@ -195,5 +242,14 @@ dev.off()
 
 
 
-
+# # fix growing season file names
+# filelist.in <- list.files(paste0(getwd(), "/", "data/cmip6/growingSeasons"), full.names = TRUE)
+# filelist.in <- gsub("//", "/", filelist.in)
+# for (i in filelist.in) {
+#   fileName_in <- i
+#   print(i)
+#   fileName_out <- gsub("growSeason", "growingSeason", i)
+#   print(fileName_out)
+#   file.rename(fileName_in, fileName_out)
+# }
 

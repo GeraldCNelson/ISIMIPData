@@ -6,9 +6,9 @@ library(terra)
 terraOptions(memfrac = 1,  progress = 10, tempdir =  "data/ISIMIP", verbose = TRUE) # need to use a relative path
 woptList <- list(gdal=c("COMPRESS=LZW"))
 
-dirList <- c( "GFDL-ESM4", "IPSL-CM6A-LR", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL") #"observed",  "historical", "IPSL-CM6A-LR", , 
- dirList <- c( "MPI-ESM1-2-HR")
-# dirList <- c( "historical")
+dirList <- c( "GFDL-ESM4", "IPSL-CM6A-LR", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL") #"observed",  "historical", "IPSL-CM6A-LR"
+ dirList <- c("IPSL-CM6A-LR")
+ dirList <- c( "historical")
 
 # # only needed when setting up directories
 # dirs.needed_observed <- paste0("/Volumes/ExtremeSSD2/climate_land_only/unitsCorrected/observed/", dirList)
@@ -25,34 +25,36 @@ dirList <- c( "GFDL-ESM4", "IPSL-CM6A-LR", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM
 # for (i in missingDirs) dir.create(i, recursive = TRUE)
 
 # filesInDir_observed <- list.files("/Volumes/ExtremeSSD2/climate_land_only/climate3b/observed/", full.names = TRUE, recursive = TRUE)
-# filesInDir_historical <- list.files("/Volumes/ExtremeSSD2/climate_land_only/climate3b/historical/", full.names = TRUE, recursive = TRUE)
+ filesInDir_historical <- list.files("/Volumes/ExtremeSSD2/climate_land_only/climate3b/historical/", full.names = TRUE, recursive = TRUE)
 filesInDir_ssp126 <- list.files("/Volumes/PassportMac/ISIMIP/cmip6/climate3b/ssp126/", full.names = TRUE, recursive = TRUE)
 filesInDir_ssp585 <- list.files("/Volumes/PassportMac/ISIMIP/cmip6/climate3b/ssp585/", full.names = TRUE, recursive = TRUE)
 filesInDir_ssp126_out <- list.files("/Volumes/ExtremeSSD2/climate_land_only/unitsCorrected/ssp126/", full.names = TRUE, recursive = TRUE)
 filesInDir_ssp585_out <- list.files("/Volumes/ExtremeSSD2/climate_land_only/unitsCorrected/ssp585/", full.names = TRUE, recursive = TRUE)
+filesInDir_historical_out <- list.files("/Volumes/ExtremeSSD2/climate_land_only/unitsCorrected/historical/", full.names = TRUE, recursive = TRUE)
 #filesInDir <- c(filesInDir_historical, filesInDir_observed, filesInDir_ssp126, filesInDir_ssp585)
-filesInDir <- c(filesInDir_ssp585)
+filesInDir <- c(filesInDir_historical)
 filesInDir <- gsub("//", "/", filesInDir)
-filesInDir_out <- c(filesInDir_ssp585_out)
+filesInDir_out <- c(filesInDir_historical_out)
 filesInDir_out <- gsub("//", "/", filesInDir_out)
 renameFile <- function(inNCfile) {
   inNCfile <- gsub("r1i1p1f1_w5e5_", "", inNCfile, fixed = TRUE)
   inNCfile <- gsub("r1i1p1f2_w5e5_", "", inNCfile, fixed = TRUE)
   inNCfile <- gsub("/Volumes/PassportMac/ISIMIP/cmip6/climate3b", "/Volumes/ExtremeSSD2/climate_land_only/unitsCorrected", inNCfile, fixed = TRUE)
+  inNCfile <- gsub("/Volumes/ExtremeSSD2/climate_land_only/climate3b", "/Volumes/ExtremeSSD2/climate_land_only/unitsCorrected", inNCfile, fixed = TRUE) # for historical files
   outfile <- gsub(".nc", ".tif", inNCfile, fixed = TRUE)
   return(outfile)
 }
 
 varListComplete <- c("_tasmax_", "_tasmin_", "_pr_", "_hurs_", "huss", "rlds", "_rsds_", "_sfcwind_", "_ps_", "_tas_", "_prsn_") # "_tave_",
 varsToKeep <- c( "_rsds_", "_sfcwind_")
-varsToKeep <- c( "_tasmax_") #, "_tasmin_") #, "_rsds_", "_sfcwind_")
+varsToKeep <- c( "_tasmax_", "_tasmin_") #, "_tasmin_") #, "_rsds_", "_sfcwind_")
 varsToRemove <- varListComplete[!varListComplete %in% varsToKeep]
 
 for (cntr in dirList) {
   filestoKeep <- filesInDir[grepl(cntr, filesInDir, fixed = TRUE)] # keep only file names with climate vars included in varsToKeep
 }
 
-filestoKeep = c()
+#filestoKeep = c()
 for (cntr in dirList) {
   filestoKeep <- c(filestoKeep, filesInDir[grepl(cntr, filesInDir, fixed = TRUE)]) # keep file names with the climate variables in varsToKeep
 }
@@ -72,12 +74,16 @@ for (cntr in yearToRemove) {
 # filestoKeep <- filestoKeep[grepl("ssp585", filestoKeep, fixed = TRUE)] # keep only file names with ESM names in dirList
 
 #filestoKeep <- data.table(v1 = character())
+filestoKeep <- filestoKeep[!grepl("aux.xml", filestoKeep, fixed = TRUE)]
+
+
 for (i in varsToKeep) {
   # update the list of files, just in case
-  filesInDir_ssp126_out <- list.files("/Volumes/ExtremeSSD2/climate_land_only/unitsCorrected/ssp126/", full.names = TRUE, recursive = TRUE)
-  filesInDir_ssp585_out <- list.files("/Volumes/ExtremeSSD2/climate_land_only/unitsCorrected/ssp585/", full.names = TRUE, recursive = TRUE)
-  filesInDir <- c(filesInDir_ssp585, filesInDir_ssp585)
-  filesInDir <- gsub("//", "/", filesInDir)
+  # filesInDir_ssp126_out <- list.files("/Volumes/ExtremeSSD2/climate_land_only/unitsCorrected/ssp126/", full.names = TRUE, recursive = TRUE)
+  # filesInDir_ssp585_out <- list.files("/Volumes/ExtremeSSD2/climate_land_only/unitsCorrected/ssp585/", full.names = TRUE, recursive = TRUE)
+  # filesInDir <- c(filesInDir_ssp585, filesInDir_ssp585)
+  # filesInDir <- gsub("//", "/", filesInDir)
+  # filesInDir_historical <- list.files("/Volumes/ExtremeSSD2/climate_land_only/climate3b/historical/", full.names = TRUE, recursive = TRUE)
   
   print(i)
   
@@ -112,17 +118,19 @@ for (i in varsToKeep) {
     }
   }
   if (i %in% c("_tasmax_", "_tasmin_", "_tas_")) {
-    for (j in 1:length(filestoKeep)) {
+    for (j in 13:length(filestoKeep)) {
       inFile <- filestoKeep[j]
       startYear <- substr(inFile, (nchar(inFile))-11 ,nchar(inFile)-8)
+      if (grepl("_", startYear)) startYear <- substr(inFile, (nchar(inFile))-12 ,nchar(inFile)-9) # for the files that are still on SSD2
       yearRange <- 9
       outFile <- renameFile(inFile)
-      if (outFile %in% filesInDir_out) print(paste0("skipping ", outFile))
-      if (!outFile %in% filesInDir_out){
-      print(paste0("outFile: ", outFile))
+#      print(paste0("tasmax outfile: ", ))
+      # if (outFile %in% filesInDir_out) print(paste0("skipping ", outFile))
+      # if (!outFile %in% filesInDir_out){
+      # print(paste0("outFile: ", outFile))
       rastIn <- rast(inFile)
       # rastIn <- setMinMax(rastIn) # add min max values
-      rastIn
+      print(rastIn)
       #rename raster names
       startDate <- paste0(startYear, "-01-01"); endDate <- paste0(as.numeric(startYear) + yearRange, "-12-31")
       indices <- seq(as.Date(startDate), as.Date(endDate), 1)
@@ -130,13 +138,12 @@ for (i in varsToKeep) {
       #     indices <- as.numeric(indices)
       
       print(system.time(rastOut <- rastIn - 273.15)); flush.console()
-      print(rastOut) 
       names(rastOut) <- indices
       print(rastOut)
       print(system.time(writeRaster(rastOut, outFile, overwrite = TRUE, format = "GTiff", wopt= woptList))); flush.console()
       rastIn <- NULL
       gc()
-      }
+#      }
     }
   }
   if (i %in% c("_hurs_", "_huss_", "_rsds_", "_sfcwind_", "_ps")) {

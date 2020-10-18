@@ -3,21 +3,22 @@
 source("R/globallyUsed.R")
 library(terra)
 woptList <- list(gdal=c("COMPRESS=LZW"))
+terraOptions(memfrac = 1,  progress = 10, tempdir =  "data/ISIMIP", verbose = TRUE) # need to use a relative path
 # library(doParallel) #Foreach Parallel Adaptor 
 # library(foreach) #Provides foreach looping construct
 locOfFiles <- "/Volumes/ExtremeSSD2/climate_land_only/unitsCorrected/"
 climateVars <- c( "tasmin", "tasmax", "tave", "pr", "hurs", "rsds", "sfcwind") # "tasmax", "tasmin"
 
-climateVarstoKeep <- c("tasmax") # "tasmax", "tasmin"
+climateVarstoKeep <- c("tasmax", "tasmin") # "tasmax", "tasmin"
 
 startyearChoices_old <-  c(2021, 2051, 2091) #2021, 2051, 2091) # c(2091) # c(2006) #, 2041, 2051, 2081)
 startyearChoices_new <-  c(2041, 2081) #1991, 2021, 2051, 2091) # c(2091) # c(2006) #, 2041, 2051, 2081)
 startyearChoices_new_historical <-  c(1991) #1991, 2021, 2051, 2091) # c(2091) # c(2006) #, 2041, 2051, 2081)
 
 sspChoices <- c("ssp585", "ssp126") #ssp585") #"ssp126",
-sspChoices <- "ssp585"
+#sspChoices <- "ssp585"
 modelChoices <- c("UKESM1-0-LL", "MPI-ESM1-2-HR", "MRI-ESM2-0", "GFDL-ESM4", "UKESM1-0-LL", "IPSL-CM6A-LR")
-modelChoices <- c( "MRI-ESM2-0")
+# modelChoices <- c( "MRI-ESM2-0")
 modelChoices.lower <- tolower(modelChoices)
 yearRangeOld <- 9
 yearRangeNew <- 19
@@ -76,7 +77,7 @@ for (k in sspChoices) {
         print(filesToKeepClimVar)
         
         fileNameOut <- paste0(locOfFiles, k, "/", i, "/", tolower(i), "_", k, "_", j, "_", "global_daily", "_", yearSpanNew, ".tif")
-        #      unlink(fileNameOut) # use this when you want fileNameOut to be redone
+              unlink(fileNameOut) # use this when you want fileNameOut to be redone
         if (!fileNameOut %in% fileInDir){
           print(paste0("fileNameOut that needs to be done : ", fileNameOut))
           print(paste0("model: ", i, ", ssp choice: ", k, ", start year: ", l, ", variable: ", j, ", startYearChoices: ", startYearChoices ))
@@ -90,7 +91,7 @@ for (k in sspChoices) {
           indices <- paste0("X", as.character(indices))
           names(rout) <- indices
           fileNameOut <- gsub("__", "_", fileNameOut) # a kludge until I can figure out the underscore sources.
-          print(fileNameOut)
+          print(paste0("fileNameOut", fileNameOut))
           print(system.time(writeRaster(rout, fileNameOut, overwrite = TRUE, format = "GTiff", wopt= woptList))); flush.console()
           rout <- NULL
           gc()
@@ -157,6 +158,7 @@ for (k in sspChoices) {
       filesToKeepClimVar <- temp[grepl(j, temp, fixed = TRUE)] 
       
       fileNameOut <- paste0(locOfFiles,  "/", "ensemble_historical_", j, "_", yearSpanNew, ".tif")
+      unlink(fileNameOut) # use this when you want fileNameOut to be redone
       if (!fileNameOut %in% filesToKeepClimVar){
         print(paste0("fileNameOut that needs to be done : ", fileNameOut))
         print(paste0("model: ", i, ", ssp choice: ", k, ", start year: ", l, ", variable: ", j, ", startyearChoices_new: ", startyearChoices_new[1] ))
