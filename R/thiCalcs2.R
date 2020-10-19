@@ -160,7 +160,7 @@ for (k in sspChoices) {
         for (m in speciesChoice) {
           
           fileName_out <- paste0("data/cmip6/THI/thi.", speciesChoice, "_",  i, "_", k, "_", yearNumber, ".tif")
-          funName <- paste("THIfun_", speciesChoice)
+          funName <- paste0("THIfun_", speciesChoice)
           if (speciesChoice %in% "chicken") {
             comb_chicken <- tmax_yr
             print(system.time(r_out <- lapp(comb_chicken, THIfun_chicken, filename = fileName_out, overwrite =TRUE, wopt = woptList)))
