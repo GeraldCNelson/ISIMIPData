@@ -16,5 +16,6 @@ for (i in yearsList) {
 }
 
 for (i in keepList) {
+  print(paste0("copying ", i))
 file.copy(i, destination, overwrite = FALSE)
 }

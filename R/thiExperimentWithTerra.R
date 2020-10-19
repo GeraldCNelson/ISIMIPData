@@ -76,8 +76,11 @@ funExtremeCattleTHIct <- function(cellVector) {
   return(heatCt) 
 }
 
+yearNumber <- 2041
+fileName_in <- paste0("data/cmip6/THI/thi.cattle_",  i, "_", k, "_", yearNumber, ".tif")
+thi.cattle <- rast(fileName_in)
 
-
+print(system.time(extremeCt_cattle <- app(thi.cattle, funExtremeCattleTHIct))) 
 
 
 
