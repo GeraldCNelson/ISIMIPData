@@ -141,13 +141,17 @@ for (k in sspChoices) {
         print(paste0("fileName out: ", fileName_out))
         funName <- paste0("THIfun_", m)
         if (m %in% "chicken") {
+          fileName_tasmin <- paste0(locOfFiles,  modelName.lower, "_", k, "_tasmin_global_daily_", yearSpan, ".tif")
+          tmin <- rast(fileName_tasmin)
+          
           comb_chicken <- sds(rh, tmin)
           print(system.time(r_out <- lapp(comb_chicken, THIfun_chicken, filename = fileName_out, overwrite =TRUE, wopt = woptList)))
+          tmin <- NULL
+          gc()
         } else {
           print(system.time(r_out <- lapp(comb, fun = funName, filename = fileName_out, overwrite =TRUE, wopt = woptList)))
           print(paste0("app done"))
-          
-          print(system.time(writeRaster(r_out, filename = fileName_out, overwrite=TRUE, wopt = woptList))); flush.console()
+ #print(system.time(writeRaster(r_out, filename = fileName_out, overwrite=TRUE, wopt = woptList))); flush.console()
         }
       }
     }
@@ -170,13 +174,16 @@ for (i in modelChoices) {
       print(paste0("fileName out: ", fileName_out))
       funName <- paste0("THIfun_", m)
       if (m %in% "chicken") {
+        fileName_tasmin <- paste0(locOfFiles,  modelName.lower, "_", k, "_tasmin_global_daily_", yearSpan, ".tif")
+        tmin <- rast(fileName_tasmin)
+        
         comb_chicken <- sds(rh, tmin)
         print(system.time(r_out <- lapp(comb_chicken, THIfun_chicken, filename = fileName_out, overwrite =TRUE, wopt = woptList)))
+        tmin <- NULL
       } else {
         print(system.time(r_out <- lapp(comb, fun = funName, filename = fileName_out, overwrite =TRUE, wopt = woptList)))
         print(paste0("app done"))
-        
-        print(system.time(writeRaster(r_out, filename = fileName_out, overwrite=TRUE, wopt = woptList))); flush.console()
+ #       print(system.time(writeRaster(r_out, filename = fileName_out, overwrite=TRUE, wopt = woptList))); flush.console()
       }
     }
   }
