@@ -17,7 +17,7 @@ get_os <- function() {
   tolower(os)
 }
 if (get_os() %in% "osx") {
-  terraOptions(memfrac = 1,  progress = 10, tempdir =  "data/ISIMIP", verbose = TRUE) # need to use a relative path
+  terraOptions(memfrac = .9,  progress = 10, tempdir =  "data/ISIMIP", verbose = TRUE) # need to use a relative path
 }else{
   terraOptions(memfrac = .6,  progress = 10, tempdir =  "data/ISIMIP", verbose = TRUE) # need to use a relative path
 }
@@ -48,6 +48,7 @@ i <- "IPSL-CM6A-LR"
 k <- "ssp585"
 l <- 2041
 yearNumber <- 2043
+m <- "goat"
 
 readRast_thi_cattle <- function(yearNumber) {
   fileNameIn <- paste0("data/cmip6/THI/thi.cattle_", i, "_", k,  "_", yearNumber, ".tif") # note yearNumber here
@@ -104,10 +105,8 @@ THIfun_sheep <- function(cellVector) {
   thi <- round(thi, 2)
 }
 
-THIfun_goat <- function(cellVector) {
-  rh <- cellVector[1:vlend]
-  tmax <- cellVector[v2start:nl]
-  if (is.nan(cellVector[1])) { return(rep(NA, vlend)) }
+THIfun_goat <- function(rh, tmax) {
+#  if (is.nan(rh[1])) { return(rep(NA, vlend)) }
   #  print(paste("length tmax: ", (length(tmax))))
   thi <- (1.8 * tmax + 32.0) - ((0.55 - 0.0055 * rh) * (1.8 * tmax - 26.8)) 
   thi[tmax < 20] <- 0
@@ -131,113 +130,113 @@ THIfun_chicken <- function(tmax) {
 
 #THI scenarios -----
 speciesChoice <- c("goat", "swine", "chicken", "sheep") # cattle
-speciesChoice <- "cattle"
+speciesChoice <- "goat"
 for (k in sspChoices) {
-  for (i in modelChoices) {
-    for (l in startyearChoices) {
-      yearSpan <- paste0(l, "_", l + yearRange + 1) # the +1 here is to get at the original file names
+  for (l in startyearChoices) {
+    for (i in modelChoices) {
+     yearSpan <- paste0(l, "_", l + yearRange)
       modelName.lower <- tolower(i)
-      modelName.lower <- tolower(i)
-      yearSpan <- paste0(l, "_", l + yearRange)
       fileName_tasmax <- paste0(locOfFiles,  modelName.lower, "_", k, "_tasmax_global_daily_", yearSpan, ".tif")
       tmax <- rast(fileName_tasmax)
       fileName_rh <- paste0(locOfFiles, modelName.lower, "_", k, "_hurs_global_daily_", yearSpan, ".tif")
       rh <- rast(fileName_rh)
+      comb <- sds(rh, tmax)
       
       combined <- c(rh, tmax)
       nl <- nlyr(combined)
       vlend <- nl/2
       v2start <- 1 + vlend
-      
-      for (yearNumber in l:(l + yearRange)) {
-        gc()
-        startDate <- paste0(yearNumber, "-01-01"); endDate <- paste0(yearNumber, "-12-31")
-        indicesYear <- seq(as.Date(startDate), as.Date(endDate), 1)
-        indicesCharYear <- paste0("X", as.character(indicesYear))
+      gc()
+      # startDate <- paste0(yearNumber, "-01-01"); endDate <- paste0(yearNumber, "-12-31")
+      # indicesYear <- seq(as.Date(startDate), as.Date(endDate), 1)
+      # indicesCharYear <- paste0("X", as.character(indicesYear))
+      # 
+      # print(system.time(tmax_yr <- subset(tmax, indicesCharYear)))
+      # print(system.time(rh_yr <- subset(rh, indicesCharYear)))
+      for (m in speciesChoice) {
         
-        print(system.time(tmax_yr <- subset(tmax, indicesCharYear)))
-        print(system.time(rh_yr <- subset(rh, indicesCharYear)))
-        for (m in speciesChoice) {
+        fileName_out <- paste0("data/cmip6/THI/thi.", m, "_",  i, "_", k, "_", yearSpan, ".tif")
+        print(paste0("fileName out: ", fileName_out))
+        funName <- paste0("THIfun_", m)
+        if (m %in% "chicken") {
+          comb_chicken <- tmax_yr
+          print(system.time(r_out <- lapp(comb_chicken, THIfun_chicken, filename = fileName_out, overwrite =TRUE, wopt = woptList)))
+        } else {
+          print(system.time(r_out <- lapp(comb, fun = funName, filename = fileName_out, overwrite =TRUE, wopt = woptList)))
+          print(paste0("app done"))
           
-          fileName_out <- paste0("data/cmip6/THI/thi.", speciesChoice, "_",  i, "_", k, "_", yearNumber, ".tif")
-          funName <- paste0("THIfun_", speciesChoice)
-          if (speciesChoice %in% "chicken") {
-            comb_chicken <- tmax_yr
-            print(system.time(r_out <- lapp(comb_chicken, THIfun_chicken, filename = fileName_out, overwrite =TRUE, wopt = woptList)))
-          } else {
-            print(system.time(r_out <- app(combined, funName)))
-            print(system.time(writeRaster(r_out, filename = fileName_out, overwrite=TRUE, wopt = woptList))); flush.console()
-          }
+          print(system.time(writeRaster(r_out, filename = fileName_out, overwrite=TRUE, wopt = woptList))); flush.console()
         }
       }
     }
   }
-  
-  #THI historical -----
-  k <- "historical"
-  for (i in modelChoices) {
-    for (l in startyearChoices_historical) {
-      yearSpan <- paste0(l, "_", l + yearRange + 1) # the +1 here is to get at the original file names
-      modelName.lower <- tolower(i)
-      modelName.lower <- tolower(i)
-      yearSpan <- paste0(l, "_", l + yearRange)
-      fileName_tasmax <- paste0(locOfFiles,  modelName.lower, "_", k, "_tasmax_global_daily_", yearSpan, ".tif")
-      tmax <- rast(fileName_tasmax)
-      fileName_rh <- paste0(locOfFiles, modelName.lower, "_", k, "_hurs_global_daily_", yearSpan, ".tif")
-      rh <- rast(fileName_rh)
+}
+
+#THI historical -----
+k <- "historical"
+for (i in modelChoices) {
+  for (l in startyearChoices_historical) {
+    yearSpan <- paste0(l, "_", l + yearRange + 1) # the +1 here is to get at the original file names
+    modelName.lower <- tolower(i)
+    modelName.lower <- tolower(i)
+    yearSpan <- paste0(l, "_", l + yearRange)
+    fileName_tasmax <- paste0(locOfFiles,  modelName.lower, "_", k, "_tasmax_global_daily_", yearSpan, ".tif")
+    tmax <- rast(fileName_tasmax)
+    fileName_rh <- paste0(locOfFiles, modelName.lower, "_", k, "_hurs_global_daily_", yearSpan, ".tif")
+    rh <- rast(fileName_rh)
+    
+    for (yearNumber in l:(l + yearRange)) {
+      gc()
+      startDate <- paste0(yearNumber, "-01-01"); endDate <- paste0(yearNumber, "-12-31")
+      indicesYear <- seq(as.Date(startDate), as.Date(endDate), 1)
+      indicesCharYear <- paste0("X", as.character(indicesYear))
       
-      for (yearNumber in l:(l + yearRange)) {
-        gc()
-        startDate <- paste0(yearNumber, "-01-01"); endDate <- paste0(yearNumber, "-12-31")
-        indicesYear <- seq(as.Date(startDate), as.Date(endDate), 1)
-        indicesCharYear <- paste0("X", as.character(indicesYear))
-        
-        print(system.time(tmax_yr <- subset(tmax, indicesCharYear)))
-        print(system.time(rh_yr <- subset(rh, indicesCharYear)))
-        comb <- sds(rh_yr, tmax_yr)
-        fileName_out <- paste0("data/cmip6/THI/thi.cattle_",  i, "_", k, "_", yearNumber, ".tif")
-        
-        print(system.time(r_out <- lapp(comb, THIfun_cattle, filename = fileName_out, overwrite =TRUE, wopt = woptList)))
-      }
+      print(system.time(tmax_yr <- subset(tmax, indicesCharYear)))
+      print(system.time(rh_yr <- subset(rh, indicesCharYear)))
+      comb <- sds(rh_yr, tmax_yr)
+      fileName_out <- paste0("data/cmip6/THI/thi.cattle_",  i, "_", k, "_", yearNumber, ".tif")
+      
+      print(system.time(r_out <- lapp(comb, THIfun_cattle, filename = fileName_out, overwrite =TRUE, wopt = woptList)))
     }
   }
-  
-  # 20 year THI results  ------
-  for (k in sspChoices) {
-    for (i in modelChoices) {
-      modelName.lower <- tolower(i)
-      for (l in startyearChoices) {
-        yearSpan <- paste0(l, "_", l + yearRange)
-        yearnumberRange <- seq(l, (l + yearRange), 1)
-        gc()
-        x <- lapply(yearnumberRange, readRast_thi_cattle)
-        x_start <- x
-        r <- rast(x)
-        fileNameOut <- paste0("data/cmip6/THI/thi.cattle_", i, "_", k,  "_", yearSpan, ".tif")
-        print(paste0("fileNameOut: ", fileNameOut))
-        print(system.time(writeRaster(r, fileNameOut, overwrite=TRUE, wopt = woptList))); flush.console()
-        r_start <- r_end <- NULL
-        gc()
-      }
-    }
+}
+
+# # 20 year THI results  ------
+# for (k in sspChoices) {
+#   for (i in modelChoices) {
+#     modelName.lower <- tolower(i)
+#     for (l in startyearChoices) {
+#       yearSpan <- paste0(l, "_", l + yearRange)
+#       yearnumberRange <- seq(l, (l + yearRange), 1)
+#       gc()
+#       x <- lapply(yearnumberRange, readRast_thi_cattle)
+#       x_start <- x
+#       r <- rast(x)
+#       fileNameOut <- paste0("data/cmip6/THI/thi.cattle_", i, "_", k,  "_", yearSpan, ".tif")
+#       print(paste0("fileNameOut: ", fileNameOut))
+#       print(system.time(writeRaster(r, fileNameOut, overwrite=TRUE, wopt = woptList))); flush.console()
+#       r_start <- r_end <- NULL
+#       gc()
+#     }
+#   }
+# }
+
+# 20 year THI results, historical  ------
+k <- "historical"
+for (i in modelChoices) {
+  for (l in startyearChoices_historical) {
+    yearSpan <- paste0(l, "_", l + yearRange)
+    yearnumberRange <- seq(l, (l + yearRange), 1)
+    gc()
+    x <- lapply(yearnumberRange, readRast_thi_cattle)
+    r <- rast(x)
+    fileNameOut <- paste0("data/cmip6/THI/thi.cattle_", i, "_", k,  "_", yearSpan, ".tif")
+    print(paste0("fileNameOut: ", fileNameOut))
+    print(system.time(writeRaster(r, fileNameOut, overwrite=TRUE, wopt = woptList))); flush.console()
+    r_start <- r_end <- NULL
+    gc()
   }
-  
-  # 20 year THI results, historical  ------
-  k <- "historical"
-  for (i in modelChoices) {
-    for (l in startyearChoices_historical) {
-      yearSpan <- paste0(l, "_", l + yearRange)
-      yearnumberRange <- seq(l, (l + yearRange), 1)
-      gc()
-      x <- lapply(yearnumberRange, readRast_thi_cattle)
-      r <- rast(x)
-      fileNameOut <- paste0("data/cmip6/THI/thi.cattle_", i, "_", k,  "_", yearSpan, ".tif")
-      print(paste0("fileNameOut: ", fileNameOut))
-      print(system.time(writeRaster(r, fileNameOut, overwrite=TRUE, wopt = woptList))); flush.console()
-      r_start <- r_end <- NULL
-      gc()
-    }
-  }
+}
 }
 
 # ensemble means -----
