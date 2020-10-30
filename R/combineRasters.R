@@ -1,32 +1,33 @@
 # combine 10 year rasters to get 20 year rasters
 
-source("R/globallyUsed.R")
+#source("R/globallyUsed.R")
 library(terra)
 woptList <- list(gdal=c("COMPRESS=LZW"))
 terraOptions(memfrac = 1,  progress = 10, tempdir =  "data/ISIMIP", verbose = TRUE) # need to use a relative path
 # library(doParallel) #Foreach Parallel Adaptor 
 # library(foreach) #Provides foreach looping construct
 locOfFiles <- "/Volumes/ExtremeSSD2/climate_land_only/unitsCorrected/"
-climateVars <- c( "tasmin", "tasmax", "tave", "pr", "hurs", "rsds", "sfcwind") # "tasmax", "tasmin"
+climateVars <- c( "tasmin", "tasmax", "tas", "pr", "hurs", "rsds", "sfcwind") # "tasmax", "tasmin"
 
-climateVarstoKeep <- c("tasmax", "tasmin") # "tasmax", "tasmin"
+climateVarstoKeep <- c("tas") # "tasmax", "tasmin"
 
 startyearChoices_old <-  c(2021, 2051, 2091) #2021, 2051, 2091) # c(2091) # c(2006) #, 2041, 2051, 2081)
 startyearChoices_new <-  c(2041, 2081) #1991, 2021, 2051, 2091) # c(2091) # c(2006) #, 2041, 2051, 2081)
+startyearChoices_new <-  c(2081) #1991, 2021, 2051, 2091) # c(2091) # c(2006) #, 2041, 2051, 2081)
 startyearChoices_new_historical <-  c(1991) #1991, 2021, 2051, 2091) # c(2091) # c(2006) #, 2041, 2051, 2081)
 
 sspChoices <- c("ssp585", "ssp126") #ssp585") #"ssp126",
-#sspChoices <- "ssp585"
-modelChoices <- c("UKESM1-0-LL", "MPI-ESM1-2-HR", "MRI-ESM2-0", "GFDL-ESM4", "UKESM1-0-LL", "IPSL-CM6A-LR")
-# modelChoices <- c( "MRI-ESM2-0")
+sspChoices <- "ssp585"
+modelChoices <- c("UKESM1-0-LL", "MPI-ESM1-2-HR", "MRI-ESM2-0", "GFDL-ESM4", "IPSL-CM6A-LR")
+# modelChoices <- c("MPI-ESM1-2-HR")
 modelChoices.lower <- tolower(modelChoices)
 yearRangeOld <- 9
 yearRangeNew <- 19
 #test values
 k <- "historical"
 l <- 1991
-i <- "MRI-ESM2-0"
-j <- "tasmax"
+i <- "UKESM1-0-LL"
+j <- "hurs"
 
 # get list of files in all the unitsCorrected dirs and combine the relevant ones
 
@@ -45,7 +46,7 @@ for (k in sspChoices) {
       yearSpanOld2 <- paste0(l2, "_", l2 + yearRangeOld)
       yearSpanNew <- paste0(l1, "_", l1 + yearRangeNew)
       
-      varListComplete <- c("_tasmax_", "_tasmin_", "_pr_", "_hurs_", "huss", "rlds", "_rsds_", "_sfcwind_", "_ps_", "_tas_", "_tave_", "prsn")
+      varListComplete <- c("_tasmax_", "_tasmin_", "_pr_", "_hurs_", "huss", "rlds", "_rsds_", "_sfcwind_", "_ps_", "_tas_", "prsn")
  #     varsToKeep <- c("_tasmax_", "_tasmin_", "_pr_", "_hurs_",  "_rsds_", "_sfcwind_") # "_tasmax_", "_tasmin_", "_pr_", "_hurs_",# remove "_tave_", for now
       varsToRemove <- varListComplete[!varListComplete %in% climateVarstoKeep]
       
@@ -86,6 +87,7 @@ for (k in sspChoices) {
           r1 <- rast(fileNameR1)
           r2 <- rast(fileNameR2)
           rout <- c(r1, r2)
+          print(rout)
           startDate <- paste0(l, "-01-01"); endDate <- paste0(l + yearRangeNew, "-12-31")
           indices <- seq(as.Date(startDate), as.Date(endDate), 1)
           indices <- paste0("X", as.character(indices))
@@ -93,6 +95,7 @@ for (k in sspChoices) {
           fileNameOut <- gsub("__", "_", fileNameOut) # a kludge until I can figure out the underscore sources.
           print(paste0("fileNameOut", fileNameOut))
           print(system.time(writeRaster(rout, fileNameOut, overwrite = TRUE, format = "GTiff", wopt= woptList))); flush.console()
+          print(paste("Done with ", fileNameOut))
           rout <- NULL
           gc()
         }
@@ -176,4 +179,66 @@ for (k in sspChoices) {
         print(system.time(writeRaster(rout, fileNameOut, overwrite = TRUE, format = "GTiff", wopt= woptList))); flush.console()}
     }
   }
+  
+  # code to check all rasters
+  library(terra)
+  fileNameHolder <- character()
+  filesToCheck <- list.files("data/bigFiles", full.names = TRUE)
+  filesToCheck <- filesToCheck[!grepl("aux.xml", filesToCheck, fixed = TRUE)]
+  filesToCheck <- unique(filesToCheck) # just in case
+  filesToCheck_hurs <- filesToCheck[grepl("hurs", filesToCheck, fixed = TRUE)]
+  filesToCheck_tasmax <- filesToCheck[grepl("tasmax", filesToCheck, fixed = TRUE)]
+  filesToCheck_tasmin <- filesToCheck[grepl("tasmin", filesToCheck, fixed = TRUE)]
+  for (i in filesToCheck_hurs) {
+    print(i)
+    temp <- rast(i)
+    minVal <- min(temp[[1]]@ptr[["range_min"]])
+    print(paste0("minVal: ", minVal))
+   if (minVal < 0) {
+     print(i)
+     fileNameHolder <- c(fileNameHolder, i)}
+  }
+  
+  for (i in fileNameHolder) {
+    file.remove(i)
+  }
+
+  # check tasmax  
+  fileNameHolder <- character()
+  for (i in filesToCheck_tasmax) {
+    print(i)
+    temp <- rast(i)
+    maxVal <- max(temp[[1]]@ptr[["range_max"]])
+#    maxVal <- min(global(temp, max, na.rm = TRUE))
+    print(paste0("maxVal: ", maxVal))
+    if (maxVal > 200) {
+      print(i)
+      fileNameHolder <- c(fileNameHolder, i)}
+  }
+  
+  for (i in filesToCheck_tasmax) {
+    i_new <- gsub("__", "_", i)
+  file.rename(from = i, to = i_new)
+  }
+  
+  for (i in filesToCheck_tasmin) {
+    i_new <- gsub("__", "_", i)
+    file.rename(from = i, to = i_new)
+  }
+  
+  # check tasmin  
+  fileNameHolder <- character()
+  for (i in filesToCheck_tasmin) {
+    print(i)
+    temp <- rast(i)
+    maxVal <- max(temp[[1]]@ptr[["range_max"]])
+    print(paste0("maxVal: ", maxVal))
+    if (maxVal > 200) {
+      print(i)
+      fileNameHolder <- c(fileNameHolder, i)}
+  }
+  
+  # for (i in fileNameHolder) {
+  #   file.remove(i)
+  # }
   

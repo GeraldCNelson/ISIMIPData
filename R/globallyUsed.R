@@ -65,7 +65,7 @@ crsLoc <- CRS(RobinsonProj)
 #coastsCoarse <- sp::spTransform(coastsCoarse, crsLoc)
 coastsCoarse.Rob <- sp::spTransform(raster::crop(coastsCoarse, raster::extent(-179.95, 179.95, -60, 90)), crsLoc)
 
-
+library(maptools)
 data(wrld_simpl)
 wrld_land <- subset(wrld_simpl, !NAME == "Antarctica")
 wrld_land@bbox <- bbox(rbind(c(-180, -90), c(180, 90)))

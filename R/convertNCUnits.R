@@ -1,14 +1,14 @@
 # this script converts the units of nc tmin, tmax, and pr and all varibles to geotifs
 #source("R/globallyUsed.R")
-library(data.table)
+#library(data.table)
 #library(raster)
 library(terra)
-terraOptions(memfrac = 1,  progress = 10, tempdir =  "data/ISIMIP", verbose = TRUE) # need to use a relative path
+terraOptions(memfrac = .9, progress = 10, tempdir =  "data/ISIMIP", verbose = TRUE) # need to use a relative path, memfrac = .9,  
 woptList <- list(gdal=c("COMPRESS=LZW"))
 
 dirList <- c( "GFDL-ESM4", "IPSL-CM6A-LR", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL") #"observed",  "historical", "IPSL-CM6A-LR"
- dirList <- c("IPSL-CM6A-LR")
- dirList <- c( "historical")
+ dirList <- c("UKESM1-0-LL")
+# dirList <- c( "historical")
 
 # # only needed when setting up directories
 # dirs.needed_observed <- paste0("/Volumes/ExtremeSSD2/climate_land_only/unitsCorrected/observed/", dirList)
@@ -32,9 +32,9 @@ filesInDir_ssp126_out <- list.files("/Volumes/ExtremeSSD2/climate_land_only/unit
 filesInDir_ssp585_out <- list.files("/Volumes/ExtremeSSD2/climate_land_only/unitsCorrected/ssp585/", full.names = TRUE, recursive = TRUE)
 filesInDir_historical_out <- list.files("/Volumes/ExtremeSSD2/climate_land_only/unitsCorrected/historical/", full.names = TRUE, recursive = TRUE)
 #filesInDir <- c(filesInDir_historical, filesInDir_observed, filesInDir_ssp126, filesInDir_ssp585)
-filesInDir <- c(filesInDir_historical)
+filesInDir <- c(filesInDir_ssp585)
 filesInDir <- gsub("//", "/", filesInDir)
-filesInDir_out <- c(filesInDir_historical_out)
+filesInDir_out <- c(filesInDir_ssp585_out)
 filesInDir_out <- gsub("//", "/", filesInDir_out)
 renameFile <- function(inNCfile) {
   inNCfile <- gsub("r1i1p1f1_w5e5_", "", inNCfile, fixed = TRUE)
@@ -47,7 +47,7 @@ renameFile <- function(inNCfile) {
 
 varListComplete <- c("_tasmax_", "_tasmin_", "_pr_", "_hurs_", "huss", "rlds", "_rsds_", "_sfcwind_", "_ps_", "_tas_", "_prsn_") # "_tave_",
 varsToKeep <- c( "_rsds_", "_sfcwind_")
-varsToKeep <- c( "_tasmax_", "_tasmin_") #, "_tasmin_") #, "_rsds_", "_sfcwind_")
+varsToKeep <- c( "_tas_") #, "_tasmin_") #, "_rsds_", "_sfcwind_")
 varsToRemove <- varListComplete[!varListComplete %in% varsToKeep]
 
 for (cntr in dirList) {
@@ -62,6 +62,7 @@ for (cntr in varsToRemove) {
   filestoKeep <- filestoKeep[!grepl(cntr, filestoKeep, fixed = TRUE)] # keep only file names with ESM names in dirList
 }
 yearToRemove <- c(1951, 1961, 1971, 1981, 2014, 2015)
+yearToRemove <- c(1951, 1961, 1971, 1981, 2014, 2015, 2021, 2031, 2061, 2071)
 for (cntr in yearToRemove) {
   filestoKeep <- filestoKeep[!grepl(cntr, filestoKeep, fixed = TRUE)] # keep only file names with ESM names in dirList
 }
@@ -75,7 +76,7 @@ for (cntr in yearToRemove) {
 
 #filestoKeep <- data.table(v1 = character())
 filestoKeep <- filestoKeep[!grepl("aux.xml", filestoKeep, fixed = TRUE)]
-
+filestoKeep <- unique(filestoKeep)
 
 for (i in varsToKeep) {
   # update the list of files, just in case
@@ -95,6 +96,8 @@ for (i in varsToKeep) {
       startYear <- substr(inFile, (nchar(inFile))-11 ,nchar(inFile)-8)
       yearRange <- 9
       outFile <- renameFile(inFile)
+      unlink(outFile) # so file gets replaced
+      
       if (outFile %in% filesInDir_out) print(paste0("skipping ", outFile))
       if (!outFile %in% filesInDir_out){
       print(paste0("outFile: ", outFile))
@@ -118,12 +121,14 @@ for (i in varsToKeep) {
     }
   }
   if (i %in% c("_tasmax_", "_tasmin_", "_tas_")) {
-    for (j in 13:length(filestoKeep)) {
+    for (j in 1:length(filestoKeep)) {
       inFile <- filestoKeep[j]
       startYear <- substr(inFile, (nchar(inFile))-11 ,nchar(inFile)-8)
       if (grepl("_", startYear)) startYear <- substr(inFile, (nchar(inFile))-12 ,nchar(inFile)-9) # for the files that are still on SSD2
       yearRange <- 9
       outFile <- renameFile(inFile)
+      unlink(outFile) # so file gets replaced
+      
 #      print(paste0("tasmax outfile: ", ))
       # if (outFile %in% filesInDir_out) print(paste0("skipping ", outFile))
       # if (!outFile %in% filesInDir_out){
@@ -152,7 +157,8 @@ for (i in varsToKeep) {
       startYear <- substr(inFile, (nchar(inFile))-11 ,nchar(inFile)-8)
       yearRange <- 9
       outFile <- renameFile(inFile)
-      if (outFile %in% filesInDir_out) print(paste0("skipping ", outFile))
+      unlink(outFile) # so file gets replaced
+#      if (outFile %in% filesInDir_out) print(paste0("skipping ", outFile))
       if (!outFile %in% filesInDir_out){
       print(paste0("variable: ", i, ", outfile: ", outFile))
       rastIn <- rast(inFile)
