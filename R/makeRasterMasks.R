@@ -22,9 +22,8 @@ for (i in animalsList) {
   if (species %in% "recl.asc") species = "livestockSystem"
   fileName <- paste0("data/animals/raster_ct_", species, ".tif")
   rAnimal <- rast(paste0(sourceDir, i), format = "ascii")
-  rAnimal <- extend(rAnimal, globeExtent)
-  rAnimal <- aggregate(rAnimal, 6, fun = sum)
-  rAnimal <- extend(rAnimal, globeExtent)
+  if (!i %in% "sheep") rAnimal <- aggregate(rAnimal, 6, fun = sum) # sheep are already in 30 sec
+#  rAnimal <- extend(rAnimal, globeExtent)
   ct <- global(rAnimal, fun = "sum", na.rm = TRUE)
   if (!species %in% "livestockSystem") {
     ct <- global(rAnimal, fun = "sum", na.rm = TRUE)

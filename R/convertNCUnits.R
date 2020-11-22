@@ -3,7 +3,7 @@
 #library(data.table)
 #library(raster)
 library(terra)
-terraOptions(memfrac = .9, progress = 10, tempdir =  "data/ISIMIP", verbose = TRUE) # need to use a relative path, memfrac = .9,  
+terraOptions(memfrac = 2, progress = 10, tempdir =  "data/ISIMIP", verbose = TRUE) # need to use a relative path, memfrac = .9,  
 woptList <- list(gdal=c("COMPRESS=LZW"))
 
 dirList <- c( "GFDL-ESM4", "IPSL-CM6A-LR", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL") #"observed",  "historical", "IPSL-CM6A-LR"
@@ -32,9 +32,9 @@ filesInDir_ssp126_out <- list.files("/Volumes/ExtremeSSD2/climate_land_only/unit
 filesInDir_ssp585_out <- list.files("/Volumes/ExtremeSSD2/climate_land_only/unitsCorrected/ssp585/", full.names = TRUE, recursive = TRUE)
 filesInDir_historical_out <- list.files("/Volumes/ExtremeSSD2/climate_land_only/unitsCorrected/historical/", full.names = TRUE, recursive = TRUE)
 #filesInDir <- c(filesInDir_historical, filesInDir_observed, filesInDir_ssp126, filesInDir_ssp585)
-filesInDir <- c(filesInDir_ssp585)
+filesInDir <- c(filesInDir_ssp126)
 filesInDir <- gsub("//", "/", filesInDir)
-filesInDir_out <- c(filesInDir_ssp585_out)
+filesInDir_out <- c(filesInDir_ssp126_out)
 filesInDir_out <- gsub("//", "/", filesInDir_out)
 renameFile <- function(inNCfile) {
   inNCfile <- gsub("r1i1p1f1_w5e5_", "", inNCfile, fixed = TRUE)
@@ -47,7 +47,7 @@ renameFile <- function(inNCfile) {
 
 varListComplete <- c("_tasmax_", "_tasmin_", "_pr_", "_hurs_", "huss", "rlds", "_rsds_", "_sfcwind_", "_ps_", "_tas_", "_prsn_") # "_tave_",
 varsToKeep <- c( "_rsds_", "_sfcwind_")
-varsToKeep <- c( "_tas_") #, "_tasmin_") #, "_rsds_", "_sfcwind_")
+varsToKeep <- c( "_tasmin_", "_tasmax_") #, "_tasmin_") #, "_rsds_", "_sfcwind_")
 varsToRemove <- varListComplete[!varListComplete %in% varsToKeep]
 
 for (cntr in dirList) {
@@ -141,10 +141,15 @@ for (i in varsToKeep) {
       indices <- seq(as.Date(startDate), as.Date(endDate), 1)
       indices <- paste0("X", as.character(indices))
       #     indices <- as.numeric(indices)
-      
-      print(system.time(rastOut <- rastIn - 273.15)); flush.console()
+      convertTemp <- function(rIn) {
+        r <- rIn - 273.15
+      }
+      print(system.time(rastOut <- convertTemp(rastIn))); flush.console()
       names(rastOut) <- indices
       print(rastOut)
+      print(paste0("max rastOut: ", max(minmax(rastOut)), ", min rastOut: ", min(minmax(rastOut)), ", outfile :", outFile))
+      
+      print(paste0("file out: ", outFile))
       print(system.time(writeRaster(rastOut, outFile, overwrite = TRUE, format = "GTiff", wopt= woptList))); flush.console()
       rastIn <- NULL
       gc()
@@ -159,7 +164,7 @@ for (i in varsToKeep) {
       outFile <- renameFile(inFile)
       unlink(outFile) # so file gets replaced
 #      if (outFile %in% filesInDir_out) print(paste0("skipping ", outFile))
-      if (!outFile %in% filesInDir_out){
+#      if (!outFile %in% filesInDir_out){
       print(paste0("variable: ", i, ", outfile: ", outFile))
       rastIn <- rast(inFile)
       #      rastIn <- setMinMax(rastIn) # add min max values
