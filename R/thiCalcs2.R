@@ -29,7 +29,7 @@
   #locOfFiles <- locOfCMIP6tifFiles
   locOfFiles <- "data/bigFiles/"
   speciesChoice <- c("humans", "cattle", "goat", "swine", "chicken", "sheep") 
-  speciesChoice <- "humans"
+  speciesChoice <- c("humans")
   sspChoices <- c("ssp126", "ssp585") 
   #sspChoices <- c("ssp585") 
   modelChoices <- c( "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM6A-LR") #, "MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
@@ -116,11 +116,19 @@
     thi <- round(thi, 2)
   }
   
-  THIfun_chicken <- function(tmax, tmin) {
-    thi <- (0.85 * tmax + 0.15 * tmin) # using broiler formula. Note. no rh needed
+  THIfun_chicken <- function(tmax, wbulb) {
+    thi <- (0.85 * tmax + 0.15 * wbulb) # using broiler formula. Note. no rh needed
     thi[tmax < 20] <- 0
     #  thi[thi > 100] <- 100
     thi <- round(thi, 2)
+  }
+  
+  # formula from Stull, R. (2011). Wet-Bulb Temperature from Relative Humidity and Air Temperature. J. Appl. Meteorol. Climatol. 50, 2267–2269. doi:10.1175/JAMC-D-11-0143.1.
+  wetbulb <- function(rh, tas) {
+    wb <- tas * atan(0.151977* (rh + 8.313659)^(1/2)) +
+      atan(tas + rh) - atan(rh - 1.676331) +
+      0.00391838 * (rh)^ (3/2) * atan(0.023101 * rh) - 4.686035
+    return(wb)
   }
   
   THIfun_humans <-  function(rh, tas) {
@@ -136,246 +144,165 @@
 # startyearChoices <- 2081
 # modelChoices <- c( "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM6A-LR") #, "MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
 
+THIfun <- function() {
+  startDate <- paste0(l, "-01-01"); endDate <- paste0(l + yearRange, "-12-31")
+  indices <- seq(as.Date(startDate), as.Date(endDate), 1)
+  indices <- paste0("X", as.character(indices))
+  indices_day <- format(as.Date(indices, format = "X%Y-%m-%d"), format = "%j") # %j is day of the year
+  indices_day <- as.numeric(indices_day)
+  
+  for (i in modelChoices) {
+    modelName.lower <- tolower(i)
+    fileName_rh_mean <- paste0(locOfFiles, "dyMean20yr_", modelName.lower, "_", k, "_hurs_global_daily_", yearSpan, ".tif")
+    fileName_tmax_mean <- paste0(locOfFiles,  "dyMean20yr_", modelName.lower, "_", k, "_tasmax_global_daily_", yearSpan, ".tif")
+    fileName_tmin_mean <- paste0(locOfFiles,  "dyMean20yr_", modelName.lower, "_", k, "_tasmin_global_daily_", yearSpan, ".tif")
+    fileName_tas_mean <- paste0(locOfFiles,  "dyMean20yr_", modelName.lower, "_", k, "_tas_global_daily_", yearSpan, ".tif")
+    
+    rh.mean <- rast(fileName_rh_mean)
+    cat(red(paste0("rh.mean min: ", round(min(minmax(rh.mean)), 2), ", rh.mean max: ", round(max(minmax(rh.mean)), 2), ", rh file: ", fileName_rh_mean, "\n")))
+    tmax.mean <- rast(fileName_tmax_mean)
+    cat(red(paste0("tmax.mean min: ", round(min(minmax(tmax.mean)), 2), ", tmax.mean max: ", round(max(minmax(tmax.mean)), 2), ", tmax file: ", fileName_tmax_mean, "\n")))
+    tmin.mean <- rast(fileName_tmin_mean)
+    cat(red(paste0("tmin.mean min: ", round(min(minmax(tmin.mean)), 2), ", tmin.mean max: ", round(max(minmax(tmin.mean)), 2), ", tmin file: ", fileName_tmin_mean, "\n")))
+    tas.mean <- rast(fileName_tas_mean)
+    cat(red(paste0("tas.mean min: ", round(min(minmax(tas.mean)), 2), ", tas.mean max: ", round(max(minmax(tas.mean)), 2), ", tmax file: ", fileName_tmax_mean, "\n")))
+    
+    if ((max(minmax(tas.mean)) | max(minmax(tmin.mean))) > max(minmax(tmax.mean))) stop("something is wrong!!")
+    
+    comb <- sds(rh.mean, tmax.mean)
+    
+    for (m in speciesChoice) {
+      if (m %in% c("humans")) {extremeStress <- extremeStress_humans
+      } else {
+        extremeStress <- bpList[species %in% m, extremeStress]
+      }
+      fileName_out <- paste0("data/cmip6/THI/thi.", m, "_",  i, "_", k, "_", yearSpan, ".tif")
+      print(paste0("fileName out: ", fileName_out))
+      funName <- paste0("THIfun_", m)
+      
+      if (m %in% "chicken") {
+        #         tmin.mean <- rast(fileName_tmin_mean)
+        comb_wb <- sds(rh.mean, tas.mean)
+        system.time(wbulb <- lapp(comb, fun = wetbulb))
+        comb_chicken <- sds(tas.mean, wbulb)
+        print(system.time(r_out <- lapp(comb_chicken, THIfun_chicken, filename = fileName_out, overwrite =TRUE, wopt = woptList)))
+        cat(red(paste0("thi chicken min: ", min(minmax(r_out)), ", thi chicken max: ", max(minmax(r_out)), ", thi chicken out file: ", fileName_out, "\n\n" )))
+        ct_small <- sum(r_out < extremeStress, na.rm = FALSE)
+        ct_large <- sum(r_out >= extremeStress, na.rm = FALSE)
+        ct_small_sum <- global(ct_small, sum, na.rm = TRUE)
+        ct_large_sum <- global(ct_large, sum, na.rm = TRUE)
+        ratio <- ct_small_sum/ct_large_sum
+        results <- c(m, k, l, i, ct_small_sum, ct_large_sum)
+        resultsStorage <- data.table::rbindlist(list(resultsStorage, results), use.names = FALSE)
+        cat(red(paste0("species: ", m, ", ssp: ", k, ", start year: ", l, ", model: ", i, ", ratio of small to large: ", round(ratio, 2)), "\n\n"))
+        # plot(ct_small)
+      }
+      if (m %in% c("humans", "sheep", "swine")) {
+        tas.mean <- rast(fileName_tas_mean)
+        print(paste0("tas.mean min: ", round(min(minmax(tas.mean)), 2), ", tas.mean max: ", round(max(minmax(tas.mean)), 2)))
+        
+        comb_humans <- sds(rh.mean, tas.mean)
+        comb_humans <- comb_humans
+        funName <- paste0("THIfun_", m)
+        # generate a SpatRaster of productive capacity values and write out the file
+        print(system.time(r_out <- lapp(comb_humans, fun = funName, filename = fileName_out, overwrite =TRUE, wopt = woptList))) #parse(eval(text = funName)
+        col = (colorList)
+        if (m %in% c( "sheep", "swine"))  col = rev(colorList)
+        plot(r_out, 1, main = paste0(m, " ", i, " ", k, " ", l, ", Jan 1"), ylim = c(-60, 90), range = c(0, 100), col = col, breaks = c(0, 40, 60, 80, 100), axes = FALSE)
+        ct_small <- sum(r_out < extremeStress, na.rm = FALSE)
+        ct_large <- sum(r_out >= extremeStress, na.rm = FALSE)
+        ct_small_sum <- global(ct_small, sum, na.rm = TRUE)
+        ct_large_sum <- global(ct_large, sum, na.rm = TRUE)
+        ratio <- ct_small_sum/ct_large_sum
+        results <- c(m, k, l, i, ct_small_sum, ct_large_sum)
+        resultsStorage <- data.table::rbindlist(list(resultsStorage, results), use.names = FALSE)
+        
+        cat(paste0(red("humProd min: ", round(min(minmax(r_out)), 2), ", humProd max: ", round(max(minmax(r_out)), 2), ", hum prod out file: ", fileName_out), "\n\n" ))
+        print(r_out)
+        breaks = c(bpList[species %in% m, zeroLevel], bpList[species %in% m, noStress], bpList[species %in% m, moderateStress],bpList[species %in% m, extremeStress], max(minmax(r_out)))
+        breaks <- round(breaks, 0)
+        plot(r_out, 1, main = paste0(m, " ", i, " ", k, " ", l, ", Jan 1"), ylim = c(-60, 90), range = c(0, 100), col = col, breaks = breaks, axes = FALSE)
+      } 
+      if (m %in% c("cattle", "goat") ) { #, "swine", "sheep"
+        print(system.time(r_out <- lapp(comb, fun = funName, filename = fileName_out, overwrite =TRUE, wopt = woptList)))
+        col <- rev(colorList)
+        plot(r_out, 1, main = paste0(m, " ", i, " ", k, " ", l, ", Jan 1"), ylim = c(-60, 90), range = c(0, 100), col = col, breaks = c(0, 40, 60, 80, 100), axes = FALSE)
+        ct_small <- sum(r_out < extremeStress, na.rm = FALSE)
+        ct_large <- sum(r_out >= extremeStress, na.rm = FALSE)
+        ct_small_sum <- global(ct_small, sum, na.rm = TRUE)
+        ct_large_sum <- global(ct_large, sum, na.rm = TRUE)
+        ratio <- ct_small_sum/ct_large_sum
+        results <- c(m, k, l, i, ct_small_sum, ct_large_sum)
+        resultsStorage <- data.table::rbindlist(list(resultsStorage, results), use.names = FALSE) 
+        cat(red(paste0("species: ", m, ", ssp: ", k, ", start year: ", l, ", model: ", i, red(", ratio of small to large: ", round(ratio, 2)), "\n\n")))
+        print(paste0("app done"))
+        gc()
+      }
+      cat(paste("Done", "\n"))
+    }
+  }
+}
+
 for (k in sspChoices) {
   #    k = "ssp126"
   for (l in startyearChoices) {
     yearSpan <- paste0(l, "_", l + yearRange)
-    startDate <- paste0(l, "-01-01"); endDate <- paste0(l + yearRange, "-12-31")
-    indices <- seq(as.Date(startDate), as.Date(endDate), 1)
-    indices <- paste0("X", as.character(indices))
-    indices_day <- format(as.Date(indices, format = "X%Y-%m-%d"), format = "%j") # %j is day of the year
-    indices_day <- as.numeric(indices_day)
-    
-    for (i in modelChoices) {
-      modelName.lower <- tolower(i)
-      fileName_rh_mean <- paste0(locOfFiles, "dyMean20yr_", modelName.lower, "_", k, "_hurs_global_daily_", yearSpan, ".tif")
-      fileName_tmax_mean <- paste0(locOfFiles,  "dyMean20yr_", modelName.lower, "_", k, "_tasmax_global_daily_", yearSpan, ".tif")
-      fileName_tmin_mean <- paste0(locOfFiles,  "dyMean20yr_", modelName.lower, "_", k, "_tasmin_global_daily_", yearSpan, ".tif")
-      fileName_tas_mean <- paste0(locOfFiles,  "dyMean20yr_", modelName.lower, "_", k, "_tas_global_daily_", yearSpan, ".tif")
-      
-     rh.mean <- rast(fileName_rh_mean)
-      cat(red(paste0("rh.mean min: ", round(min(minmax(rh.mean)), 2), ", rh.mean max: ", round(max(minmax(rh.mean)), 2), ", rh file: ", fileName_rh_mean, "\n")))
-      tmax.mean <- rast(fileName_tmax_mean)
-      cat(red(paste0("tmax.mean min: ", round(min(minmax(tmax.mean)), 2), ", tmax.mean max: ", round(max(minmax(tmax.mean)), 2), ", tmax file: ", fileName_tmax_mean, "\n")))
-      tmin.mean <- rast(fileName_tmin_mean)
-      cat(red(paste0("tmin.mean min: ", round(min(minmax(tmin.mean)), 2), ", tmin.mean max: ", round(max(minmax(tmin.mean)), 2), ", tmin file: ", fileName_tmin_mean, "\n")))
-      tas.mean <- rast(fileName_tas_mean)
-      cat(red(paste0("tas.mean min: ", round(min(minmax(tas.mean)), 2), ", tas.mean max: ", round(max(minmax(tas.mean)), 2), ", tmax file: ", fileName_tmax_mean, "\n")))
-      
-      if ((max(minmax(tas.mean)) | max(minmax(tmin.mean))) > max(minmax(tmax.mean))) stop("something is wrong!!")
-      
-      comb <- sds(rh.mean, tmax.mean)
-      comb <- comb
-      
-      for (m in speciesChoice) {
-        if (m %in% "humans") {extremeStress <- extremeStress_humans
-        } else {
-          extremeStress <- bpList[species %in% m, extremeStress]
-        }
-        fileName_out <- paste0("data/cmip6/THI/thi.", m, "_",  i, "_", k, "_", yearSpan, ".tif")
-        print(paste0("fileName out: ", fileName_out))
-        funName <- paste0("THIfun_", m)
-        
-        if (m %in% "chicken") {
-          tmin.mean <- rast(fileName_tmin_mean)
-          
-          comb_chicken <- sds(tmax.mean, tmin.mean)
-          print(system.time(r_out <- lapp(comb_chicken, THIfun_chicken, filename = fileName_out, overwrite =TRUE, wopt = woptList)))
-          cat(red(paste0("thi chicken min: ", min(minmax(r_out)), ", thi chicken max: ", max(minmax(r_out)), ", thi chicken out file: ", fileName_out, "\n\n" )))
-          ct_small <- sum(r_out < extremeStress, na.rm = FALSE)
-          ct_large <- sum(r_out >= extremeStress, na.rm = FALSE)
-          ct_small_sum <- global(ct_small, sum, na.rm = TRUE)
-          ct_large_sum <- global(ct_large, sum, na.rm = TRUE)
-          ratio <- ct_small_sum/ct_large_sum
-          results <- c(m, k, l, i, ct_small_sum, ct_large_sum)
-          resultsStorage <- data.table::rbindlist(list(resultsStorage, results), use.names = FALSE)
-          cat(red(paste0("species: ", m, ", ssp: ", k, ", start year: ", l, ", model: ", i, ", ratio of small to large: ", round(ratio, 2)), "\n\n"))
-          plot(ct_small)
-        }
-        if (m %in% "humans") {
-          tas.mean <- rast(fileName_tas_mean)
-          print(paste0("tas.mean min: ", round(min(minmax(tas.mean)), 2), ", tas.mean max: ", round(max(minmax(tas.mean)), 2)))
-          
-          comb_humans <- sds(rh.mean, tas.mean)
-          comb_humans <- comb_humans
-          
-          # generate a SpatRaster of productive capacity values and write out the file
-          print(system.time(r_out <- lapp(comb_humans, THIfun_humans, filename = fileName_out, overwrite =TRUE, wopt = woptList)))
-          plot(r_out, 1, main = paste0(m, " ", i, " ", k, " ", l, ", Jan 1"), ylim = c(-60, 90), range = c(0, 100), col = (colorList), breaks = c(0, 40, 60, 80, 100), axes = FALSE)
-          ct_small <- sum(r_out < extremeStress, na.rm = FALSE)
-          ct_large <- sum(r_out >= extremeStress, na.rm = FALSE)
-          ct_small_sum <- global(ct_small, sum, na.rm = TRUE)
-          ct_large_sum <- global(ct_large, sum, na.rm = TRUE)
-          ratio <- ct_small_sum/ct_large_sum
-          results <- c(m, k, l, i, ct_small_sum, ct_large_sum)
-          resultsStorage <- data.table::rbindlist(list(resultsStorage, results), use.names = FALSE)
-          
-          cat(paste0(red("humProd min: ", round(min(minmax(r_out)), 2), ", humProd max: ", round(max(minmax(r_out)), 2), ", hum prod out file: ", fileName_out), "\n\n" ))
-          print(r_out)
-          plot(r_out, 1, main = paste0(m, " ", i, " ", k, " ", l, ", Jan 1"), ylim = c(-60, 90), range = c(0, 100), col = (colorList), breaks = c(0, 40, 60, 80, 100), axes = FALSE)
-        } 
-        if (m %in% c("cattle", "goat", "swine", "sheep") ) {
-          print(system.time(r_out <- lapp(comb, fun = funName, filename = fileName_out, overwrite =TRUE, wopt = woptList)))
-          plot(r_out, 1, main = paste0(m, " ", i, " ", k, " ", l, ", Jan 1"), ylim = c(-60, 90), range = c(0, 100), col = (colorList), breaks = c(0, 40, 60, 80, 100), axes = FALSE)
-          ct_small <- sum(r_out < extremeStress, na.rm = FALSE)
-          ct_large <- sum(r_out >= extremeStress, na.rm = FALSE)
-          ct_small_sum <- global(ct_small, sum, na.rm = TRUE)
-          ct_large_sum <- global(ct_large, sum, na.rm = TRUE)
-          ratio <- ct_small_sum/ct_large_sum
-          results <- c(m, k, l, i, ct_small_sum, ct_large_sum)
-          resultsStorage <- data.table::rbindlist(list(resultsStorage, results), use.names = FALSE) 
-          cat(red(paste0("species: ", m, ", ssp: ", k, ", start year: ", l, ", model: ", i, red(", ratio of small to large: ", round(ratio, 2)), "\n\n")))
-          print(paste0("app done"))
-          gc()
-        }
-        cat(paste("Done", "\n"))
-      }
-    }
+    THIfun()
   }
 }
 
 #THI historical -----
 k <- "historical"
 l = 1991
-#speciesChoice <- c("chicken") #, "goat")
 yearSpan <- paste0(l, "_", l + yearRange)
-startDate <- paste0(l, "-01-01"); endDate <- paste0(l + yearRange, "-12-31")
-indices <- seq(as.Date(startDate), as.Date(endDate), 1)
-indices <- paste0("X", as.character(indices))
-indices_day <- format(as.Date(indices, format = "X%Y-%m-%d"), format = "%j") # %j is day of the year
-indices_day <- as.numeric(indices_day)
+THIfun()
 
-for (i in modelChoices) {
-  modelName.lower <- tolower(i)
-  fileName_rh_mean <- paste0(locOfFiles, "dyMean20yr_", modelName.lower, "_", k, "_hurs_global_daily_", yearSpan, ".tif")
-  fileName_tmax_mean <- paste0(locOfFiles,  "dyMean20yr_", modelName.lower, "_", k, "_tasmax_global_daily_", yearSpan, ".tif")
-  fileName_tmin_mean <- paste0(locOfFiles,  "dyMean20yr_", modelName.lower, "_", k, "_tasmin_global_daily_", yearSpan, ".tif")
-  fileName_tas_mean <- paste0(locOfFiles,  "dyMean20yr_", modelName.lower, "_", k, "_tas_global_daily_", yearSpan, ".tif")
+# ensemble means -----
+# combine all the spatrasters by model for the time period and then take the mean across that combo
+#speciesChoice <- c("chicken")
+
+ensembleTHIfun <- function() {
   
-  # read in rh and tmax mean files first because they are used by multiple species
-  rh.mean <- rast(fileName_rh_mean)
-  cat(red(paste0("rh.mean min: ", round(min(minmax(rh.mean)), 2), ", rh.mean max: ", round(max(minmax(rh.mean)), 2), ", rh file: ", fileName_rh_mean, "\n")))
-  tmax.mean <- rast(fileName_tmax_mean)
-  cat(red(paste0("tmax.mean min: ", round(min(minmax(tmax.mean)), 2), ", tmax.mean max: ", round(max(minmax(tmax.mean)), 2), ", tmax file: ", fileName_tmax_mean, "\n")))
-  tmin.mean <- rast(fileName_tmin_mean)
-  cat(red(paste0("tmin.mean min: ", round(min(minmax(tmin.mean)), 2), ", tmin.mean max: ", round(max(minmax(tmin.mean)), 2), ", tmin file: ", fileName_tmin_mean, "\n")))
-  tas.mean <- rast(fileName_tas_mean)
-  cat(red(paste0("tas.mean min: ", round(min(minmax(tas.mean)), 2), ", tas.mean max: ", round(max(minmax(tas.mean)), 2), ", tmax file: ", fileName_tmax_mean, "\n")))
-  
-  if ((max(minmax(tas.mean)) | max(minmax(tmin.mean))) > max(minmax(tmax.mean))) stop("something is wrong!!")
-  
-  comb <- sds(rh.mean, tmax.mean)
-  comb <- comb
-  
+  # cattle and goats have the same 
   for (m in speciesChoice) {
     if (m %in% "humans") {extremeStress <- extremeStress_humans
     } else {
       extremeStress <- bpList[species %in% m, extremeStress]
     }
-    fileName_out <- paste0("data/cmip6/THI/thi.", m, "_",  i, "_", k, "_", yearSpan, ".tif")
-    print(paste0("fileName out: ", fileName_out))
-    funName <- paste0("THIfun_", m)
+    print(paste0("species Choice m: ", m))
+    x <- lapply(modelChoices, readRast_thi_ensemble)
+    r <- rast(x)
+    indices_day <- rep(seq(1, nlyr(x[[1]]), 1), 5) # 5 is number of models; if omitted should get the same result
+    maxVal <- round(max(minmax(r)), 2)
+    minVal <- round(min(minmax(r)), 2)
+    #     print(r)
+    fileName_out <- paste0("data/cmip6/THI/ensemble_thi.", m, "_", k, "_", yearSpan, ".tif")
+    cat(paste0(red("species: ", m, ", ensemble ssp: ", k, ", start year: ", l, ", minVal ", minVal,  ", maxVal ", maxVal, ", fileName out: ", fileName_out), "\n\n"))
+    print(system.time(r.mean <- tapp(r, indices_day, fun = "mean", na.rm = TRUE, filename = fileName_out, overwrite = TRUE, woptList = woptList)))
+    names(r.mean) <- gsub("X", "Day ", names(r.mean))
     
-    if (m %in% "chicken") {
-      tmin.mean <- rast(fileName_tmin_mean)
-      
-      comb_chicken <- sds(tmax.mean, tmin.mean)
-      print(system.time(r_out <- lapp(comb_chicken, THIfun_chicken, filename = fileName_out, overwrite =TRUE, wopt = woptList)))
-      cat(red(paste0("thi chicken min: ", min(minmax(r_out)), ", thi chicken max: ", max(minmax(r_out)), ", thi chicken out file: ", fileName_out, "\n\n" )))
-      # cat(red((paste0("thi chicken max ", max(minmax(r_out)), "\n\n"))))
-      ct_small <- sum(r_out < extremeStress, na.rm = FALSE)
-      ct_large <- sum(r_out >= extremeStress, na.rm = FALSE)
-      ct_small_sum <- global(ct_small, sum, na.rm = TRUE)
-      ct_large_sum <- global(ct_large, sum, na.rm = TRUE)
-      ratio <- ct_small_sum/ct_large_sum
-      results <- c(m, k, l, i, ct_small_sum, ct_large_sum)
-      resultsStorage <- data.table::rbindlist(list(resultsStorage, results), use.names = FALSE)
-      cat(red(paste0("species: ", m, ", ssp: ", k, ", start year: ", l, ", model: ", i, ", ratio of small to large: ", round(ratio, 2)), "\n\n"))
-      plot(ct_small)
-    }
-    if (m %in% "humans") {
-      tas.mean <- rast(fileName_tas_mean)
-      print(paste0("tas.mean min: ", round(min(minmax(tas.mean)), 2), ", tas.mean max: ", round(max(minmax(tas.mean)), 2)))
-      
-      comb_humans <- sds(rh.mean, tas.mean)
-      comb_humans <- comb_humans
-      
-      # generate a SpatRaster of productive capacity values and write out the file
-      print(system.time(r_out <- lapp(comb_humans, THIfun_humans, filename = fileName_out, overwrite =TRUE, wopt = woptList)))
-      plot(r_out, 1, main = paste0(m, " ", i, " ", k, " ", l, ", Jan 1"), ylim = c(-60, 90), range = c(0, 100), col = (colorList), breaks = c(0, 40, 60, 80, 100), axes = FALSE)
-      ct_small <- sum(r_out < extremeStress, na.rm = FALSE)
-      ct_large <- sum(r_out >= extremeStress, na.rm = FALSE)
-      ct_small_sum <- global(ct_small, sum, na.rm = TRUE)
-      ct_large_sum <- global(ct_large, sum, na.rm = TRUE)
-      ratio <- ct_small_sum/ct_large_sum
-      results <- c(m, k, l, i, ct_small_sum, ct_large_sum)
-      resultsStorage <- data.table::rbindlist(list(resultsStorage, results), use.names = FALSE)
-      
-      cat(paste0(red("humProd min: ", round(min(minmax(r_out)), 2), ", humProd max: ", round(max(minmax(r_out)), 2), ", hum prod out file: ", fileName_out), "\n\n" ))
-      print(r_out)
-      plot(r_out, 1, main = paste0(m, " ", i, " ", k, " ", l, ", Jan 1"), ylim = c(-60, 90), range = c(0, 100), col = (colorList), breaks = c(0, 40, 60, 80, 100), axes = FALSE)
-    } 
-    if (m %in% c("cattle", "goat", "swine", "sheep") ) {
-      print(system.time(r_out <- lapp(comb, fun = funName, filename = fileName_out, overwrite =TRUE, wopt = woptList)))
-      plot(r_out, 1, main = paste0(m, " ", i, " ", k, " ", l, ", Jan 1"), ylim = c(-60, 90), range = c(0, 100), col = (colorList), breaks = c(0, 40, 60, 80, 100), axes = FALSE)
-      ct_small <- sum(r_out < extremeStress, na.rm = FALSE)
-      ct_large <- sum(r_out >= extremeStress, na.rm = FALSE)
-      ct_small_sum <- global(ct_small, sum, na.rm = TRUE)
-      ct_large_sum <- global(ct_large, sum, na.rm = TRUE)
-      ratio <- ct_small_sum/ct_large_sum
-      results <- c(m, k, l, i, ct_small_sum, ct_large_sum)
-      resultsStorage <- data.table::rbindlist(list(resultsStorage, results), use.names = FALSE) 
-      cat(red(paste0("species: ", m, ", ssp: ", k, ", start year: ", l, ", model: ", i, red(", ratio of small to large: ", round(ratio, 2)), "\n\n")))
-      print(paste0("app done"))
-      gc()
-    }
-    cat(paste("Done", "\n"))
+    cat(paste0(red("species: ",m, "thi min: ", round(min(minmax(r.mean)), 2), "thi max: ", round(max(minmax(r.mean)), 2), "\n\n")))
+    ct_small <- sum(r.mean < extremeStress, na.rm = FALSE)
+    ct_large <- sum(r.mean >= extremeStress, na.rm = FALSE)
+    ct_small_sum <- global(ct_small, sum, na.rm = TRUE)
+    ct_large_sum <- global(ct_large, sum, na.rm = TRUE)
+    ratio <- ct_small_sum/ct_large_sum
+    results <- c(m, k, l, "ensemble", ct_small_sum, ct_large_sum)
+    resultsStorage <- data.table::rbindlist(list(resultsStorage, results), use.names = FALSE)
+    cat(paste0(red("species: ", m, ", ensemble ssp: ", k, ", start year: ", l, ", ratio of small to large: ", round(ratio, 2)), "\n"))
+    
+    cat((paste0(red("ensemble mean min: ", round(min(minmax(r.mean)), 2), ", ensemble mean max: ", round(max(minmax(r.mean)), 2), ", ensemble mean out file: ", fileName_out), "\n\n")))
+    #    r.mean <- NULL
+    gc()
   }
 }
 
-# ensemble means -----
-# combine all the spatrasters by model for the time period and then take the mean across that combo
-#speciesChoice <- c("chicken")
 for (k in sspChoices) {
   #  k <- "ssp585"
   for (startYear in startyearChoices) {
     l <- startYear
     yearSpan <- paste0(l, "_", l + yearRange)
-    
-    # cattle and goats have the same 
-    for (m in speciesChoice) {
-      if (m %in% "humans") {extremeStress <- extremeStress_humans
-      } else {
-        extremeStress <- bpList[species %in% m, extremeStress]
-      }
-      print(paste0("species Choice m: ", m))
-      x <- lapply(modelChoices, readRast_thi_ensemble)
-      r <- rast(x)
-      indices_day <- rep(seq(1, nlyr(x[[1]]), 1), 5) # 5 is number of models; if omitted should get the same result
-      maxVal <- round(max(minmax(r)), 2)
-      minVal <- round(min(minmax(r)), 2)
- #     print(r)
-      fileName_out <- paste0("data/cmip6/THI/ensemble_thi.", m, "_", k, "_", yearSpan, ".tif")
-      cat(paste0(red("species: ", m, ", ensemble ssp: ", k, ", start year: ", l, ", minVal ", minVal,  ", maxVal ", maxVal, ", fileName out: ", fileName_out), "\n\n"))
-      print(system.time(r.mean <- tapp(r, indices_day, fun = "mean", na.rm = TRUE, filename = fileName_out, overwrite = TRUE, woptList = woptList)))
-      names(r.mean) <- gsub("X", "Day ", names(r.mean))
-      
-      cat(paste0(red("species: ",m, "thi min: ", round(min(minmax(r.mean)), 2), "thi max: ", round(max(minmax(r.mean)), 2), "\n\n")))
-      ct_small <- sum(r.mean < extremeStress, na.rm = FALSE)
-      ct_large <- sum(r.mean >= extremeStress, na.rm = FALSE)
-      ct_small_sum <- global(ct_small, sum, na.rm = TRUE)
-      ct_large_sum <- global(ct_large, sum, na.rm = TRUE)
-      ratio <- ct_small_sum/ct_large_sum
-      results <- c(m, k, l, "ensemble", ct_small_sum, ct_large_sum)
-      resultsStorage <- data.table::rbindlist(list(resultsStorage, results), use.names = FALSE)
-      cat(paste0(red("species: ", m, ", ensemble ssp: ", k, ", start year: ", l, ", ratio of small to large: ", round(ratio, 2)), "\n"))
-      
-      cat((paste0(red("ensemble mean min: ", round(min(minmax(r.mean)), 2), ", ensemble mean max: ", round(max(minmax(r.mean)), 2), ", ensemble mean out file: ", fileName_out), "\n\n")))
-      plot(ct_small)
-      
-      #    r.mean <- NULL
-      gc()
-    }
+    ensembleTHIfun()
   }
 }
 
@@ -384,41 +311,8 @@ for (k in sspChoices) {
 k <- "historical"
 l <- 1991
 yearSpan <- paste0(l, "_", l + yearRange)
-yearnumberRange <- seq(l, (l + yearRange), 1)
-gc()
-# cattle and goats have the same 
-for (m in speciesChoice) {
-  if (m %in% "humans") {extremeStress <- extremeStress_humans
-  } else {
-    extremeStress <- bpList[species %in% m, extremeStress]
-  }
-  # for (m in "humans") {
-  print(paste0("species Choice m: ", m))
-  x <- lapply(modelChoices, readRast_thi_ensemble)
-  indices_day <- seq(1, nlyr(x[[1]]), 1)
-  r <- rast(x)
-  maxVal <- round(max(minmax(r)), 2)
-  minVal <- round(min(minmax(r)), 2)
-  print(r)
-  fileName_out <- paste0("data/cmip6/THI/ensemble_thi.", m, "_", k, "_", yearSpan, ".tif")
-  cat(paste0("\n", red("var: ", m, ", minVal ", minVal,  ", maxVal ", maxVal, ", fileName out: ", fileName_out, "\n\n")))
-  #     print(paste0("fileName out: ", fileName_out))
-  #     x.cv <- tapp(x, indices_day, fun = cv, na.rm = TRUE)
-  print(system.time(r.mean <- tapp(r, indices_day, fun = mean, na.rm = TRUE, filename = fileName_out, overwrite = TRUE, woptList = woptList)))
-  names(r.mean) <- gsub("X", "Day ", names(r.mean))
-  cat(paste0(red("species: ",m, "thi min: ", round(min(minmax(r.mean)), 2), "thi max: ", round(max(minmax(r.mean)), 2), "\n\n")))
-  ct_small <- sum(r.mean < extremeStress, na.rm = FALSE)
-  ct_large <- sum(r.mean >= extremeStress, na.rm = FALSE)
-  ct_small_sum <- global(ct_small, sum, na.rm = TRUE)
-  ct_large_sum <- global(ct_large, sum, na.rm = TRUE)
-  ratio <- ct_small_sum/ct_large_sum
-  results <- c(m, k, l, "ensemble", ct_small_sum, ct_large_sum)
-  resultsStorage <- data.table::rbindlist(list(resultsStorage, results), use.names = FALSE)
-  cat(paste0("species: ", m, ", ratio of small to large ", red(round(ratio, 2))), "\n\n")
-  plot(ct_small)
-  # r.mean <- NULL
-  gc()
-}
+ensembleTHIfun()
+
 fileName_resultsStorage <- "data/CMIP6/THI/results/resultsStorage_all.csv"
 
 write.csv(resultsStorage, fileName_resultsStorage, row.names = FALSE)
@@ -469,15 +363,18 @@ for (k in scenarioChoicesEnsemble) {
       } else {
         title_animate <- paste0("Temperature Humidity Index (THI) value, ", m, " ", k,  ", ", gsub("_", "-", yearSpan))
         names(r) <- paste0(title_animate, ", ", indices_date)
-        animation::saveVideo(animate( r, n=1, ylim = c(-60, 90), pause = .001, sub = title_animate, col = rev(colorList)), 
+        breaks = c(bpList[species %in% m, zeroLevel], bpList[species %in% m, noStress], bpList[species %in% m, moderateStress],bpList[species %in% m, extremeStress], max(minmax(r)))
+        breaks <- round(breaks, 0)
+        rangeMaximum <- max(minmax(r))
+        animation::saveVideo(animate( r, n=1, ylim = c(-60, 90), range = c(0, rangeMaximum), pause = .001, sub = title_animate, col = rev(colorList), breaks = breaks, axes = FALSE), 
                              ani.height = 800, ani.width = 1200, video.name = videoName_out)
       }
     }
   }
 }
 
-# extreme stress scenarios -------
 
+# extreme stress scenarios -------
 library(data.table)
 funextTHI <- function(cellVector) {
   if (m %in% "humans") {
@@ -512,7 +409,13 @@ for (m in speciesChoice) {
       print(paste0("fileName out: ", fileName_out))
       writeRaster(extremeCt, fileName_out, overwrite = TRUE, woptList = woptList )
       title <- paste0(m, ", days above extreme stress value of ", extremeStress, ", ensemble means, ", k, ", ", yearSpan)
-      #      plot(extremeCt, main = paste0(m, ", days above extreme stress value of ", extremeStress, ", ensemble means, ", k, ", ", yearSpan))
+      title <- paste0(m, ", days above extreme stress value of ", extremeStress, ", \nensemble means, ", k, ", ", yearSpan)
+      col <- rev(colorList)
+      breaks = seq(from = 0, to = max(minmax(extremeCt)), length.out = 5)
+      breaks <- round(breaks, 0)
+      
+      plot(extremeCt, 1, main = title, ylim = c(-60, 90), range = c(0, 100), col = col, breaks = breaks, axes = FALSE)
+      
     }
   }
 }
@@ -539,8 +442,12 @@ for (m in speciesChoice) {
   fileName_out <- paste0("data/cmip6/THI/extremeCt.", m, "_", k, "_", yearSpan, ".tif")
   print(paste0("fileName out: ", fileName_out))
   writeRaster(extremeCt, fileName_out, overwrite = TRUE, woptList = woptList )
-  title <- paste0(m, ", days above extreme stress value of ", extremeStress, ", ensemble means, ", k, ", ", yearSpan)
-  plot(extremeCt, main = paste0(m, ", days above extreme stress value of ", extremeStress, ", ensemble means, ", k, ", ", yearSpan))
+  title <- paste0(m, ", days above extreme stress value of ", extremeStress, ", \nensemble means, ", k, ", ", yearSpan)
+  col <- rev(colorList)
+  breaks = seq(from = 0, to = max(minmax(extremeCt)), length.out = 5)
+  breaks <- round(breaks, 0)
+  
+  plot(extremeCt, 1, main = title, ylim = c(-60, 90), range = c(0, 100), col = col, breaks = breaks, axes = FALSE)
 }
 
 #  do graphics -----
@@ -574,7 +481,6 @@ coastline <- st_transform(coastline, crsRob)
 
 yearSpan_begin <- "1991_2010"
 yearSpan_end <- "2081_2100"
-colorList <- (RColorBrewer::brewer.pal(5, "YlOrRd"))
 legendTitle <- "Days"
 # test values
 m = "chicken"
@@ -589,13 +495,13 @@ for (m in speciesChoice) {
   names(r_begin) <- "value"
   fileName_r_mask <- paste0("data/animals/raster_ct_", m, ".tif")
   r_mask <- rast(fileName_r_mask)
-  if (m %in% "cattle") maskMin <- 2000
+  if (m %in% "cattle") maskMin <- 5000
   #  if (m %in% "humans") maskMin <- 10 commented out to see if that affects the middle east values
   if (m %in% "humans") maskMin <- 0 
-  if (m %in% "swine") maskMin <- 10
-  if (m %in% "chicken") maskMin <- 20
-  if (m %in% "goat") maskMin <- 10
-  if (m %in% "sheep") maskMin <- 10
+  if (m %in% "swine") maskMin <- 1000
+  if (m %in% "chicken") maskMin <- 20000
+  if (m %in% "goat") maskMin <- 5000
+  if (m %in% "sheep") maskMin <- 3000
   r_mask[r_mask < maskMin] <- NA
   r_mask[r_mask > 0] <- 1
   r_begin <- mask(r_begin, r_mask)
@@ -632,17 +538,25 @@ for (m in speciesChoice) {
   r_end_ssp585_df <- as.data.frame(r_end_ssp585, xy = TRUE)
   r_delta_ssp585_df <- as.data.frame(r_delta_ssp585, xy = TRUE)
   
-  
   for (i in c("r_begin_df", "r_end_ssp585_df", "r_delta_ssp585_df", "r_end_ssp126_df", "r_delta_ssp126_df")) {
+    colorList <- (RColorBrewer::brewer.pal(5, "YlOrRd")) # yellow to red
+    
     if (i %in% "r_begin_df") {
       titleText <- paste0(m, ", days above extreme stress value, ", gsub("_", "-", yearSpan_begin))
-      if (m %in% "humans") titleText <- paste0(m, ", days with PWC below ", extremeStress, " percent, ", gsub("_", "-", yearSpan_begin))
+      if (m %in% "humans") {
+        titleText <- paste0(m, ", days with PWC below ", extremeStress, " percent, ", gsub("_", "-", yearSpan_begin))
+        colorList <- rev(colorList) # red to yellow
+      }
+      
       outFilename <- paste0("graphics/cmip6/THI/THIextremeCt.", m, "_", "historical", "_", yearSpan_begin, ".png")
       r <- r_begin_df}
     if (i %in% "r_end_ssp585_df") {
-      titleText <- paste0(m, ", days above extreme stress value, ", ", ssp585, ", " ", gsub("_", "-", yearSpan_end))
-      if (m %in% "humans") titleText <- paste0(m, ", days with PWC below ", extremeStress, " percent" , ", ssp585, ", gsub("_", "-", yearSpan_begin))
-      outFilename <- paste0("graphics/cmip6/THI/THIextremeCt.", m, "_", "ssp585", "_", yearSpan_end, ".png")
+      titleText <- paste0(m, ", days above extreme stress value, ", " ssp585, ", " ", gsub("_", "-", yearSpan_end))
+      if (m %in% "humans") {
+        titleText <- paste0(m, ", days with PWC below ", extremeStress, " percent" , ", ssp585, ", gsub("_", "-", yearSpan_begin))
+        outFilename <- paste0("graphics/cmip6/THI/THIextremeCt.", m, "_", "ssp585", "_", yearSpan_end, ".png")
+        colorList <- rev(colorList) # red to yellow
+      }
       r <- r_end_ssp585_df}
     if (i %in% "r_delta_ssp585_df") {
       titleText <- paste0(m, ", change in days above extreme stress value, \n early to end century ", "ssp585")
@@ -650,8 +564,11 @@ for (m in speciesChoice) {
       outFilename <- paste0("graphics/cmip6/THI/THIextremeCtDelta.", m, "_", "ssp585", "_", yearSpan_end, ".png")
       r <- r_delta_ssp585_df}
     if (i %in% "r_end_ssp126_df") {
-      titleText <- paste0(m, ", days above extreme stress value, ", "ssp126", " ", gsub("_", "-", yearSpan_end))
-      if (m %in% "humans") titleText <- paste0(m, ", days with PWC below ", extremeStress, " percent" , ", ssp126, ", gsub("_", "-", yearSpan_end))
+      titleText <- paste0(m, ", days above extreme stress value, ", " ssp126", " ", gsub("_", "-", yearSpan_end))
+      if (m %in% "humans") {
+        titleText <- paste0(m, ", days with PWC below ", extremeStress, " percent" , ", ssp126, ", gsub("_", "-", yearSpan_end))
+        colorList <- rev(colorList) # red to yellow
+      }
       outFilename <- paste0("graphics/cmip6/THI/THIextremeCt.", m, "_", "ssp126", "_", yearSpan_end, ".png")
       r <- r_end_ssp126_df}
     if (i %in% "r_delta_ssp126_df") {
@@ -663,7 +580,7 @@ for (m in speciesChoice) {
     gc()
     
     maxVal <- max(minmax(r_end_ssp585)) 
-    if (maxVal > 150) maxVal <- 150
+    #   if (maxVal > 150) maxVal <- 5
     custom_bins <- round(seq.int(from = 0, to = maxVal, length = 4))
     r$value[r$value > maxVal] <- maxVal #set values > maxVal to maxVal
     g <- ggplot(data = coastline) +
@@ -685,13 +602,126 @@ for (m in speciesChoice) {
   }
 }
 
+# graphics with polygon shading -----
+library(ggpattern)
+for (m in speciesChoice) {
+  if (m %in% "humans") {extremeStress <- extremeStress_humans
+  } else {
+    extremeStress <- bpList[species %in% m, extremeStress]
+  }
+  fileName_century_begin <- paste0("data/cmip6/THI/extremeCt.", m, "_", "historical", "_", yearSpan_begin, ".tif")
+  r_begin <- rast(fileName_century_begin)
+  names(r_begin) <- "value"
+  fileName_r_mask <- paste0("data/animals/raster_ct_", m, ".tif")
+  r_mask <- rast(fileName_r_mask)
+  if (m %in% "cattle") maskMin <- 5000
+  #  if (m %in% "humans") maskMin <- 10 commented out to see if that affects the middle east values
+  if (m %in% "humans") maskMin <- 0 
+  if (m %in% "swine") maskMin <- 1000
+  if (m %in% "chicken") maskMin <- 10000
+  if (m %in% "goat") maskMin <- 5000
+  if (m %in% "sheep") maskMin <- 3000
+  r_mask[r_mask < maskMin] <- NA
+  r_mask[r_mask > 0] <- 1
+  r_mask_pg <- as.polygons(r_mask)
+  test <- as(r_mask_pg, "Spatial") # convert the SpatVector to a spatial SpatialPolygonsDataFrame
+  
+  r_begin <- mask(r_begin, r_mask)
+  r_begin <- crop(r_begin, ext_noAntarctica)
+  r_begin <- project(r_begin, crsRob)
+  r_begin_df <- as.data.frame(r_begin, xy = TRUE)
+  
+  #sspChoices <- c("ssp126", "ssp585")
+  #  for (k in sspChoices) {
+  fileName_century_end_ssp585 <- paste0("data/cmip6/THI/extremeCt.", m, "_", "ssp585", "_", yearSpan_end, ".tif")
+  r_end_ssp585 <- rast(fileName_century_end_ssp585)
+  
+  r_end_ssp585 <- mask(r_end_ssp585, r_mask)
+  r_end_ssp585 <- crop(r_end_ssp585, ext_noAntarctica)
+  r_end_ssp585 <- project(r_end_ssp585, crsRob)
+  
+  fileName_century_end_ssp126 <- paste0("data/cmip6/THI/extremeCt.", m, "_", "ssp126", "_", yearSpan_end, ".tif")
+  r_end_ssp126 <- rast(fileName_century_end_ssp126)
+  r_end_ssp126 <- mask(r_end_ssp126, r_mask)
+  r_end_ssp126 <- crop(r_end_ssp126, ext_noAntarctica)
+  r_end_ssp126 <- project(r_end_ssp126, crsRob)
+  
+  r_delta_ssp585 <- r_end_ssp585 - r_begin
+  names(r_end_ssp585) <-  names(r_delta_ssp585) <- "value"
+  
+  r_delta_ssp126 <- r_end_ssp126 - r_begin
+  names(r_end_ssp126) <-  names(r_delta_ssp126) <- "value"
+  
+  
+  # convert to data frame to use with ggplot
+  r_end_ssp126_df <- as.data.frame(r_end_ssp126, xy = TRUE)
+  r_delta_ssp126_df <- as.data.frame(r_delta_ssp126, xy = TRUE)
+  
+  r_end_ssp585_df <- as.data.frame(r_end_ssp585, xy = TRUE)
+  r_delta_ssp585_df <- as.data.frame(r_delta_ssp585, xy = TRUE)
+  
+  for (i in c("r_begin_df", "r_end_ssp585_df", "r_delta_ssp585_df", "r_end_ssp126_df", "r_delta_ssp126_df")) {
+    if (i %in% "r_begin_df") {
+      titleText <- paste0(m, ", days above extreme stress value, ", gsub("_", "-", yearSpan_begin))
+      if (m %in% "humans") titleText <- paste0(m, ", days with PWC below ", extremeStress, " percent, ", gsub("_", "-", yearSpan_begin))
+      outFilename <- paste0("graphics/cmip6/THI/THIextremeCt.", m, "_", "historical", "_", yearSpan_begin, ".png")
+      r <- r_begin_df}
+    if (i %in% "r_end_ssp585_df") {
+      titleText <- paste0(m, ", days above extreme stress value, ", " ssp585, ", " ", gsub("_", "-", yearSpan_end))
+      if (m %in% "humans") titleText <- paste0(m, ", days with PWC below ", extremeStress, " percent" , ", ssp585, ", gsub("_", "-", yearSpan_begin))
+      outFilename <- paste0("graphics/cmip6/THI/THIextremeCt.", m, "_", "ssp585", "_", yearSpan_end, ".png")
+      r <- r_end_ssp585_df}
+    if (i %in% "r_delta_ssp585_df") {
+      titleText <- paste0(m, ", change in days above extreme stress value, \n early to end century ", "ssp585")
+      if (m %in% "humans") titleText <- paste0(m, ", change in days with PWC below ", extremeStress, " percent, \n early to end century ", "ssp585")
+      outFilename <- paste0("graphics/cmip6/THI/THIextremeCtDelta.", m, "_", "ssp585", "_", yearSpan_end, ".png")
+      r <- r_delta_ssp585_df}
+    if (i %in% "r_end_ssp126_df") {
+      titleText <- paste0(m, ", days above extreme stress value, ", " ssp126", " ", gsub("_", "-", yearSpan_end))
+      if (m %in% "humans") titleText <- paste0(m, ", days with PWC below ", extremeStress, " percent" , ", ssp126, ", gsub("_", "-", yearSpan_end))
+      outFilename <- paste0("graphics/cmip6/THI/THIextremeCt.", m, "_", "ssp126", "_", yearSpan_end, ".png")
+      r <- r_end_ssp126_df}
+    if (i %in% "r_delta_ssp126_df") {
+      titleText <- paste0(m, ", change in days above extreme stress value, \n early to end century ", "ssp585")
+      if (m %in% "humans") titleText <- paste0(m, ", change in days with PWC below ", extremeStress, " percent, \n early to end century ", "ssp126")
+      outFilename <- paste0("graphics/cmip6/THI/THIextremeCtDelta.", m, "_", "ssp126", "_", yearSpan_end, ".png")
+      r <- r_delta_ssp126_df
+    }
+    gc()
+    
+    maxVal <- max(minmax(r_end_ssp585)) 
+    #   if (maxVal > 150) maxVal <- 5
+    custom_bins <- round(seq.int(from = 0, to = maxVal, length = 4))
+    r$value[r$value > maxVal] <- maxVal #set values > maxVal to maxVal
+    g <- ggplot(data = coastline) +
+      labs(title = titleText, fill = legendTitle) + theme(plot.title = element_text(size = 12, hjust = 0.5)) +
+      labs(x = "", y = "") +
+      geom_raster(data = r, aes(x, y, fill = value)) +
+      scale_fill_gradientn(colours = colorList, na.value = "white",
+                           breaks = custom_bins,labels = custom_bins,
+                           limits = c(0, maxVal)) + 
+      geom_sf(fill = NA, color = "gray", lwd = 0.2) +
+      theme_bw() +
+      theme(legend.text.align = 1) +
+      ggpattern::geom_polygon_pattern(data=test, aes(x=long, y=lat), 
+                                      pattern = 'stripe', fill   = 'white', colour  = 'black')
+    
+    print(g)
+    ggsave(filename = outFilename, plot = g, width = 6, height = 6, units = "in", dpi = 300)
+    print(paste0("out file name: ", outFilename))
+    g <- NULL
+    #     print(g)
+    dev.off()
+  }
+}
+
 library(rgl)
 plot3d(x = r_end_ssp126_df$x, y = r_end_ssp126_df$y, z = r_end_ssp126_df$value, col = colorList,
        xlab="longitude", ylab="latitude", zlab="Count of extreme stress")
 
 library(plotly)
 plot_ly(x = r_end_ssp126_df$x, y = r_end_ssp126_df$y, z = r_end_ssp126_df$value, colors = colorList, type = "scatter3d", mode = "markers",
-       xlab="longitude", ylab="latitude", zlab="Count of extreme stress")
+        xlab="longitude", ylab="latitude", zlab="Count of extreme stress")
 # # get animal raster masks
 # animalsOnly <- speciesChoice[!speciesChoice %in% "humans"]
 # for (m in animalsOnly) {

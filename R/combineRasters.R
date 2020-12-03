@@ -3,13 +3,13 @@
 #source("R/globallyUsed.R")
 library(terra)
 woptList <- list(gdal=c("COMPRESS=LZW"))
-terraOptions(memfrac = 1,  progress = 10, tempdir =  "data/ISIMIP", verbose = TRUE) # need to use a relative path
+terraOptions(memfrac = 4,  progress = 10, tempdir =  "data/ISIMIP", verbose = TRUE) # need to use a relative path
 # library(doParallel) #Foreach Parallel Adaptor 
 # library(foreach) #Provides foreach looping construct
 locOfFiles <- "/Volumes/ExtremeSSD2/climate_land_only/unitsCorrected/"
-climateVars <- c( "tasmin", "tasmax", "tas", "pr", "hurs", "rsds", "sfcwind") # "tasmax", "tasmin"
+climateVars <- c( "tasmin", "tasmax", "tas", "pr", "hurs", "rsds", "sfcwind", "ps") # "tasmax", "tasmin"
 
-climateVarstoKeep <- c("tas") # "tasmax", "tasmin"
+climateVarstoKeep <- c("ps") # "tasmax", "tasmin"
 
 startyearChoices_old <-  c(2021, 2051, 2091) #2021, 2051, 2091) # c(2091) # c(2006) #, 2041, 2051, 2081)
 startyearChoices_new <-  c(2041, 2081) #1991, 2021, 2051, 2091) # c(2091) # c(2006) #, 2041, 2051, 2081)
@@ -17,7 +17,7 @@ startyearChoices_new <-  c(2081) #1991, 2021, 2051, 2091) # c(2091) # c(2006) #,
 startyearChoices_new_historical <-  c(1991) #1991, 2021, 2051, 2091) # c(2091) # c(2006) #, 2041, 2051, 2081)
 
 sspChoices <- c("ssp585", "ssp126") #ssp585") #"ssp126",
-sspChoices <- "ssp585"
+#sspChoices <- "ssp585"
 modelChoices <- c("UKESM1-0-LL", "MPI-ESM1-2-HR", "MRI-ESM2-0", "GFDL-ESM4", "IPSL-CM6A-LR")
 # modelChoices <- c("MPI-ESM1-2-HR")
 modelChoices.lower <- tolower(modelChoices)

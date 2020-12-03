@@ -1,65 +1,44 @@
-# tave calculations
-# this script converts the units of nc tmin, tmax, and pr
-#source("R/globallyUsed.R")
-library(data.table)
+# tave calculations from tmin and tmax
+
 #library(raster)
 library(terra)
 woptList <- list(gdal=c("COMPRESS=LZW"))
 terraOptions(memfrac = 2,  progress = 10, tempdir =  "data/ISIMIP", verbose = TRUE) # need to use a relative path
 
-modelChoices <- c("GFDL-ESM4", "IPSL-CM6A-LR", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL") #"observed", 
-#modelChoices <- "MRI-ESM2-0"
-startyearChoices <-  c(2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
-sspChoices <- c("ssp126", "ssp585")
-locOfFiles <- "/Volumes/ExtremeSSD2/climate_land_only/unitsCorrected/"
-yearRange <- 9
-# textvals
-k = "ssp126"
-l = 2021
-i = "MRI-ESM2-0"
+bigFileList <- list.files("/Volumes/ExtremeSSD2/bigFiles", full.names = TRUE)
+bigFileList <- bigFileList[!grepl("aux.xml", bigFileList, fixed = TRUE)]
 
-for (k in sspChoices) {
-  for (i in modelChoices) {
-    for (l in startyearChoices) {
-      gc()
-      modelName.lower <- tolower(i)
-      yearSpan <- paste0(l, "_", l + yearRange)
-      fileName_tasmax <- paste0(locOfFiles, k,  "/", i, "/", modelName.lower,  "_", k, "_tasmax_global_daily_", yearSpan, ".tif")
-      fileName_tasmin <- paste0(locOfFiles, k,  "/", i, "/", modelName.lower, "_", k, "_tasmin_global_daily_", yearSpan, ".tif")
-      fileName_tave <- paste0(locOfFiles, k,  "/", i, "/", modelName.lower, "_", k, "_tave_global_daily_", yearSpan, ".tif")
-      tasmax <- rast(fileName_tasmax) 
-      tasmin <- rast(fileName_tasmin)
-      print(system.time(tave <- (tasmax + tasmin)/2))
-      print(paste0("writing out: ", fileName_tave))
-      writeRaster(tave, filename = fileName_tave, format = "GTiff", overwrite = TRUE, wopt = woptList)
-      tasmax <- tasmin <- tave <- NULL
-    }
-  }
+#small group of files
+bigFileList <- bigFileList[grepl("ukesm1-0-ll_ssp126_tasmax_global_daily", bigFileList, fixed = TRUE)]
+
+  bigFileList_tasmax <- bigFileList[grepl("tasmax", bigFileList, fixed = TRUE)]
+bigFileList_tasmin <- gsub("tasmax", "tasmin", bigFileList_tasmax)
+
+for (i in 1:length(bigFileList_tasmax)) {
+  tmax <- rast(bigFileList_tasmax[i])
+  tmin <- rast(bigFileList_tasmin[i])
+  print(paste0("max tmax: ", max(minmax(tmax)), ", min tmax: ", min(minmax(tmax))))
+  print(paste0("max tmin: ", max(minmax(tmin)), ", min tmin: ", min(minmax(tmin))))
+  # system.time(tmax <- tmax + 0)
+  # system.time(tmin <- tmin + 0)
+  print(system.time(tas <- (tmax + tmin)/2))
+  tasOut <-  gsub("tasmax", "tas", bigFileList_tasmax[i])
+  print(paste0("file name out: ", tasOut))
+  print(system.time(writeRaster(tas, tasOut, format = "GTiff", overwrite = TRUE, wopt=list(gdal="COMPRESS=LZW"))))
+  gc()
 }
 
-# do historical 
-yearRange <- 9
-startyearChoices <-  c(1991, 2001) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
 
-locOfFilesHistorical <- "/Volumes/ExtremeSSD2/climate_land_only/unitsCorrected/historical/"
-modelChoices <- c("GFDL-ESM4", "IPSL-CM6A-LR", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL") #"observed", 
-#test values
-l = 2001
-i = "MRI-ESM2-0"
+# alreadyDone <- c("mri-esm2-0_historical_tas_global_daily_1991_2010.tif", "mri-esm2-0_historical_tas_global_daily_1991_2010.tif.aux.xml", "mpi-esm1-2-hr_ssp585_tas_global_daily_2081_2100.tif", "mpi-esm1-2-hr_ssp585_tas_global_daily_2081_2100.tif.aux.xml", "mpi-esm1-2-hr_ssp585_tas_global_daily_2041_2060.tif", "mpi-esm1-2-hr_ssp585_tas_global_daily_2041_2060.tif.aux.xml", "mpi-esm1-2-hr_ssp126_tas_global_daily_2081_2100.tif", "mpi-esm1-2-hr_ssp126_tas_global_daily_2081_2100.tif.aux.xml", "mpi-esm1-2-hr_ssp126_tas_global_daily_2041_2060.tif", "mpi-esm1-2-hr_ssp126_tas_global_daily_2041_2060.tif.aux.xml", "mpi-esm1-2-hr_historical_tas_global_daily_1991_2010.tif", "mpi-esm1-2-hr_historical_tas_global_daily_1991_2010.tif.aux.xml", "ipsl-cm6a-lr_ssp585_tas_global_daily_2081_2100.tif", "ipsl-cm6a-lr_ssp585_tas_global_daily_2081_2100.tif.aux.xml", "ipsl-cm6a-lr_ssp585_tas_global_daily_2041_2060.tif", "ipsl-cm6a-lr_ssp585_tas_global_daily_2041_2060.tif.aux.xml", "ipsl-cm6a-lr_ssp126_tas_global_daily_2081_2100.tif", "ipsl-cm6a-lr_ssp126_tas_global_daily_2081_2100.tif.aux.xml", "ipsl-cm6a-lr_ssp126_tas_global_daily_2041_2060.tif", "ipsl-cm6a-lr_ssp126_tas_global_daily_2041_2060.tif.aux.xml", "ipsl-cm6a-lr_historical_tas_global_daily_1991_2010.tif", "ipsl-cm6a-lr_historical_tas_global_daily_1991_2010.tif.aux.xml", "gfdl-esm4_ssp585_tas_global_daily_2081_2100.tif", "gfdl-esm4_ssp585_tas_global_daily_2081_2100.tif.aux.xml", "gfdl-esm4_ssp585_tas_global_daily_2041_2060.tif", "gfdl-esm4_ssp585_tas_global_daily_2041_2060.tif.aux.xml", "gfdl-esm4_ssp126_tas_global_daily_2081_2100.tif", "gfdl-esm4_ssp126_tas_global_daily_2081_2100.tif.aux.xml", "gfdl-esm4_ssp126_tas_global_daily_2041_2060.tif", "gfdl-esm4_ssp126_tas_global_daily_2041_2060.tif.aux.xml", "gfdl-esm4_historical_tas_global_daily_1991_2010.tif", "gfdl-esm4_historical_tas_global_daily_1991_2010.tif.aux.xml")
+# alreadyDone <- alreadyDone[!grepl("aux.xml", alreadyDone, fixed = TRUE)]
+# alreadyDone <- paste0("data/bigFiles/", alreadyDone)
+# alreadyDone <- gsub("tas", "tasmax", alreadyDone)
+# bigFileList_tasmax <- bigFileList_tasmax[!bigFileList_tasmax %in% alreadyDone]
 
-  for (i in modelChoices) {
-    for (l in startyearChoices) {
-      gc()
-      modelName.lower <- tolower(i)
-      yearSpan <- paste0(l, "_", l + yearRange)
-      fileName_tasmax <- paste0(locOfFilesHistorical, i, "/", modelName.lower,  "_", "historical", "_tasmax_global_daily_", yearSpan, ".tif")
-      fileName_tasmin <- paste0(locOfFilesHistorical, i, "/", modelName.lower, "_", "historical", "_tasmin_global_daily_", yearSpan, ".tif")
-      fileName_tave <- paste0(locOfFilesHistorical, i, "/", modelName.lower, "_", "historical", "_tave_global_daily_", yearSpan, ".tif")
-      tasmax <- rast(fileName_tasmax) 
-      tasmin <- rast(fileName_tasmin)
-      print(system.time(tave <- (tasmax + tasmin)/2))
-      print(paste0("writing out: ", fileName_tave))
-      writeRaster(tave, filename = fileName_tave, format = "GTiff", overwrite = TRUE, wopt = woptList)
-      tasmax <- tasmin <- tave <- NULL
-    }
-  }
+
+tmax <- rast(bigFileList_tasmax[i])
+tmin <- rast(bigFileList_tasmin[i])
+print(system.time(tas <- (tmax + tmin)/2))
+tasOut <-  gsub("tasmax", "tas", bigFileList_tasmax[i])
+print(paste0("file name out: ", tasOut))
+print(system.time(writeRaster(tas, tasOut, format = "GTiff", overwrite = TRUE, wopt=list(gdal="COMPRESS=LZW"))))

@@ -1,11 +1,11 @@
 source("R/globallyUsed.R")
-
-locOfFiles <- locOfCMIP6tifFiles
+terraOptions(memfrac = 4, progress = 0, tempdir =  "data/ISIMIP", verbose = TRUE)
+locOfFiles <- "data/bigFiles/"
 
 sspChoices <- c("ssp126", "ssp585") 
 #sspChoices <- c("ssp585") 
 modelChoices <- c( "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM6A-LR") #, "MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
-modelChoices <- c("UKESM1-0-LL", "GFDL-ESM4") #, "MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
+#modelChoices <- c("MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") #, "MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
 startyearChoices <-  c(2041, 2081) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
 startyearChoices <-  c(2081) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
 startyearChoices_historical <- c(1991)
@@ -13,10 +13,13 @@ scenarioChoicesEnsemble <- c("historical", sspChoices)
 northernHemExtent <- c( -180, 180, 0, 90)
 southernHemExtent <-c( -180, 180, -90, 0)
 hemisphere <- c("NH", "SH")
+options(warn=0) # convert warnings to errors
 
 yearRange <- 19
 yearRangeSH <- 18 # one less year because of 6 month offset
 
+minimumGrwSeasonLength = 90
+seqLengthCode <- paste0("1{", minimumGrwSeasonLength, ",}")
 woptList <- list(gdal=c("COMPRESS=LZW"))
 
 #test values
@@ -41,123 +44,42 @@ fun <- function(cellVector) {
   if (is.nan(cellVector[1])) {
     return(startend)
   }
-  g <- gregexpr("1{60,}", paste(+(cellVector > 0), collapse = ""))[[1]]
+  g <- gregexpr(seqLengthCode, paste(+(cellVector > 0), collapse = ""))[[1]]
   if (!g[[1]] == -1) { # no need to write to growing season if g returns 1
-    startend[1] <- g[[1]]
-    matchLength <- attributes(g)$match.length
-    startend[2] <- startend[1] + matchLength - 1
+    startend[1] <- g[[1]] # the starting day of the sequence
+    matchLength <- as.numeric(attributes(g)$match.length) # the number of days in the sequence of days that match at least the minimum length required
+    startend[2] <- startend[1] + as.numeric(matchLength) - 1
   }
   return(startend) 
 }
 
-# it looks like this could be done using multiple processors since the memory load is small for each iteration.
-
-# NH ------
+tminExtremeVal <- -30
+extremeColdFun <- function() {
+  fileName_tasmin <- paste0(locOfFiles, "ensemble_dyMean20yr_", k, "_tasmin_global_daily_", yearSpan, ".tif")
+  tmin <- rast(fileName_tasmin)
+  print(system.time(extremeColdCt <- sum(tmin < tminExtremeVal, na.rm = TRUE)))
+  fileNameStart <- paste0("extremeColdMinus", gsub("-", "", tminExtremeVal))
+  fileName_out <- paste0("data/cmip6/growingSeasons/", fileNameStart, "_", k, "_", yearSpan, ".tif")
+  print(paste0("fileName_out: ", fileName_out))
+  print("extremeColdCt")
+  print(extremeColdCt)
+  print(system.time(writeRaster(extremeColdCt, fileName_out, overwrite = TRUE, woptList = woptList)))
+}
 
 for (k in sspChoices) {
   for (i in modelChoices) {
     for (l in startyearChoices) {
-      gc()
       yearSpan <- paste0(l, "_", l + yearRange)
-      modelName.lower <- tolower(i)
-      fileName_tasmin <- paste0(locOfFiles, k,  "/", i, "/", modelName.lower, "_", k, "_tasmin_global_daily_", yearSpan, ".tif")
-      tmin <- rast(fileName_tasmin)
-      system.time(NH <- crop(tmin, ext(northernHemExtent)))
-      
-      for (yearNumber in l:(l + yearRange)) {
-        startDate <- paste0(yearNumber, "-01-01"); endDate <- paste0(yearNumber, "-12-31")
-        indicesYear <- seq(as.Date(startDate), as.Date(endDate), 1)
-        indicesCharYear <- paste0("X", as.character(indicesYear))
-        system.time(tmin_yr_NH <- subset(NH, indicesCharYear))
-        print(system.time(growingSeasonNH <- app(tmin_yr_NH, fun)))
-        names(growingSeasonNH) <- c("growingSeason_start", "growingSeason_end")
-        
-        fileName_out <- paste0("data/cmip6/growingSeasons/growingSeasonNH_",  i, "_", k, "_", yearNumber, ".tif")
-        writeRaster(growingSeasonNH, fileName_out, overwrite = TRUE, woptList = woptList)
-      }
+      extremeColdFun()
     }
   }
 }
 
-# NH historical by model -----
+#historical  -----
 k = "historical"
-for (i in modelChoices) {
-  for (l in startyearChoices_historical) {
-    gc()
-    yearSpan <- paste0(l, "_", l + yearRange)
-    modelName.lower <- tolower(i)
-    fileName_tasmin <- paste0(locOfFiles, k,  "/", i, "/", modelName.lower, "_", k, "_tasmin_global_daily_", yearSpan, ".tif")
-    tmin <- rast(fileName_tasmin)
-    system.time(NH <- crop(tmin, ext(northernHemExtent)))
-    
-    for (yearNumber in l:(l + yearRange)) {
-      startDate <- paste0(yearNumber, "-01-01"); endDate <- paste0(yearNumber, "-12-31")
-      indicesYear <- seq(as.Date(startDate), as.Date(endDate), 1)
-      indicesCharYear <- paste0("X", as.character(indicesYear))
-      system.time(tmin_yr_NH <- subset(NH, indicesCharYear))
-      print(system.time(growingSeasonNH <- app(tmin_yr_NH, fun)))
-      names(growingSeasonNH) <- c("growingSeason_start", "growingSeason_end")
-      print(summary(growingSeasonNH))
-      fileName_out <- paste0("data/cmip6/growingSeasons/growingSeasonNH_",  i, "_", k, "_", yearNumber, ".tif")
-      writeRaster(growingSeasonNH, fileName_out, overwrite = TRUE, woptList = woptList)
-    }
-  }
-}
-
-# SH -----
-# it looks like this could be done using multiple processors since the memory load is small for each iteration.
-for (k in sspChoices) {
-  for (i in modelChoices) {
-    for (l in startyearChoices) {
-      gc()
-      yearSpan <- paste0(l, "_", l + yearRange) 
-      yearSpanSH <- paste0(l, "_", l + yearRangeSH)
-      modelName.lower <- tolower(i)
-      fileName_tasmin <- paste0(locOfFiles, k,  "/", i, "/", modelName.lower, "_", k, "_tasmin_global_daily_", yearSpan, ".tif")
-      tmin <- rast(fileName_tasmin)
-      SH <- crop(tmin, ext(southernHemExtent))
-      
-      for (yearNumber in l:(l + yearRangeSH)) {
-        startDate <- paste0(yearNumber, "-07-01"); endDate <- paste0(yearNumber +1, "-06-30")
-        indicesYear <- seq(as.Date(startDate), as.Date(endDate), 1)
-        indicesCharYear <- paste0("X", as.character(indicesYear))
-        system.time(tmin_yr_SH <- subset(SH, indicesCharYear))
-        print(system.time(growingSeasonSH <- app(tmin_yr_SH, fun)))
-        names(growingSeasonSH) <- c("growingSeason_start", "growingSeason_end")
-        
-        fileName_out <- paste0("data/cmip6/growingSeasons/growingSeasonSH_",  i, "_", k, "_", yearNumber, ".tif")
-        writeRaster(growingSeasonSH, fileName_out, overwrite = TRUE, woptList = woptList)
-      }
-    }
-  }
-}
-
-# SH historical by model -----
-locOfFiles_historical <- "/Volumes/ExtremeSSD2/climate_land_only/unitsCorrected/"
-k <- "historical"
-for (i in modelChoices) {
-  for (l in startyearChoices_historical) {
-    gc()
-    yearSpan <- paste0(l, "_", l + yearRange)
-    yearSpanSH <- paste0(l, "_", l + yearRangeSH)
-    modelName.lower <- tolower(i)
-    fileName_tasmin <- paste0(locOfFiles, k,  "/", i, "/", modelName.lower, "_", k, "_tasmin_global_daily_", yearSpan, ".tif")
-    tmin <- rast(fileName_tasmin)
-    system.time(SH <- crop(tmin, ext(southernHemExtent)))
-    
-    for (yearNumber in l:(l + yearRangeSH)) {
-      startDate <- paste0(yearNumber, "-07-01"); endDate <- paste0(yearNumber +1, "-06-30")
-      indicesYear <- seq(as.Date(startDate), as.Date(endDate), 1)
-      indicesCharYear <- paste0("X", as.character(indicesYear))
-      system.time(tmin_yr_SH <- subset(SH, indicesCharYear))
-      print(system.time(growingSeasonSH <- app(tmin_yr_SH, fun)))
-      names(growingSeasonSH) <- c("growingSeason_start", "growingSeason_end")
-      
-      fileName_out <- paste0("data/cmip6/growingSeasons/growingSeasonSH_",  i, "_", k, "_", yearNumber, ".tif")
-      writeRaster(growingSeasonSH, fileName_out, overwrite = TRUE, woptList = woptList)
-    }
-  }
-}
+l = 1991
+yearSpan <- paste0(l, "_", l + yearRange)
+extremeColdFun()
 
 # 20 year growing seasons  ------
 for (k in sspChoices) {
@@ -304,7 +226,37 @@ for (k in scenarioChoicesEnsemble) {
   #}
 }
 
-# graphing stuff
+# graphing gs start and end -----
+#  do graphics -----
+library(ggplot2)
+library(RColorBrewer)
+library(rworldmap)
+library(maps)
+#remotes::install_github("ropensci/rnaturalearthhires") need to do once to get the library from github
+library(rnaturalearthhires)
+library(ggspatial)
+library(data.table)
+library(readxl)
+library(sf)
+library(dplyr)
+
+coastline <- st_read("data-raw/regionInformation/ne_50m_coastline/ne_50m_coastline.shp")
+ext_noAntarctica <- ext(-180, 180, -60, 90)
+
+#function to get rid of Antarctica
+crop_custom <- function(poly.sf) {
+  poly.sp <- as(poly.sf, "Spatial")
+  extR <- raster::extent(c(-180, 180, -60, 90))
+  poly.sp.crop <- crop(poly.sp, extR)
+  st_as_sf(poly.sp.crop)
+}
+
+coastline <- crop_custom(coastline)
+#st_crop(coastline, c(xmin=-180, xmax= 180, ymin = -60, ymax = 90))
+RobinsonProj <-  "+proj=robin +lon_0=0 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs"
+crsRob <- RobinsonProj
+coastline <- st_transform(coastline, crsRob)
+
 test_df <- as.data.frame(growingSeasonSH, xy = TRUE)
 
 names(test_df)[names(test_df) == "x"] <- "longitude"
@@ -332,6 +284,57 @@ png(filename = outFilename, width = 6, height = 6, units = "in", res = 300)
 print(g)
 dev.off()
 
+# graph extreme cold days with 0-1 -----
+
+graphExtremDaysFun <- function() {
+  fileNameStart <- paste0("extremeColdMinus", gsub("-", "", tminExtremeVal))
+  fileName_in <- paste0("data/cmip6/growingSeasons/", fileNameStart, "_", k, "_", yearSpan, ".tif")
+  
+  r <- rast(fileName_in)
+  r <- crop(r, ext_noAntarctica)
+  r <- project(r, crsRob)
+  
+  r_df <- as.data.frame(r, xy = TRUE)
+  names(r_df) <- c("x", "y", "value")
+  titleText <- paste0("Number of days below ", tminExtremeVal, "°C, \nscenario:  ", k,  ", year span: ", gsub("_", "-", yearSpan))
+  legendTitle <- paste("days below ", tminExtremeVal)
+  #        colorList <- (RColorBrewer::brewer.pal(2, "YlOrRd"))
+  colorList <- c("white", "green")
+  #    custom_bins = c(0, 1)
+  g <- ggplot(data = coastline) +
+    labs(title = titleText, fill = legendTitle) + theme(plot.title = element_text(size = 12, hjust = 0.5)) +
+    labs(x = "", y = "") +
+    geom_raster(data = r_df, aes(x, y, fill = value), show.legend = TRUE) +
+    scale_fill_gradientn(colours=c("white","green")) +
+    geom_sf(color = "ghostwhite", lwd = 0.2) +
+    theme(panel.background = element_rect(fill = "aliceblue"))
+  #          theme(legend.text.align = 1) +
+  #   theme(legend.position = "none")
+  outFilename <- paste0("graphics/cmip6/growingSeasons/extremeColdCt_", k, "_", yearSpan, ".png")
+  
+  ggsave(filename = outFilename, plot = g, width = 6, height = 6, units = "in", dpi = 300)
+  print(paste0("out file name: ", outFilename))
+  g <- NULL
+  #     print(g)
+  #      dev.off()
+}
+
+for (k in sspChoices) {
+  #  k = "ssp585"
+  for (l in startyearChoices) {
+    # l <- 2041
+    yearSpan <- paste0(l, "_", l + yearRange)
+    graphExtremDaysFun()
+  }
+}
+
+
+k = "historical"
+  l <- 1991
+  yearSpan <- paste0(l, "_", l + yearRange)
+  graphExtremDaysFun()
+
+
 
 
 # # fix growing season file names
@@ -345,5 +348,17 @@ dev.off()
 #   file.rename(fileName_in, fileName_out)
 # }
 
+# new approach from Robert
+threshold <- 60
+n <- 100
+ff <- function(x) {
+  y <- x > threshold
+  y[is.na(y)] <- FALSE
+  a <- ave(y, cumsum(!y), FUN=cumsum)
+  m <- max(a)
+  if (m < n) return (c(NA, NA))
+  i <- which(a == m)[1]
+  c(i-m+1, i)
+}
 
 

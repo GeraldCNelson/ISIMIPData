@@ -16,16 +16,15 @@
 # cold damage
 # When tmin < -30C
 
-source("R/globallyUsed.R")
-
-locOfFiles <- locOfCMIP6tifFiles
+terraOptions(memfrac = 4, progress = 0, tempdir =  "data/ISIMIP", verbose = TRUE)
+locOfFiles <- "data/bigFiles/"
 
 sspChoices <- c("ssp126", "ssp585") 
 #sspChoices <- c("ssp585") 
 modelChoices <- c( "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM6A-LR") #, "MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
-#modelChoices <- c("UKESM1-0-LL", "IPSL-CM6A-LR") #, "MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
+modelChoices <- c("UKESM1-0-LL", "GFDL-ESM4") #, "MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
 startyearChoices <-  c(2041, 2081) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
-#startyearChoices <-  c(2041) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
+startyearChoices <-  c(2081) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
 startyearChoices_historical <- c(1991)
 scenarioChoicesEnsemble <- c("historical", sspChoices)
 northernHemExtent <- c( -180, 180, 0, 90)
@@ -33,6 +32,8 @@ southernHemExtent <-c( -180, 180, -90, 0)
 hemisphere <- c("NH", "SH")
 
 yearRange <- 19
+yearRangeSH <- 18 # one less year because of 6 month offset
+minimumGrwSeasonLength = 100
 woptList <- list(gdal=c("COMPRESS=LZW"))
 
 #test values
