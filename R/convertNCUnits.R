@@ -3,331 +3,89 @@
 #library(data.table)
 #library(raster)
 library(terra)
-terraOptions(memfrac = 2, progress = 10, tempdir =  "data/ISIMIP", verbose = TRUE) # need to use a relative path, memfrac = .9,  
+terraOptions(memfrac = 2, progress = 10, tempdir =  "data/ISIMIP", verbose = FALSE) 
 woptList <- list(gdal=c("COMPRESS=LZW"))
+woptList <- list(gdal=c("COMPRESS=DEFLATE", "PREDICTOR=3", "ZLEVEL = 6"))
 
-dirList <- c( "GFDL-ESM4", "IPSL-CM6A-LR", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL") #"observed",  "historical", "IPSL-CM6A-LR"
- dirList <- c("MRI-ESM2-0")
-# dirList <- c( "historical")
+yearRange <- 9
 
-# # only needed when setting up directories
-# dirs.needed_observed <- paste0("/Volumes/ExtremeSSD2/climate_land_only/unitsCorrected/observed/", dirList)
-# dirs.needed_historical <- paste0("/Volumes/ExtremeSSD2/climate_land_only/unitsCorrected/historical/", dirList)
-# dirs.needed_ssp585 <- paste0("/Volumes/ExtremeSSD2/climate_land_only/unitsCorrected/ssp585/", dirList)
-# dirs.needed_ssp126 <- paste0("/Volumes/ExtremeSSD2/climate_land_only/unitsCorrected/ssp126/", dirList)
-# existingDirs <- list.dirs("/Volumes/ExtremeSSD2/climate_land_only/")
-# missingDirs_observed <- dirs.needed_observed[!dirs.needed_observed %in% existingDirs]
-# missingDirs_historical <- dirs.needed_historical[!dirs.needed_historical %in% existingDirs]
-# missingDirs_ssp126 <- dirs.needed_ssp126[!dirs.needed_ssp126 %in% existingDirs]
-# missingDirs_ssp585 <- dirs.needed_ssp585[!dirs.needed_ssp585 %in% existingDirs]
-# missingDirs <- c(missingDirs_observed, missingDirs_ssp126, missingDirs_ssp585, missingDirs_historical)
-# missingDirs <- missingDirs_historical
-# for (i in missingDirs) dir.create(i, recursive = TRUE)
+dirList <- c( "GFDL-ESM4", "IPSL-CM6A-LR", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "historical") #"observed",  "historical", "IPSL-CM6A-LR"
+# dirList <- c("MRI-ESM2-0")
 
-# filesInDir_observed <- list.files("/Volumes/ExtremeSSD2/climate_land_only/climate3b/observed/", full.names = TRUE, recursive = TRUE)
-filesInDir_historical <- list.files("/Volumes/ExtremeSSD2/climate_land_only/climate3b/historical/", full.names = TRUE, recursive = TRUE)
-filesInDir_ssp126 <- list.files("/Volumes/PassportMac/ISIMIP/cmip6/climate3b/ssp126/", full.names = TRUE, recursive = TRUE)
-filesInDir_ssp585 <- list.files("/Volumes/PassportMac/ISIMIP/cmip6/climate3b/ssp585/", full.names = TRUE, recursive = TRUE)
-filesInDir_ssp126_out <- list.files("/Volumes/ExtremeSSD2/climate_land_only/unitsCorrected/ssp126/", full.names = TRUE, recursive = TRUE)
-filesInDir_ssp585_out <- list.files("/Volumes/ExtremeSSD2/climate_land_only/unitsCorrected/ssp585/", full.names = TRUE, recursive = TRUE)
-filesInDir_historical_out <- list.files("/Volumes/ExtremeSSD2/climate_land_only/unitsCorrected/historical/", full.names = TRUE, recursive = TRUE)
-#filesInDir <- c(filesInDir_historical, filesInDir_observed, filesInDir_ssp126, filesInDir_ssp585)
-filesInDir <- c(filesInDir_historical)
-filesInDir <- gsub("//", "/", filesInDir)
-filesInDir_out <- c(filesInDir_historical_out)
-filesInDir_out <- gsub("//", "/", filesInDir_out)
+sspList <- c("ssp126", "ssp585")
+# Note that ssp370 not included
+filesInDir_historical <- list.files("/Volumes/ExtremeSSD3/climate3b/historical", full.names = TRUE, recursive = TRUE)
+filesInDir_ssp126 <- list.files("/Volumes/ExtremeSSD3/climate3b/ssp126", full.names = TRUE, recursive = TRUE)
+filesInDir_ssp585 <- list.files("/Volumes/ExtremeSSD3/climate3b/ssp585", full.names = TRUE, recursive = TRUE)
+
+filestoKeep <- filesInDir_ssp585
+
+# make file names more compact
 renameFile <- function(inNCfile) {
   inNCfile <- gsub("r1i1p1f1_w5e5_", "", inNCfile, fixed = TRUE)
   inNCfile <- gsub("r1i1p1f2_w5e5_", "", inNCfile, fixed = TRUE)
-  inNCfile <- gsub("/Volumes/PassportMac/ISIMIP/cmip6/climate3b", "/Volumes/ExtremeSSD2/climate_land_only/unitsCorrected", inNCfile, fixed = TRUE)
-  inNCfile <- gsub("/Volumes/ExtremeSSD2/climate_land_only/climate3b", "/Volumes/ExtremeSSD2/climate_land_only/unitsCorrected", inNCfile, fixed = TRUE) # for historical files
-  outfile <- gsub(".nc", ".tif", inNCfile, fixed = TRUE)
-  return(outfile)
+  inNCfile <- gsub("global_daily_", "", inNCfile, fixed = TRUE)
+  inNCfile <- gsub("/Volumes/ExtremeSSD3/climate3b/", "/Volumes/PassportMac/ISIMIP/cmip6/climate3b/", inNCfile, fixed = TRUE)
+  for (i in paste0(dirList, "/")) {
+    inNCfile <- gsub(i, "", inNCfile)
+  }
+  for (i in paste0(sspList, "/")) {
+    inNCfile <- gsub(i, "", inNCfile)
+  }
+  inNCfile <- gsub("/Volumes/ExtremeSSD3/climate3b/", "/Volumes/ExtremeSSD2/climate_land_only/unitsCorrected/", inNCfile, fixed = TRUE) # for historical files
+  fileName_out <- gsub(".nc", ".tif", inNCfile, fixed = TRUE)
+  return(fileName_out)
 }
 
-varListComplete <- c("_tasmax_", "_tasmin_", "_pr_", "_hurs_", "huss", "rlds", "_rsds_", "_sfcwind_", "_ps_", "_tas_", "_prsn_") # "_tave_",
-varsToKeep <- c( "_rsds_", "_sfcwind_")
-varsToKeep <- c( "_sfcwind_") #, "_tasmin_") #, "_rsds_", "_sfcwind_")
+varListComplete <- c("_tasmax_", "_tasmin_", "_pr_", "_hurs_", "_huss_", "_rlds_", "_rsds_", "_sfcwind_", "_ps_", "_tas_", "_prsn_") 
+#varsToKeep <- c( "_rsds_", "_sfcwind_")
+varsToKeep <- varListComplete
 varsToRemove <- varListComplete[!varListComplete %in% varsToKeep]
 
-for (cntr in dirList) {
-  filestoKeep <- filesInDir[grepl(cntr, filesInDir, fixed = TRUE)] # keep only file names with climate vars included in varsToKeep
-}
-
-#filestoKeep = c()
-for (cntr in dirList) {
-  filestoKeep <- c(filestoKeep, filesInDir[grepl(cntr, filesInDir, fixed = TRUE)]) # keep file names with the climate variables in varsToKeep
-}
-for (cntr in varsToRemove) {
-  filestoKeep <- filestoKeep[!grepl(cntr, filestoKeep, fixed = TRUE)] # keep only file names with ESM names in dirList
-}
-yearToRemove <- c(1951, 1961, 1971, 1981, 2014, 2015)
-yearToRemove <- c(1951, 1961, 1971, 1981, 2014, 2015, 2021, 2031, 2061, 2071)
-#yearToRemove <- c(1951, 1961, 1971, 1981, 2014, 2015, 2021, 2031, 2051, 2061, 2071, 2081, 2091)
+earlyYearsToRemove <- seq(from = 1850, to = 1981, by = 1)
+yearToRemove <- c(earlyYearsToRemove, 1951, 1961, 1971, 1981, 2014, 2015, 2021, 2031, 2061, 2071)
 for (cntr in yearToRemove) {
   filestoKeep <- filestoKeep[!grepl(cntr, filestoKeep, fixed = TRUE)] # keep only file names with ESM names in dirList
 }
-
-# for (cntr in c("ukesm", "ipsl")) { # remove these file names since they are already done for varsToKeep
-#   filestoKeep <- filestoKeep[!grepl(cntr, filestoKeep, fixed = TRUE)] # keep only file names with ESM names in dirList
-# }
-
-# # keep just ssp585
-# filestoKeep <- filestoKeep[grepl("ssp585", filestoKeep, fixed = TRUE)] # keep only file names with ESM names in dirList
 
 #filestoKeep <- data.table(v1 = character())
 filestoKeep <- filestoKeep[!grepl("aux.xml", filestoKeep, fixed = TRUE)]
 filestoKeep <- filestoKeep[!grepl(".tif", filestoKeep, fixed = TRUE)]
 filestoKeep <- unique(filestoKeep)
 
-for (i in varsToKeep) {
-  # update the list of files, just in case
-  # filesInDir_ssp126_out <- list.files("/Volumes/ExtremeSSD2/climate_land_only/unitsCorrected/ssp126/", full.names = TRUE, recursive = TRUE)
-  # filesInDir_ssp585_out <- list.files("/Volumes/ExtremeSSD2/climate_land_only/unitsCorrected/ssp585/", full.names = TRUE, recursive = TRUE)
-  # filesInDir <- c(filesInDir_ssp585, filesInDir_ssp585)
-  # filesInDir <- gsub("//", "/", filesInDir)
-  # filesInDir_historical <- list.files("/Volumes/ExtremeSSD2/climate_land_only/climate3b/historical/", full.names = TRUE, recursive = TRUE)
+for (j in 1:length(filestoKeep)) {
+  gc()
+  fileName_in <- filestoKeep[j]
+  print(paste0("fileName_in: ", fileName_in))
+  startYear <- substr(fileName_in, (nchar(fileName_in))-11 ,nchar(fileName_in)-8)
+  fileName_out <- renameFile(fileName_in)
+  #   if (!fileName_out %in% filesInDir_out) {
+  rastIn <- rast(fileName_in)
+  print(rastIn)
   
-  print(i)
+  # pr and the temp files need to be converted 
+  if (grepl("_pr_", fileName_in)) {
+    print(system.time(rastIn <- rastIn * 86400)); flush.console()
+  }
+  if (grepl("_tasmax_", fileName_in)) {
+    print(system.time(rastIn <- rastIn - 273.15)); flush.console()
+  }     
+  if (grepl("_tasmin_", fileName_in)) {
+    print(system.time(rastIn <- rastIn - 273.15)); flush.console()
+  }     
+  if (grepl("_tas_", fileName_in)) {
+    print(system.time(rastIn <- rastIn - 273.15)); flush.console()
+  }
   
-  if (i %in% "_pr_") {
-    for (j in 1:length(filestoKeep)) {
-      gc()
-      inFile <- filestoKeep[j]
-      print(paste0("infile: ", inFile))
-      startYear <- substr(inFile, (nchar(inFile))-11 ,nchar(inFile)-8)
-      yearRange <- 9
-      outFile <- renameFile(inFile)
-      unlink(outFile) # so file gets replaced
-      
-      if (outFile %in% filesInDir_out) print(paste0("skipping ", outFile))
-      if (!outFile %in% filesInDir_out){
-        print(paste0("outFile: ", outFile))
-        rastIn <- rast(inFile)
-        #    rastIn <- setMinMax(rastIn) # add min max values
-        print(rastIn)
-        #rename raster names
-        startDate <- paste0(startYear, "-01-01"); endDate <- paste0(as.numeric(startYear) + yearRange, "-12-31")
-        indices <- seq(as.Date(startDate), as.Date(endDate), 1)
-        indices <- paste0("X", as.character(indices))
-        #     indices <- as.numeric(indices)
-        
-        #     system.time(rastIn_mean <- tapp(rastIn, indices, fun = mean))
-        print(system.time(rastOut <- rastIn * 86400)); flush.console()
-        names(rastOut) <- indices
-        print(rastOut)
-        print(system.time(writeRaster(rastOut, outFile,  overwrite = TRUE, wopt= woptList))); flush.console()
-        rastOut <- NULL
-        gc()
-      }
-    }
-  }
-  if (i %in% c("_tasmax_", "_tasmin_", "_tas_")) {
-    for (j in 1:length(filestoKeep)) {
-      inFile <- filestoKeep[j]
-      startYear <- substr(inFile, (nchar(inFile))-11 ,nchar(inFile)-8)
-      if (grepl("_", startYear)) startYear <- substr(inFile, (nchar(inFile))-12 ,nchar(inFile)-9) # for the files that are still on SSD2
-      yearRange <- 9
-      outFile <- renameFile(inFile)
-      unlink(outFile) # so file gets replaced
-      
-      #      print(paste0("tasmax outfile: ", ))
-      # if (outFile %in% filesInDir_out) print(paste0("skipping ", outFile))
-      # if (!outFile %in% filesInDir_out){
-      # print(paste0("outFile: ", outFile))
-      rastIn <- rast(inFile)
-      # rastIn <- setMinMax(rastIn) # add min max values
-      print(rastIn)
-      #rename raster names
-      startDate <- paste0(startYear, "-01-01"); endDate <- paste0(as.numeric(startYear) + yearRange, "-12-31")
-      indices <- seq(as.Date(startDate), as.Date(endDate), 1)
-      indices <- paste0("X", as.character(indices))
-      #     indices <- as.numeric(indices)
-      convertTemp <- function(rIn) {
-        r <- rIn - 273.15
-      }
-      print(system.time(rastOut <- convertTemp(rastIn))); flush.console()
-      names(rastOut) <- indices
-      print(rastOut)
-      print(paste0("max rastOut: ", max(minmax(rastOut)), ", min rastOut: ", min(minmax(rastOut)), ", outfile :", outFile))
-      
-      print(paste0("file out: ", outFile))
-      print(system.time(writeRaster(rastOut, outFile, overwrite = TRUE, format = "GTiff", wopt= woptList))); flush.console()
-      rastIn <- NULL
-      gc()
-      #      }
-    }
-  }
-  if (i %in% c("_hurs_", "_huss_", "_rsds_", "_sfcwind_", "_ps_")) {
-    for (j in 1:length(filestoKeep)) {
-      inFile <- filestoKeep[j]
-      startYear <- substr(inFile, (nchar(inFile))-11 ,nchar(inFile)-8)
-      yearRange <- 9
-      outFile <- renameFile(inFile)
-      unlink(outFile) # so file gets replaced
-      #      if (outFile %in% filesInDir_out) print(paste0("skipping ", outFile))
-      #      if (!outFile %in% filesInDir_out){
-      print(paste0("variable: ", i, ", outfile: ", outFile))
-      rastIn <- rast(inFile)
-      #      rastIn <- setMinMax(rastIn) # add min max values
-      print(rastIn)
-      
-      #rename raster names
-      startDate <- paste0(startYear, "-01-01"); endDate <- paste0(as.numeric(startYear) + yearRange, "-12-31")
-      indices <- seq(as.Date(startDate), as.Date(endDate), 1)
-      indices <- paste0("X", as.character(indices))
-      #      indices <- as.numeric(indices)
-      
-      names(rastIn) <- indices
-      print(rastIn)
-      
-      print(paste0("outfile name: ", outFile))
-      print(system.time(writeRaster(rastIn, outFile, overwrite = TRUE, format = "GTiff", wopt= woptList))); flush.console()
-      rastIn <- NULL
-      gc()
-    }
-  }
+  startDate <- paste0(startYear, "-01-01"); endDate <- paste0(as.numeric(startYear) + yearRange, "-12-31")
+  indices <- seq(as.Date(startDate), as.Date(endDate), 1)
+  indices <- paste0("X", as.character(indices))
+  
+  names(rastIn) <- indices
+  setMinMax(rastIn)
+  print(rastIn)
+  print(paste0("max rastIn: ", max(minmax(rastIn)), ", min rastIn: ", min(minmax(rastIn)), ", fileName_out :", fileName_out))
+  print(system.time(writeRaster(rastIn, fileName_out,  overwrite = TRUE, format = "GTiff", wopt= woptList))); flush.console()
+  rastIn <- NULL
 }
 
-# copy ps files in tif form from /Volumes/ExtremeSSD2/climate_land_only/unitsCorrected/ to /Volumes/ExtremeSSD/data/bigFiles/ps
-files_ps <- list.files("/Volumes/ExtremeSSD2/climate_land_only/unitsCorrected/", full.names = TRUE, recursive = TRUE)
-
-files_ps <- files_ps[grepl("_ps_", files_ps, fixed = TRUE)]
-yearsToRemove <- c(1951, 1961, 1971, 1981, 2014, 2015, 2021, 2031, 2061, 2071)
-
-for (i in yearsToRemove) {
-  files_ps <- files_ps[!grepl(i, files_ps, fixed = TRUE)]
-}
-
-files_ps <- files_ps[!grepl("ensemble", files_ps, fixed = TRUE)]
-files_ps <- gsub("//", "/", files_ps)
-
-nameOnly <-  gsub("/Volumes/ExtremeSSD2/climate_land_only/unitsCorrected/", "", files_ps)
-nameOnly <-  gsub("historical/", "", nameOnly)
-
-for (i in dirList){
-  textToRemove <- paste0(i, "/")
-  nameOnly <-  gsub(textToRemove, "", nameOnly)
-}
-nameOnly <-  gsub("ssp585/", "", nameOnly)
-nameOnly <-  gsub("ssp126/", "", nameOnly)
-
-for (i in 1:length(files_ps)) {
-  fileNameOnly <- nameOnly[i]
-  print(paste0("i ", fileNameOnly))
-  fileOut <- paste0("/Volumes/ExtremeSSD/data/bigFiles/ps/", fileNameOnly)
-  print(fileOut)
-  file.copy(from = files_ps[i], to = fileOut, overwrite = TRUE)
-}
-
-# test <- rast("/Volumes/ExtremeSSD2/climate_land_only/unitsCorrected/ssp126/GFDL-ESM4/gfdl-esm4_ssp126_tasmin_global_daily_2021_2030.tif")
-# test2 <- rast("/Volumes/ExtremeSSD2/climate_land_only/unitsCorrected/ssp126/GFDL-ESM4/gfdl-esm4_ssp126_tasmin_global_daily_2031_2040.tif")
-# test3 <- c(test, test2)
-
-# # Now do the observed data
-# 
-# filesInDir <- list.files("/Volumes/ExtremeSSD2/climate_land_only/climate3b/observed", full.names = TRUE, recursive = TRUE)
-# filesInDir <- gsub("//", "/", filesInDir)
-# 
-# renameFileObserved <- function(inNCfile){
-#   inNCfile <- gsub("observed", "unitsCorrected/observed", inNCfile, fixed = TRUE)
-#   outfile <- gsub(".nc", ".tif", inNCfile, fixed = TRUE)
-#   return(outfile)
-# }
-# 
-# for (i in varsToKeep) {
-#   print(i)
-#   filestoKeep <- filesInDir[grepl(i, filesInDir, fixed = TRUE)]
-#   #  filestoKeep <- head(filestoKeep)
-#   #  filestoKeep <- paste0(pathPrefix, "/", filestoKeep)
-#   
-#   starttime <- Sys.time()
-#   if (i %in% "_pr_") {
-#     for (j in 1:length(filestoKeep)) {
-#       inFile <- filestoKeep[j]
-#       startYear <- substr(inFile, (nchar(inFile))-11 ,nchar(inFile)-8)
-#       yearRange <- 9
-#       outFile <- renameFileObserved(filestoKeep[j])
-#       print(outFile)
-#       rastIn <- rast(inFile)
-#       print(rastIn)
-#       
-#       #rename raster names
-#       startDate <- paste0(startYear, "-01-01"); endDate <- paste0(as.numeric(startYear) + yearRange, "-12-31")
-#       indices <- seq(as.Date(startDate), as.Date(endDate), 1)
-#       indices <- paste0("X", as.character(indices))
-#       indices <- format(as.Date(indices, format = "X%Y-%m-%d"), format = "%m") # %n is month of the year
-#       indices <- as.numeric(indices)
-#       
-#       #      system.time(rastIn_mean <- tapp(rastIn, indices, fun = mean))
-#       print(system.time(rastOut <- rastIn * 86400)); flush.console()
-#       print(system.time(writeRaster(rastOut, outFile,  overwrite = TRUE, wopt= woptList))); flush.console()
-#       
-#       # cdoCommandMult <- paste("cdo -z zip_6 setunit,'mm/day' -mulc,86400 ", inFile, outFile)
-#       # system(cdoCommandMult)
-#       # # temp.r <- readAll(rastfilestoKeep[j]))
-#       # temp.r@data@unit <- "mm/day"
-#       # temp.r <- temp.r * 86400
-#       #    print(paste0("writing out ", outfiles[j]))
-#       #   writeRaster(temp.r, filename = outfiles[j], format = "GTiff", overwrite = TRUE)
-#       # }
-#     }
-#   }
-#   if (i %in% c("_tasmax_", "_tasmin_")) {
-#     for (j in 1:length(filestoKeep)) {
-#       inFile <- filestoKeep[j]
-#       startYear <- substr(inFile, (nchar(inFile))-11 ,nchar(inFile)-8)
-#       yearRange <- 9
-#       outFile <- renameFileObserved(filestoKeep[j])
-#       print(outFile)
-#       rastIn <- rast(inFile)
-#       
-#       #rename raster names
-#       startDate <- paste0(startYear, "-01-01"); endDate <- paste0(as.numeric(startYear) + yearRange, "-12-31")
-#       indices <- seq(as.Date(startDate), as.Date(endDate), 1)
-#       indices <- paste0("X", as.character(indices))
-#       indices <- format(as.Date(indices, format = "X%Y-%m-%d"), format = "%m") # %n is month of the year
-#       indices <- as.numeric(indices)
-#       
-#       #      system.time(rastIn_mean <- tapp(rastIn, indices, fun = mean))
-#       print(system.time(rastOut <- rastIn - 273.15)); flush.console()
-#       print(system.time(writeRaster(rastOut, outFile, overwrite = TRUE, format = "GTiff", wopt= woptList))); flush.console()
-#       
-#       #   cdoCommandMult <- paste("cdo -z zip_6 setunit,'mm/day' -addc,-273.15 ",  inFile, outFile)
-#       #   system(cdoCommandMult)
-#       # 
-#     }
-#   }
-#   
-#   if (i %in% c("_hurs_", "_rsds_", "_sfcwind_")) {
-#     for (j in 1:length(filestoKeep)) {
-#       inFile <- filestoKeep[j]
-#       startYear <- substr(inFile, (nchar(inFile))-11 ,nchar(inFile)-8)
-#       yearRange <- 9
-#       outFile <- renameFileObserved(filestoKeep[j])
-#       print(outFile)
-#       rastIn <- rast(inFile)
-#       
-#       #rename raster names
-#       startDate <- paste0(startYear, "-01-01"); endDate <- paste0(as.numeric(startYear) + yearRange, "-12-31")
-#       indices <- seq(as.Date(startDate), as.Date(endDate), 1)
-#       indices <- paste0("X", as.character(indices))
-#       indices <- format(as.Date(indices, format = "X%Y-%m-%d"), format = "%m") # %n is month of the year
-#       indices <- as.numeric(indices)
-#       
-#       #     system.time(rastIn_mean <- tapp(rastIn, indices, fun = mean))
-#       print(system.time(rastOut <- rastIn)); flush.console()
-#       print(paste0("outfile name: ", outFile))
-#       
-#       print(system.time(writeRaster(rastOut, outFile,  overwrite = TRUE, wopt= woptList))); flush.console()
-#     }
-#   }
-# }
-
-# generate tave - added July 30, 2020
-
-
-# cdo -setunit="degC" -addc,-273.15 <infile> <outfile>
-# cdo -setunit="mm/day" -mulc,86400 <infile> <outfile>
-
-# cdo -setunit="degC" j -addc,-273.15 -z szip outfile

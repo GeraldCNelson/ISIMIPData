@@ -373,7 +373,6 @@ for (k in scenarioChoicesEnsemble) {
   }
 }
 
-
 # extreme stress scenarios -------
 library(data.table)
 funextTHI <- function(cellVector) {
