@@ -135,7 +135,8 @@
   }
   f_combinedDamage <- function(fruitSpecies) {
     for (m in hemisphere) {
-      fileName_in <- paste0(locOfDataFiles, "combinedDamages_", fruitSpecies, "_", m, "_", i, "_", yearSpan, ".nc")
+      for (i in c("good", "ok", "bad")) {
+      fileName_in <- paste0(locOfDataFiles, "combinedDamages_", fruitSpecies, "_", m, "_", "i", "_", yearSpan, ".nc")
       combined <- rast(fileName_in)
       extremeCold <- combined[1]
       unsuitableFrost <- combined[2]
@@ -179,6 +180,7 @@
       fileName_out <- paste0("data/cmip6/perennials/suitable_", fruitSpecies, "_", k, "_", m, "_", yearSpan, ".tif")
       writeRaster(r, fileName_out, overwrite = TRUE, woptList = woptList)
       print(paste0("file name out: ", fileName_out))
+      }
     }
   }
   
