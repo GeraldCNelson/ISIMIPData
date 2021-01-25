@@ -21,6 +21,7 @@ yearRangeSH <- 18 # one less year because of 6 month offset
 minimumGrwSeasonLength = 90
 seqLengthCode <- paste0("1{", minimumGrwSeasonLength, ",}")
 woptList <- list(gdal=c("COMPRESS=LZW"))
+woptList <- list(gdal=c("COMPRESS=DEFLATE", "PREDICTOR=3", "ZLEVEL = 6"))
 
 #test values
 i <- "IPSL-CM6A-LR"
@@ -29,14 +30,14 @@ l <- 2041
 yearNumber <- 2043
 
 readRast_gs <- function(yearNumber) {
-  fileNameIn <- paste0("data/cmip6/growingSeasons/growingSeason", m, "_", i, "_", k,  "_", yearNumber, ".tif") # note yearNumber here
-  r <- rast(fileNameIn)
+  fileName_in <- paste0("data/cmip6/growingSeasons/growingSeason", m, "_", i, "_", k,  "_", yearNumber, ".tif") # note yearNumber here
+  r <- rast(fileName_in)
 }
 
 readRast_GrowSeasonEnsemble <- function(i) {
-  fileNameIn <- paste0("data/cmip6/growingSeasons/growingSeason_", n, m, "_", i, "_", k,  "_", yearSpan, ".tif") # note yearSpan here
-  print(fileNameIn)
-  r <- rast(fileNameIn)
+  fileName_in <- paste0("data/cmip6/growingSeasons/growingSeason_", n, m, "_", i, "_", k,  "_", yearSpan, ".tif") # note yearSpan here
+  print(fileName_in)
+  r <- rast(fileName_in)
 }
 
 fun <- function(cellVector) {
@@ -102,12 +103,12 @@ for (k in sspChoices) {
         index_r_end <-seq(2, nlyr(r), 2)
         r_start <- subset(r, index_r_start)
         r_end <- subset(r, index_r_end)
-        fileNameOut_start <- paste0("data/cmip6/growingSeasons/growingSeason_start", m, "_", i, "_", k,  "_", yearSpan, ".tif")
-        fileNameOut_end <- paste0("data/cmip6/growingSeasons/growingSeason_end", m, "_", i, "_", k,  "_", yearSpan, ".tif")
-        print(paste0("fileNameOut_start out: ", fileNameOut_start))
-        print(paste0("fileNameOut_end out: ", fileNameOut_end))
-        print(system.time(writeRaster(r_start, fileNameOut_start, overwrite=TRUE, wopt=list(gdal="COMPRESS=LZW")))); flush.console()
-        print(system.time(writeRaster(r_end, fileNameOut_end, overwrite=TRUE, wopt=list(gdal="COMPRESS=LZW")))); flush.console()
+        fileName_out_start <- paste0("data/cmip6/growingSeasons/growingSeason_start", m, "_", i, "_", k,  "_", yearSpan, ".tif")
+        fileName_out_end <- paste0("data/cmip6/growingSeasons/growingSeason_end", m, "_", i, "_", k,  "_", yearSpan, ".tif")
+        print(paste0("fileName_out_start out: ", fileName_out_start))
+        print(paste0("fileName_out_end out: ", fileName_out_end))
+        print(system.time(writeRaster(r_start, fileName_out_start, overwrite=TRUE, wopt=list(gdal="COMPRESS=LZW")))); flush.console()
+        print(system.time(writeRaster(r_end, fileName_out_end, overwrite=TRUE, wopt=list(gdal="COMPRESS=LZW")))); flush.console()
         r_start <- r_end <- NULL
         gc()
       }
@@ -134,12 +135,12 @@ for (m in hemisphere) {
       index_r_end <-seq(2, nlyr(r), 2)
       r_start <- subset(r, index_r_start)
       r_end <- subset(r, index_r_end)
-      fileNameOut_start <- paste0("data/cmip6/growingSeasons/growingSeason_start", m, "_", i, "_", k,  "_", yearSpan, ".tif")
-      fileNameOut_end <- paste0("data/cmip6/growingSeasons/growingSeason_end", m, "_", i, "_", k,  "_", yearSpan, ".tif")
-      print(paste0("fileNameOut_start out: ", fileNameOut_start))
-      print(paste0("fileNameOut_end out: ", fileNameOut_end))
-      print(system.time(writeRaster(r_start, fileNameOut_start, overwrite=TRUE, wopt=list(gdal="COMPRESS=LZW")))); flush.console()
-      print(system.time(writeRaster(r_end, fileNameOut_end, overwrite=TRUE, wopt=list(gdal="COMPRESS=LZW")))); flush.console()
+      fileName_out_start <- paste0("data/cmip6/growingSeasons/growingSeason_start", m, "_", i, "_", k,  "_", yearSpan, ".tif")
+      fileName_out_end <- paste0("data/cmip6/growingSeasons/growingSeason_end", m, "_", i, "_", k,  "_", yearSpan, ".tif")
+      print(paste0("fileName_out_start out: ", fileName_out_start))
+      print(paste0("fileName_out_end out: ", fileName_out_end))
+      print(system.time(writeRaster(r_start, fileName_out_start, overwrite=TRUE, wopt=list(gdal="COMPRESS=LZW")))); flush.console()
+      print(system.time(writeRaster(r_end, fileName_out_end, overwrite=TRUE, wopt=list(gdal="COMPRESS=LZW")))); flush.console()
       r_start <- r_end <- NULL
     }
   }

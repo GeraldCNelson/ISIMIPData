@@ -33,8 +33,8 @@ start_time <- Sys.time()
 #   foreach(k = sspChoices, .combine = rbind)  %dopar% {
 
 readRast <- function(m) {
-  fileNameIn <- paste0("data/cmip6/THI/", thiList[j], "_", m,  "_", yearSpan, "_", k, ".tif")
-  r <- rast(fileNameIn)
+  fileName_in <- paste0("data/cmip6/THI/", thiList[j], "_", m,  "_", yearSpan, "_", k, ".tif")
+  r <- rast(fileName_in)
   names(r) <- month.abb
   r
 }
@@ -50,9 +50,9 @@ for (k in sspChoices) {
       print(paste0("species names: ", speciesName, ", start year: ", l,  ", pid number: ", Sys.getpid()))
       # rasterList <- vector(length = 0)
       #  for (m in 1:length(modelChoices)) {
-      #  #   fileNameIn <- paste0("data/cmip6/THI/", thiList[j], "_", modelChoices[m],  "_", yearSpan, "_", k, ".tif")
-      #   print(paste0("raster file name in: ", fileNameIn,  ", pid number: ", Sys.getpid()))
-      #   rtemp <- rast(fileNameIn)
+      #  #   fileName_in <- paste0("data/cmip6/THI/", thiList[j], "_", modelChoices[m],  "_", yearSpan, "_", k, ".tif")
+      #   print(paste0("raster file name in: ", fileName_in,  ", pid number: ", Sys.getpid()))
+      #   rtemp <- rast(fileName_in)
       #   names(rtemp) <- month.abb
       #          rasterList <- c(rasterList, rtemp)
       # }

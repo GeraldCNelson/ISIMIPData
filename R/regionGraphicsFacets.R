@@ -16,8 +16,8 @@ startyearChoices <-  c(2001, 2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091
 startyearChoices_ensemble <-  c(2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
 yearRange <- 9
 
-climateVars <- c("tasmax", "tave", "tasmin", "pr", "hurs") #""pr", "hurs", tasmax",   "tasmin", "tave"
- #climateVars <- c( "hurs") #""pr", "hurs", tasmax",   "tasmin", "tave"
+climateVars <- c("tasmax", "tas", "tasmin", "pr", "hurs") #""pr", "hurs", tasmax",   "tasmin",
+ #climateVars <- c( "hurs") #""pr", "hurs", tasmax",   "tasmin"
 fileLoc_monthlyMean <- "data/cmip6/monthlyMean/"
 
 #regionInfoLookup <- as.data.table(read_excel("data-raw/regionInformation/regionInfoLookup.xlsx", range = "A1:k7"))

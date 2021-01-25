@@ -52,10 +52,10 @@ foreach(i = modelChoices) %:%
     startTime <-  Sys.time()
     yearSpan <- paste0(l, "_", l + yearRange)
     
-    fileNameIn <- paste(modelName.lower, k, j, "global_daily", yearSpan, sep = "_")
-    fileNameIn <- paste0(fileNameIn, ".nc")
+    fileName_in <- paste(modelName.lower, k, j, "global_daily", yearSpan, sep = "_")
+    fileName_in <- paste0(fileName_in, ".nc")
     
-    temp <- paste(locOfFiles, k, "/", i, "/", fileNameIn, sep = "")
+    temp <- paste(locOfFiles, k, "/", i, "/", fileName_in, sep = "")
     print(paste0("Working on : ", temp))
     brick.pr <- rasttemp, varname = j) # because there is no explicit projection info in the netcdf files, this is assumed - +proj=longlat +datum=WGS84"
 

@@ -30,9 +30,9 @@ for (k in sspChoices) {
       yearSpan <- paste0(l, "_", l + yearRange)
       rasterList <- vector(mode = "list", length = length(modelChoices))
       for (j in 1:length(modelChoices)) {
-        fileNameIn <- paste0("data/cmip6/damageTemp/tdamage_mean_", cropName, "_", tdamage_mean, "C_",  modelChoices.lower[j], "_", k,  "_", yearSpan, ".tif")
-        print(paste("fileNameIn: ", fileNameIn))
-        rasterList[[j]] <- rast(fileNameIn)
+        fileName_in <- paste0("data/cmip6/damageTemp/tdamage_mean_", cropName, "_", tdamage_mean, "C_",  modelChoices.lower[j], "_", k,  "_", yearSpan, ".tif")
+        print(paste("fileName_in: ", fileName_in))
+        rasterList[[j]] <- rast(fileName_in)
         names(rasterList[[j]]) <- month.abb
       }
       ras.test <- stack(rasterList)
@@ -154,9 +154,9 @@ for (k in sspChoices) {
       yearSpan <- paste0(l, "_", l + yearRange)
       rasterList <- vector(mode = "list", length = length(modelChoices))
       for (j in 1:length(modelChoices)) {
-        fileNameIn <- paste0("data/cmip6/damageTemp/tdamage_mean_", cropName, "_", tdamage_mean, "C_",  modelChoices.lower[j], "_", k,  "_", yearSpan, ".tif")
-        print(paste("fileNameIn: ", fileNameIn))
-        rasterList[[j]] <- rast(fileNameIn)
+        fileName_in <- paste0("data/cmip6/damageTemp/tdamage_mean_", cropName, "_", tdamage_mean, "C_",  modelChoices.lower[j], "_", k,  "_", yearSpan, ".tif")
+        print(paste("fileName_in: ", fileName_in))
+        rasterList[[j]] <- rast(fileName_in)
         names(rasterList[[j]]) <- month.abb
       }
       ras.test <- stack(rasterList)

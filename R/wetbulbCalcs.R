@@ -19,12 +19,14 @@ get_os <- function() {
   tolower(os)
 }
 if (get_os() %in% "osx") {
-  terraOptions(memfrac = 4, progress = 10, tempdir =  "data/ISIMIP", verbose = TRUE) # need to use a relative path, memfrac = .9,
+  terraOptions(memfrac = 2, progress = 10, tempdir =  "data/ISIMIP", verbose = TRUE) # need to use a relative path, memfrac = .9,
 }else{
   terraOptions(memfrac = .6,  progress = 10, tempdir =  "data/ISIMIP", verbose = TRUE) # need to use a relative path
 }
 
-terraOptions(memfrac = 4, progress = 0, tempdir =  "data/ISIMIP", verbose = FALSE)
+terraOptions(memfrac = 2, progress = 0, tempdir =  "data/ISIMIP", verbose = FALSE)
+woptList <- list(gdal=c("COMPRESS=LZW"))
+woptList <- list(gdal=c("COMPRESS=DEFLATE", "PREDICTOR=3", "ZLEVEL = 6"))
 
 #locOfFiles <- locOfCMIP6tifFiles
 locOfFiles <- "data/bigFiles/"
@@ -40,7 +42,7 @@ scenarioChoicesEnsemble <- c("historical", sspChoices)
 ext_noAntarctica <- ext(-180, 180, -60, 90)
 
 yearRange <- 19
-woptList <- list(gdal=c("COMPRESS=LZW"))
+
 colorList <- (RColorBrewer::brewer.pal(5, "RdYlGn"))
 
 #test values

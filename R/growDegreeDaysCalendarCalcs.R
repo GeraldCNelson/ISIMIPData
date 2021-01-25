@@ -193,8 +193,8 @@ for (k in sspChoices)  {
 # indices <- as.numeric(indices)
 # monthZeroCount <- tapp(tmin, indices, fun = function(x, ...){sum(x <= 0)}) 
 # names(monthZeroCount) <- month.abb
-# fileNameOutZero <- paste0("belowZeroCount_", modelName.lower, "_", k, "_", yearSpan, ".tif")
-# writeRaster(monthZeroCount, filename = paste0("data/cmip6/belowZero/", fileNameOutZero), format = "GTiff", overwrite = TRUE)
+# fileName_outZero <- paste0("belowZeroCount_", modelName.lower, "_", k, "_", yearSpan, ".tif")
+# writeRaster(monthZeroCount, filename = paste0("data/cmip6/belowZero/", fileName_outZero), format = "GTiff", overwrite = TRUE)
 
 
 

@@ -4,19 +4,19 @@ library(officer)
 library(magrittr)
 library(flextable)
 
-sspChoices <- c("ssp585") #"ssp126", 
+sspChoices <- c("ssp126", "ssp585")
 startyearChoices <-  c(2001, 2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
 startyearChoices_ensemble <-  c(2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
-climateVars <- c("tave", "tasmax", "tasmin", "pr", "hurs") 
+climateVars <- c("tas", "tasmax", "tasmin", "pr", "hurs") 
 
-#climateVars <- "tave"
+#climateVars <- "tas"
 varNamesInfo <- as.data.table(read_excel("data-raw/varNamesLookup.xlsx"))
 
 yearRange <- 9
 #test values
 k <- "ssp585"
 l <- 2091
-j <- "tave"
+j <- "tas"
 
 regionInfoLookup <- as.data.table(read_excel("data-raw/regionInformation/regionInfoLookup.xlsx", range = "A1:k7"))
 regionInfoLookup <- as.data.table(read_excel("data-raw/regionInformation/regionInfoLookupCSVs.xlsx", range = "F7:P43"))

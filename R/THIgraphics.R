@@ -126,7 +126,7 @@ for (j in 1:length(thiListReduced)) {
   speciesName <- gsub("thi.", "", thiListReduced[j])
   
   fileNameMean.masked <- paste0("data/cmip6/THI/THI_masked_", speciesName, "_historical_", yearSpan, ".tif")
-  print(paste0("filenamein ", fileNameMean.masked))
+  print(paste0("fileName_in ", fileNameMean.masked))
   meanData <- rast(fileNameMean.masked)
   meanData <- terra::project(meanData, crsRob)
   names(meanData) <- month.abb
@@ -164,7 +164,7 @@ for (j in 1:length(thiListReduced)) {
 #   speciesName <- gsub("thi.", "", thiListReduced[j])
 #   
 #   fileNameMean.masked <- paste0("data/cmip6/THI/THI_masked_", speciesName, "_observed_", yearSpan, ".tif")
-#   print(paste0("filenamein ", fileNameMean.masked))
+#   print(paste0("fileName_in ", fileNameMean.masked))
 #   meanData <- rast(fileNameMean.masked)
 #   meanData <- terra::project(meanData, crsRob)
 #   names(meanData) <- month.abb

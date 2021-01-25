@@ -18,7 +18,7 @@ filesInDir_historical <- list.files("/Volumes/ExtremeSSD3/climate3b/historical",
 filesInDir_ssp126 <- list.files("/Volumes/ExtremeSSD3/climate3b/ssp126", full.names = TRUE, recursive = TRUE)
 filesInDir_ssp585 <- list.files("/Volumes/ExtremeSSD3/climate3b/ssp585", full.names = TRUE, recursive = TRUE)
 
-filestoKeep <- filesInDir_ssp585
+filestoKeep <- c(filesInDir_historical, filesInDir_ssp126, filesInDir_ssp585)
 
 # make file names more compact
 renameFile <- function(inNCfile) {
@@ -37,13 +37,18 @@ renameFile <- function(inNCfile) {
   return(fileName_out)
 }
 
-varListComplete <- c("_tasmax_", "_tasmin_", "_pr_", "_hurs_", "_huss_", "_rlds_", "_rsds_", "_sfcwind_", "_ps_", "_tas_", "_prsn_") 
-#varsToKeep <- c( "_rsds_", "_sfcwind_")
+varListComplete <- c("_tasmax_", "_tasmin_", "_tas_", "_pr_", "_hurs_", "_huss_", "_rlds_", "_rsds_", "_sfcwind_", "_ps_", "_prsn_") 
 varsToKeep <- varListComplete
+#varsToKeep <- c( "_tasmin_", "_tasmax_")
 varsToRemove <- varListComplete[!varListComplete %in% varsToKeep]
 
-earlyYearsToRemove <- seq(from = 1850, to = 1981, by = 1)
+for (cntr in varsToRemove) {
+  filestoKeep <- filestoKeep[!grepl(cntr, filestoKeep, fixed = TRUE)] # keep only file names with ESM names in dirList
+}
+
+earlyYearsToRemove <- seq(from = 1850, to = 1980, by = 1)
 yearToRemove <- c(earlyYearsToRemove, 1951, 1961, 1971, 1981, 2014, 2015, 2021, 2031, 2061, 2071)
+yearToRemove <- c(earlyYearsToRemove, 1951, 1961, 1971, 1991, 2001, 2014, 2015, 2021, 2041, 2051, 2061, 2081, 2091) # to add the 10 year files needed for 30 year combos
 for (cntr in yearToRemove) {
   filestoKeep <- filestoKeep[!grepl(cntr, filestoKeep, fixed = TRUE)] # keep only file names with ESM names in dirList
 }

@@ -3,7 +3,7 @@ source("R/globallyUsed.R")
 library(doParallel) #Foreach Parallel Adaptor 
 # library(foreach) #Provides foreach looping construct, called with doParallel
 
-locOfFiles <- locOfCMIP6tifFiles
+# locOfFiles <- locOfCMIP6tifFiles
 sspChoices <- c("ssp126", "ssp585") #"ssp126", 
 modelChoices <- c( "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM6A-LR") #, "MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
 
@@ -36,20 +36,20 @@ foreach(l = startyearChoices) %:%
     modelName.lower <- tolower(i)
     yearSpan <- paste0(l, "_", l + yearRange)
     j <- "tasmax"
-    fileNameIn <- paste(modelName.lower, k, j, "global_daily", yearSpan, sep = "_")
-    fileNameIn <- paste0(fileNameIn, ".tif")
-    tmaxFile <- paste0(locOfFiles, k,"/", i, "/", fileNameIn)
+    fileName_in <- paste(modelName.lower, k, j, "global_daily", yearSpan, sep = "_")
+    fileName_in <- paste0(fileName_in, ".tif")
+    tmaxFile <- paste0(locOfFiles, k,"/", i, "/", fileName_in)
     
     j <- "hurs"
-    fileNameIn <- paste(modelName.lower, k, j, "global_daily", yearSpan, sep = "_")
-    fileNameIn <- paste0(fileNameIn, ".tif")
-    rhFile <- paste0(locOfFiles, k,"/", i, "/", fileNameIn)
+    fileName_in <- paste(modelName.lower, k, j, "global_daily", yearSpan, sep = "_")
+    fileName_in <- paste0(fileName_in, ".tif")
+    rhFile <- paste0(locOfFiles, k,"/", i, "/", fileName_in)
     hiFilesCompleted <- list.files(hifileOutLoc)
     hiFilesCompleted <- hiFilesCompleted[!grepl("aux.xml", hiFilesCompleted, fixed = TRUE)]
     
     # check if global daily HI file already exists
-    fileNameOut <-    paste0(modelName.lower, "_heatIndexSimple_", "global_daily_", yearSpan, ".tif")
-    if (!paste0(hifileOutLoc, fileNameOut) %in% hiFilesCompleted) {
+    fileName_out <-    paste0(modelName.lower, "_heatIndexSimple_", "global_daily_", yearSpan, ".tif")
+    if (!paste0(hifileOutLoc, fileName_out) %in% hiFilesCompleted) {
       
       print(system.time(tmaxRhIn(tmaxFile, rhFile)))
       
@@ -83,8 +83,8 @@ foreach(l = startyearChoices) %:%
       #   .00122874 *  tmax^2 * rh + .00085282 *  tmax * rh^2 - .00000199 *  tmax^2 * rh^2
       # 
       fileOutLoc <- "data/cmip6/heatIndex/"
-      print(paste0("Writing out : " , paste0(fileOutLoc, fileNameOut)))
-      writeRaster(hiSimple, filename = paste0(fileOutLoc, fileNameOut), format = "GTiff", overwrite = TRUE, wopt=list(gdal="COMPRESS=LZW"))
+      print(paste0("Writing out : " , paste0(fileOutLoc, fileName_out)))
+      writeRaster(hiSimple, filename = paste0(fileOutLoc, fileName_out), format = "GTiff", overwrite = TRUE, wopt=list(gdal="COMPRESS=LZW"))
       
     }
     
@@ -124,20 +124,20 @@ print(paste0("start year: ", l, " ssp: ", k, " pid: ", Sys.getpid(), " systime: 
 
 yearSpan <- paste0(l, "_", l + yearRange)
 # j <- tasmax.observed
-# fileNameIn <- paste(modelName.lower, k, j, "global_daily", yearSpan, sep = "_")
-# fileNameIn <- paste0(fileNameIn, ".tif")
+# fileName_in <- paste(modelName.lower, k, j, "global_daily", yearSpan, sep = "_")
+# fileName_in <- paste0(fileName_in, ".tif")
 tmaxFile <- tasmax.historical
 
 # j <- "hurs"
-# fileNameIn <- paste(modelName.lower, k, j, "global_daily", yearSpan, sep = "_")
-# fileNameIn <- paste0(fileNameIn, ".tif")
+# fileName_in <- paste(modelName.lower, k, j, "global_daily", yearSpan, sep = "_")
+# fileName_in <- paste0(fileName_in, ".tif")
 rhFile <-hurs.historical
 hiFilesCompleted <- list.files(hifileOutLoc)
 hiFilesCompleted <- hiFilesCompleted[!grepl("aux.xml", hiFilesCompleted, fixed = TRUE)]
 
 # check if global daily HI file already exists
-fileNameOut <-    paste("observed", "_heatIndexSimple_", "global_daily_", yearSpan, ".tif")
-if (!paste0(hifileOutLoc, fileNameOut) %in% hiFilesCompleted) {
+fileName_out <-    paste("observed", "_heatIndexSimple_", "global_daily_", yearSpan, ".tif")
+if (!paste0(hifileOutLoc, fileName_out) %in% hiFilesCompleted) {
   
   print(system.time(tmaxRhIn(tmaxFile, rhFile)))
   
@@ -171,8 +171,8 @@ if (!paste0(hifileOutLoc, fileNameOut) %in% hiFilesCompleted) {
   #   .00122874 *  tmax^2 * rh + .00085282 *  tmax * rh^2 - .00000199 *  tmax^2 * rh^2
   # 
   fileOutLoc <- "data/cmip6/heatIndex/"
-  print(paste0("Writing out : ", paste0(fileOutLoc, fileNameOut)))
-  writeRaster(hiSimple, filename = paste0(fileOutLoc, fileNameOut), format = "GTiff", overwrite = TRUE, wopt=list(gdal="COMPRESS=LZW"))
+  print(paste0("Writing out : ", paste0(fileOutLoc, fileName_out)))
+  writeRaster(hiSimple, filename = paste0(fileOutLoc, fileName_out), format = "GTiff", overwrite = TRUE, wopt=list(gdal="COMPRESS=LZW"))
 }
 
 # # do same calculations on observed data
@@ -184,20 +184,20 @@ if (!paste0(hifileOutLoc, fileNameOut) %in% hiFilesCompleted) {
 # 
 # yearSpan <- paste0(l, "_", l + yearRange)
 # # j <- tasmax.observed
-# # fileNameIn <- paste(modelName.lower, k, j, "global_daily", yearSpan, sep = "_")
-# # fileNameIn <- paste0(fileNameIn, ".tif")
+# # fileName_in <- paste(modelName.lower, k, j, "global_daily", yearSpan, sep = "_")
+# # fileName_in <- paste0(fileName_in, ".tif")
 # tmaxFile <- tasmax.observed
 # 
 # # j <- "hurs"
-# # fileNameIn <- paste(modelName.lower, k, j, "global_daily", yearSpan, sep = "_")
-# # fileNameIn <- paste0(fileNameIn, ".tif")
+# # fileName_in <- paste(modelName.lower, k, j, "global_daily", yearSpan, sep = "_")
+# # fileName_in <- paste0(fileName_in, ".tif")
 # rhFile <-hurs.observed
 # hiFilesCompleted <- list.files(hifileOutLoc)
 # hiFilesCompleted <- hiFilesCompleted[!grepl("aux.xml", hiFilesCompleted, fixed = TRUE)]
 # 
 # # check if global daily HI file already exists
-# fileNameOut <-    paste("observed", "_heatIndexSimple_", "global_daily_", yearSpan, ".tif")
-# if (!paste0(hifileOutLoc, fileNameOut) %in% hiFilesCompleted) {
+# fileName_out <-    paste("observed", "_heatIndexSimple_", "global_daily_", yearSpan, ".tif")
+# if (!paste0(hifileOutLoc, fileName_out) %in% hiFilesCompleted) {
 #   
 #   print(system.time(tmaxRhIn(tmaxFile, rhFile)))
 #   
@@ -231,8 +231,8 @@ if (!paste0(hifileOutLoc, fileNameOut) %in% hiFilesCompleted) {
 #   #   .00122874 *  tmax^2 * rh + .00085282 *  tmax * rh^2 - .00000199 *  tmax^2 * rh^2
 #   # 
 #   fileOutLoc <- "data/cmip6/heatIndex/"
-#   print(paste0("Writing out : ", paste0(fileOutLoc, fileNameOut)))
-#   writeRaster(hiSimple, filename = paste0(fileOutLoc, fileNameOut), format = "GTiff", overwrite = TRUE, wopt=list(gdal="COMPRESS=LZW"))
+#   print(paste0("Writing out : ", paste0(fileOutLoc, fileName_out)))
+#   writeRaster(hiSimple, filename = paste0(fileOutLoc, fileName_out), format = "GTiff", overwrite = TRUE, wopt=list(gdal="COMPRESS=LZW"))
 # }
 
 

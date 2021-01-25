@@ -20,7 +20,7 @@ startyearChoices_ensemble <-  c(2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2
 yearRange <- 9
 pal <- colorRampPalette(c("green","red"))
 extentRange <- 2 # a value of 2 means 2 of the units of the raster; if it is 1/2 degree cells, this would be 1 degree
-climateVars <- c("pr", "hurs", "tasmax", "tasmin", "tave")
+climateVars <- c("pr", "hurs", "tasmax", "tasmin", "tas")
 fileLoc_monthlyMean <- "data/cmip6/monthlyMean/"
 
 regionInfoLookup <- as.data.table(read_excel("data-raw/regionInformation/regionInfoLookup.xlsx", range = "A1:k7"))

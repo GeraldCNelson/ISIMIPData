@@ -5,8 +5,8 @@ options("rgdal_show_exportToProj4_warnings"="none") # directions given with libr
 # library(rgdal) - commented out because it has a project function
 #library(gdalUtils)
 library(rgeos)
-# library(sp)
-# library(sf)
+# library(sp) 
+library(sf)
 library(maps)
 library(maptools)
 library(data.table)
@@ -15,7 +15,6 @@ library(terra)
 library(rasterVis)
 library(ggplot2)
 library(readxl)
-library(rworldmap)
 library(lubridate)
 
 # function to identify operating system
@@ -47,28 +46,22 @@ crslatlong <- "+proj=longlat +datum=WGS84 +no_defs"
 
 varNamesInfo <- as.data.table(read_excel("data-raw/varNamesLookup.xlsx"))
 
-
-# starttime <- Sys.time()
-# tmin_clamped <- clamp(tmin, lower = Tbase_barley, upper = Tbase_max_barley, Values = TRUE)
-# endtime <- Sys.time()
-# endtime - starttime
+# coastsCoarse <- st_read(dsn = "/Users/gcn/Documents/workspace/ISIMIPData/data-raw/naturalEarth/ne_110m_coastline/ne_110m_coastline.shp")
+# coastsCoarse <- st_crop(coastsCoarse, y = c(xmin = -179.95, xmax = 179.95, ymin = -60, ymax = 90))
 # 
-# rasterOptions(chunksize = 1e+09, maxmemory = 6e+09)
-# 
-# starttime <- Sys.time()
-# tmin_clamped <- clamp(tmin, lower = Tbase_barley, upper = Tbase_max_barley, Values = TRUE)
-# endtime <- Sys.time()
-# endtime - starttime
+# coastsCoarse.Rob <- st_transform(coastsCoarse, crsRob)
 
-data("coastsCoarse")
-crsLoc <- CRS(RobinsonProj)
-#coastsCoarse <- sp::spTransform(coastsCoarse, crsLoc)
-coastsCoarse.Rob <- sp::spTransform(raster::crop(coastsCoarse, raster::extent(-179.95, 179.95, -60, 90)), crsLoc)
+coastline <- st_read("data-raw/regionInformation/ne_50m_coastline/ne_50m_coastline.shp")
+coastline_cropped <- st_crop(coastline, c(xmin = -180, xmax = 180, ymin = -60, ymax = 90))
+# #coastline_cropped <- f_crop_custom(coastline)
+# 
+ coastline_cropped <- st_transform(coastline_cropped, crsRob)
+
 
 library(maptools)
-data(wrld_simpl)
-wrld_land <- subset(wrld_simpl, !NAME == "Antarctica")
-wrld_land@bbox <- bbox(rbind(c(-180, -90), c(180, 90)))
+# data(wrld_simpl)
+# wrld_land <- subset(wrld_simpl, !NAME == "Antarctica")
+# wrld_land@bbox <- bbox(rbind(c(-180, -90), c(180, 90)))
 
 #an alternative
 # data(wrld_simpl)
@@ -366,7 +359,7 @@ f.gdd.clamped_masked <- function(cropMask, tmin, tmax, tbase, tbase_max) {
 # f.gdd.old <- function(tmin, tmax, tbase, tbase_max, crop) {
 #   fileNameMask.in <- paste0("data/crops/rasterMask_", tolower(crop), ".tif")
 #   mask <- rast(fileNameMask.in)
-#   paste0(fileNameOut, ".tif")
+#   paste0(fileName_out, ".tif")
 #   tmin_cropArea <- overlay(tmin, mask, fun = overlayfunction_mask)
 #   #  print(paste0("tmin_cropArea created, ", temp, ", creation time: ", endTime -startTime,  ", pid: ", Sys.getpid()))
 #   tmax_cropArea <- overlay(tmax, mask, fun = overlayfunction_mask)

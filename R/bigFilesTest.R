@@ -18,6 +18,7 @@ locOfFiles <- destination
 yearRange <- 19
 yearRange10 <- 9
 woptList <- list(gdal=c("COMPRESS=LZW"))
+woptList <- list(gdal=c("COMPRESS=DEFLATE", "PREDICTOR=3", "ZLEVEL = 6"))
 
 bigfilesNames <- list.files(destination, full.names = FALSE, recursive = TRUE)
 
@@ -137,10 +138,10 @@ for (m in c("tas")) {
           # indices <- seq(as.Date(startDate), as.Date(endDate), 1)
           # indices <- paste0("X", as.character(indices))
           # names(rout) <- indices
-          fileNameOut <- paste0(locOfFiles, fileNameOnly)
-          print(paste0("fileNameOut: ", fileNameOut))
-          print(system.time(writeRaster(rout, fileNameOut, overwrite = TRUE, format = "GTiff", wopt= woptList))); flush.console()
-          print(paste0("Done with ", fileNameOut))
+          fileName_out <- paste0(locOfFiles, fileNameOnly)
+          print(paste0("fileName_out: ", fileName_out))
+          print(system.time(writeRaster(rout, fileName_out, overwrite = TRUE, format = "GTiff", wopt= woptList))); flush.console()
+          print(paste0("Done with ", fileName_out))
           rout <- NULL
         }
       }
@@ -211,6 +212,7 @@ modelChoices <- c( "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "I
 
 terraOptions(memfrac = 2, progress = 5, tempdir =  "data/ISIMIP", verbose = TRUE) # need to use a relative path, memfrac = .9,  
 woptList <- list(gdal=c("COMPRESS=LZW"))
+woptList <- list(gdal=c("COMPRESS=DEFLATE", "PREDICTOR=3", "ZLEVEL = 6"))
 
 for (m in modelChoices) {
   yearRange <- 19
@@ -237,9 +239,9 @@ for (m in modelChoices) {
   #  r1 <- r2 <- NULL
   gc()
   print(Sys.time())
-  fileNameOut <- paste0("/Volumes/ExtremeSSD/data/bigFiles/", m_lower,  "_", k, "_", climVar, "_global_daily_", yearSpanFinal, ".tif")
-  #  fileNameOut <- paste0("/Volumes/PassportMac/bigFiles/", m_lower,  "_", k, "_", climVar, "_global_daily_", yearSpanFinal, ".tif")
-  print(system.time(writeRaster(r_out, fileNameOut, overwrite = TRUE, format = "GTiff", wopt= woptList))); flush.console()
+  fileName_out <- paste0("/Volumes/ExtremeSSD/data/bigFiles/", m_lower,  "_", k, "_", climVar, "_global_daily_", yearSpanFinal, ".tif")
+  #  fileName_out <- paste0("/Volumes/PassportMac/bigFiles/", m_lower,  "_", k, "_", climVar, "_global_daily_", yearSpanFinal, ".tif")
+  print(system.time(writeRaster(r_out, fileName_out, overwrite = TRUE, format = "GTiff", wopt= woptList))); flush.console()
 }
 
 
@@ -251,9 +253,9 @@ system.time(r_out <- c(r1, r2))
 r1 <- r2 <- NULL
 gc()
 m_lower <- tolower(m)
-fileNameOut <- paste0("/Volumes/PassportMac/bigFiles/", m_lower, "_ssp585_tas_global_daily_2081_2090.tif")
+fileName_out <- paste0("/Volumes/PassportMac/bigFiles/", m_lower, "_ssp585_tas_global_daily_2081_2090.tif")
 print(Sys.time())
 
-system.time(writeRaster(r_out, fileNameOut, overwrite = TRUE, format = "GTiff", wopt= woptList)); flush.console()
+system.time(writeRaster(r_out, fileName_out, overwrite = TRUE, format = "GTiff", wopt= woptList)); flush.console()
 }
 

@@ -7,7 +7,7 @@ terraOptions(memfrac = 2,  progress = 10, tempdir =  "data/ISIMIP", verbose = TR
 # library(foreach) #Provides foreach looping construct
 climateVars <- c( "tasmin", "tasmax", "tas", "pr", "hurs", "rsds", "sfcwind", "ps") # "tasmax", "tasmin"
 modelChoices <- c("UKESM1-0-LL", "MPI-ESM1-2-HR", "MRI-ESM2-0", "GFDL-ESM4", "IPSL-CM6A-LR")
-modelChoices <- c(  "MRI-ESM2-0", "GFDL-ESM4", "IPSL-CM6A-LR")
+#modelChoices <- c( "UKESM1-0-LL") #, "GFDL-ESM4", "IPSL-CM6A-LR")
 yearRangeOld <- 9
 yearRangeNew <- 19
 climateVarstoKeep <- c("tasmin", "tasmax", "tas", "pr", "hurs", "huss", "rsds", "rlds", "sfcwind", "ps", "prsn") # "tasmax", "tasmin"
@@ -62,12 +62,12 @@ for (k in sspChoices) {
         # indices <- paste0("X", as.character(indices))
         # names(rout) <- indices
         # 
-        fileNameOut <- paste0(locOfFilesbigFiles, modelName.lower, "_", k, "_", j, "_", yearSpanNew, ".tif")
-        #       unlink(fileNameOut) # use this when you want fileNameOut to be redone
-        rout <- rout*1
-        print(paste0("fileNameOut: ", fileNameOut))
-        print(system.time(writeRaster(rout, fileNameOut, overwrite = TRUE, format = "GTiff", wopt= woptList))); flush.console()
-        print(paste("Done with ", fileNameOut))
+        fileName_out <- paste0(locOfFilesbigFiles, modelName.lower, "_", k, "_", j, "_", yearSpanNew, ".tif")
+        #       unlink(fileName_out) # use this when you want fileName_out to be redone
+        terra:::readAll(rout) # notation needed to access the readAll function
+        print(paste0("fileName_out: ", fileName_out))
+        print(system.time(writeRaster(rout, fileName_out, overwrite = TRUE, format = "GTiff", wopt= woptList))); flush.console()
+        print(paste("Done with ", fileName_out))
         rout <- NULL
         gc()
       }
@@ -78,36 +78,32 @@ for (k in sspChoices) {
 # historical -----
 k <- "historical"
 l <- 1991
-filesInDir <- list.files(locOfFilesbigFiles)
-locOfFiles <- "data/bigFiles/ps/"
 for (i in modelChoices) {
   modelName.lower <- tolower(i)
   for (j in climateVarstoKeep) {
-    print(paste0("variable: ", j, ", model: ", i, ", ssp choice: ", k, ", start year: ", l))
-    if (!paste0(modelName.lower, "_", k, "_", j, "_", "global_daily", "_", yearSpanNew, ".tif") %in% filesInDir) {
-      fileNameOut <- paste0(locOfFilesbigFiles, modelName.lower, "_", k, "_", j, "_", "global_daily", "_", yearSpanNew, ".tif")
-      l1 <- l
-      l2 <- l + yearRangeOld + 1
-      yearSpanOld1 <- paste0(l1, "_", l1 + yearRangeOld)
-      yearSpanOld2 <- paste0(l2, "_", l2 + yearRangeOld)
-      yearSpanNew <- paste0(l1, "_", l1 + yearRangeNew)
-      fileNameR1 <- paste0(locOfFiles, modelName.lower, "_", k, "_", j, "_", "global_daily", "_", yearSpanOld1, ".tif")
-      fileNameR2 <- paste0(locOfFiles, modelName.lower, "_", k, "_", j, "_", "global_daily", "_", yearSpanOld2, ".tif")
-      r1 <- rast(fileNameR1)
-      r2 <- rast(fileNameR2)
-      rout <- c(r1, r2)
-      startDate <- paste0(l, "-01-01"); endDate <- paste0(l + yearRangeNew, "-12-31")
-      indices <- seq(as.Date(startDate), as.Date(endDate), 1)
-      indices <- paste0("X", as.character(indices))
-      names(rout) <- indices
-      
-      #    unlink(fileNameOut) # use this when you want fileNameOut to be redone
-      
-      print(paste0("fileNameOut: ", fileNameOut))
-      print(system.time(writeRaster(rout, fileNameOut, overwrite = TRUE, format = "GTiff", wopt= woptList))); flush.console()
-      print(paste("Done with ", fileNameOut))
-      rout <- NULL
-      gc()
-    }
+    print(paste0("model: ", i, ", ssp choice: ", k, ", start year: ", l))
+    l1 <- l
+    l2 <- l + yearRangeOld + 1
+    yearSpanOld1 <- paste0(l1, "_", l1 + yearRangeOld)
+    yearSpanOld2 <- paste0(l2, "_", l2 + yearRangeOld)
+    yearSpanNew <- paste0(l1, "_", l1 + yearRangeNew)
+    fileNameR1 <- paste0(locOf10yrFiles, modelName.lower, "_", k, "_", j, "_", yearSpanOld1, ".tif")
+    fileNameR2 <- paste0(locOf10yrFiles, modelName.lower, "_", k, "_", j, "_", yearSpanOld2, ".tif")
+    r1 <- rast(fileNameR1)
+    r2 <- rast(fileNameR2)
+    rout <- c(r1, r2)
+    startDate <- paste0(l, "-01-01"); endDate <- paste0(l + yearRangeNew, "-12-31")
+    # indices <- seq(as.Date(startDate), as.Date(endDate), 1)
+    # indices <- paste0("X", as.character(indices))
+    # names(rout) <- indices
+    # 
+    fileName_out <- paste0(locOfFilesbigFiles, modelName.lower, "_", k, "_", j, "_", yearSpanNew, ".tif")
+    #       unlink(fileName_out) # use this when you want fileName_out to be redone
+    print(system.time(terra:::readAll(rout))) # notation needed to access the readAll function
+    print(paste0("fileName_out: ", fileName_out))
+    print(system.time(writeRaster(rout, fileName_out, overwrite = TRUE, format = "GTiff", wopt= woptList))); flush.console()
+    print(paste("Done with ", fileName_out))
+    rout <- NULL
+    gc()
   }
 }

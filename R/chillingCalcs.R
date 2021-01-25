@@ -64,15 +64,15 @@ for (l in startyearChoices) {
       startTime <-  Sys.time()
       yearSpan <- paste0(l, "_", l + yearRange)
       j <- "tasmax"
-      fileNameIn <- paste(modelName.lower, k, j, "global_daily", yearSpan, sep = "_")
-      fileNameIn <- paste0(fileNameIn, ".tif")
+      fileName_in <- paste(modelName.lower, k, j, "global_daily", yearSpan, sep = "_")
+      fileName_in <- paste0(fileName_in, ".tif")
       
-      tmaxIn <- paste0(locOfFiles, k,"/", i, "/", fileNameIn)
+      tmaxIn <- paste0(locOfFiles, k,"/", i, "/", fileName_in)
       
       j <- "tasmin"
-      fileNameIn <- paste(modelName.lower, k, j, "global_daily", yearSpan, sep = "_")
-      fileNameIn <- paste0(fileNameIn, ".tif")
-      tminIn <- paste0(locOfFiles, k,"/", i, "/", fileNameIn)
+      fileName_in <- paste(modelName.lower, k, j, "global_daily", yearSpan, sep = "_")
+      fileName_in <- paste0(fileName_in, ".tif")
+      tminIn <- paste0(locOfFiles, k,"/", i, "/", fileName_in)
       tmaxTminIn(tmaxIn, tminIn) # function to read in tmax and tmin with rast
       terra:::.mem_info(tmax, 1)
       tmp <- sds(tmin, tmax)
@@ -92,9 +92,9 @@ for (l in startyearChoices) {
       indices <- as.numeric(indices)
       print(system.time(monthZeroCount <- tapp(tmin, indices, fun = function(x, ...){sum(x <= 0)}, na.rm = TRUE)))
       names(monthZeroCount) <- month.abb
-      fileNameOutZero <- paste0("belowZeroCount_", modelName.lower, "_", k, "_", yearSpan, ".tif")
-      print(paste0("Writing out ", fileNameOutZero))
-      writeRaster(monthZeroCount, filename = paste0("data/cmip6/belowZero/", fileNameOutZero), format = "GTiff", overwrite = TRUE)
+      fileName_outZero <- paste0("belowZeroCount_", modelName.lower, "_", k, "_", yearSpan, ".tif")
+      print(paste0("Writing out ", fileName_outZero))
+      writeRaster(monthZeroCount, filename = paste0("data/cmip6/belowZero/", fileName_outZero), format = "GTiff", overwrite = TRUE)
       
       #   rm(list = c("tmax", "tmin"))
       print(system.time(chillHrs.sumMonth <- tapp(chillHrs, indices, fun = sum, na.rm = TRUE)))
@@ -138,15 +138,15 @@ indices <- as.numeric(indices)
 # first count the number of days with temp below zero
 system.time(monthZeroCount <- tapp(tmin, indices, fun = function(x, ...){sum(x <= 0)}, na.rm = TRUE))
 names(monthZeroCount) <- month.abb
-fileNameOutZero <- paste0("belowZeroCount", "_observed_", yearSpan, ".tif")
-writeRaster(monthZeroCount, filename = paste0("data/cmip6/belowZero/", fileNameOutZero), format = "GTiff", overwrite = TRUE)
+fileName_outZero <- paste0("belowZeroCount", "_observed_", yearSpan, ".tif")
+writeRaster(monthZeroCount, filename = paste0("data/cmip6/belowZero/", fileName_outZero), format = "GTiff", overwrite = TRUE)
 
 # # now do count above tmax limit
 # f.tmaxLimit <- function(tmax, tmaxLimit, indices) {
 #   tmaxSum <- tapp(tmax, indices, fun = function(x, ...){sum(x >= tmaxLimit)}) 
 #   names(tmaxSum) <- month.abb
-#   fileNameOut <- paste0("tmaxGT_", tmaxLimit, "_observed_", yearSpan, ".tif")
-#   writeRaster(tmaxSum, filename = paste0("data/cmip6/tmaxMonthlySums/", fileNameOut), format = "GTiff", overwrite = TRUE)
+#   fileName_out <- paste0("tmaxGT_", tmaxLimit, "_observed_", yearSpan, ".tif")
+#   writeRaster(tmaxSum, filename = paste0("data/cmip6/tmaxMonthlySums/", fileName_out), format = "GTiff", overwrite = TRUE)
 # }
 # tmaxfunctionStart <- Sys.time()
 # #tmax > 31

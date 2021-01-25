@@ -54,8 +54,8 @@ for (m in 1:nrow(ann_crop_temp_table)) {
   lowerOpt <- as.numeric(ann_crop_temp_table[m, "topt lower"])
   print(paste0(cropName, ", lower optimum: ", lowerOpt, ", upper optimum: ", upperOpt, ", damage temp: ", tdamage_mean, "\n"))
   
-  fileNameOut_damage <- paste0("tdamage_mean_", cropName, "_", tdamage_mean, "C_", modelName.lower, "_", k, "_", yearSpan, ".tif")
-  fileNameOut_optTemp <- paste0("optTempRange_", cropName, "_", lowerOpt, "_", upperOpt, "_", modelName.lower, "_", k, "_", yearSpan, ".tif")
+  fileName_out_damage <- paste0("tdamage_mean_", cropName, "_", tdamage_mean, "C_", modelName.lower, "_", k, "_", yearSpan, ".tif")
+  fileName_out_optTemp <- paste0("optTempRange_", cropName, "_", lowerOpt, "_", upperOpt, "_", modelName.lower, "_", k, "_", yearSpan, ".tif")
   startTime <-  Sys.time()
   numYears <- 10
   monthDamageCount <- tapp(tmax, indices, fun = function(x, ...){sum(x > tdamage_mean)/numYears}, progress = "text") 
@@ -65,10 +65,10 @@ for (m in 1:nrow(ann_crop_temp_table)) {
   monthOptTempRangeCount <- tapp(tmax, indices, fun = function(x, ...){sum(x < upperOpt & x >  lowerOpt)/numYears}, progress = "text") 
   names(monthOptTempRangeCount) <- month.abb
   print(paste0("time to calc optimum range: ", difftime(Sys.time(), startTime, units = "mins")))
-  print(paste0("damage  file name out: ", fileNameOut_damage))
-  print(paste0("optTempRange file name out: ", fileNameOut_optTemp))
-  writeRaster(monthDamageCount, filename = paste0("data/cmip6/damageTemp/", fileNameOut_damage), format = "GTiff", overwrite = TRUE)
-  writeRaster(monthOptTempRangeCount, filename = paste0("data/cmip6/optTempRange/", fileNameOut_optTemp), format = "GTiff", overwrite = TRUE)
+  print(paste0("damage  file name out: ", fileName_out_damage))
+  print(paste0("optTempRange file name out: ", fileName_out_optTemp))
+  writeRaster(monthDamageCount, filename = paste0("data/cmip6/damageTemp/", fileName_out_damage), format = "GTiff", overwrite = TRUE)
+  writeRaster(monthOptTempRangeCount, filename = paste0("data/cmip6/optTempRange/", fileName_out_optTemp), format = "GTiff", overwrite = TRUE)
 }
 unlink(tmpDirName, recursive = TRUE)
 gc(reset = FALSE, full = TRUE) 
@@ -91,8 +91,8 @@ for (m in 1:nrow(ann_crop_temp_table)) {
   #         print(paste0("years covered:", yearSpan)), 
   print(paste0(cropName, ", lower optimum: ", lowerOpt, ", upper optimum: ", upperOpt, ", damage temp: ", tdamage_mean))
   
-  fileNameOut_damage <- paste0("tdamage_mean_", cropName, "_", tdamage_mean, "C", "_observed_", yearSpan, ".tif")
-  fileNameOut_optTemp <- paste0("optTempRange_", cropName, "_", lowerOpt, "_", upperOpt, "_observed_", yearSpan, ".tif")
+  fileName_out_damage <- paste0("tdamage_mean_", cropName, "_", tdamage_mean, "C", "_observed_", yearSpan, ".tif")
+  fileName_out_optTemp <- paste0("optTempRange_", cropName, "_", lowerOpt, "_", upperOpt, "_observed_", yearSpan, ".tif")
   startTime <-  Sys.time()
   numYears <- 10
   monthDamageCount <- tapp(tmax, indices, fun = function(x, ...){sum(x > tdamage_mean)/numYears}, progress = "text") 
@@ -103,9 +103,9 @@ for (m in 1:nrow(ann_crop_temp_table)) {
   names(monthOptTempRangeCount) <- month.abb
   #          raster::endCluster()
   print(paste0("time to calc monthly opt temp range: ", difftime(Sys.time(), startTime, units = "mins")))
-  print(paste0("damage  file name out: ", fileNameOut_damage))
-  print(paste0("optTempRange file name out: ", fileNameOut_optTemp))
-  writeRaster(monthDamageCount, filename = paste0("data/cmip6/damageTemp/", fileNameOut_damage), format = "GTiff", overwrite = TRUE)
-  writeRaster(monthOptTempRangeCount, filename = paste0("data/cmip6/optTempRange/", fileNameOut_optTemp), format = "GTiff", overwrite = TRUE)
+  print(paste0("damage  file name out: ", fileName_out_damage))
+  print(paste0("optTempRange file name out: ", fileName_out_optTemp))
+  writeRaster(monthDamageCount, filename = paste0("data/cmip6/damageTemp/", fileName_out_damage), format = "GTiff", overwrite = TRUE)
+  writeRaster(monthOptTempRangeCount, filename = paste0("data/cmip6/optTempRange/", fileName_out_optTemp), format = "GTiff", overwrite = TRUE)
 }
 

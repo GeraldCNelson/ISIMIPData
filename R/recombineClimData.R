@@ -17,6 +17,7 @@ yearRangeOld <- 9
 #yearRangeNew <- 29
 yearRangeNew <- 19
 woptList <- list(gdal=c("COMPRESS=LZW"))
+woptList <- list(gdal=c("COMPRESS=DEFLATE", "PREDICTOR=3", "ZLEVEL = 6"))
 
 #testvalues
 l = 1

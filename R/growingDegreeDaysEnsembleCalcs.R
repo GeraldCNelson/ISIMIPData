@@ -21,8 +21,8 @@ l <- 2051
 j <- 1
 
 readRast <- function(m, yearSpan) {
-  fileNameIn <- paste0("data/cmip6/growingDegreeDays/", m , "_", cropChoices[j], "_", k,  "_gdd_global_daily_", yearSpan, ".tif")
-  r <- rast(fileNameIn)
+  fileName_in <- paste0("data/cmip6/growingDegreeDays/", m , "_", cropChoices[j], "_", k,  "_gdd_global_daily_", yearSpan, ".tif")
+  r <- rast(fileName_in)
   r
 }
 

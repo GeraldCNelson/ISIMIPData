@@ -51,9 +51,9 @@ for (k in sspChoices)  {
         print(paste("start time: ", Sys.time()))
         
         print(paste0("crop: ", m))
-        fileNameOut <-    paste(modelName.lower, m, k, "gdd", "global_daily", yearSpan, sep = "_")
-        if (!paste0(fileNameOut, ".tif") %in% gddFilesCompleted) {
-          print(paste0("Working on: ", fileNameOut))
+        fileName_out <-    paste(modelName.lower, m, k, "gdd", "global_daily", yearSpan, sep = "_")
+        if (!paste0(fileName_out, ".tif") %in% gddFilesCompleted) {
+          print(paste0("Working on: ", fileName_out))
           tbase <- ann_crop_temp_table[(crop %in% m), Tbase]
           tbase_max <- ann_crop_temp_table[(crop %in% m), Tbase_max]
           print(system.time(gdd <- app(tave, fun=function(x){ 
@@ -61,13 +61,13 @@ for (k in sspChoices)  {
             y <- x - tbase
             y[y < 0] <- 0
             return(y)} ))); flush.console
-          print(paste0("gdd file out name: ", gddsfileOutLoc, fileNameOut, ".tif"))
-          writeRaster(round(gdd, 1), filename = paste0(gddsfileOutLoc, fileNameOut, ".tif"), format = "GTiff", overwrite = TRUE, wopt=list(gdal=c("COMPRESS=LZW"))  )  
+          print(paste0("gdd file out name: ", gddsfileOutLoc, fileName_out, ".tif"))
+          writeRaster(round(gdd, 1), filename = paste0(gddsfileOutLoc, fileName_out, ".tif"), format = "GTiff", overwrite = TRUE, wopt=list(gdal=c("COMPRESS=LZW"))  )  
           gdd <- NULL
           gc(reset = FALSE, full = TRUE)
           
         }else{
-          print(paste("This file has already been created: ", fileNameOut))
+          print(paste("This file has already been created: ", fileName_out))
         }
         gc(reset = FALSE, full = TRUE)
       }
@@ -93,9 +93,9 @@ gddFilesCompleted <- gddFilesCompleted[!grepl("aux.xml", gddFilesCompleted, fixe
 for (o in 1:length(cropChoices)) {
   for (m in get(cropChoices[o])) {
     print(paste0("crop: ", m))
-    fileNameOut <-    paste("observed", m, "gdd", "global_daily", yearSpan, sep = "_")
-    if (!paste0(fileNameOut, ".tif") %in% gddFilesCompleted) {
-      print(paste0("Working on: ", fileNameOut))
+    fileName_out <-    paste("observed", m, "gdd", "global_daily", yearSpan, sep = "_")
+    if (!paste0(fileName_out, ".tif") %in% gddFilesCompleted) {
+      print(paste0("Working on: ", fileName_out))
       print(paste("start time: ", Sys.time()))
       
       Tbase <- ann_crop_temp_table[(crop %in% m), Tbase]
@@ -106,11 +106,11 @@ for (o in 1:length(cropChoices)) {
         y <- x - tbase
         y[y < 0] <- 0
         return(y)} ))); flush.console
-      print(paste0("gdd file out name: ", gddsfileOutLoc, fileNameOut, ".tif"))
-      writeRaster(round(gdd, 1), filename = paste0(gddsfileOutLoc, fileNameOut, ".tif"), format = "GTiff", overwrite = TRUE, wopt=list(gdal=c("COMPRESS=LZW"))  )  
+      print(paste0("gdd file out name: ", gddsfileOutLoc, fileName_out, ".tif"))
+      writeRaster(round(gdd, 1), filename = paste0(gddsfileOutLoc, fileName_out, ".tif"), format = "GTiff", overwrite = TRUE, wopt=list(gdal=c("COMPRESS=LZW"))  )  
       gdd <- NULL
     }else{
-      print(paste("This file has already been created: ", fileNameOut))
+      print(paste("This file has already been created: ", fileName_out))
     }
     gc(reset = FALSE, full = TRUE)
   }

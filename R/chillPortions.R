@@ -16,6 +16,7 @@
   
   yearRange <- 19
   woptList <- list(gdal=c("COMPRESS=LZW"))
+  woptList <- list(gdal=c("COMPRESS=DEFLATE", "PREDICTOR=3", "ZLEVEL = 6"))
   
   coastline <- st_read("data-raw/regionInformation/ne_50m_coastline/ne_50m_coastline.shp")
   
@@ -42,9 +43,9 @@
   readRast_ensemble <- function(i) {
     if (m == "NH") hem <- "north"
     if (m == "SH") hem <- "south"
-    fileNameIn <- paste0("data/cmip6/chillPortions/chill_portions/", k,"/", i, "/", k, "_", i, "_", midYear, "_chill_portions_", hem, ".tif")
-    print(paste0("fileName in: ", fileNameIn))
-    r <- rast(fileNameIn)
+    fileName_in <- paste0("data/cmip6/chillPortions/chill_portions/", k,"/", i, "/", k, "_", i, "_", midYear, "_chill_portions_", hem, ".tif")
+    print(paste0("fileName in: ", fileName_in))
+    r <- rast(fileName_in)
     system.time(chillPortion <- app(r, fun = quantile, probs=0.1, na.rm = TRUE))
     print(chillPortion)
     chillPortion <- crop(chillPortion, get(paste0("extent_", m)))

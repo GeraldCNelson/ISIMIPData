@@ -6,7 +6,7 @@ sspChoices <- c("ssp585") #"ssp126",
 modelChoices <- c( "GFDL-ESM4", "UKESM1-0-LL", "MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
 #modelChoices <- c("IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
 startyearChoices <-  c(2001, 2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
-climateVars <- c( "tasmin", "tasmax", "tave",  "pr", "hurs") 
+climateVars <- c( "tasmin", "tasmax", "tas",  "pr", "hurs") 
 varNamesInfo <- as.data.table(read_excel("data-raw/varNamesLookup.xlsx"))
 globalMeanHolder <- as.data.table( read.csv("data/cmip6/annualMean/globalMeans.csv"))
 globalMeanHolder[, yearSpan := gsub("_", "-", yearSpan)]

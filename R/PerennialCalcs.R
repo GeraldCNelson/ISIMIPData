@@ -1,11 +1,11 @@
 # code to do various perennial crop calculations
 {source("R/globallyUsed.R")
   terraOptions(memfrac = 2, progress = 0, tempdir =  "data/ISIMIP", verbose = FALSE)
-  locOfFiles <- "data/bigFiles/"
-  
+  locOfClimFiles <- "data/bigFiles/"
+  locOfDataFiles <- "data/cmip6/perennials/"
   sspChoices <- c("ssp126", "ssp585") 
   #sspChoices <- c("ssp585") 
-  modelChoices <- c( "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM6A-LR") #, "MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
+  modelChoices <- c( "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM6A-LR") 
   #modelChoices <- c("MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") 
   startyearChoices <-  c(2041, 2081) 
   #startyearChoices <-  c(2081) 
@@ -21,12 +21,16 @@
   fileLocCP <- "data/cmip6/chillPortions/chill_portions/"
   speciesChoice <- c("cherry", "almond", "winegrape", "apple") #, "olive", "berries") 
   
+  weatherVarClassification <- read_excel("data-raw/crops/perennials/weatherVarClassification.xlsx", skip = 1)
+  names(weatherVarClassification) <- c("range", "range_winterChill_CP", "range_winterChill_species", "range_springFrost_days", "range_springFrost_species", "range_summerHeat_days", "range_summerHeat_species")
+  
   # constants -----
-  minimumGrwSeasonLength = 90
+  minimumGrwSeasonLength = 100
   tminExtremeVal <- -30 # single day kills the plant
-  tmaxExtremeVal <- 35
-  unsuitable_springFreezeDays <- 40 #temp below zero
-  unsuitable_summerHotDays <- 45 # temp above tmaxExtremeVal
+  tminDamageVal <- 0 # frost damage temperature
+  tmaxDamageVal <- 35 # heat damage temperature
+  unsuitable_springFreezeDays <- 45 # days where temp below tminDamageVal means location is unsuitable
+  unsuitable_summerHotDays <- 45 # days where temp above tmaxDamageVal means location is unsuitable
   springStart_NH <- 60 #March 1 in 2019
   springEnd_NH <- 120 #April 30 in 2019
   springStart_SH <- 227 #Aug 15 in 2019
@@ -35,92 +39,126 @@
   heatDamageEnd_NH <- 242 #Aug 30 in 2019
   heatDamageStart_SH <- 1 #Jan 1
   heatDamageEnd_SH <- 59 #Feb 28 in 2019
-  frostRiskDays <- c(0,4,5,6,20,21, 45) # pairs for ranges - good, ok, bad
-  heatRiskDays <- c(0,9,10,30,31, 45) # pairs for ranges - good, ok, bad
+  frostRiskDays <- c(0, 5, 6, 20, 21, 45) # pairs for ranges - low, medium, high
+  heatRiskDays <- c(0, 9, 10, 30, 31, 45) # pairs for ranges - low, medium, high
   
   woptList <- list(gdal=c("COMPRESS=LZW"))
+  woptList <- list(gdal=c("COMPRESS=DEFLATE", "PREDICTOR=3", "ZLEVEL = 6"))
   
   #test values
   i <- "IPSL-CM6A-LR"
   k <- "ssp585"
   l <- 2041
+  yearSpan <- paste0(l, "_", l + yearRange)
+  
   
   # functions -----
-  extremeColdFun <- function() {
-    fileName_tasmin <- paste0(locOfFiles, "ensemble_dyMean20yr_", k, "_tasmin_global_daily_", yearSpan, ".tif")
-    tmin <- rast(fileName_tasmin)
-    # commented out cold counts the number of days below tminExtremeVal
-    # print(system.time(extremeColdCt <- sum(tmin < tminExtremeVal, na.rm = TRUE)))
-    # print("extremeColdCt")
-    # print(extremeColdCt)
-    # fileNameStart <- paste0("extremeColdMinus", gsub("-", "", tminExtremeVal))
-    # fileName_out <- paste0("data/cmip6/growingSeasons/", fileNameStart, "_", k, "_", yearSpan, ".tif")
-    extremeColdLoc <- sum(tmin < tminExtremeVal, na.rm = TRUE)
-    extremeColdLoc[extremeColdLoc > 0] <- 1
-    fileNameStart <- paste0("extremeColdlocs_", gsub("-", "", tminExtremeVal))
-    fileName_out <- paste0("data/cmip6/perennials/", fileNameStart, "_", k, "_", yearSpan, ".tif")
-    print(paste0("fileName_out: ", fileName_out))
-    print(system.time(writeRaster(extremeColdLoc, fileName_out, overwrite = TRUE, woptList = woptList)))
+  
+  f_range <- function(x, range) {
+    # set locations with values outside the range to NA
+    x[x < range[1]] <- NA
+    x[x > range[2]] <- NA
+    return(x)
   }
   
-  springFrostFun = function() {
-    fileName_tasmin <- paste0(locOfFiles, "ensemble_dyMean20yr_", k, "_tasmin_global_daily_", yearSpan, ".tif")
+  f_coldFrostHeatDamage <- function() {
+    # does extreme cold locations and frost and heat damage locations
+    combined <- sds()
+    fileName_tasmin <- paste0(locOfClimFiles, "ensembleMn_dailyMn_20Yr_", k, "_tasmin_", yearSpan, ".tif")
+    fileName_tasmax <- paste0(locOfClimFiles, "ensembleMn_dailyMn_20Yr_", k, "_tasmax_", yearSpan, ".tif")
     tmin <- rast(fileName_tasmin)
-    for (m in hemisphere) {
-      spStart <- paste0("springStart_", m)
-      spEnd <- paste0("springEnd_", m)
-      spLyrs <- paste0(get(spStart), ":", get(spEnd))
-      tmin_hem <- subset(tmin, get(spStart):get(spEnd))
-      tmin_hem <- crop(tmin_hem, get(paste0("extent_", m)))
-      # count number of days tmin is below 0
-      frostCt <- sum(tmin_hem < 0, na.rm = TRUE)
-      fileNameStart <- paste0("springFrost_hem_")
-      fileName_out <- paste0("data/cmip6/perennials/", fileNameStart, m, "_", k, "_", yearSpan, ".tif")
-      print(system.time(writeRaster(frostCt, fileName_out, overwrite = TRUE, woptList = woptList)))
-    }
-  }
-  
-  heatDamageFun <- function() {
-    fileName_tasmax <- paste0(locOfFiles, "ensemble_dyMean20yr_", k, "_tasmax_global_daily_", yearSpan, ".tif")
     tmax <- rast(fileName_tasmax)
     for (m in hemisphere) {
+      # do extreme cold locations
+      extremeColdCt <- sum(tmin < tminExtremeVal, na.rm = TRUE)
+      extremeColdCt[extremeColdCt > 0] <- 1 # one day is all it takes
+      extremeColdMask_hem <- crop(extremeColdCt, get(paste0("extent_", m)))
+      
+      # species-specific chill portion
+      fileLocCP <- "data/cmip6/chillPortions/chill_portions/"
+      fileNameCP_in <- paste0(fileLocCP, "ensemble_chill_cutoff_", fruitSpecies, "_", k, "_", m, "_", yearSpan, ".tif")
+      chillPortionsCutoff <- rast(fileNameCP_in)
+      print(paste0("fileNameCP_in: ", fileNameCP_in))
+      # if (m == "NH") extremeColdMask <- crop(extremeCold, extent_NH)
+      # if (m == "SH") extremeColdMask <- crop(extremeCold, extent_SH)
+      # 
+      chillPortionsCutoff[chillPortionsCutoff == 0] <- NA    
+      # heat and frost damage calculations
+      tmin_hem <- crop(tmin, get(paste0("extent_", m)))
+      tmax_hem <- crop(tmax, get(paste0("extent_", m)))
       spStart <- paste0("springStart_", m)
       spEnd <- paste0("springEnd_", m)
       spLyrs <- paste0(get(spStart), ":", get(spEnd))
-      tmax_hem <- subset(tmax, get(spStart):get(spEnd))
-      tmax_hem <- crop(tmax_hem, get(paste0("extent_", m)))
       hdStart <- paste0("heatDamageStart_", m)
       hdEnd <- paste0("heatDamageEnd_", m)
-      highHeatCt <- sum(tmax_hem > tmaxExtremeVal, na.rm = TRUE)
-      fileNameStart <- paste0("summerHeat_hem_")
-      fileName_out <- paste0("data/cmip6/perennials/", fileNameStart, m, "_", k, "_", yearSpan, ".tif")
-      print(system.time(writeRaster(highHeatCt, fileName_out, overwrite = TRUE, woptList = woptList)))
+      hdLyrs <- paste0(get(hdStart), ":", get(hdEnd))
+      tmin_hem <- subset(tmin_hem, get(spStart):get(spEnd))
+      tmax_hem <- subset(tmax_hem, get(hdStart):get(hdEnd))
+      # count number of days tmin is below tminDamageVal
+      frostCt <- sum(tmin_hem < tminDamageVal, na.rm = TRUE)
+      heatCt <- sum(tmax_hem > tmaxDamageVal, na.rm = TRUE)
+      for (i in c("good", "ok", "bad")) {
+        frDays <- switch(i,
+                         "good" = frostRiskDays[1:2],
+                         "ok" = frostRiskDays[3:4],
+                         "bad" = frostRiskDays[5:6],
+        )
+        fr <- f_range(frostCt, frDays)
+        hdDays <- switch(i,
+                         "good" = heatRiskDays[1:2],
+                         "ok" = heatRiskDays[3:4],
+                         "bad" = heatRiskDays[5:6],
+        )
+        hr <- f_range(heatCt, hdDays)
+        # do unsuitable
+        unsuitableFrost <- frostCt
+        unsuitableFrost[unsuitableFrost < unsuitable_springFreezeDays] <- 1
+        unsuitableFrost[unsuitableFrost >= unsuitable_springFreezeDays] <- 0
+        
+        unsuitableHeat <- heatCt
+        unsuitableHeat[unsuitableHeat < unsuitable_summerHotDays] <- 1
+        unsuitableHeat[unsuitableHeat >= unsuitable_summerHotDays] <- 0 # locations where the number of hot days in summer is greater than the suitable cutoff
+        
+        
+        #   assign(paste0("fr_", m, "_", i), fr)
+        #   assign(paste0("hr_", m, "_", i), hr)
+        # combined <- sds(combined, get(paste0("fr_", m, i)))
+        #      holder <- c("extremeColdMask_hem", paste0("fr_",  m, "_", i), paste0("hr_",  m, "_", i))
+        holder <- c("extremeColdMask_hem", "unsuitableFrost", "fr", "unsuitableHeat", "hr", "chillPortionsCutoff") # the names and order in which the rasters are stored in the sds
+        combined <- sds(lapply(holder,  function(x) eval(parse(text = x))))
+        fileName_out <- paste0(locOfDataFiles, "combinedDamages_", fruitSpecies, "_", m, "_", i, "_", yearSpan, ".nc")
+        writeCDF(combined, filename = fileName_out,  overwrite = TRUE, missval=-9999, prec="float", compression=5)
+      }
+      
+      return(combined)
     }
   }
-  
-  combinedDamageFun <- function(fruitSpecies) {
-    # extreme cold
-    fileNameStart <- paste0("extremeColdlocs_", gsub("-", "", tminExtremeVal))
-    fileName_in <- paste0("data/cmip6/perennials/", fileNameStart, "_", k, "_", yearSpan, ".tif")
-    extremeCold <- rast(fileName_in)
-    
+  f_combinedDamage <- function(fruitSpecies) {
     for (m in hemisphere) {
+      fileName_in <- paste0(locOfDataFiles, "combinedDamages_", fruitSpecies, "_", m, "_", i, "_", yearSpan, ".nc")
+      combined <- rast(fileName_in)
+      extremeCold <- combined[1]
+      unsuitableFrost <- combined[2]
+      frostCt <- combined[3]
+      unsuitableHeat <- combined[4]
+      heatCt <- combined[5]
+      
       print(paste0("working on combined damage ", fruitSpecies, " in hemisphere ", m, ", year ", l, ", scenario ", k))
-      #summer heat
-      fileNameStart <- paste0("summerHeat_hem_")
-      fileName_heat <- paste0("data/cmip6/perennials/", fileNameStart, m, "_", k, "_", yearSpan, ".tif")
-      print(paste0("fileName_heat: ", fileName_heat))
-      heatCt <- rast(fileName_heat)
-      heatCt[heatCt < unsuitable_summerHotDays] <- 1
-      heatCt[heatCt >= unsuitable_summerHotDays] <- 0
-      
-      # spring frost
-      fileNameStart <- paste0("springFrost_hem_")
-      fileName_frost <- paste0("data/cmip6/perennials/", fileNameStart, m, "_", k, "_", yearSpan, ".tif")
-      frostCt <- rast(fileName_frost)
-      frostCt[frostCt < unsuitable_springFreezeDays] <- 1
-      frostCt[frostCt >= unsuitable_springFreezeDays] <- 0
-      
+      #unsuitable summer heat
+      # fileNameStart <- paste0("summerHeat_hem_")
+      # fileName_heat <- paste0("data/cmip6/perennials/", fileNameStart, m, "_", k, "_", yearSpan, ".tif")
+      # print(paste0("fileName_heat: ", fileName_heat))
+      # heatCt <- rast(fileName_heat)
+      # heatCt[heatCt < unsuitable_summerHotDays] <- 1
+      # heatCt[heatCt >= unsuitable_summerHotDays] <- 0 # locations where the number of hot days in summer is greater than the suitable cutoff
+      # 
+      # # unsuitable spring frost
+      # fileNameStart <- paste0("springFrost_hem_")
+      # fileName_frost <- paste0("data/cmip6/perennials/", fileNameStart, m, "_", k, "_", yearSpan, ".tif")
+      # frostCt <- rast(fileName_frost)
+      # frostCt[frostCt < unsuitable_springFreezeDays] <- 1
+      # frostCt[frostCt >= unsuitable_springFreezeDays] <- 0
+      # 
       # species-specific chill portion
       fileLocCP <- "data/cmip6/chillPortions/chill_portions/"
       fileNameCP_in <- paste0(fileLocCP, "ensemble_chill_cutoff_", fruitSpecies, "_", k, "_", m, "_", yearSpan, ".tif")
@@ -144,128 +182,86 @@
     }
   }
   
-  rangeFun <- function(x, range) {
-    x[x < range[1]] <- NA
-    x[x > range[2]] <- NA
-    return(x)
-  }
-  
-  favorableLocFun <- function(fruitSpecies) {
+  f_favorableLoc <- function(fruitSpecies) {
     for (m in hemisphere) {
       fileName_in <- paste0("data/cmip6/perennials/suitable_", fruitSpecies, "_", k, "_", m, "_", yearSpan, ".tif")
-      baseCt <- rast(fileName_in)  #favorable/unfavorable - 1/0
+      baseCt <- rast(fileName_in)  #suitable/not suitable - 1/NA - because some combo of chill portions, extreme cold, and frost or heat outside the suitable level
       
       #frostRiskDays
       fileNameStart <- paste0("springFrost_hem_")
       fileName_frost <- paste0("data/cmip6/perennials/", fileNameStart, m, "_", k, "_", yearSpan, ".tif")
-      frostCt <- rast(fileName_frost)
+      frostCt <- rast(fileName_frost) # number of days with temps below zero
       
       #heatRiskDays
       fileNameStart <- paste0("summerHeat_hem_")
       fileName_heat <- paste0("data/cmip6/perennials/", fileNameStart, m, "_", k, "_", yearSpan, ".tif")
       heatCt <- rast(fileName_heat)
       
-      
       for (i in c("good", "ok", "bad")) {
-        print(paste0("i: ", i, ", hemisphere: ", m, ", fruitSpecies: ", fruitSpecies))
-        if (i == "good"){
-          window_frostrisk <- frostRiskDays[1:2]
-          window_heatrisk <- heatRiskDays[1:2]
-          frostRisk_good <- rangeFun(frostCt, window_frostrisk)
-          heatRisk_good <- rangeFun(heatCt, window_heatrisk)
-        }
-        if (i == "ok"){
-          window_frostrisk <- frostRiskDays[3:4]
-          window_heatrisk <- heatRiskDays[3:4]
-          frostRisk_ok <- rangeFun(frostCt, window_frostrisk)
-          heatRisk_ok <- rangeFun(heatCt, window_heatrisk)
-        }
-        if (i == "bad") {
-          window_frostrisk <- frostRiskDays[3:4]
-          window_heatrisk <- heatRiskDays[5:6]
-          frostRisk_bad <- rangeFun(frostCt, window_frostrisk)
-          heatRisk_bad <- rangeFun(heatCt, window_heatrisk)
-        }
-        r <- mask(get(paste0("heatRisk_", i)), baseCt)
-        r <- mask(r, get(paste0("frostRisk_", i)))
-        fileName_out <- paste0("data/cmip6/perennials/", fruitSpecies, "_frost_", i, "_heat_", i, "_", k, "_", m, "_", yearSpan, ".tif")
-        print(paste0("file name out: ", fileName_out))
-        writeRaster(r, fileName_out, overwrite = TRUE, woptList = woptList)
+        #      print(paste0("i: ", i, ", hemisphere: ", m, ", fruitSpecies: ", fruitSpecies))
+        frDays <- switch(
+          i,
+          "good" = frostRiskDays[1:2],
+          "ok" = frostRiskDays[3:4],
+          "bad" = frostRiskDays[5:6],
+        )
+        fr <- f_range(frostCt, frDays) # f_range sets values at locations outside the range to be NA
+        hdDays <- switch(
+          i,
+          "good" = heatRiskDays[1:2],
+          "ok" = heatRiskDays[3:4],
+          "bad" = heatRiskDays[5:6],
+        )
+        hr <- f_range(heatCt, hdDays)
       }
+      r <- mask(get(paste0("heatRisk_", i)), baseCt)
+      r <- mask(r, get(paste0("frostRisk_", i)))
+      fileName_out <- paste0("data/cmip6/perennials/", fruitSpecies, "_frost_", i, "_heat_", i, "_", k, "_", m, "_", yearSpan, ".tif")
+      print(paste0("file name out: ", fileName_out))
+      writeRaster(r, fileName_out, overwrite = TRUE, woptList = woptList)
     }
   }
 }
 
+
 # use the functions -----
-# extreme cold locs - identify locations where there is at least one day of temperatures at or below tminExtremeVal -----
 for (k in sspChoices) {
   for (l in startyearChoices) {
     yearSpan <- paste0(l, "_", l + yearRange)
-    print(system.time(extremeColdFun()))
+    for (fruitSpecies in speciesChoice) {
+      print(system.time(combined <- f_coldFrostHeatDamage())) # combined has three temperature-related spatrasters - hard freeze, frost, and heat. Each combined output file has all locations that are good, ok, and bad for frost and heat damage
+    }
   }
 }
 
-# extreme cold historical -----
+#  historical -----
 k <- "historical"
 l <- 1991
 yearSpan <- paste0(l, "_", l + yearRange)
-print(system.time(extremeColdFun()))
-#}
-
-# spring frost risk -----
-
-for (k in sspChoices) {
-  for (l in startyearChoices) {
-    yearSpan <- paste0(l, "_", l + yearRange)
-    springFrostFun()
-  }
+for (fruitSpecies in speciesChoice) {
+  print(system.time(combined <- f_coldFrostHeatDamage())) # combined has 5 temperature-related spatrasters - hard freeze, unsuitable frost days, acceptable frost days, and heat. Each combined output file has all locations that are good, ok, and bad for frost and heat damage
 }
-
-# spring frost risk historical -----
-k <- "historical"
-l <- 1991
-yearSpan <- paste0(l, "_", l + yearRange)
-springFrostFun()
-
-# heat damage risk -----
-for (k in sspChoices) {
-  for (l in startyearChoices) {
-    yearSpan <- paste0(l, "_", l + yearRange)  
-    heatDamageFun()
-  }
-}
-
-# heat damage risk historical -----
-k <- "historical"
-l <- 1991
-yearSpan <- paste0(l, "_", l + yearRange)
-heatDamageFun()
 
 # combined damage -----
 # code to read in chill portions, cold, freeze and heat stress 1/0 files and produce 1/0 tifs where the crop is potentially growable. The chill portions files are created in the chillPortions.R script
-fileLocCP <- "data/cmip6/chillPortions/chill_portions/"
-speciesChoice <- c("cherry", "almond", "winegrape", "apple") #, "olive", "berries") 
 
 for (k in sspChoices) {
   for (l in startyearChoices) {
     yearSpan <- paste0(l, "_", l + yearRange)
     for (fruitSpecies in speciesChoice) {
       print(paste0("fruitSpecies: ", fruitSpecies, ", ssp choice: ", k, ", start year: ", l))
-      combinedDamageFun(fruitSpecies) 
+      f_combinedDamage(fruitSpecies) 
     }
   }
 }
 
 # combined damage, historical -----
-fileLocCP <- "data/cmip6/chillPortions/chill_portions/"
-speciesChoice <- c("cherry", "almond", "winegrape", "apple") #, "olive", "berries") 
-
 k <- "historical"
 l <- 1991
 yearSpan <- paste0(l, "_", l + yearRange)
 for (fruitSpecies in speciesChoice) {
   print(paste0("fruitSpecies: ", fruitSpecies, ", ssp choice: ", k, ", start year: ", l))
-  combinedDamageFun(fruitSpecies) 
+  f_combinedDamage(fruitSpecies) 
 } 
 
 #favorable locations - create figures with different combinations of favorable growing conditions -----
@@ -276,7 +272,7 @@ for (k in sspChoices) {
     yearSpan <- paste0(l, "_", l + yearRange)
     for (fruitSpecies in speciesChoice) {
       print(paste0("fruitSpecies: ", fruitSpecies, ", ssp choice: ", k, ", start year: ", l))
-      favorableLocFun(fruitSpecies)
+      f_favorableLoc(fruitSpecies)
     }
   }
 }
@@ -286,17 +282,17 @@ k <- "historical"
 l <- 1991
 yearSpan <- paste0(l, "_", l + yearRange)
 for (fruitSpecies in speciesChoice) {
-  print(paste0("fruitSpecies: ", fruitSpecies, ", ssp choice: ", k, ", start year: ", l))s
-  favorableLocFun(fruitSpecies)
+  print(paste0("fruitSpecies: ", fruitSpecies, ", ssp choice: ", k, ", start year: ", l))
+  f_favorableLoc(fruitSpecies)
 } 
 
 # graphing -----
 library(ggplot2)
 library(RColorBrewer)
-library(rworldmap)
+#library(rworldmap)
 library(maps)
 #remotes::install_github("ropensci/rnaturalearthhires") need to do once to get the library from github
-library(rnaturalearthhires)
+#library(rnaturalearthhires)
 library(ggspatial)
 library(data.table)
 library(readxl)
@@ -306,22 +302,24 @@ colorCombo <- "YlOrRd"
 colorList <- rev((RColorBrewer::brewer.pal(4, colorCombo)))
 
 coastline <- st_read("data-raw/regionInformation/ne_50m_coastline/ne_50m_coastline.shp")
+library(readxl)
+fileName_fruitCPs <- paste0("data-raw/crops/", "fruitCPs.xlsx")
+CPs <- read_excel(fileName_fruitCPs)
 
 #function to get rid of Antarctica and do either northern or southern hemisphere
-crop_custom <- function(poly.sf, ext) {
+f_crop_custom <- function(poly.sf, ext) {
   poly.sp <- as(poly.sf, "Spatial")
-  # extR <- raster::extent(c(-180, 180, -60, 90))
   extR <- ext
   poly.sp.crop <- crop(poly.sp, extR)
   st_as_sf(poly.sp.crop)
 }
 #st_crop(coastline, c(xmin=-180, xmax= 180, ymin = -60, ymax = 90))
-RobinsonProj <-  "+proj=robin +lon_0=0 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs"
-crsRob <- RobinsonProj
+# RobinsonProj <-  "+proj=robin +lon_0=0 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs"
+# crsRob <- RobinsonProj
 
 legendTitle <- "Days"
 
-perennialClimateThreatsGraphicsFun <- function() {
+f_perennialClimateThreatsGraphics <- function() {
   # get extreme cold mask
   fileNameStart <- paste0("extremeColdlocs_", gsub("-", "", tminExtremeVal))
   extremeColdMask <- paste0("data/cmip6/perennials/", fileNameStart, "_", k, "_", yearSpan, ".tif")
@@ -331,7 +329,7 @@ perennialClimateThreatsGraphicsFun <- function() {
   
   for (m in hemisphere) {
     # crop out areas where summer heat or spring frost are greater than the unsuitable values, either unsuitable_springFreezeDays or unsuitable_summerHotDays
-    coastline_cropped <- crop_custom(coastline, get(paste0("extent_", m)))
+    coastline_cropped <- f_crop_custom(coastline, get(paste0("extent_", m)))
     coastline_cropped <- st_transform(coastline_cropped, crsRob)
     
     for (n in c("spring", "summer")) {
@@ -361,7 +359,7 @@ perennialClimateThreatsGraphicsFun <- function() {
         # crop out areas where temp is below extreme level
         r <- mask(r, get(paste0("extremeColdMask_", m)), maskvalue = 1)
         
-        r[r > unsuitable_summerHotDays] <- NA # unsuitable_summerHotDays is number of days where tmax is greater than tmaxExtremeVal
+        r[r > unsuitable_summerHotDays] <- NA # unsuitable_summerHotDays is number of days where tmax is greater than tmaxDamageVal
         titleText <- paste0("Summer heat danger, scenario ", k, ", period ", gsub("_", "-", yearSpan))
         # get maximum value for summer, I'm guessing it is in the ssp585 at end century 
         fileName_in_max <- paste0("data/cmip6/perennials/", fileNameStart, m, "_", "ssp585", "_", "2081_2100", ".tif")
@@ -369,12 +367,17 @@ perennialClimateThreatsGraphicsFun <- function() {
         heatDamageLimits <- c(0, 10, 30, unsuitable_summerHotDays)
         bins <- heatDamageLimits
         caption <- paste0("Note: NA is oceans and land areas that are not suitable because of high heat \n(more than ", unsuitable_summerHotDays, 
-                          " days in the summer with temperatures above ", tmaxExtremeVal, "°C) or extreme cold (less than ", tminExtremeVal, "°C.)")
+                          " days in the summer with temperatures above ", tmaxDamageVal, "°C) or extreme cold (less than ", tminExtremeVal, "°C.)")
         
       }
       r <- project(r, crsRob)
       r_df <- as.data.frame(r, xy = TRUE)
       names(r_df) <-   c("lon", "lat", "value")
+      
+      #for testing
+      baseCt_df <- project(baseCt, crsRob)
+      baseCt_df <- as.data.frame(baseCt_df, xy = TRUE)
+      names(baseCt_df) <-   c("lon", "lat", "value")
       
       fileName_out <- paste0("graphics/cmip6/perennials/", fileNameStart, m, "_", k, "_", yearSpan, ".png")
       custom_bins <- bins
@@ -383,12 +386,17 @@ perennialClimateThreatsGraphicsFun <- function() {
       g <- ggplot(data = coastline_cropped) +
         labs(title = titleText, fill = legendTitle, x = "", y = "", caption = caption) +
         geom_tile(data = r_df , aes(x = lon, y = lat, fill = custom_bins))  +
-        scale_fill_manual(values = rev(RColorBrewer::brewer.pal(3, colorCombo))) +
+        scale_fill_manual(values = RColorBrewer::brewer.pal(3, colorCombo)) +
         geom_sf(fill = NA, color = "gray", lwd = 0.1) +
         theme_bw() +
         theme(axis.ticks = element_blank(), axis.text = element_blank(), axis.title = element_blank()) +
         theme(plot.title = element_text(size = 12, hjust = 0.5), plot.caption = element_text(hjust = 0, size = 8)) +
         theme(legend.text.align = 1)
+      g <- g + geom_tile(data = baseCt_df,   aes(x = lon, y = lat, fill = value)) +
+        scale_fill_gradient("Distance",
+                            low = 'yellow', high = 'blue',
+                            na.value = NA)
+      
       #        theme(plot.margin=grid::unit(c(0,0,0,0), "mm"))
       print(g)
       ggsave(filename = fileName_out, plot = g, width = 8, height = 4, units = "in", dpi = 300)
@@ -402,12 +410,10 @@ perennialClimateThreatsGraphicsFun <- function() {
 # frostRiskDays <- c(0,4,5,6,20,21, 45) # pairs for ranges - good, ok, bad
 # heatRiskDays <-  c(0,9,10,30,31, 45) # pairs for ranges - good, ok, bad
 
-
-#-------------------------------------------
-favorableLocsGraphicsFun <- function() {
+f_favorableLocsGraphics <- function() {
   for (m in hemisphere) {
     # crop out areas where summer heat or spring frost are greater than the unsuitable values, either unsuitable_springFreezeDays or unsuitable_summerHotDays
-    coastline_cropped <- crop_custom(coastline, get(paste0("extent_", m)))
+    coastline_cropped <- f_crop_custom(coastline, get(paste0("extent_", m)))
     coastline_cropped <- st_transform(coastline_cropped, crsRob)
     CPfruit <- CPs$chillRequirement[CPs$crop==fruitSpecies]
     for (i in c("good", "ok", "bad")) {
@@ -452,13 +458,11 @@ favorableLocsGraphicsFun <- function() {
   }
 }
 
-#--------------------------------------------
-
 # threats graphics -----
 for (k in sspChoices) {
   for (l in startyearChoices) {
     yearSpan <- paste0(l, "_", l + yearRange)
-    perennialClimateThreatsGraphicsFun()
+    f_perennialClimateThreatsGraphics()
   }
 }
 
@@ -466,7 +470,7 @@ for (k in sspChoices) {
 k <- "historical"
 l <- 1991
 yearSpan <- paste0(l, "_", l + yearRange)
-perennialClimateThreatsGraphicsFun()
+f_perennialClimateThreatsGraphics()
 
 # favorable locs graphics -----
 for (k in sspChoices) {
@@ -474,7 +478,7 @@ for (k in sspChoices) {
     yearSpan <- paste0(l, "_", l + yearRange)
     for (fruitSpecies in speciesChoice) {
       print(paste0(" favorable locs, fruitSpecies: ", fruitSpecies, ", ssp choice: ", k, ", start year: ", l))
-      favorableLocsGraphicsFun()
+      f_favorableLocsGraphics()
     }
   }
 }
@@ -485,10 +489,10 @@ l <- 1991
 yearSpan <- paste0(l, "_", l + yearRange)
 for (fruitSpecies in speciesChoice) {
   print(paste0(" favorable locs, fruitSpecies: ", fruitSpecies, ", ssp choice: ", k, ", start year: ", l))
-  favorableLocsGraphicsFun()
+  f_favorableLocsGraphics()
 }
 
-#  powerpoint, threats -----
+# powerpoint, threats -----
 library(officer)
 library(flextable)
 library(magrittr)
@@ -499,7 +503,7 @@ defaultLeft <- 0
 defaultTopNH <- 0.5
 defaultTopSH <- 4
 
-perennialStressPptFun <- function(season) {
+f_perennialStressPpt <- function(season) {
   if (season == "spring") fileNameStart <- paste0("springFrost_hem_")
   if (season == "summer") fileNameStart <- paste("summerHeat_hem_")
   fileName_NH <- paste0("graphics/cmip6/perennials/", fileNameStart, "NH", "_", k, "_", yearSpan, ".png")
@@ -511,11 +515,10 @@ perennialStressPptFun <- function(season) {
   my_pres <- add_slide(x = my_pres, layout = 'Title Only', master = 'Office Theme')
   my_pres <- ph_with(x = my_pres, value = extImg_NH, location = ph_location(left = defaultLeft, top = defaultTopNH, width = defaultWidth, height = defaultHeight - 0.5) )
   my_pres <- ph_with(x = my_pres, value = extImg_SH, location = ph_location(left = defaultLeft, top = defaultTopSH, width = defaultWidth, height = defaultHeight - 0.5) )
-  
   return(my_pres)
 }
 
-# presentation intro 
+# presentation text and figures 
 titleString <- paste0("Spring Frost and Summer Heat Threat")
 contentString <- paste0("Powerpoint produced on ", Sys.Date())
 
@@ -571,12 +574,12 @@ for (season in c("spring", "summer")) {
   k <- "historical"
   l <- 1991
   yearSpan <- paste0(l, "_", l + yearRange)
-  my_pres <- perennialStressPptFun(season)
+  my_pres <- f_perennialStressPpt(season)
   
   for (k in sspChoices) {
     for (l in startyearChoices) {
       yearSpan <- paste0(l, "_", l + yearRange)
-      perennialStressPptFun(season)
+      f_perennialStressPpt(season)
     }
   }
 }
@@ -599,20 +602,16 @@ defaultLeft <- 0
 defaultTop <- 1
 # defaultTopSH <- 4
 
-favorableLocsPptFun <- function(fruitSpecies) {
+f_favorableLocsPpt <- function(fruitSpecies) {
   fileNameStart <- paste0(fruitSpecies, "_", i, "_locations_", m, "_")
-  fileName_in <- paste0("graphics/cmip6/perennials/", fileNameStart, fruitSpecies, "_", k, "_", yearSpan, ".png")
+  fileName_in <- paste0("graphics/cmip6/perennials/", fileNameStart, k, "_", yearSpan, ".png")
   extImg_favLocs <- external_img(src = fileName_in, width = defaultWidth, height = defaultHeight)
   my_pres <- add_slide(x = my_pres, layout = 'Title Only', master = 'Office Theme')
   my_pres <- ph_with(x = my_pres, value = extImg_favLocs, location = ph_location(left = defaultLeft, top = defaultTop, width = defaultWidth, height = defaultHeight - 0.5) )
   return(my_pres)
 }
 
-library(readxl)
-fileName_fruitCPs <- paste0("data-raw/crops/", "fruitCPs.xlsx")
-CPs <- read_excel(fileName_fruitCPs)
-
-# presentation intro 
+# presentation intro -----
 titleString <- paste0("Adequate Chill Portions by Fruit, Time Period, and Scenario")
 contentString <- paste0("Powerpoint produced on ", Sys.Date())
 
@@ -669,12 +668,12 @@ for (fruitSpecies in speciesChoice) {
       k <- "historical"
       l <- 1991
       yearSpan <- paste0(l, "_", l + yearRange)
-      favorableLocsPptFun(fruitSpecies)
+      my_pres <- f_favorableLocsPpt(fruitSpecies)
       
       for (k in sspChoices) {
         for (l in startyearChoices) {
           yearSpan <- paste0(l, "_", l + yearRange)
-          favorableLocsPptFun(fruitSpecies)
+          my_pres <- f_favorableLocsPpt(fruitSpecies)
         }
       }
     }
@@ -688,7 +687,7 @@ my_pres <- ph_with(x = my_pres, value = blData, location = ph_location_type(type
 print(my_pres, target = "presentations/cmip6/perennials/adequateChillPortions.pptx") %>% browseURL()
 
 # runs testing ------
-runsfun <- function(x) {
+f_runs <- function(x) {
   runResult <- c(NA, NA) 
   if (is.nan(x[1])) {
     return(runResult)
@@ -713,7 +712,7 @@ for (k in sspChoices) {
     yearSpan <- paste0(l, "_", l + yearRange)
     fileName_in <- paste0("data/bigFiles/ensemble_dyMean20yr_", k, "_tasmax_global_daily_", yearSpan, ".tif")
     r <- rast(fileName_in)
-    print(system.time(r_runs <- app(r, runsfun)))
+    print(system.time(r_runs <- app(r, f_runs)))
     fileName_out <- paste0("data/cmip6/tmaxRuns/run_10_lim_gt35_ensemble_tmax_", k, "_", yearSpan, ".tif")
     print(system.time(writeRaster(r_runs, filename = fileName_out,  overwrite = TRUE, format = "GTiff", wopt= woptList))); flush.console()
     
@@ -728,3 +727,53 @@ plot(temp_ssp585_end$lyr.2, main = "Tmax number of days in runs, minimum length 
 plot(temp_ssp585_mid$lyr.1, main = "Number of tmax runs, minimum length of 10 days, tmax > 35, SSP585\nmid century")
 plot(temp_ssp585_mid$lyr.2, main = "Tmax number of days in runs, minimum length of 10 days, tmax > 35\nSSP585, mid century")
 
+
+# f_heatDamage <- function() {
+#   # does extreme cold locations and frost and heat damage locations
+#   combined <- sds()
+#   
+#   fileName_tasmax <- paste0(locOfClimFiles, "ensembleMn_dailyMn_20Yr_", k, "_tasmax_", yearSpan, ".tif")
+#   tmax <- rast(fileName_tasmax)
+#   for (m in hemisphere) {
+#     tmin_hem <- crop(tmin, get(paste0("extent_", m)))
+#     tmax_hem <- crop(tmax, get(paste0("extent_", m)))
+#     spStart <- paste0("springStart_", m)
+#     spEnd <- paste0("springEnd_", m)
+#     spLyrs <- paste0(get(spStart), ":", get(spEnd))
+#     hdStart <- paste0("heatDamageStart_", m)
+#     hdEnd <- paste0("heatDamageEnd_", m)
+#     hdLyrs <- paste0(get(hdStart), ":", get(hdEnd))
+#     tmin_hem <- subset(tmin_hem, get(spStart):get(spEnd))
+#     tmax_hem <- subset(tmax_hem, get(hdStart):get(hdEnd))
+#     # count number of days tmin is below tminDamageVal
+#     frostCt <- sum(tmin_hem < tminDamageVal, na.rm = TRUE)
+#     heatCt <- sum(tmax_hem > tmaxDamageVal, na.rm = TRUE)
+#     # fileNameStart_frost <- paste0("frostCt_hem_")
+#     # fileName_out_frostDam <- paste0("data/cmip6/perennials/", fileNameStart_frost, m, "_", k, "_", yearSpan, ".tif")
+#     # print(system.time(writeRaster(frostCt, fileName_out_frostDam, overwrite = TRUE, woptList = woptList)))
+#     # fileNameStart_heat <- paste0("heatCt_hem_")
+#     # fileName_out_heatDam <- paste0("data/cmip6/perennials/", fileNameStart_heat, m, "_", k, "_", yearSpan, ".tif")
+#     # print(system.time(writeRaster(frostCt, fileName_out_heatDam, overwrite = TRUE, woptList = woptList)))
+#     # 
+#     for (i in c("good", "ok", "bad")) {
+#       frDays <- switch(i,
+#                        "good" = frostRiskDays[1:2],
+#                        "ok" = frostRiskDays[3:4],
+#                        "bad" = frostRiskDays[5:6],
+#       )
+#       fr <- f_range(frostCt, frDays)
+#       hdDays <- switch(i,
+#                        "good" = heatRiskDays[1:2],
+#                        "ok" = heatRiskDays[3:4],
+#                        "bad" = heatRiskDays[5:6],
+#       )
+#       hr <- f_range(heatCt, hdDays)
+#     }
+#     # combined <- sds(combined, get(paste0("fr_", m, i)))
+#     # combined <- sds(combined, get(paste0("hr_", m, i)))
+#     combined <- sds(lapply(combined, function(i) eval(parse(text = paste0("fr_", m, i)))))
+#     combined <- sds(lapply(combined, function(i) eval(parse(text = paste0("hr_", m, i)))))
+#     
+#   }
+#   return(combined)
+# }

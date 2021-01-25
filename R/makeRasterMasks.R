@@ -21,7 +21,7 @@ for (i in animalsList) {
   species <- unlist(strsplit(i, "-"))[2]
   if (species %in% "recl.asc") species = "livestockSystem"
   fileName <- paste0("data/animals/raster_ct_", species, ".tif")
-  rAnimal <- rast(paste0(sourceDir, i), format = "ascii")
+  rAnimal <- rast(paste0(sourceDir, i))
   values(rAnimal)[values(rAnimal) == -99] <- NA # -99 used for missing values
 #  if (!i %in% "sheep") rAnimal <- aggregate(rAnimal, 6, fun = sum) # sheep are already in 30 sec
 #  rAnimal <- extend(rAnimal, globeExtent)
@@ -58,9 +58,9 @@ write.csv(animalStats, "data/animals/animalCt.csv")
 #   r[r <= 0] <- NA
 #   r <- reclassify(rIn, rbind(c(-Inf, cutoff, NA), c(cutoff, Inf, 1)))
 #   
-#   fileNameout <- paste0("data/animals/rasterMask_", speciesName, ".tif")
-#   print(fileNameout)
-#   writeRaster(r, fileNameout, format = "GTiff", overwrite = TRUE)
+#   fileName_out <- paste0("data/animals/rasterMask_", speciesName, ".tif")
+#   print(fileName_out)
+#   writeRaster(r, fileName_out, format = "GTiff", overwrite = TRUE)
 # }
 
 # now do plants
@@ -125,9 +125,9 @@ for (i in crops.new) {
   # rInAreaAgg[rInAreaAgg > cutoff] <- 1
   r <- classify(rInAreaAgg, rbind(c(-Inf, cutoff, NA), c(cutoff, Inf, 1)))
   
-  fileNameout <- paste0("data/crops/rasterMask_", i, ".tif")
-  print(fileNameout)
-  writeRaster(r, fileNameout, format = "GTiff", overwrite = TRUE)
+  fileName_out <- paste0("data/crops/rasterMask_", i, ".tif")
+  print(fileName_out)
+  writeRaster(r, fileName_out, format = "GTiff", overwrite = TRUE)
   
 }
 

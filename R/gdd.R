@@ -100,7 +100,7 @@ gdd.f3 <- function(mask, tmin, tmax, tbase, tbase_max) {
  
 fileNameMask.in <- paste0("data/crops/rasterMask_", tolower(m), ".tif")
 mask <- rast(fileNameMask.in)
-#paste0(fileNameOut, ".tif")
+#paste0(fileName_out, ".tif")
 # example data
 library(raster)
 r <- rast()

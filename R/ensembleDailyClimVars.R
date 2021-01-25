@@ -36,9 +36,9 @@ startyearChoices <-  c(2041, 2081) #2011, 2041, 2051, 2081) # c(2091) # c(2006) 
 yearRange <- 19
 readRast_climVar_ensemble <- function(i) {
   modelName.lower <- tolower(i)
-  fileNameIn <- paste0("data/bigFiles/dyMean20yr_", modelName.lower, "_", k,  "_", m, "_global_daily_", yearSpan, ".tif") # note yearSpan here
-  print(fileNameIn)
-  r <- rast(fileNameIn)
+  fileName_in <- paste0("data/bigFiles/dyMean20yr_", modelName.lower, "_", k,  "_", m, "_global_daily_", yearSpan, ".tif") # note yearSpan here
+  print(fileName_in)
+  r <- rast(fileName_in)
 }
 
 dailyMean <- function() {
