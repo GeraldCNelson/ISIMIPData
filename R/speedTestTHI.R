@@ -2,6 +2,7 @@ library("terra")
 terraOptions(memfrac = 1,  progress = 10, tempdir =  "data/ISIMIP", verbose = TRUE) # need to use a relative path
 locOfFiles <- "data/bigFiles/"
 woptList <- list(gdal=c("COMPRESS=LZW"))
+woptList <- list(gdal=c("COMPRESS=DEFLATE", "PREDICTOR=3", "ZLEVEL = 6"))
 
 yearSpan <- "2041_2060"
 k = "ssp585"

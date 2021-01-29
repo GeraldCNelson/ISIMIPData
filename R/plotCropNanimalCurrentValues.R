@@ -115,9 +115,9 @@ for (i in animalsList) {
 }
   
   
-  fileNameout <- paste0("data/animals/rasterMask_", speciesName, ".tif")
-  print(fileNameout)
-  writeRaster(rIn, fileNameout, format = "GTiff", overwrite = TRUE)
+  fileName_out <- paste0("data/animals/rasterMask_", speciesName, ".tif")
+  print(fileName_out)
+  writeRaster(rIn, fileName_out, format = "GTiff", overwrite = TRUE)
 }
  
 
@@ -145,6 +145,6 @@ for (i in animalsList) {
 #   jpeg(plotFileName, width = 8, height = 8, quality = 100, units = "in", res = 300)
 #   print(g)
 #   dev.off()
-#   fileNameout <- paste0("data/crops/rasterMask_", i, ".tif")
-#   print(fileNameout)
-#   writeRaster(rInAreaAgg, fileNameout, format = "GTiff", overwrite = TRUE)
+#   fileName_out <- paste0("data/crops/rasterMask_", i, ".tif")
+#   print(fileName_out)
+#   writeRaster(rInAreaAgg, fileName_out, format = "GTiff", overwrite = TRUE)

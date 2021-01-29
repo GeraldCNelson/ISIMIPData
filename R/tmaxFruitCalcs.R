@@ -35,6 +35,7 @@ yearRange <- 19
 yearRangeSH <- 18 # one less year because of 6 month offset
 minimumGrwSeasonLength = 100
 woptList <- list(gdal=c("COMPRESS=LZW"))
+woptList <- list(gdal=c("COMPRESS=DEFLATE", "PREDICTOR=3", "ZLEVEL = 6"))
 
 #test values
 i <- "IPSL-CM6A-LR"
@@ -46,39 +47,39 @@ yearNumber <- 2043
 
 # readRastHeat, readRastFrost, readRastHeatEnsemble, and readRastFrostEnsemble are used to assemble sets of spatRasters
 readRastHeat <- function(yearNumber) {
-  fileNameIn <- paste0("data/cmip6/extremeHtCt/extremeHtCt", m, "_", i, "_", k,  "_", yearNumber, ".tif")
+  fileName_in <- paste0("data/cmip6/extremeHtCt/extremeHtCt", m, "_", i, "_", k,  "_", yearNumber, ".tif")
   print(yearNumber)
-  print(fileNameIn)
-  r <- rast(fileNameIn)
+  print(fileName_in)
+  r <- rast(fileName_in)
 }
 readRastFrost <- function(yearNumber) {
-  fileNameIn <- paste0("data/cmip6/frostCt/frostCt", m, "_", i, "_", k,  "_", yearNumber, ".tif")
-  r <- rast(fileNameIn)
+  fileName_in <- paste0("data/cmip6/frostCt/frostCt", m, "_", i, "_", k,  "_", yearNumber, ".tif")
+  r <- rast(fileName_in)
 }
 
 readRastExtremeCld <- function(yearNumber) {
-  fileNameIn <- paste0("data/cmip6/extremeCldCt/extremeCldCt_", i, "_", k,  "_", yearNumber, ".tif")
-  r <- rast(fileNameIn)
+  fileName_in <- paste0("data/cmip6/extremeCldCt/extremeCldCt_", i, "_", k,  "_", yearNumber, ".tif")
+  r <- rast(fileName_in)
 }
 readRastHeatEnsemble <- function(i) {
-  fileNameIn <- paste0("data/cmip6/extremeHtCt/extremeHtCt", m, "_", i, "_", k,  "_", yearSpan, ".tif")
-  print(fileNameIn)
-  r <- rast(fileNameIn)
+  fileName_in <- paste0("data/cmip6/extremeHtCt/extremeHtCt", m, "_", i, "_", k,  "_", yearSpan, ".tif")
+  print(fileName_in)
+  r <- rast(fileName_in)
 }
 readRastFrostEnsemble <- function(i) {
-  fileNameIn <- paste0("data/cmip6/frostCt/frostCt", m, "_", i, "_", k,  "_", yearSpan, ".tif")
-  print(fileNameIn)
-  r <- rast(fileNameIn)
+  fileName_in <- paste0("data/cmip6/frostCt/frostCt", m, "_", i, "_", k,  "_", yearSpan, ".tif")
+  print(fileName_in)
+  r <- rast(fileName_in)
 }
 
 readRastExtremeCldEnsemble <- function(i) {
-  fileNameIn <- paste0("data/cmip6/extremeCldCt/extremeCldCt_", i, "_", k,  "_", yearSpan, ".tif")
-  print(fileNameIn)
-  r <- rast(fileNameIn)
+  fileName_in <- paste0("data/cmip6/extremeCldCt/extremeCldCt_", i, "_", k,  "_", yearSpan, ".tif")
+  print(fileName_in)
+  r <- rast(fileName_in)
 }
 
-# funFrost, funExtremeHeat, and funColdKill return counts of the number of days in the cellVector spatRaster that meet the criterion
-funFrost <- function(cellVector) {
+# f_Frost, funExtremeHeat, and funColdKill return counts of the number of days in the cellVector spatRaster that meet the criterion
+f_Frost <- function(cellVector) {
   frostCt <- c(NA) 
   if (is.nan(cellVector[1])) {
     return(frostCt)
@@ -94,7 +95,7 @@ funExtremeHeat <- function(cellVector) {
   heatCt <- sum(cellVector > 35)
   return(heatCt) 
 }
-funExtremeCld <- function(cellVector) {
+f_ExtremeCld <- function(cellVector) {
   ExtremeCldCt <- c(NA) 
   if (is.nan(cellVector[1])) {
     return(ExtremeCldCt)
@@ -103,8 +104,8 @@ funExtremeCld <- function(cellVector) {
   return(ExtremeCldCt) 
 }
 
-# funCrop crops a climate variable to an extent
-funCrop <- function(cvar, extent) {
+# f_Crop crops a climate variable to an extent
+f_Crop <- function(cvar, extent) {
   if (cvar %in% c("tmax", "tasmax")) cvar <- "tasmax"
   if (cvar %in% c("tmin", "tasmin")) cvar <- "tasmin"
   fileName_cvar <- paste0(locOfFiles, k,  "/", i, "/", modelName.lower, "_", k, "_", cvar, "_global_daily_", yearSpan, ".tif")
@@ -122,7 +123,7 @@ for (k in sspChoices) {
       gc()
       yearSpan <- paste0(l, "_", l + yearRange)
       modelName.lower <- tolower(i)
-      system.time(NH <- funCrop("tmax", "NH"))
+      system.time(NH <- f_Crop("tmax", "NH"))
       
       for (yearNumber in l:(l + yearRange)) {
         startDate <- paste0(yearNumber, "-07-01"); endDate <- paste0(yearNumber, "-08-15")
@@ -150,8 +151,8 @@ for (k in sspChoices) {
         print(m)
         x <- lapply(yearnumberRange, readRastHeat)
         r <- rast(x)
-        fileNameOut <- paste0("data/cmip6/extremeHtCt/extremeHtCt", m, "_", i, "_", k,  "_", yearSpan, ".tif")
-        print(system.time(writeRaster(r, fileNameOut, overwrite=TRUE, wopt=list(gdal="COMPRESS=LZW")))); flush.console()
+        fileName_out <- paste0("data/cmip6/extremeHtCt/extremeHtCt", m, "_", i, "_", k,  "_", yearSpan, ".tif")
+        print(system.time(writeRaster(r, fileName_out, overwrite=TRUE, wopt=list(gdal="COMPRESS=LZW")))); flush.console()
       }
   }
 }
@@ -169,8 +170,8 @@ for (i in modelChoices) {
       x <- lapply(yearnumberRange, readRastHeat)
       r <- rast(x)
       r
-      fileNameOut <- paste0("data/cmip6/extremeHtCt/extremeHtCt", m, "_", i, "_", k,  "_", yearSpan, ".tif")
-      print(system.time(writeRaster(r, fileNameOut, overwrite=TRUE, wopt=list(gdal="COMPRESS=LZW")))); flush.console()
+      fileName_out <- paste0("data/cmip6/extremeHtCt/extremeHtCt", m, "_", i, "_", k,  "_", yearSpan, ".tif")
+      print(system.time(writeRaster(r, fileName_out, overwrite=TRUE, wopt=list(gdal="COMPRESS=LZW")))); flush.console()
     }
 }
 
@@ -190,7 +191,7 @@ for (k in sspChoices) {
         indicesYear <- seq(as.Date(startDate), as.Date(endDate), 1)
         indicesCharYear <- paste0("X", as.character(indicesYear))
         system.time(tmin_yr_NH <- subset(NH, indicesCharYear))
-        print(system.time(frostCt <- app(tmin_yr_NH, funFrost)))
+        print(system.time(frostCt <- app(tmin_yr_NH, f_Frost)))
         fileName_out <- paste0("data/cmip6/frostCt/frostCtNH_",  i, "_", k, "_", yearNumber, ".tif")
         frostCt
         writeRaster(frostCt, fileName_out, overwrite = TRUE, woptList = woptList)
@@ -206,7 +207,7 @@ for (i in modelChoices) {
     gc()
     yearSpan <- paste0(l, "_", l + yearRange)
     modelName.lower <- tolower(i)
-    system.time(NH <- funCrop("tmax", "NH"))
+    system.time(NH <- f_Crop("tmax", "NH"))
     NH
     for (yearNumber in l:(l + yearRange)) {
       startDate <- paste0(yearNumber, "-07-01"); endDate <- paste0(yearNumber, "-08-15")
@@ -229,7 +230,7 @@ for (k in sspChoices) {
       gc()
       yearSpan <- paste0(l, "_", l + yearRange)
       modelName.lower <- tolower(i)
-      system.time(NH <- funCrop("tmax", "NH"))
+      system.time(NH <- f_Crop("tmax", "NH"))
       
       for (yearNumber in l:(l + yearRange)) {
         startDate <- paste0(yearNumber, "-07-01"); endDate <- paste0(yearNumber, "-08-15")
@@ -251,7 +252,7 @@ for (i in modelChoices) {
     gc()
     yearSpan <- paste0(l, "_", l + yearRange)
     modelName.lower <- tolower(i)
-    system.time(NH <- funCrop("tmin", "NH"))
+    system.time(NH <- f_Crop("tmin", "NH"))
     
     for (yearNumber in l:(l + yearRange)) {
       startDate <- paste0(yearNumber, "-03-01"); endDate <- paste0(yearNumber, "-04-30")
@@ -260,7 +261,7 @@ for (i in modelChoices) {
       indicesYear <- seq(as.Date(startDate), as.Date(endDate), 1)
       indicesCharYear <- paste0("X", as.character(indicesYear))
       system.time(tmin_yr_NH <- subset(NH, indicesCharYear))
-      print(system.time(frostCt <- app(tmin_yr_NH, funFrost)))
+      print(system.time(frostCt <- app(tmin_yr_NH, f_Frost)))
       fileName_out <- paste0("data/cmip6/frostCt/frostCtNH_",  i, "_", k, "_", yearNumber, ".tif")
       writeRaster(frostCt, fileName_out, overwrite = TRUE, woptList = woptList)
       #      frostCt <- NULL
@@ -285,8 +286,8 @@ for (k in sspChoices) {
         print(m)
         x <- lapply(yearnumberRange, readRastFrost)
         r <- rast(x)
-        fileNameOut <- paste0("data/cmip6/frostCt/frostCt", m, "_", i, "_", k,  "_", yearSpan, ".tif")
-        print(system.time(writeRaster(r, fileNameOut, overwrite=TRUE, wopt=list(gdal="COMPRESS=LZW")))); flush.console()
+        fileName_out <- paste0("data/cmip6/frostCt/frostCt", m, "_", i, "_", k,  "_", yearSpan, ".tif")
+        print(system.time(writeRaster(r, fileName_out, overwrite=TRUE, wopt=list(gdal="COMPRESS=LZW")))); flush.console()
       }
   }
 }
@@ -306,8 +307,8 @@ for (i in modelChoices) {
       x <- lapply(yearnumberRange, readRastFrost)
       print(x)
       r <- rast(x)
-      fileNameOut <- paste0("data/cmip6/frostCt/frostCt", m, "_", i, "_", k,  "_", yearSpan, ".tif")
-      print(system.time(writeRaster(r, fileNameOut, overwrite=TRUE, wopt=list(gdal="COMPRESS=LZW")))); flush.console()
+      fileName_out <- paste0("data/cmip6/frostCt/frostCt", m, "_", i, "_", k,  "_", yearSpan, ".tif")
+      print(system.time(writeRaster(r, fileName_out, overwrite=TRUE, wopt=list(gdal="COMPRESS=LZW")))); flush.console()
     }
 }
 
@@ -319,7 +320,7 @@ for (k in sspChoices) {
       gc()
       yearSpan <- paste0(l, "_", l + yearRange)
       modelName.lower <- tolower(i)
-      system.time(SH <- funCrop("tmax", "SH"))
+      system.time(SH <- f_Crop("tmax", "SH"))
       
       for (yearNumber in l:(l + yearRange)) {
         startDate <- paste0(yearNumber, "-01-01"); endDate <- paste0(yearNumber, "-02-15")
@@ -342,7 +343,7 @@ for (k in sspChoices) {
       gc()
       yearSpan <- paste0(l, "_", l + yearRange)
       modelName.lower <- tolower(i)
-      system.time(SH <- funCrop("tmin", "SH"))
+      system.time(SH <- f_Crop("tmin", "SH"))
       
       for (yearNumber in l:(l + yearRange)) {
         startDate <- paste0(yearNumber, "-03-01"); endDate <- paste0(yearNumber, "-04-30")
@@ -350,7 +351,7 @@ for (k in sspChoices) {
         indicesCharYear <- paste0("X", as.character(indicesYear))
         system.time(tmin_yr_SH <- subset(SH, indicesCharYear))
         
-        print(system.time(frostCt <- app(tmin_yr_SH, funFrost)))
+        print(system.time(frostCt <- app(tmin_yr_SH, f_Frost)))
         fileName_out <- paste0("data/cmip6/frostCt/frostCtSH_",  i, "_", k, "_", yearNumber, ".tif")
         writeRaster(frostCt, fileName_out, overwrite = TRUE, woptList = woptList)
       }
@@ -365,7 +366,7 @@ for (i in modelChoices) {
     gc()
     yearSpan <- paste0(l, "_", l + yearRange)
     modelName.lower <- tolower(i)
-    system.time(SH <- funCrop("tmax", "SH"))
+    system.time(SH <- f_Crop("tmax", "SH"))
     
     for (yearNumber in l:(l + yearRange)) {
       startDate <- paste0(yearNumber, "-01-01"); endDate <- paste0(yearNumber, "-02-15")
@@ -388,7 +389,7 @@ for (i in modelChoices) {
     gc()
     yearSpan <- paste0(l, "_", l + yearRange)
     modelName.lower <- tolower(i)
-    system.time(SH <- funCrop("tmin", "SH"))
+    system.time(SH <- f_Crop("tmin", "SH"))
     
     for (yearNumber in l:(l + yearRange)) {
       startDate <- paste0(yearNumber, "-03-01"); endDate <- paste0(yearNumber, "-04-30")
@@ -397,7 +398,7 @@ for (i in modelChoices) {
       system.time(tmin_yr_SH <- subset(SH, indicesCharYear))
       
       # then use the function like this
-      print(system.time(frostCt <- app(tmin_yr_SH, funFrost)))
+      print(system.time(frostCt <- app(tmin_yr_SH, f_Frost)))
       print(frostCt)
       fileName_out <- paste0("data/cmip6/frostCt/frostCtSH_",  i, "_", k, "_", yearNumber, ".tif")
       print(paste0("frost historical outfile: ", fileName_out))
@@ -422,7 +423,7 @@ for (k in sspChoices) {
         indicesCharYear <- paste0("X", as.character(indicesYear))
         system.time(extremeCld_yr <- subset(tmin, indicesCharYear))
         
-        print(system.time(extremeCldCt <- app(extremeCld_yr, funExtremeCld)))
+        print(system.time(extremeCldCt <- app(extremeCld_yr, f_ExtremeCld)))
         fileName_out <- paste0("data/cmip6/extremeCldCt/extremeCldCt_",  i, "_", k, "_", yearNumber, ".tif")
         writeRaster(extremeCldCt, fileName_out, overwrite = TRUE, woptList = woptList)
       }
@@ -446,7 +447,7 @@ for (i in modelChoices) {
       indicesYear <- seq(as.Date(startDate), as.Date(endDate), 1)
       indicesCharYear <- paste0("X", as.character(indicesYear))
       system.time(extremeCld_yr <- subset(tmin, indicesCharYear))
-      print(system.time(extremeCldCt <- app(extremeCld_yr, funExtremeCld)))
+      print(system.time(extremeCldCt <- app(extremeCld_yr, f_ExtremeCld)))
       print(extremeCldCt)
       fileName_out <- paste0("data/cmip6/extremeCldCt/extremeCldCt_",  i, "_", k, "_", yearNumber, ".tif")
       print(paste0("fileName out: ", fileName_out))
@@ -466,8 +467,8 @@ for (k in sspChoices) {
       gc()
       x <- lapply(yearnumberRange, readRastExtremeCld)
       r <- rast(x)
-      fileNameOut <- paste0("data/cmip6/extremeCldCt/extremeCldCt_", i, "_", k,  "_", yearSpan, ".tif")
-      print(system.time(writeRaster(r, fileNameOut, overwrite=TRUE, wopt=list(gdal="COMPRESS=LZW")))); flush.console()
+      fileName_out <- paste0("data/cmip6/extremeCldCt/extremeCldCt_", i, "_", k,  "_", yearSpan, ".tif")
+      print(system.time(writeRaster(r, fileName_out, overwrite=TRUE, wopt=list(gdal="COMPRESS=LZW")))); flush.console()
     }
   }
 }
@@ -483,8 +484,8 @@ for (i in modelChoices) {
     gc()
     x <- lapply(yearnumberRange, readRastExtremeCld)
     r <- rast(x)
-    fileNameOut <- paste0("data/cmip6/extremeCldCt/extremeCldCt_", i, "_", k,  "_", yearSpan, ".tif")
-    print(system.time(writeRaster(r, fileNameOut, overwrite=TRUE, wopt=list(gdal="COMPRESS=LZW")))); flush.console()
+    fileName_out <- paste0("data/cmip6/extremeCldCt/extremeCldCt_", i, "_", k,  "_", yearSpan, ".tif")
+    print(system.time(writeRaster(r, fileName_out, overwrite=TRUE, wopt=list(gdal="COMPRESS=LZW")))); flush.console()
   }
 }
 

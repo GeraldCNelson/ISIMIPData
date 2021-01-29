@@ -683,6 +683,7 @@ for (m in thiListReduced) {
     fileName_in <- paste0("graphics/cmip6/THI/THIextremeCtDelta.", m, "_", k, "_", "2081_2100.png")
     my_pres <- f_deltaExtremeCtSpeciesForPptx()
   }
+  my_pres <- ph_with(x = my_pres, value = blData, location = ph_location_type(type = "body") )
 }
 
 print(my_pres, target = "presentations/cmip6/THI/damageTemp_Ensemble.pptx") %>% browseURL()

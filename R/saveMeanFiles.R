@@ -32,7 +32,7 @@ modelChoices <- c( "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "I
 startyearChoices <-  c(2041, 2081) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
 #startyearChoices <-  c(2041) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
 scenarioChoicesEnsemble <- c("historical", sspChoices)
-climateVars <- c("tasmin", "tasmax", "tas", "pr", "hurs", "rsds", "sfcwind", "ps") # "tasmax", "tasmin"
+climateVars <- c("tasmin", "tasmax", "tas", "pr", "hurs", "rsds", "sfcwind", "ps") 
 climateVars <- c("tasmin") # "tasmax", "tasmin"
 
 meansFun <- function() {
@@ -282,13 +282,13 @@ for (i in modelChoices) {
 
 
 
-# rename files
-renameList <- list.files(locOfFiles, full.names = TRUE)
-renameList <- renameList[grepl("mean", renameList, fixed = TRUE)]
-renameList_out <- gsub("mean", "dyMean20yr", renameList)
-renameList <- gsub("//","/", renameList)
-renameList_out <- gsub("//","/", renameList_out)
-
-for (i in 1:length(renameList)) {
-  file.rename(from = renameList[i], to = renameList_out[i])
-}
+# # rename files
+# renameList <- list.files(locOfFiles, full.names = TRUE)
+# renameList <- renameList[grepl("mean", renameList, fixed = TRUE)]
+# renameList_out <- gsub("mean", "dyMean20yr", renameList)
+# renameList <- gsub("//","/", renameList)
+# renameList_out <- gsub("//","/", renameList_out)
+# 
+# for (i in 1:length(renameList)) {
+#   file.rename(from = renameList[i], to = renameList_out[i])
+# }
