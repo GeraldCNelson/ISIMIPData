@@ -55,13 +55,14 @@ for (k in sspChoices)  {
       
       for (m in cropChoices) {
         print(paste0("crop: ", m))
-        fileName_out <-    paste(modelName.lower, m, k, "gdd", "global_daily", yearSpan, sep = "_")
-        if (!paste0(fileName_out, ".tif") %in% gddFilesCompleted) {
+        fileName_out <- paste0(gddsfileOutLoc, modelName.lower, "_", "gdd", "_", tolower(m), "_", k, "_", "global_daily", "_", yearSpan, ".tif")
+        if (!fileName_out %in% gddFilesCompleted) {
           print(paste0("Working on: ", fileName_out))
           tbase <- ann_crop_temp_table[crop == m, Tbase]
           tbase_max <- ann_crop_temp_table[crop == m, Tbase_max]
           print(Sys.time())
-          print(system.time(gdd <- app(tas, fun=f_gdd, tbase, tbase_max, filename = paste0(gddsfileOutLoc, fileName_out, ".tif", wopt = woptList))))
+          
+          print(system.time(gdd <- app(tas, fun=f_gdd, tbase, tbase_max, filename = paste0(gddsfileOutLoc, fileName_out, ".tif"), wopt = woptList)))
           print(Sys.time())
           print(paste0("gdd file out name: ", gddsfileOutLoc, fileName_out, ".tif"))
           #         writeRaster(round(gdd, 1), filename = paste0(gddsfileOutLoc, fileName_out, ".tif"), format = "GTiff", overwrite = TRUE, wopt = woptList)
