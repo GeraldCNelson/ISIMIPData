@@ -29,6 +29,12 @@ k <- "ssp585"
 l <- 2041
 m <- "Wheat"
 
+f_gdd = function(cellVector, tbase, tbase_max){
+  if (is.nan(cellVector[1])) {return(cellVector)}
+  y <- clamp(cellVector, lower = tbase, upper = tbase_max)
+  return(y)
+}
+
 for (k in sspChoices)  {
   for (i in modelChoices)  {
     for (l in startyearChoices) {
