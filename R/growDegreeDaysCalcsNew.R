@@ -62,9 +62,9 @@ for (k in sspChoices)  {
           tbase_max <- ann_crop_temp_table[crop == m, Tbase_max]
           print(Sys.time())
           
-          print(system.time(gdd <- app(tas, fun=f_gdd, tbase, tbase_max, filename = paste0(gddsfileOutLoc, fileName_out, ".tif"), wopt = woptList)))
+          print(system.time(gdd <- app(tas, fun=f_gdd, tbase, tbase_max, filename = fileName_out, wopt = woptList)))
           print(Sys.time())
-          print(paste0("gdd file out name: ", gddsfileOutLoc, fileName_out, ".tif"))
+          print(paste0("gdd file out name: ", fileName_out))
           #         writeRaster(round(gdd, 1), filename = paste0(gddsfileOutLoc, fileName_out, ".tif"), format = "GTiff", overwrite = TRUE, wopt = woptList)
           gdd <- NULL
           gc(reset = FALSE, full = TRUE)
