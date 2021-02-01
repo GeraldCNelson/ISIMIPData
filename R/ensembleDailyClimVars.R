@@ -46,7 +46,7 @@ dailyMean <- function() {
   x <- lapply(modelChoices, readRast_climVar_ensemble)
   r <- rast(x)
   indices_day <- rep(seq(1, nlyr(x[[1]]), 1), 5) # 5 is number of models; if omitted should get the same result
-  fileName_out <- paste0("data/bigFiles/ensemble_dyMean20yr_", k,  "_", m, "_global_daily_", yearSpan, ".tif") # note yearSpan here
+  fileName_out <- paste0("data/bigFiles/ensemble_dyMean20yr_", k,  "_", m, "_", yearSpan, ".tif") # note yearSpan here
   print(system.time(r.mean <- tapp(r, indices_day, fun = "mean", na.rm = TRUE, filename = fileName_out, overwrite = TRUE, woptList = woptList)))
 }
 

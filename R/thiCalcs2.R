@@ -279,17 +279,54 @@
     return(r)
   }
   
-  f_thi_graphing <- function(m, r, col, extremeStress, totalNum, totalNum_extreme, maxCount) {
+  # f_thi_graphing_prep <- function(m, r, r_mask, maskMin, l, yearRange, k, extremeStress, dt_stressCts) {
+  #   
+  #   
+  #   
+  # 
+  #   # fileName_out <- paste0("graphics/cmip6/THI/THIextremeCt.", m, "_", k, "_", yearSpan, ".png")
+  #   # print(paste0("fileName out: ", fileName_out))
+  #   # get counts in extreme stress regions with more than maxCount days
+  #   
+  #   #      totalNum <- global(r_mask, fun = "sum", na.rm = TRUE)
+  #   print(paste0("share of ", m, " in regions with extreme stress days greater than ", maxCount, " is ", round(100 * totalNum_extreme/totalNum, 2), " %."))
+  #   #   r <- crop(r, ext_noAntarctica) I think r_mask is already cropped so no need to do this
+  #   return(dt_stressCts)
+  # }
+  
+  # function to fill in dt_stressCts
+  f_dt_stressCts <- function(r, dt_stressCts, r_mask) {
+    r_mask_scen <- r_mask
+    r_mask_scen[r_mask_scen < maskMin] <- NA
+    r_mask_scen[r_mask_scen > 0] <- 1
+    r <- mask(r, r_mask_scen)
+    r_ext <- r
+    r_ext[r < maxCount] <- NA
+    r_ext_mask <- mask(r_mask, r_ext)
+    totalNum_extreme <- global(r_ext_mask, fun = "sum", na.rm = TRUE)
+    totalNum <- 6.512 * 10^9 # world population in 2005 is 6.512 billion
+    if (!m == "humans") totalNum <- animalCts_global[species == m, ct]
+    dt_stressCts <- rbindlist(list(dt_stressCts, list(m, k, l, as.numeric(totalNum_extreme), totalNum, maxCount, extremeStress)), use.names = FALSE)
+    return(dt_stressCts)
+    
+  }
+  f_thi_graphing <- function(m, r, r_mask, maskMin, col, dt_stressCts) {
     print("--------------------------")
-    names(r) <- "value"
-    print(r)
-    # plot(r)
+    extremeStress <- dt_stressCts[species == m, extremeStress]
+    totalNum<- dt_stressCts[species == m, totalCts]
+    totalNum_extreme<- dt_stressCts[species == m, stressCts]
+    maxCount<- dt_stressCts[species == m, countDays]
+    
     totalNum_extreme <- totalNum_extreme/1000000 # convert to millions
     totalNum <- totalNum/1000000 # convert to millions
     ratio_extreme <- 100 * totalNum_extreme/totalNum # convert to percent
     totalNum_extreme <- round(totalNum_extreme, 0)
     totalNum <- round(totalNum, 0)
     ratio_extreme <- round (ratio_extreme, 1)
+    print(paste0("share of ", m, " in regions with extreme stress days greater than ", maxCount, " is ", round(100 * totalNum_extreme/totalNum, 2), " %."))
+    
+    # # r_mask 
+    # r_mask[r_mask > 0] <- 0
     
     print(paste0("species: ", m, ", min r: ", min(minmax(r)), ", max r: ", max(minmax(r))))
     if (is.na( max(minmax(r)))) stop("max is na")
@@ -298,16 +335,25 @@
     # r_mask <- crop(r, ext_noAntarctica)
     # r_maskRob <- project(r_mask, crsRob)
     r <- project(r, crsRob)
-    #  print(paste0("min r proj: ", min(minmax(r)), ", max r proj: ", max(minmax(r)), ", rname: ", paste0("r_", k, "_", l)))
-    caption <- paste0("The extreme stress value for ", m, " is ", extremeStress, ". Stress locations are where the species was raised in the early 21st century. \nOf early century species numbers, ", ratio_extreme, "% are in locations with at least ", maxCount, " days with extreme stress during this period.")
-    if (m == "humans") {
-      caption <- paste0("The extreme stress value for reduction in physical work capacity (PWC) is ", extremeStress, " %.")
-    }
+    r_mask <- project(r_mask, crsRob)
+    r_mask_df <- as.data.frame(r_mask, xy = TRUE)
+    names(r_mask_df) <-   c("x", "y", "value")
+    
     r_df <- as.data.frame(r, xy = TRUE)
     #   r_df$value[r_df$value > maxVal] <- maxVal #set values > maxVal to maxVal
     r_df_mod <- r_df %>%
       mutate(value_2 = cut(value, breaks = custom_bins)) %>%
       group_by(value_2)
+    
+    #  print(paste0("min r proj: ", min(minmax(r)), ", max r proj: ", max(minmax(r)), ", rname: ", paste0("r_", k, "_", l)))
+    titleText <- paste0(m, ", days above extreme stress value, ", k, ", ", gsub("_", "-", yearSpan))
+    if (m == "humans") {
+      titleText <- paste0(m, ", days with PWC below ", extremeStress, " percent, " , k, ", ", gsub("_", "-", yearSpan))
+    }
+    caption <- paste0("The extreme stress value for ", m, " is ", extremeStress, ". Stress locations are where the species was raised in the early 21st century. \nOf early century species numbers, ", ratio_extreme, "% are in locations with at least ", maxCount, " days with extreme stress during this period.")
+    if (m == "humans") {
+      caption <- paste0("The extreme stress value for reduction in physical work capacity (PWC) is ", extremeStress, " %.")
+    }
     g <- ggplot() +
       geom_tile(data = r_df_mod, aes(x, y, fill = value_2)) +
       #      scale_fill_discrete(colors = colorList, drop = FALSE, na.value = 'grey95') +
@@ -326,8 +372,11 @@
       geom_sf(data = coastline_cropped , 
               color = "black", size = 0.1, stat = "sf", fill = NA,
               position = "identity")
+#    if (! m == "humans") g <- g + geom_tile(data = r_mask_df, aes(x, y, fill = value), alpha = .2, show.legend = FALSE) # +
     
     print(g)
+    fileName_out <- paste0("graphics/cmip6/THI/THIextremeCt.", m, "_", k, "_", yearSpan, ".png")
+    
     ggsave(filename = fileName_out, plot = g, device = "png", width = 6, height = 6, units = "in", dpi = 300)
     knitr::plot_crop(fileName_out) # gets rid of margins around the plot
     print(paste0("fileName out: ", fileName_out))
@@ -452,43 +501,6 @@ f_extremeStress_setup(k, l, colorList)
   legendTitle <- "Days"
   # test values
   m = "chicken"
-  # coastline <- st_read("data-raw/regionInformation/ne_50m_coastline/ne_50m_coastline.shp")
-  # coastline_cropped <- f_crop_custom(coastline)
-  # coastline_cropped <- st_transform(coastline_cropped, crsRob)
-  
-}
-
-f_thi_graphing_prep <- function(l, yearRange, m, k, extremeStress, dt_stressCts) {
-  yearSpan <- paste0(l, "_", l + yearRange)
-  fileName_in <- paste0(locOfDataFiles, "extremeCt.", m, "_", k, "_", yearSpan, ".tif")
-  print(paste0("fileName in: ", fileName_in))
-  r <- rast(fileName_in)
-  names(r) <- "value"
-  titleText <- paste0(m, ", days above extreme stress value, ", k, ", ", gsub("_", "-", yearSpan))
-  if (m == "humans") {
-    titleText <- paste0(m, ", days with PWC below ", extremeStress, " percent, " , k, ", ", gsub("_", "-", yearSpan))
-  }
-  fileName_out <- paste0("graphics/cmip6/THI/THIextremeCt.", m, "_", k, "_", yearSpan, ".png")
-  print(paste0("fileName out: ", fileName_out))
-  r_mask_scen <- r_mask
-  r_mask_scen[r_mask_scen < maskMin] <- NA
-  r_mask_scen[r_mask_scen > 0] <- 1
-  #   r <- eval(parse(text = paste0("r_", k, "_", m, "_", l)))
-  r <- mask(r, r_mask_scen)
-  # get counts in extreme stress regions with more than maxCount days
-  maxCount <- 30
-  r_ext <- r
-  r_ext[r < maxCount] <- NA
-  r_ext_mask <- mask(r_mask, r_ext)
-  totalNum_extreme <- global(r_ext_mask, fun = "sum", na.rm = TRUE)
-  totalNum <- 6.512 * 10^9 # world population in 2005 is 6.512 billion
-  if (!m == "humans") totalNum <- animalCts_global[species == m, ct]
-  dt_stressCts <- rbindlist(list(dt_stressCts, list(m, k, l, as.numeric(totalNum_extreme), totalNum, maxCount, extremeStress)), use.names = FALSE)
-  
-  #      totalNum <- global(r_mask, fun = "sum", na.rm = TRUE)
-  print(paste0("share of ", m, " in regions with extreme stress days greater than ", maxCount, " is ", round(100 * totalNum_extreme/totalNum, 2), " %."))
-  #   r <- crop(r, ext_noAntarctica) I think r_mask is already cropped so no need to do this
-  return(dt_stressCts)
 }
 
 # speciesChoice <- "humans"
@@ -496,6 +508,8 @@ f_thi_graphing_prep <- function(l, yearRange, m, k, extremeStress, dt_stressCts)
 
 # create blank table to hold animal numbers in high stress areas
 dt_stressCts <- data.table(species = character(), ssp  = character(), startYear  = character(), stressCts = numeric(), totalCts = numeric(), countDays = numeric(), extremeStress = numeric())
+
+
 for (m in speciesChoice) {
   print(paste0("------", m, "------"))
   extremeStress <- f_getExtremeStressValue(m) 
@@ -513,6 +527,7 @@ for (m in speciesChoice) {
     "sheep" = 3000
   )
   
+  maxCount <- 30 # used to identify regions with extreme stress value more than maxCount days
   #  maxVal <- max(minmax(r_ssp585_2081))  # assumes the maximum value in all years is found at the end of the century in the scenario ssp585
   #  custom_bins <- round(seq.int(from = 0, to = maxVal, length = 4))
   # alternate approach to custom_bins, choose relevant number of days since should be the same for all THIs
@@ -522,9 +537,13 @@ for (m in speciesChoice) {
   #  scenario graphics -----
   for (k in sspChoices) {
     for (l in startYearChoices) {
-      dt_stressCts <- f_thi_graphing_prep (l, yearRange, m, k, extremeStress, dt_stressCts)
-      dt_stressCts
-      f_thi_graphing(m, r, col, extremeStress, totalNum, totalNum_extreme, maxCount)
+      yearSpan <- paste0(l, "_", l + yearRange)
+      fileName_in <- paste0(locOfDataFiles, "extremeCt.", m, "_", k, "_", yearSpan, ".tif")
+      print(paste0("fileName in: ", fileName_in))
+      r <- rast(fileName_in)
+      names(r) <- "value"
+      dt_stressCts <- f_dt_stressCts (r, dt_stressCts, r_mask)
+      f_thi_graphing(m, r, r_mask, maskMin, col, dt_stressCts)
       print("-------------------------")
     }
   }
@@ -532,9 +551,13 @@ for (m in speciesChoice) {
   # historical graphing -----
   k <- "historical"
   l <- 1991
-  dt_stressCts <- f_thi_graphing_prep (l, yearRange, m, k, extremeStress, dt_stressCts)
-  dt_stressCts
-  f_thi_graphing(m, r, col, extremeStress, totalNum, totalNum_extreme, maxCount)
+  yearSpan <- paste0(l, "_", l + yearRange)
+  fileName_in <- paste0(locOfDataFiles, "extremeCt.", m, "_", k, "_", yearSpan, ".tif")
+  print(paste0("fileName in: ", fileName_in))
+  r <- rast(fileName_in)
+  names(r) <- "value"
+  dt_stressCts <- f_dt_stressCts (r, dt_stressCts, r_mask)
+  f_thi_graphing(m, r, r_mask, maskMin, col, dt_stressCts)
   print("-------------------------")
   
   # delta graphics -----
@@ -562,7 +585,6 @@ for (m in speciesChoice) {
     r <- mask(r, r_mask_scen)
     
     # get counts in extreme stress regions with more than maxCount days
-    maxCount <- 30
     r_ext <- r >= maxCount
     r_ext_mask <- mask(r_mask, r_ext)
     totalNum_extreme <- global(r_ext_mask, fun = "sum", na.rm = TRUE)
@@ -570,7 +592,7 @@ for (m in speciesChoice) {
     
     
     r <- crop(r, ext_noAntarctica)
-    f_thi_graphing(m, r, col, extremeStress, totalNum, totalNum_extreme, maxCount)
+    f_thi_graphing(m, r, r_mask, maskMin, col, dt_stressCts)
   }
 }
 
@@ -865,6 +887,48 @@ plot3d(x = r_end_ssp126_df$x, y = r_end_ssp126_df$y, z = r_end_ssp126_df$value, 
 library(plotly)
 plot_ly(x = r_end_ssp126_df$x, y = r_end_ssp126_df$y, z = r_end_ssp126_df$value, colors = colorList, type = "scatter3d", mode = "markers",
         xlab="longitude", ylab="latitude", zlab="Count of extreme stress")
+
+# runs code -----
+# test cattle thi for runs
+thiMax = 88
+test_logic <- paste0("x > ", thiMax)
+test_length <- 10
+k <- "ssp585"
+l = "2041"
+
+f_runs <- function(x) {
+  runResult <- c(NA, NA) 
+  if (is.nan(x[1])) {
+    return(runResult)
+  }
+  seqLengthCode <- paste0("1{", test_length, ",}") #A regular expression  to get the first item of gregexpr. It says look for  test_length times See http://xenon.stanford.edu/~xusch/regexp/
+  g <- gregexpr(seqLengthCode, paste(+eval(parse(text = test_logic)), collapse = ""))[[1]] # The + converts TRUE and FALSE to 1 and 0
+  if (!(g[1] == -1)) { # no need to write to growing season if g returns -1, return 0,0
+    startDays <- unlist(g)
+    runLengths <- sum(as.numeric(attributes(g)$match.length))
+    runResult <- c(length(startDays), runLengths)
+  } else {
+    runResult <- c(0, 0) 
+  }
+  return(runResult)
+}
+test_logic <- "x > 35"
+test_length <- 10
+
+for (k in sspChoices) {
+  for (l in startyearChoices) {
+    yearSpan <- paste0(l, "_", l + yearRange)
+    fileName_in <- paste0("data/cmip6/THI/ensemble_thi.cattle_", k, "_", yearSpan, ".tif")
+    r <- rast(fileName_in)
+    print(system.time(r_runs <- app(r, f_runs)))
+    fileName_out <- paste0("data/cmip6/THI/run_", test_length, "_lim_gt", thiMax, "_ensemble_thi.cattle_", k, "_", yearSpan, ".tif")
+    print(system.time(writeRaster(r_runs, filename = fileName_out,  overwrite = TRUE, format = "GTiff", wopt= woptList))); flush.console()
+    plot(r_runs$lyr.1, main = paste0("Cattle THI gt ", thiMax, ", \nminimum length is ", test_length, " days, ", k, ", ", yearSpan))
+    plot(r_runs$lyr.2, main = paste0("Cattle THI gt ", thiMax, ", \nlongest days in a single run ", test_length, " days, ", k, ", ", yearSpan))
+  }
+}
+
+
 # # get animal raster masks
 # animalsOnly <- speciesChoice[!speciesChoice %in% "humans"]
 # for (m in animalsOnly) {

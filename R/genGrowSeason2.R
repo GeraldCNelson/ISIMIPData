@@ -1,77 +1,77 @@
-source("R/globallyUsed.R")
-terraOptions(memfrac = 4, progress = 0, tempdir =  "data/ISIMIP", verbose = TRUE)
-locOfFiles <- "data/bigFiles/"
-
-sspChoices <- c("ssp126", "ssp585") 
-#sspChoices <- c("ssp585") 
-modelChoices <- c( "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM6A-LR") #, "MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
-#modelChoices <- c("MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") #, "MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
-startyearChoices <-  c(2041, 2081) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
-startyearChoices <-  c(2081) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
-startyearChoices_historical <- c(1991)
-scenarioChoicesEnsemble <- c("historical", sspChoices)
-northernHemExtent <- c( -180, 180, 0, 90)
-southernHemExtent <-c( -180, 180, -90, 0)
-hemisphere <- c("NH", "SH")
-options(warn=0) # convert warnings to errors
-
-yearRange <- 19
-yearRangeSH <- 18 # one less year because of 6 month offset
-
-minimumGrwSeasonLength = 90
-seqLengthCode <- paste0("1{", minimumGrwSeasonLength, ",}")
-woptList <- list(gdal=c("COMPRESS=LZW"))
-woptList <- list(gdal=c("COMPRESS=DEFLATE", "PREDICTOR=3", "ZLEVEL = 6"))
-
-#test values
-i <- "IPSL-CM6A-LR"
-k <- "ssp585"
-l <- 2041
-yearNumber <- 2043
-
-readRast_gs <- function(yearNumber) {
-  fileName_in <- paste0("data/cmip6/growingSeasons/growingSeason", m, "_", i, "_", k,  "_", yearNumber, ".tif") # note yearNumber here
-  r <- rast(fileName_in)
-}
-
-readRast_GrowSeasonEnsemble <- function(i) {
-  fileName_in <- paste0("data/cmip6/growingSeasons/growingSeason_", n, m, "_", i, "_", k,  "_", yearSpan, ".tif") # note yearSpan here
-  print(fileName_in)
-  r <- rast(fileName_in)
-}
-
-fun <- function(cellVector) {
-  startend <- c(NA, NA) 
-  if (is.nan(cellVector[1])) {
-    return(startend)
+{source("R/globallyUsed.R")
+  terraOptions(memfrac = 4, progress = 0, tempdir =  "data/ISIMIP", verbose = TRUE)
+  woptList <- list(gdal=c("COMPRESS=DEFLATE", "PREDICTOR=3", "ZLEVEL = 6"))
+  locOfFiles <- "data/bigFiles/"
+  
+  sspChoices <- c("ssp126", "ssp585") 
+  #sspChoices <- c("ssp585") 
+  modelChoices <- c( "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM6A-LR") 
+  #modelChoices <- c("MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") #, "MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") #
+  startyearChoices <-  c(2041, 2081) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
+  #startyearChoices <-  c(2081) #2011, 2041, 2051, 2081) 
+  startyearChoices_historical <- c(1991)
+  #scenarioChoicesEnsemble <- c("historical", sspChoices)
+  northernHemExtent <- c( -180, 180, 0, 90)
+  southernHemExtent <-c( -180, 180, -60, 0)
+  hemisphere <- c("NH", "SH")
+  options(warn=0) # convert warnings to errors
+  
+  yearRange <- 19
+  yearRangeSH <- 18 # one less year because of 6 month offset
+  
+  # constants
+  tminExtremeVal <- -30
+  minimumGrwSeasonLength = 90
+  seqLengthCode <- paste0("1{", minimumGrwSeasonLength, ",}")
+  
+  #test values
+  i <- "IPSL-CM6A-LR"
+  k <- "ssp585"
+  l <- 2041
+  yearNumber <- 2043
+  
+  f_readRast_gs <- function(yearNumber) {
+    fileName_in <- paste0("data/cmip6/growingSeasons/growingSeason", m, "_", i, "_", k,  "_", yearNumber, ".tif") # note yearNumber here
+    r <- rast(fileName_in)
   }
-  g <- gregexpr(seqLengthCode, paste(+(cellVector > 0), collapse = ""))[[1]]
-  if (!g[[1]] == -1) { # no need to write to growing season if g returns 1
-    startend[1] <- g[[1]] # the starting day of the sequence
-    matchLength <- as.numeric(attributes(g)$match.length) # the number of days in the sequence of days that match at least the minimum length required
-    startend[2] <- startend[1] + as.numeric(matchLength) - 1
+  
+  f_readRast_GrowSeasonEnsemble <- function(i) {
+    fileName_in <- paste0("data/cmip6/growingSeasons/growingSeason_", n, m, "_", i, "_", k,  "_", yearSpan, ".tif") # note yearSpan here
+    print(fileName_in)
+    r <- rast(fileName_in)
   }
-  return(startend) 
-}
-
-tminExtremeVal <- -30
-extremeColdFun <- function() {
-  fileName_tasmin <- paste0(locOfFiles, "ensemble_dyMean20yr_", k, "_tasmin_global_daily_", yearSpan, ".tif")
-  tmin <- rast(fileName_tasmin)
-  print(system.time(extremeColdCt <- sum(tmin < tminExtremeVal, na.rm = TRUE)))
-  fileNameStart <- paste0("extremeColdMinus", gsub("-", "", tminExtremeVal))
-  fileName_out <- paste0("data/cmip6/growingSeasons/", fileNameStart, "_", k, "_", yearSpan, ".tif")
-  print(paste0("fileName_out: ", fileName_out))
-  print("extremeColdCt")
-  print(extremeColdCt)
-  print(system.time(writeRaster(extremeColdCt, fileName_out, overwrite = TRUE, woptList = woptList)))
+  
+  f_growSeason <- function(cellVector) {
+    startend <- c(NA, NA) 
+    if (is.nan(cellVector[1])) {
+      return(startend)
+    }
+    g <- gregexpr(seqLengthCode, paste(+(cellVector > 0), collapse = ""))[[1]]
+    if (!g[[1]] == -1) { # no need to write to growing season if g returns 1
+      startend[1] <- g[[1]] # the starting day of the sequence
+      matchLength <- as.numeric(attributes(g)$match.length) # the number of days in the sequence of days that match at least the minimum length required
+      startend[2] <- startend[1] + as.numeric(matchLength) - 1
+    }
+    return(startend) 
+  }
+  
+  f_extremeCold <- function() {
+    fileName_tasmin <- paste0(locOfFiles, "ensembleMn_dailyMn_20Yr_", k, "_tasmin_", yearSpan, ".tif")
+    tmin <- rast(fileName_tasmin)
+    print(system.time(extremeColdCt <- sum(tmin < tminExtremeVal, na.rm = TRUE)))
+    fileNameStart <- paste0("extremeColdMinus", gsub("-", "", tminExtremeVal))
+    fileName_out <- paste0("data/cmip6/growingSeasons/", fileNameStart, "_", k, "_", yearSpan, ".tif")
+    print(paste0("fileName_out: ", fileName_out))
+    print(extremeColdCt)
+    print(system.time(writeRaster(extremeColdCt, fileName_out, overwrite = TRUE, wopt = woptList)))
+  }
 }
 
 for (k in sspChoices) {
   for (i in modelChoices) {
     for (l in startyearChoices) {
       yearSpan <- paste0(l, "_", l + yearRange)
-      extremeColdFun()
+      f_extremeCold()
     }
   }
 }
@@ -80,7 +80,7 @@ for (k in sspChoices) {
 k = "historical"
 l = 1991
 yearSpan <- paste0(l, "_", l + yearRange)
-extremeColdFun()
+f_extremeCold()
 
 # 20 year growing seasons  ------
 for (k in sspChoices) {
@@ -96,7 +96,7 @@ for (k in sspChoices) {
           yearSpan <- paste0(l, "_", l + yearRangeSH)
         }
         gc()
-        x <- lapply(yearnumberRange, readRast_gs)
+        x <- lapply(yearnumberRange, f_readRast_gs)
         x_start <- x
         r <- rast(x)
         index_r_start <-seq(1, nlyr(r), 2)
@@ -129,7 +129,7 @@ for (m in hemisphere) {
         yearSpan <- paste0(l, "_", l + yearRangeSH)
       }
       gc()
-      x <- lapply(yearnumberRange, readRast_gs)
+      x <- lapply(yearnumberRange, f_readRast_gs)
       r <- rast(x)
       index_r_start <-seq(1, nlyr(r), 2)
       index_r_end <-seq(2, nlyr(r), 2)
@@ -164,7 +164,7 @@ for (k in scenarioChoicesEnsemble) {
         if (k %in% "historical" & m %in% "SH") yearSpan <- "1991_2009"
         
         gc()
-        x <- lapply(modelChoices, readRast_GrowSeasonEnsemble)
+        x <- lapply(modelChoices, f_readRast_GrowSeasonEnsemble)
         r <- rast(x)
         fileName_out <- paste0("data/cmip6/growingSeasons/ensemble_growingSeason_", n, m, "_", k, "_", yearSpan, ".tif")
         system.time(r_mean <- app(r, fun = "mean", filename = fileName_out, overwrite = TRUE, woptList = woptList))
@@ -241,22 +241,6 @@ library(readxl)
 library(sf)
 library(dplyr)
 
-coastline <- st_read("data-raw/regionInformation/ne_50m_coastline/ne_50m_coastline.shp")
-ext_noAntarctica <- ext(-180, 180, -60, 90)
-
-#function to get rid of Antarctica
-crop_custom <- function(poly.sf) {
-  poly.sp <- as(poly.sf, "Spatial")
-  extR <- raster::extent(c(-180, 180, -60, 90))
-  poly.sp.crop <- crop(poly.sp, extR)
-  st_as_sf(poly.sp.crop)
-}
-
-coastline <- crop_custom(coastline)
-#st_crop(coastline, c(xmin=-180, xmax= 180, ymin = -60, ymax = 90))
-RobinsonProj <-  "+proj=robin +lon_0=0 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs"
-crsRob <- RobinsonProj
-coastline <- st_transform(coastline, crsRob)
 
 test_df <- as.data.frame(growingSeasonSH, xy = TRUE)
 
@@ -287,7 +271,7 @@ dev.off()
 
 # graph extreme cold days with 0-1 -----
 
-graphExtremDaysFun <- function() {
+f_graphExtremDays <- function() {
   fileNameStart <- paste0("extremeColdMinus", gsub("-", "", tminExtremeVal))
   fileName_in <- paste0("data/cmip6/growingSeasons/", fileNameStart, "_", k, "_", yearSpan, ".tif")
   
@@ -302,7 +286,7 @@ graphExtremDaysFun <- function() {
   #        colorList <- (RColorBrewer::brewer.pal(2, "YlOrRd"))
   colorList <- c("white", "green")
   #    custom_bins = c(0, 1)
-  g <- ggplot(data = coastline) +
+  g <- ggplot(data = coastline_cropped) +
     labs(title = titleText, fill = legendTitle) + theme(plot.title = element_text(size = 12, hjust = 0.5)) +
     labs(x = "", y = "") +
     geom_raster(data = r_df, aes(x, y, fill = value), show.legend = TRUE) +
@@ -325,15 +309,15 @@ for (k in sspChoices) {
   for (l in startyearChoices) {
     # l <- 2041
     yearSpan <- paste0(l, "_", l + yearRange)
-    graphExtremDaysFun()
+    f_graphExtremDays()
   }
 }
 
 
 k = "historical"
-  l <- 1991
-  yearSpan <- paste0(l, "_", l + yearRange)
-  graphExtremDaysFun()
+l <- 1991
+yearSpan <- paste0(l, "_", l + yearRange)
+f_graphExtremDays()
 
 
 
@@ -352,7 +336,7 @@ k = "historical"
 # new approach from Robert
 threshold <- 60
 n <- 100
-ff <- function(x) {
+f_ff <- function(x) {
   y <- x > threshold
   y[is.na(y)] <- FALSE
   a <- ave(y, cumsum(!y), FUN=cumsum)

@@ -787,7 +787,7 @@ f_runs <- function(x) {
   }
   seqLengthCode <- paste0("1{", test_length, ",}") #A regular expression  to get the first item of gregexpr. It says look for  test_length times See http://xenon.stanford.edu/~xusch/regexp/
   g <- gregexpr(seqLengthCode, paste(+eval(parse(text = test_logic)), collapse = ""))[[1]] # The + converts TRUE and FALSE to 1 and 0
-  if (!(g[1] == -1)) { # no need to write to growing season if g returns -1, return 0,0
+  if (!(g[1] == -1)) { # no need to return if g returns -1, return 0,0 instead
     startDays <- unlist(g)
     runLengths <- sum(as.numeric(attributes(g)$match.length))
     runResult <- c(length(startDays), runLengths)

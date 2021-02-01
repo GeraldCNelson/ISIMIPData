@@ -34,7 +34,7 @@ get_os <- function() {
   tolower(os)
 }
 if (get_os() %in% "osx") {
-  terraOptions(memfrac = 1,  progress = 10, tempdir =  "data/ISIMIP", verbose = TRUE) # need to use a relative path
+  terraOptions(memfrac = 2,  progress = 10, tempdir =  "data/ISIMIP", verbose = TRUE) # need to use a relative path
 }else{
   terraOptions(memfrac = .6,  progress = 10, tempdir =  "data/ISIMIP", verbose = TRUE) # need to use a relative path
 }
@@ -159,7 +159,7 @@ tmpDirName <- paste0(locOfCMIP6tifFiles, "rasterTmp", Sys.getpid(), "/")
 # }
 
 # source of crop temperature values
-ann_crop_temp_table <- as.data.table(read_excel("data-raw/crops/ann_crop_temp_table_summary_22082020.xlsx", range = "A1:S26"))
+ann_crop_temp_table <- as.data.table(read_excel("data-raw/crops/ann_crop_temp_table_summary_22082020.xlsx", range = "A1:T26"))
 data.table::setnames(ann_crop_temp_table, old = names(ann_crop_temp_table), new = make.names(names(ann_crop_temp_table)))
 
 perennial_crop_temp_table <- as.data.table(read_excel("data-raw/crops/perennnial_crop_temp_table_summary_29_52020.xlsx", range = "A1:S10"))
@@ -238,23 +238,8 @@ hurs.historical <- paste0(locOfCMIP6tifFiles,   "historical/ensemble/ensemble_hi
 tasmax.historical <- paste0(locOfCMIP6tifFiles, "historical/ensemble/ensemble_historical_tasmax_2001_2010.tif")
 tasmin.historical <- paste0(locOfCMIP6tifFiles, "historical/ensemble/ensemble_historical_tasmin_2001_2010.tif")
 pr.historical <- paste0(locOfCMIP6tifFiles, "historical/ensemble/ensemble_historical_pr_2001_2010.tif")
-tave.historical <- paste0(locOfCMIP6tifFiles, "historical/ensemble/ensemble_historical_tave_2001_2010.tif")
-historicallist <- c("hurs", "tasmax", "tasmin", "pr", "tave")
-
-# observed data names and locations
-
-# hurs.observed <- paste0(locOfCMIP6tifFiles,   "observed/gswp3-w5e5_obsclim_hurs_global_daily_2001_2010.tif")
-# tasmax.observed <- paste0(locOfCMIP6tifFiles, "observed/gswp3-w5e5_obsclim_tasmax_global_daily_2001_2010.tif")
-# tasmin.observed <- paste0(locOfCMIP6tifFiles, "observed/gswp3-w5e5_obsclim_tasmin_global_daily_2001_2010.tif")
-# pr.observed <- paste0(locOfCMIP6tifFiles, "observed/gswp3-w5e5_obsclim_pr_global_daily_2001_2010.tif")
-# tave.observed <- paste0(locOfCMIP6tifFiles, "observed/gswp3-w5e5_obsclim_tave_global_daily_2001_2010.tif")
-# observedlist <- c("hurs", "tasmax", "tasmin", "pr", "tave")
-# 
-# # note that these don't have the path to the file
-# rh.observed.cmip5 <- c("hurs_ewembi1_daily_1991_2000.tif", "hurs_ewembi1_daily_2001_2010.tif")
-# tmax.observed.cmip5 <- c("tasmax_ewembi1_daily_1991_2000.tif", "tasmax_ewembi1_daily_2001_2010.tif") 
-# tmin.observed.cmip5 <- c("tasmin_ewembi1_daily_1991_2000.tif", "tasmin_ewembi1_daily_2001_2010.tif")
-# observedlist.cmip5 <- c("rh.observed.cmip5", "tmax.observed.cmip5", "tmin.observed.cmip5")
+tas.historical <- paste0(locOfCMIP6tifFiles, "historical/ensemble/ensemble_historical_tas_2001_2010.tif")
+historicallist <- c("hurs", "tasmax", "tasmin", "pr", "tas")
 
 ##' To check if files (incl. directories) are symbolic links:
 is.symlink <- function(paths) isTRUE(nzchar(Sys.readlink(paths), keepNA = TRUE))
@@ -296,23 +281,23 @@ getcropAreaYield <- function(cropName, dataType) { #dataType is area or yield
 # }
 
 # faster version
-f.gdd <- function(cropMask, tave, tbase, tbase_max) {
+f.gdd <- function(cropMask, tas, tbase, tbase_max) {
   # testFun <- function(tmax, tmin){return((tmax+tmin)/2)}
-  # system.time(tave <-  lapp(tmin, fun=testFun))
-  # system.time(tave <- (tmax + tmin) / 2 - tbase)
-  # tave[tave < 0] <- 0
+  # system.time(tas <-  lapp(tmin, fun=testFun))
+  # system.time(tas <- (tmax + tmin) / 2 - tbase)
+  # tas[tas < 0] <- 0
   # #  tbase_max <- tbase_max - tbase
-  # tave[tave > tbase_max] <- tbase_max
-  print(system.time(gdd <- tave - tbase))
+  # tas[tas > tbase_max] <- tbase_max
+  print(system.time(gdd <- tas - tbase))
   print(system.time(gdd[is.na(cropMask), ] <- NA))
   gdd
 }
 
 # faster version with mask loading included
-f.gdd_model <- function(cropMask, tave, tbase, tbase_max, m) {
+f.gdd_model <- function(cropMask, tas, tbase, tbase_max, m) {
   fileNameMask.in <- paste0("data/crops/rasterMask_", tolower(m), ".tif")
   cropMask <- rast(fileNameMask.in)
-  gdd <- tave - tbase
+  gdd <- tas - tbase
   gdd[gdd < 0] <- 0
   #  tbase_max <- tbase_max - tbase
   gdd[gdd > tbase_max] <- tbase_max
@@ -350,53 +335,6 @@ f.gdd.clamped_masked <- function(cropMask, tmin, tmax, tbase, tbase_max) {
   r[cropMask == 0, ] <- NA
   r
 }
-
-
-# growing degree days functions
-
-#f.gdd.old is the original function
-
-# f.gdd.old <- function(tmin, tmax, tbase, tbase_max, crop) {
-#   fileNameMask.in <- paste0("data/crops/rasterMask_", tolower(crop), ".tif")
-#   mask <- rast(fileNameMask.in)
-#   paste0(fileName_out, ".tif")
-#   tmin_cropArea <- overlay(tmin, mask, fun = overlayfunction_mask)
-#   #  print(paste0("tmin_cropArea created, ", temp, ", creation time: ", endTime -startTime,  ", pid: ", Sys.getpid()))
-#   tmax_cropArea <- overlay(tmax, mask, fun = overlayfunction_mask)
-#   if (tbase_max > 0) {
-#     tmax_clamped <- clamp(tmax_cropArea, lower = tbase, upper = tbase_max, Values = TRUE)
-#   } else {
-#     tmax_clamped <- clamp(tmax_cropArea, lower = tbase, upper = Inf, Values = TRUE)
-#   }
-#   
-#   if (tbase_max > 0) {
-#     tmin_clamped <- clamp(tmin_cropArea, lower = tbase, upper = tbase_max, Values = TRUE)
-#   } else {
-#     tmin_clamped <- clamp(tmin_cropArea, lower = tbase, upper = Inf, Values = TRUE)
-#   }
-#   gddFunction2 <- function(z) {
-#     function(x, y) (x + y) / 2 - z
-#   }
-#   gdd <- overlay(x = tmax_clamped, y = tmin_clamped, fun = gddFunction2(z = Tbase))
-# }
-
-
-# load tmax and rh data from nc
-tmaxRhIn <- function(tmaxFile, rhFile) {
-  tmax <<- rast(tmaxFile)
-  rh <<- rast(rhFile)
-}
-
-tmaxTminIn <- function(tmaxIn, tminIn) {
-  # tmax <<- readAll(rasttmaxIn))
-  # tmin <<- readAll(rasttminIn))
-  tmax <<- rast(tmaxIn)
-  tmin <<- rast(tminIn)
-}
-
-# overlayfunction_mask <- function(x,y) {
-#   return(x * y)
-# }
 
 loadSpatialData <- function(dataVar) {
   print(dataVar)
