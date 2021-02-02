@@ -31,9 +31,11 @@ m <- "Wheat"
 
 f_gdd = function(cellVector, tbase, tbase_max){
   if (is.nan(cellVector[1])) {return(cellVector)}
-  y <- clamp(cellVector, lower = tbase, upper = tbase_max)
+#  y <- clamp(cellVector, lower = tbase, upper = tbase_max)
+  y <- max(0, min(cellVector, tbase_max)-tbase) # from Toshi email May 3, 2020
   return(y)
 }
+
 
 for (k in sspChoices)  {
   for (i in modelChoices)  {
