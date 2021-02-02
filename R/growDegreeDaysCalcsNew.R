@@ -23,12 +23,12 @@ if (get_os() %in% "osx") {
   
 }else{
   terraOptions(progress = 10, tempdir =  "data/ISIMIP", verbose = TRUE) # need to use a relative path
-  gddsfileOutLoc <- "data/tas/"
+  locOfFiles <- "/Volumes/ExtremeSSD3/bigFiles/"
+  gddsfileOutLoc <- "data/cmip6/growingDegreeDays/"
 }
 woptList <- list(gdal=c("COMPRESS=LZW"))
 woptList <- list(gdal=c("COMPRESS=DEFLATE", "PREDICTOR=3", "ZLEVEL = 6"))
 
-locOfFiles <- "/Volumes/ExtremeSSD3/bigFiles/"
 sspChoices <- c("ssp126", "ssp585") 
 #sspChoices <- c("ssp585") 
 modelChoices <- c( "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM6A-LR") 
