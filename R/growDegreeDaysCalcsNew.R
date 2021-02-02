@@ -32,10 +32,11 @@ m <- "Wheat"
 f_gdd = function(cellVector, tbase, tbase_max){
   if (is.nan(cellVector[1])) {return(cellVector)}
 #  y <- clamp(cellVector, lower = tbase, upper = tbase_max)
-  y <- max(0, min(cellVector, tbase_max)-tbase) # from Toshi email May 3, 2020
+  y <- sapply(cellVector, FUN = f_ycalc) # from Toshi email May 3, 2020
   return(y)
 }
 
+f_ycalc <- function(cellVector){max(0, min(cellVector, tbase_max)-tbase)}
 
 for (k in sspChoices)  {
   for (i in modelChoices)  {
@@ -63,8 +64,7 @@ for (k in sspChoices)  {
           tbase <- ann_crop_temp_table[crop == m, Tbase]
           tbase_max <- ann_crop_temp_table[crop == m, Tbase_max]
           print(Sys.time())
-          
-          print(system.time(gdd <- app(tas, fun=f_gdd, tbase, tbase_max, filename = fileName_out, wopt = woptList)))
+         print(system.time(gdd <- app(tas, fun=f_gdd, tbase, tbase_max, filename = fileName_out, overwrite=TRUE, wopt = woptList)))
           print(Sys.time())
           print(paste0("gdd file out name: ", fileName_out))
           #         writeRaster(round(gdd, 1), filename = paste0(gddsfileOutLoc, fileName_out, ".tif"), format = "GTiff", overwrite = TRUE, wopt = woptList)
