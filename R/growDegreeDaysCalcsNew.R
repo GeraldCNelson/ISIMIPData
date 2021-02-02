@@ -60,7 +60,7 @@ f_gdd = function(cellVector, tbase, tbase_max){
 
 f_ycalc <- function(cellVector){max(0, min(cellVector, tbase_max)-tbase)}
 
-gddFilesCompleted <- list.files(gddsfileOutLoc, full.names = TRUE)
+gddFilesCompleted <- list.files(paste0(getwd(), gddsfileOutLoc),  full.names = TRUE)
 gddFilesCompleted <- gddFilesCompleted[!grepl("aux.xml", gddFilesCompleted, fixed = TRUE)]
 
 for (k in sspChoices)  {
