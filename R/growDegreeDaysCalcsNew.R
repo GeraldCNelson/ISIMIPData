@@ -20,11 +20,12 @@ get_os <- function() {
 }
 if (get_os() %in% "osx") {
   terraOptions(memfrac = 2,  progress = 10, tempdir =  "data/ISIMIP", verbose = TRUE) # need to use a relative path
+  locOfFiles <- "/Volumes/ExtremeSSD3/bigFiles/"
   gddsfileOutLoc <- "data/cmip6/growingDegreeDays/"
   
 }else{
   terraOptions(progress = 10, tempdir =  "data/ISIMIP", verbose = TRUE) # need to use a relative path
-  locOfFiles <- "/Volumes/ExtremeSSD3/bigFiles/"
+  locOfFiles <- "data/tas/"
   gddsfileOutLoc <- "data/cmip6/growingDegreeDays/"
 }
 woptList <- list(gdal=c("COMPRESS=LZW"))
@@ -42,9 +43,6 @@ cropChoice_cereals <- ann_crop_temp_table[ICC.crop.classification %in% "Cereal",
 
 yearRange <- 19
 
-library(readxl)
-
-#cropChoices <- c("cropChoice_cereals")
 cropChoices <- cropChoice_cereals
 #test values
 i <- "UKESM1-0-LL"
