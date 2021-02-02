@@ -2,6 +2,7 @@
 #source("R/globallyUsed.R")
 library(terra)
 library(data.table)
+library(readxl)
 get_os <- function() {
   sysinf <- Sys.info()
   if (!is.null(sysinf)) {
