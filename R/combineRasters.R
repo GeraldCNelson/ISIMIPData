@@ -13,10 +13,10 @@ climateVars <- c( "tasmin", "tasmax", "tas", "pr", "hurs", "rsds", "sfcwind", "p
 
 climateVarstoKeep <- c("ps") # "tasmax", "tasmin"
 
-startyearChoices_old <-  c(2021, 2051, 2091) #2021, 2051, 2091) # c(2091) # c(2006) #, 2041, 2051, 2081)
-startyearChoices_new <-  c(2041, 2081) #1991, 2021, 2051, 2091) # c(2091) # c(2006) #, 2041, 2051, 2081)
-startyearChoices_new <-  c(2081) #1991, 2021, 2051, 2091) # c(2091) # c(2006) #, 2041, 2051, 2081)
-startyearChoices_new_historical <-  c(1991) #1991, 2021, 2051, 2091) # c(2091) # c(2006) #, 2041, 2051, 2081)
+startYearChoices_old <-  c(2021, 2051, 2091) #2021, 2051, 2091) # c(2091) # c(2006) #, 2041, 2051, 2081)
+startYearChoices_new <-  c(2041, 2081) #1991, 2021, 2051, 2091) # c(2091) # c(2006) #, 2041, 2051, 2081)
+startYearChoices_new <-  c(2081) #1991, 2021, 2051, 2091) # c(2091) # c(2006) #, 2041, 2051, 2081)
+startYearChoices_new_historical <-  c(1991) #1991, 2021, 2051, 2091) # c(2091) # c(2006) #, 2041, 2051, 2081)
 
 sspChoices <- c("ssp585", "ssp126") #ssp585") #"ssp126",
 #sspChoices <- "ssp585"
@@ -37,8 +37,8 @@ for (k in sspChoices) {
   for (i in modelChoices) {
     fileList <- list.files(paste0(locOfFiles, k, "/", i), full.names = TRUE, recursive = TRUE)
     fileList <- fileList[!grepl("tif.aux.xml", fileList, fixed = TRUE)]
-    startYearChoices <- startyearChoices_new
-    if (k %in% "historical") startYearChoices <- startyearChoices_new_historical
+    startYearChoices <- startYearChoices_new
+    if (k %in% "historical") startYearChoices <- startYearChoices_new_historical
     for (l in startYearChoices) {
       temp <- fileList
       print(paste0("model: ", i, ", ssp choice: ", k, ", start year: ", l))
@@ -110,8 +110,8 @@ for (k in sspChoices) {
   for (i in modelChoices) {
     fileList <- list.files(paste0(locOfFiles, k, "/", i), full.names = TRUE, recursive = TRUE)
     fileList <- fileList[!grepl("tif.aux.xml", fileList, fixed = TRUE)]
-    startYearChoices <- startyearChoices_new
-    if (k %in% "historical") startYearChoices <- startyearChoices_new_historical
+    startYearChoices <- startYearChoices_new
+    if (k %in% "historical") startYearChoices <- startYearChoices_new_historical
     for (l in startYearChoices) {
       temp <- fileList
       print(paste0("model: ", i, ", ssp choice: ", k, ", start year: ", l))
@@ -179,7 +179,7 @@ for (k in sspChoices) {
   }
 }
 
-#startyearChoices_old <-  c(2021, 2051, 2091) #2021, 2051, 2091) # c(2091) # c(2006) #, 2041, 2051, 2081)
+#startYearChoices_old <-  c(2021, 2051, 2091) #2021, 2051, 2091) # c(2091) # c(2006) #, 2041, 2051, 2081)
 k <- "historical"
 l <- 1991
 
@@ -261,7 +261,7 @@ for (i in modelChoices) {
 fileList <- list.files(paste0(locOfFiles), full.names = TRUE, recursive = TRUE)
 fileList <- fileList[!grepl("tif.aux.xml", fileList, fixed = TRUE)]
 
-for (l in startyearChoices_new) {
+for (l in startYearChoices_new) {
   temp <- fileList
   print(paste0("start year: ", l))
   l1 <- l
@@ -282,7 +282,7 @@ for (l in startyearChoices_new) {
   
   yearListComplete <- seq(from = 1951, to = 2100, by = 10)
   
-  yearsToKeep <- c(startyearChoices_new, startyearChoices_new + 10)
+  yearsToKeep <- c(startYearChoices_new, startYearChoices_new + 10)
   yearsToRemove <-  yearListComplete[!yearListComplete %in% yearsToKeep]
   
   for (cntr in yearsToRemove) {
@@ -302,7 +302,7 @@ for (l in startyearChoices_new) {
     unlink(fileName_out) # use this when you want fileName_out to be redone
     if (!fileName_out %in% filesToKeepClimVar){
       print(paste0("fileName_out that needs to be done : ", fileName_out))
-      print(paste0("model: ", i, ", ssp choice: ", k, ", start year: ", l, ", variable: ", j, ", startyearChoices_new: ", startyearChoices_new[1] ))
+      print(paste0("model: ", i, ", ssp choice: ", k, ", start year: ", l, ", variable: ", j, ", startYearChoices_new: ", startYearChoices_new[1] ))
       
       fileNameR1 <- filesToKeepClimVar[1]
       fileNameR2 <- filesToKeepClimVar[2]

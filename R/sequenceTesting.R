@@ -3,7 +3,7 @@ library(terra)
 # starting point is approaches in https://stackoverflow.com/questions/64091829/r-how-to-find-a-series-of-common-values-in-a-vector-identifying-growing-season
 sspChoices <- c("ssp126", "ssp585") 
 #sspChoices <- c("ssp585") 
-startyearChoices <-  c(2041, 2081) 
+startYearChoices <-  c(2041, 2081) 
 terraOptions(memfrac = 2, progress = 0, tempdir =  "data/ISIMIP", verbose = FALSE)
 locOfFiles <- "data/bigFiles/"
 
@@ -11,9 +11,9 @@ sspChoices <- c("ssp126", "ssp585")
 #sspChoices <- c("ssp585") 
 modelChoices <- c( "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM6A-LR") #, "MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
 #modelChoices <- c("MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") 
-startyearChoices <-  c(2041, 2081) 
-#startyearChoices <-  c(2081) 
-startyearChoices_historical <- c(1991)
+startYearChoices <-  c(2041, 2081) 
+#startYearChoices <-  c(2081) 
+startYearChoices_historical <- c(1991)
 woptList <- list(gdal=c("COMPRESS=DEFLATE", "PREDICTOR=3", "ZLEVEL = 6"))
 options(warn=0) # convert warnings to errors
 
@@ -41,18 +41,22 @@ runsfun <- function(x) {
 }
 
 # test cattle thi for runs
-test_logic <- "x > 88"
+thiMax = 88
+test_logic <- paste0("x > ", thiMax)
 test_length <- 10
+k <- "ssp585"
+l = "2041"
 
 for (k in sspChoices) {
-  for (l in startyearChoices) {
+  for (l in startYearChoices) {
     yearSpan <- paste0(l, "_", l + yearRange)
     fileName_in <- paste0("data/cmip6/THI/ensemble_thi.cattle_", k, "_", yearSpan, ".tif")
     r <- rast(fileName_in)
     print(system.time(r_runs <- app(r, runsfun)))
-    fileName_out <- paste0("data/cmip6/THI/run_10_lim_gt88_ensemble_thi.cattle_", k, "_", yearSpan, ".tif")
+    fileName_out <- paste0("data/cmip6/THI/run_", test_length, "_lim_gt", thiMax, "_ensemble_thi.cattle_", k, "_", yearSpan, ".tif")
     print(system.time(writeRaster(r_runs, filename = fileName_out,  overwrite = TRUE, format = "GTiff", wopt= woptList))); flush.console()
-    
+    plot(r_runs$lyr.1, main = paste0("Cattle THI gt ", thiMax, ", \nminimum length is ", test_length, " days, ", k, ", ", yearSpan))
+    plot(r_runs$lyr.2, main = paste0("Cattle THI gt ", thiMax, ", \nlongest days in a single run ", test_length, " days, ", k, ", ", yearSpan))
   }
 }
     
@@ -65,7 +69,7 @@ test_logic <- "x > 35"
 test_length <- 10
 
 for (k in sspChoices) {
-  for (l in startyearChoices) {
+  for (l in startYearChoices) {
     yearSpan <- paste0(l, "_", l + yearRange)
     fileName_in <- paste0("data/bigFiles/ensemble_dyMean20yr_", k, "_tasmax_global_daily_", yearSpan, ".tif")
     r <- rast(fileName_in)

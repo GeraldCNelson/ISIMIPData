@@ -7,7 +7,7 @@ library(doParallel) #Foreach Parallel Adaptor
 sspChoices <- c("ssp126", "ssp585") #"ssp126", 
 modelChoices <- c( "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM6A-LR") #, "MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
 
-startyearChoices <-  c(2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
+startYearChoices <-  c(2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
 
 yearRange <- 9
 hifileOutLoc <- "data/cmip6/heatIndex/"
@@ -23,11 +23,11 @@ m <- "Wheat"
 useCores <- detectCores() - 2 # max number of cores
 useCores <- 2 # better for memory intensive activities
 
-varList <- c("startyearChoices", "sspChoices", "modelChoices", "locOfFiles", "ann_crop_temp_table")
+varList <- c("startYearChoices", "sspChoices", "modelChoices", "locOfFiles", "ann_crop_temp_table")
 libList <- c("terra", "ncdf4")
 
 cl <- clusterSetup(varList, libList, useCores) # function created in globallyUsed.R
-foreach(l = startyearChoices) %:%
+foreach(l = startYearChoices) %:%
   foreach(i = modelChoices) %:%
   foreach(k = sspChoices)  %:%
   foreach(m = cropChoices) %dopar% {
@@ -100,8 +100,8 @@ foreach(l = startyearChoices) %:%
     #        
     #        cropCalendarName <- ann_crop_temp_table[crop %in% cropName, crop.calendar]
     #        cropCalFilesLoc <- paste0("data-raw/crops/cropCalendars/ALL_CROPS_netCDF_0.5deg_filled/")
-    #        fileInName <- paste0(cropCalendarName, ".crop.calendar.fill.nc")
-    #        locNFileIn <- paste0(cropCalFilesLoc, fileInName)
+    #        fileName_in <- paste0(cropCalendarName, ".crop.calendar.fill.nc")
+    #        locNFileIn <- paste0(cropCalFilesLoc, fileName_in)
     #        R.utils::gunzip(paste0(locNFileIn, ".gz"), remove = FALSE, overwrite = TRUE)
     #        
     #        temp <- rast(locNFileIn)

@@ -5,18 +5,18 @@ library(magrittr)
 library(flextable)
 
 sspChoices <- c("ssp126", "ssp585") #"ssp126", 
-startyearChoices <-  c(2001, 2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
-startyearChoices_ensemble <-  c(2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
-climateVars <- c("tave", "tasmax", "tasmin", "pr", "hurs") 
+startYearChoices <-  c(2001, 2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
+startYearChoices_ensemble <-  c(2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
+climateVars <- c("tas", "tasmax", "tasmin", "pr", "hurs") 
 
-#climateVars <- "tave"
+#climateVars <- "tas"
 varNamesInfo <- as.data.table(read_excel("data-raw/varNamesLookup.xlsx"))
 
 yearRange <- 9
 #test values
 k <- "ssp585"
 l <- 2091
-j <- "tave"
+j <- "tas"
 
 #regionInfoLookup <- as.data.table(read_excel("data-raw/regionInformation/regionInfoLookup.xlsx", range = "A1:k7"))
 regionInfoLookup <- as.data.table(read_excel("data-raw/regionInformation/wg2ch5Locations.xlsx", range = "a1:k16")) # Ch5 author locations
@@ -36,7 +36,7 @@ for (i in 1:nrow(regionInfoLookup)) {
     ph_with(value = titleString, location = ph_location_type(type = "ctrTitle")) %>% 
     ph_with(value = contentString, location = ph_location_type(type = "subTitle"))
   
-  IntroText0 <- "Daily minimum, average and maximum temperature (tmin or tasmin, tave and tmax or tasmax), relative humidity (rh or hurs), and precipitation (pr) are the key climate variables for agricultural activities.  "
+  IntroText0 <- "Daily minimum, average and maximum temperature (tmin or tasmin, tas and tmax or tasmax), relative humidity (rh or hurs), and precipitation (pr) are the key climate variables for agricultural activities.  "
   IntroText1 <- "The climate data set used in these graphics was prepared initially by the ISIMIP project (www.isimip.org) using CMIP6 data. " 
   IntroText2 <- "This analysis uses the ISIMIP3b output data sets (https://www.isimip.org/news/isimip3ab-protocol-released/). "
   IntroText3 <- "It includes modeling results from 5 earth system models (GFDL-ESM4, UKESM1-0-LL, MPI-ESM1-2-HR, MRI-ESM2-0, and IPSL-CM6A-LR) and the GHG emission scenarios (SSP126 and SSP585). "
@@ -96,7 +96,7 @@ for (i in 1:nrow(regionInfoLookup)) {
     if (varName %in% "pr")  ensembleText <- paste0("The climate variable called ", j, " is ", varNameLong, ". These graphics report the total amount of rain in a month.", ensembleTextPost)
     if (varName %in% "tasmax")  ensembleText <- paste0("The climate variable called ", j, " is ", varNameLong, ". It is the average of the highest temperature in each day of the month.", ensembleTextPost)
     if (varName %in% "tasmin")  ensembleText <- paste0("The climate variable called ", j, " is ", varNameLong, ". It is the average of the lowest temperature in each day of the month.", ensembleTextPost)
-    if (varName %in% "tave")  ensembleText <- paste0("The climate variable called ", j, " is ", varNameLong, ". It is the average of the highest and lowest temperature in each day of the month.", ensembleTextPost)
+    if (varName %in% "tas")  ensembleText <- paste0("The climate variable called ", j, " is ", varNameLong, ". It is the average of the highest and lowest temperature in each day of the month.", ensembleTextPost)
     #print(ensembleText)
     
     my_pres <- add_slide(x = my_pres, layout = 'Section Header', master = 'Office Theme')
@@ -122,15 +122,15 @@ for (i in 1:nrow(regionInfoLookup)) {
     # add_slide(my_pres, layout = 'Title Only', master = 'Office Theme') %>% 
     #   ph_with(value = extImgObs, location = ph_location(left = 0, top = 0, width = 5, height = 8) )
     # 
-    for (l in startyearChoices) {
+    for (l in startYearChoices) {
       yearSpan <- paste0(l, "_", l + yearRange)
-      if (l %in% startyearChoices[1]) { 
+      if (l %in% startYearChoices[1]) { 
         fileNameMean <- paste0("graphics/cmip6/regionInfo/", j, "MonthlyAve_",  yearSpan, "_", region, ".png")
         extImgMean <- external_img(src = fileNameMean, width = 5, height = 5)
         add_slide(my_pres, layout = 'Title Only', master = 'Office Theme') %>% 
           ph_with(value = extImgMean, location = ph_location(left = 1.5, top = .5, width = 7, height = 7) )
       }
-      if (!l %in% startyearChoices[1]) {
+      if (!l %in% startYearChoices[1]) {
         for (k in sspChoices) {
           
           #      fileNameCV <- paste0("graphics/cmip6/monthlyMean/ensemblemonthlyCV_",   varName, "_",  yearSpan, "_", k, ".jpg")

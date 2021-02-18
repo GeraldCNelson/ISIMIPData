@@ -20,8 +20,8 @@ i <- 1
 sspChoices <- c("ssp126", "ssp585") #"ssp126", 
 modelChoices <- c( "GFDL-ESM4", "UKESM1-0-LL", "MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
 #modelChoices <- c("IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
-startyearChoices <-  c(2001, 2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
-startyearChoices_ensemble <-  c(2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
+startYearChoices <-  c(2001, 2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
+startYearChoices_ensemble <-  c(2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
 yearRange <- 9
 pal <- colorRampPalette(c("green","red"))
 fileLoc_monthlyMean <- "data/cmip6/monthlyMean/"
@@ -86,7 +86,7 @@ for (i in 3) { #:nrow(regionInfoLookup)) {
       meanData <- c()
       meanData <- rast(paste0("data/cmip6/THI/THI_masked_", speciesName, "_observed_2001_2010.tif"))
       max(global(meanData, fun = "max", na.rm = TRUE))
-      for (q in startyearChoices_ensemble) {
+      for (q in startYearChoices_ensemble) {
         for (r in sspChoices) {
           yearSpan <- paste0(q, "_", q + yearRange)
           temp <- rast(paste0("data/cmip6/THI/THI_ensembleMean_masked_", speciesName,  "_",  yearSpan, "_", k, ".tif"))
@@ -97,9 +97,9 @@ for (i in 3) { #:nrow(regionInfoLookup)) {
       }
       
       # keeping the climVar terminology below for now
-      for (l in startyearChoices) { 
+      for (l in startYearChoices) { 
         yearSpan <- paste0(l, "_", l + yearRange)
-        if (l == startyearChoices[1]) {
+        if (l == startYearChoices[1]) {
           r_climVar <- paste0("data/cmip6/THI/THI_masked_", speciesName, "_observed_2001_2010.tif")
         } else {
           r_climVar <- paste0("data/cmip6/THI/THI_ensembleMean_masked_", speciesName, "_", yearSpan,"_", k, ".tif")
@@ -121,7 +121,7 @@ for (i in 3) { #:nrow(regionInfoLookup)) {
         
         climVarMax <- zeroLevel
         climVarMin <- extremeStress
-        # if (l %in% startyearChoices[1]) {
+        # if (l %in% startYearChoices[1]) {
         #   dataHolder <- as.data.table(r_climVar_region)
         #   setnames(dataHolder, old = c("x", "y", new = c("longitude", "latitude")))
         # } else {
@@ -177,7 +177,7 @@ for (i in 3) { #:nrow(regionInfoLookup)) {
           facet_wrap(vars(month))
         facet_wrap(vars(month))
         outFilename <- paste0("graphics/cmip6/regionInfo/THI/", j,"MonthlyAve_", k, "_", yearSpan, "_", regionInfoLookup[i, region], ".png")
-        if (l %in% startyearChoices[1]) {
+        if (l %in% startYearChoices[1]) {
           yearSpan <- paste0(l, "_", l + yearRange)
           outFilename <- paste0("graphics/cmip6/regionInfo/THI/", j,"MonthlyAve_", yearSpan, "_", regionInfoLookup[i, region], ".png")
         }
@@ -190,7 +190,7 @@ for (i in 3) { #:nrow(regionInfoLookup)) {
         #        ggsave(outFilename, plot = g, device = "png", width = 6, height = 6)
         # ggsave("map_web.png", width = 6, height = 6, dpi = "screen")
         outFilename_csv <- paste0("data/regionResults/THI/monthlyFacet_", j, "_", regionInfoLookup[i, region], "_", k, "_", yearSpan, ".csv")
-        if (l %in% startyearChoices[1]) {
+        if (l %in% startYearChoices[1]) {
           yearSpan <- paste0(l, "_", l + yearRange)
           outFilename_csv <- paste0("data/regionResults/THI/monthlyFacet_", j, "_", regionInfoLookup[i, region], "_", yearSpan, ".csv")
         }

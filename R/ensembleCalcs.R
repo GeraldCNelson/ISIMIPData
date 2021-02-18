@@ -6,7 +6,7 @@ library(raster)
 # library(doParallel) #Foreach Parallel Adaptor 
 # library(foreach) #Provides foreach looping construct
 
-startyearChoices <-  c(2021, 2051, 2091) #2021, 2051, 2091) # c(2091) # c(2006) #, 2041, 2051, 2081)
+startYearChoices <-  c(2021, 2051, 2091) #2021, 2051, 2091) # c(2091) # c(2006) #, 2041, 2051, 2081)
 
 yearRange <- 9
 sspChoices <- c("ssp585") #"ssp126", 
@@ -17,7 +17,7 @@ k <- "ssp585"
 l <- 2021
 
 for (k in sspChoices) {
-  for (l in startyearChoices) {
+  for (l in startYearChoices) {
     yearSpan <- paste0(l, "_", l + yearRange)
     print(paste0("ssp choice: ", k, "start year: ", l))
     
@@ -57,7 +57,7 @@ overlayfunction <- function(x,y) {
   return(x * y)
 }
 for (k in sspChoices) {
-  for (l in startyearChoices) {
+  for (l in startYearChoices) {
     yearSpan <- paste0(l, "_", l + yearRange)
     print(paste0("ssp choice: ", k, "start year: ", l))
     for (m in 1:nrow(ann_crop_temp_table)) {
@@ -130,7 +130,7 @@ library(raster)
 # library(doParallel) #Foreach Parallel Adaptor 
 # library(foreach) #Provides foreach looping construct
 
-startyearChoices <-  c(2041, 2061) #2021, 2051, 2091) # c(2091) # c(2006) #, 2041, 2051, 2081)
+startYearChoices <-  c(2041, 2061) #2021, 2051, 2091) # c(2091) # c(2006) #, 2041, 2051, 2081)
 
 yearRange <- 19
 sspChoices <- c("ssp126", "ssp585") #"ssp126", 
@@ -141,7 +141,7 @@ k <- "ssp585"
 l <- 2041
 
 for (k in sspChoices) {
-  for (l in startyearChoices) {
+  for (l in startYearChoices) {
     yearSpan <- paste0(l, "_", l + yearRange)
     print(paste0("ssp choice: ", k, "start year: ", l))
     
@@ -181,7 +181,7 @@ overlayfunction <- function(x,y) {
   return(x * y)
 }
 for (k in sspChoices) {
-  for (l in startyearChoices) {
+  for (l in startYearChoices) {
     yearSpan <- paste0(l, "_", l + yearRange)
     print(paste0("ssp choice: ", k, "start year: ", l))
     for (m in 1:nrow(ann_crop_temp_table)) {

@@ -4,7 +4,7 @@ library(RColorBrewer)
 library(colorspace)# use pal <- choose_palette() to see what this is about
 sspChoices <- c("ssp126", "ssp585") #"ssp126", 
 #modelChoices <- c( "GFDL-ESM4", "UKESM1-0-LL", "MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
-startyearChoices <-  c(2001, 2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
+startYearChoices <-  c(2001, 2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
 yearRange <- 9
 
 climateVars <- c("tave", "tasmax", "tasmin", "pr", "hurs") 
@@ -19,7 +19,7 @@ jpgHeight = 8
 jpgWidth = 8
 
 # ensemble graphics
-startyearChoices_ensemble <-  c(2021, 2051, 2091) # no multimodel results for observed data
+startYearChoices_ensemble <-  c(2021, 2051, 2091) # no multimodel results for observed data
 # get max values for the legends
 # l = 2091
 # yearSpan <- paste0(l, "_", l + yearRange)
@@ -30,7 +30,7 @@ for (k in sspChoices) {
   meanData <- c()
 #  meanData <- rast(paste0("data/cmip6/monthlyMean/monthlyMean_", j, "_observed_2001_2010.tif"))
   meanData <- rast(paste0("data/cmip6/monthlyMean/ensembleMonthlyMean_", j, "_historical_2001_2010.tif"))
-  for (q in startyearChoices_ensemble) {
+  for (q in startYearChoices_ensemble) {
     yearSpan <- paste0(q, "_", q + yearRange)
     meanData <- c(meanData, rast(paste0("data/cmip6/monthlyMean/ensemblemonthlyMean_", j,  "_",  yearSpan, "_", k, ".tif")))
     print(meanData)
@@ -67,7 +67,7 @@ for (k in sspChoices) {
 }
 
 for (k in sspChoices) {
-  for (l in startyearChoices_ensemble) {
+  for (l in startYearChoices_ensemble) {
     yearSpan <- paste0(l, "_", l + yearRange)
     print(paste0("ssp choice: ", k, ", start year: ", l))
     for (j in climateVars) {
@@ -157,7 +157,7 @@ for (k in sspChoices) {
 #   varNameLongUnits <- as.character(varNamesInfo[variableShortName %in% varName, units])
 #   fileNameMean <- paste0("data/cmip6/monthlyMean/monthlyMean_", j, "_observed_", yearSpan, ".tif") 
 #   
-#   print(paste0("filenamein: ", fileNameMean))
+#   print(paste0("fileName_in: ", fileNameMean))
 #   meanData <- rast(fileNameMean)
 #   meanData <- terra::project(meanData, crsRob)
 #   names(meanData) <- month.abb
@@ -208,7 +208,7 @@ for (j in climateVars) {
   varNameLongUnits <- as.character(varNamesInfo[variableShortName %in% varName, units])
   fileNameMean <- paste0("data/cmip6/monthlyMean/monthlyMean_", j, "_observed_", yearSpan, ".tif") 
   
-  print(paste0("filenamein: ", fileNameMean))
+  print(paste0("fileName_in: ", fileNameMean))
   meanData <- rast(fileNameMean)
   meanData <- terra::project(meanData, crsRob)
   names(meanData) <- month.abb

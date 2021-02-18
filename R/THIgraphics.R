@@ -5,7 +5,7 @@ library(colorspace)# use pal <- choose_palette() to see what this is about
 sspChoices <- c("ssp126", "ssp585") #"ssp126", 
 modelChoices <- c( "GFDL-ESM4", "UKESM1-0-LL", "MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
 #modelChoices <- c("IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
-startyearChoices <-  c(2001, 2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
+startYearChoices <-  c(2001, 2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
 yearRange <- 9
 
 #test values
@@ -58,9 +58,9 @@ for (j in 1:length(thiListReduced)) {
 
 # ensemble graphics
 # apply masks, can only do this to animals we have in THIlist and that have area mask raster
-startyearChoices_ensemble <-  c(2021, 2051, 2091) # no multimodel results for observed data
+startYearChoices_ensemble <-  c(2021, 2051, 2091) # no multimodel results for observed data
 for (k in sspChoices) {
-  for (l in startyearChoices_ensemble) {
+  for (l in startYearChoices_ensemble) {
     yearSpan <- paste0(l, "_", l + yearRange)
     print(paste0("ssp choice: ", k, ", start year: ", l))
     for (j in 1:length(thiListReduced)) {

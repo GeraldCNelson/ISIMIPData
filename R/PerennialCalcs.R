@@ -8,9 +8,9 @@
   #sspChoices <- c("ssp585") 
   modelChoices <- c( "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM6A-LR") 
   #modelChoices <- c("MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") 
-  startyearChoices <-  c(2041, 2081) 
-  #startyearChoices <-  c(2081) 
-  startyearChoices_historical <- c(1991)
+  startYearChoices <-  c(2041, 2081) 
+  #startYearChoices <-  c(2081) 
+  startYearChoices_historical <- c(1991)
   scenarioChoicesEnsemble <- c("historical", sspChoices)
   extent_NH <- c( -180, 180, 0, 90)
   extent_SH <-c( -180, 180, -60, 0) #-60 gets rid of Antarctica
@@ -327,7 +327,7 @@
 
 # use the functions -----
 for (k in sspChoices) {
-  for (l in startyearChoices) {
+  for (l in startYearChoices) {
     yearSpan <- paste0(l, "_", l + yearRange)
     for (fruitSpecies in speciesChoice) {
       print(system.time(combined <- f_coldFrostHeatDamage(k, l, fruitSpecies))) # combined has three temperature-related spatrasters - hard freeze, frost, and heat. Each combined output file has all locations that are good, ok, and bad for frost and heat damage
@@ -347,7 +347,7 @@ for (fruitSpecies in speciesChoice) {
 # code to read in chill portions, cold, freeze and heat stress 1/0 files and produce 1/0 tifs where the crop is potentially growable. The chill portions files are created in the chillPortions.R script
 
 for (k in sspChoices) {
-  for (l in startyearChoices) {
+  for (l in startYearChoices) {
     yearSpan <- paste0(l, "_", l + yearRange)
     for (fruitSpecies in speciesChoice) {
       print(paste0("fruitSpecies: ", fruitSpecies, ", ssp choice: ", k, ", start year: ", l))
@@ -386,7 +386,7 @@ library(dplyr)
 
 # # threats graphics -----
 # for (k in sspChoices) {
-#   for (l in startyearChoices) {
+#   for (l in startYearChoices) {
 #     yearSpan <- paste0(l, "_", l + yearRange)
 #     f_perennialClimateThreatsGraphics()
 #   }
@@ -407,7 +407,7 @@ m = "NH"
 
 #suitable locations, scenario graphics -----
 for (k in sspChoices) {
-  for (l in startyearChoices) {
+  for (l in startYearChoices) {
     yearSpan <- paste0(l, "_", l + yearRange)
     for (fruitSpecies in speciesChoice) {
       print(paste0(" favorable locs, fruitSpecies: ", fruitSpecies, ", ssp choice: ", k, ", start year: ", l))
@@ -669,7 +669,7 @@ for (i in c("good", "ok", "bad")) {
     my_pres <- f_suitableLocsPpt(k, l, yearSpan, i)
     
     for (k in sspChoices) {
-      for (l in startyearChoices) {
+      for (l in startYearChoices) {
         yearSpan <- paste0(l, "_", l + yearRange)
         my_pres <- f_suitableLocsPpt(k, l, yearSpan, i)
       }
@@ -764,7 +764,7 @@ for (fruitSpecies in speciesChoice) {
       my_pres <- f_favorableLocsPpt(fruitSpecies)
       
       for (k in sspChoices) {
-        for (l in startyearChoices) {
+        for (l in startYearChoices) {
           yearSpan <- paste0(l, "_", l + yearRange)
           my_pres <- f_favorableLocsPpt(fruitSpecies)
         }
@@ -801,7 +801,7 @@ test_logic <- "x > 35"
 test_length <- 10
 
 for (k in sspChoices) {
-  for (l in startyearChoices) {
+  for (l in startYearChoices) {
     yearSpan <- paste0(l, "_", l + yearRange)
     fileName_in <- paste0("data/bigFiles/ensemble_dyMean20yr_", k, "_tasmax_global_daily_", yearSpan, ".tif")
     r <- rast(fileName_in)

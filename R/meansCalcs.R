@@ -7,12 +7,13 @@ woptList <- list(gdal=c("COMPRESS=LZW"))
 woptList <- list(gdal=c("COMPRESS=DEFLATE", "PREDICTOR=3", "ZLEVEL = 6"))
 
 sspChoices <- c("ssp126", "ssp585") #"ssp126", "ssp585"
-modelChoices <- c(  "MPI-ESM1-2-HR", "UKESM1-0-LL",  "IPSL-CM6A-LR", "MRI-ESM2-0", "GFDL-ESM4") #, "MRI-ESM2-0", "GFDL-ESM4", "MRI-ESM2-0","MPI-ESM1-2-HR", "MRI-ESM2-0") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM6A-LR"
-modelChoices <- c( "MRI-ESM2-0")
+modelChoices <- c(  "MPI-ESM1-2-HR", "UKESM1-0-LL",  "IPSL-CM6A-LR", "MRI-ESM2-0", "GFDL-ESM4")
+#modelChoices <- c( "MRI-ESM2-0")
 climateVars <- c( "tasmax", "tasmin", "pr", "hurs",  "rsds", "sfcwind") 
 #climateVars <- c(  "rsds", "sfcwind") #, "hurs") # "tasmin", tasmax
 
-startyearChoices <-  c(2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
+#startYearChoices <-  c(2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
+startYearChoices <- c(2041, 2081)
 locOfFiles <- locOfCMIP6tifFiles
 yearRange <- 9
 
@@ -25,14 +26,14 @@ j <- "hurs"
 # useCores <- detectCores() - 1 # max number of cores
 # useCores <- 3 # better for memory intensive activities
 
-# varList <- c("startyearChoices", "sspChoices", "modelChoices", "wrld_land",  "locOfFiles")
+# varList <- c("startYearChoices", "sspChoices", "modelChoices", "wrld_land",  "locOfFiles")
 # libList <- c("terra", "ncdf4", "stringr")
 # 
 # cl <- clusterSetup(varList, libList, useCores) # function created in globallyUsed.R
 
 # foreach(k = sspChoices) %:%
 #   foreach(i = modelChoices) %:%
-#   foreach(l = startyearChoices) %:%
+#   foreach(l = startYearChoices) %:%
 #   foreach(j = climateVars) %dopar% {
 
 f_means <- function() {
@@ -81,7 +82,7 @@ f_means <- function() {
 
 for (k in sspChoices) {
   for (i in modelChoices) {
-    for (l in startyearChoices) {
+    for (l in startYearChoices) {
       for (j in climateVars) {
         gc()
         f_means()
@@ -92,7 +93,7 @@ for (k in sspChoices) {
 
 k <- "historical"
   for (i in modelChoices) {
-    for (l in startyearChoices) {
+    for (l in startYearChoices) {
       for (j in climateVars) {
         gc()
         f_means()
@@ -104,17 +105,17 @@ k <- "historical"
 #stopCluster(cl)
 
 # do calculations on historical data; note ensemble calculations for historical done in ensembleCalcsHistoricalData.R. Here we just need to calculate the monthly means (sums for precip)s
-climateVars <- c( "tasmax", "tasmin",  "pr", "rsds", "sfcwind", "hurs") #"hurs", "tave", 
+climateVars <- c( "tasmax", "tasmin",  "pr", "rsds", "sfcwind", "hurs") #"hurs", "tas", 
 climateVars <- c( "hurs") #"hurs",
-startyearChoices <-  c(1991, 2001) 
-startyearChoices <-  c(2001) 
+startYearChoices <-  c(1991, 2001) 
+startYearChoices <-  c(2001) 
 locOfFiles <- "/Volumes/ExtremeSSD2/climate_land_only/unitsCorrected/historical/ensemble/"
 
 #test values
 l = 2001
 j = "hurs"
 
-for (l in startyearChoices) {
+for (l in startYearChoices) {
   
   yearSpan <- paste0(l, "_", l + yearRange)
   
@@ -168,7 +169,7 @@ modelChoices <- c(  "MPI-ESM1-2-HR", "UKESM1-0-LL",  "IPSL-CM6A-LR", "MRI-ESM2-0
 #modelChoices <- c(  "MPI-ESM1-2-HR")
 climateVars <- c( "tasmax", "tasmin")#, "pr", "hurs",  "rsds", "sfcwind") 
 
-startyearChoices <-  c(2081) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
+startYearChoices <-  c(2081) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
 locOfFiles <- locOfCMIP6tifFiles
 yearRange <- 19
 
@@ -180,7 +181,7 @@ j <- "tasmax"
 
 for (k in sspChoices) {
   for (i in modelChoices) {
-    for (l in startyearChoices) {
+    for (l in startYearChoices) {
       for (j in climateVars) {
         gc()
         modelName.lower <- tolower(i)
@@ -237,16 +238,16 @@ for (k in sspChoices) {
 
 # do 20 year historical means
 # do calculations on historical data; note ensemble calculations for historical done in ensembleCalcsHistoricalData.R. Here we just need to calculate the monthly means (sums for precip)s
-climateVars <- c( "tasmax", "tasmin",  "pr", "rsds", "sfcwind", "hurs") #"hurs", "tave", 
+climateVars <- c( "tasmax", "tasmin",  "pr", "rsds", "sfcwind", "hurs") #"hurs", "tas", 
 #climateVars <- c( "hurs") #"hurs",
-startyearChoices <-  c(1991) 
+startYearChoices <-  c(1991) 
 locOfFiles <- "/Volumes/ExtremeSSD2/climate_land_only/unitsCorrected/historical/ensemble/"
 yearRange = 19
 #test values
 l = 1991
 j = "hurs"
 
-for (l in startyearChoices) {
+for (l in startYearChoices) {
   
   yearSpan <- paste0(l, "_", l + yearRange)
   
@@ -295,13 +296,13 @@ for (l in startyearChoices) {
 }
 
 # # do same calculations on observed data
-# observedlist <- c("hurs", "tasmax", "tasmin", "pr", "tave", "rsds", "sfcwind")
+# observedlist <- c("hurs", "tasmax", "tasmin", "pr", "tas", "rsds", "sfcwind")
 # observedlist <- c( "pr")
 # print(system.time(tasmax <- rast(tasmax.observed)))
 # print(system.time(tasmin <- rast(tasmin.observed)))
 # print(system.time(pr <- rast(pr.observed)))
 # print(system.time(hurs <- rast(hurs.observed)))
-# print(system.time(tave <- rast(tave.observed)))
+# print(system.time(tas <- rast(tas.observed)))
 # l = 2001
 # yearSpan <- paste0(l, "_", l + yearRange)
 # 

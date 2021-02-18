@@ -5,8 +5,8 @@ library(magrittr)
 library(flextable)
 
 sspChoices <- c("ssp126", "ssp585")
-startyearChoices <-  c(2001, 2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
-startyearChoices_ensemble <-  c(2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
+startYearChoices <-  c(2001, 2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
+startYearChoices_ensemble <-  c(2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
 climateVars <- c("tas", "tasmax", "tasmin", "pr", "hurs") 
 
 #climateVars <- "tas"
@@ -119,7 +119,7 @@ for (i in 1:(nrow(regionInfoLookup))) {
       # add_slide(my_pres, layout = 'Title Only', master = 'Office Theme') %>% 
       #   ph_with(value = extImgObs, location = ph_location(left = 0, top = 0, width = 5, height = 8) )
       # 
-      for (l in startyearChoices) {
+      for (l in startYearChoices) {
         yearSpan <- paste0(l, "_", l + yearRange)
         #      fileNameCV <- paste0("graphics/cmip6/annualMean/ensembleAnnualCV_",   varName, "_",  yearSpan, "_", k, ".jpg")
         fileNameMean <- paste0("graphics/cmip6/regionInfo/", j, "_", k, "_",  yearSpan, "_", region, ".png")

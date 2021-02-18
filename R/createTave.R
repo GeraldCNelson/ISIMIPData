@@ -3,7 +3,7 @@ source("R/globallyUsed.R")
 sspChoices <- c("ssp585", "ssp126")
 modelChoices <- c( "GFDL-ESM4", "UKESM1-0-LL", "MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
 #modelChoices <- c("IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
-startyearChoices <-  c(2041, 2081) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
+startYearChoices <-  c(2041, 2081) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
 yearRange <- 19
 library(terra)
 terraOptions(memfrac = .9, progress = 10, tempdir =  "data/ISIMIP", verbose = TRUE) # need to use a relative path, memfrac = .9,  
@@ -17,7 +17,7 @@ l <- 2041
 
 for (k in sspChoices)  {
   for (i in modelChoices)  {
-    for (l in startyearChoices) {
+    for (l in startYearChoices) {
       yearSpan <- paste0(l, "_", l + yearRange)
       modelName.lower <- tolower(i)
       
@@ -37,9 +37,9 @@ for (k in sspChoices)  {
 }
 
 # do observed version
-startyearChoices <- 2001
+startYearChoices <- 2001
 modelChoices <- "observed"
-for (l in startyearChoices) {
+for (l in startYearChoices) {
   for (i in modelChoices)  {
     yearSpan <- paste0(l, "_", l + yearRange)
     modelName.lower <- tolower(i)

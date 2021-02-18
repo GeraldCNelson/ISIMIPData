@@ -29,8 +29,8 @@ sspChoices <- c("ssp126", "ssp585")
 #sspChoices <- c("ssp126") 
 modelChoices <- c( "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM6A-LR") #, "MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
 #modelChoices <- c("UKESM1-0-LL") #, "GFDL-ESM4") #, "MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
-startyearChoices <-  c(2041, 2081) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
-#startyearChoices <-  c(2041) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
+startYearChoices <-  c(2041, 2081) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
+#startYearChoices <-  c(2041) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
 scenarioChoicesEnsemble <- c("historical", sspChoices)
 climateVars <- c("tasmin", "tasmax", "tas", "pr", "hurs", "rsds", "sfcwind", "ps") 
 climateVars <- c("tasmin") # "tasmax", "tasmin"
@@ -150,7 +150,7 @@ meansFun <- function() {
 }
 
 for (k in sspChoices) {
-  for (l in startyearChoices) {
+  for (l in startYearChoices) {
     yearSpan <- paste0(l, "_", l + yearRange)
     meansFun()
   }
@@ -166,7 +166,7 @@ meansFun()
 
 for (k in sspChoices) {
   #    k = "ssp126"
-  for (l in startyearChoices) {
+  for (l in startYearChoices) {
     # set up names with Jan-1. Need to set up the endDate_year with a leap year such as 2040
     yearSpan <- paste0(l, "_", l + yearRange)
     

@@ -10,8 +10,8 @@ woptList <- list(gdal=c("COMPRESS=DEFLATE", "PREDICTOR=3", "ZLEVEL = 6"))
 # library(doParallel) #Foreach Parallel Adaptor 
 # library(foreach) #Provides foreach looping construct
 yearRange <- 9
-startyearChoices <-  c(1991, 2001)#, 1991, 2001) #1981, 1991, 2001) 
-startyearChoices <-  c(2001)#, 1991, 2001) #1981, 1991, 2001) 
+startYearChoices <-  c(1991, 2001)#, 1991, 2001) #1981, 1991, 2001) 
+startYearChoices <-  c(2001)#, 1991, 2001) #1981, 1991, 2001) 
 locOfFiles <- "/Volumes/ExtremeSSD2/climate_land_only/unitsCorrected/historical/"
 climateVars <- c("tasmax", "tasmin",  "tas", "pr", "hurs", "rsds", "sfcwind") # "tasmax", "tasmin" 
 climateVars <- "hurs"
@@ -35,7 +35,7 @@ readRast <- function(m) {
 
 for (j in climateVars) {
   print(paste0("climate var: ", j))
-  for (l in startyearChoices) {
+  for (l in startYearChoices) {
     gc()
     yearSpan <- paste0(l, "_", l + yearRange)
     startDate <- paste0(l, "-01-01"); endDate <- paste0(l + yearRange, "-12-31")
@@ -59,7 +59,7 @@ for (j in climateVars) {
 # do 20 years
 
 yearRange <- 19
-startyearChoices <-  c(1991)#, 1991, 2001) #1981, 1991, 2001) 
+startYearChoices <-  c(1991)#, 1991, 2001) #1981, 1991, 2001) 
 locOfFiles <- "/Volumes/ExtremeSSD2/climate_land_only/unitsCorrected/historical/"
 climateVars <- c("tasmax", "tasmin",  "tas", "pr", "hurs", "rsds", "sfcwind") # "tasmax", "tasmin" 
 modelChoices <- c( "MPI-ESM1-2-HR", "MRI-ESM2-0", "GFDL-ESM4", "UKESM1-0-LL", "IPSL-CM6A-LR")
@@ -82,7 +82,7 @@ readRast <- function(m) {
 
 for (j in climateVars) {
   print(paste0("climate var: ", j))
-  for (l in startyearChoices) {
+  for (l in startYearChoices) {
     gc()
     yearSpan <- paste0(l, "_", l + yearRange)
     startDate <- paste0(l, "-01-01"); endDate <- paste0(l + yearRange, "-12-31")

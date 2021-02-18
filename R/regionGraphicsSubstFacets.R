@@ -15,8 +15,8 @@ locOfCMIP6ncFiles <- "data-raw/ISIMIP/cmip6/unitsCorrected/"
 sspChoices <- c("ssp585") #"ssp126", 
 modelChoices <- c( "GFDL-ESM4", "UKESM1-0-LL", "MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
 #modelChoices <- c("IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
-startyearChoices <-  c(2001, 2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
-startyearChoices_ensemble <-  c(2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
+startYearChoices <-  c(2001, 2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
+startYearChoices_ensemble <-  c(2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
 yearRange <- 9
 pal <- colorRampPalette(c("green","red"))
 extentRange <- 2 # a value of 2 means 2 of the units of the raster; if it is 1/2 degree cells, this would be 1 degree
@@ -66,7 +66,7 @@ for (j in climateVars) {
       # code to get min and max values across all periods
       meanData <- c()
       meanData <- rast(paste0("data/cmip6/monthlyMean/monthlyMean_", j, "_observed_2001_2010.tif"))
-      for (l in startyearChoices_ensemble) {
+      for (l in startYearChoices_ensemble) {
         yearSpan <- paste0(l, "_", l + yearRange)
         meanData <- c(meanData, rast(paste0("data/cmip6/monthlyMean/ensemblemonthlyMean_", j,  "_",  yearSpan, "_", k, ".tif")))
       }
@@ -81,7 +81,7 @@ for (j in climateVars) {
       
       # from https://stackoverflow.com/questions/37376398/how-to-create-an-empty-datatable-with-columns-names-and-then-append-datatables-t
       #      dataHolder <- data.table(1)[,`:=`(c(j, "yearSpan", "x", "y", month.abb),NA)][,V1:=NULL][.0]
-      for (l in startyearChoices) { 
+      for (l in startYearChoices) { 
         yearSpan <- paste0(l, "_", l + yearRange)
         if (l == 2001) {
           r_climVar <- paste0("data/cmip6/monthlyMean/monthlyMean_", j, "_observed_2001_2010.tif")
@@ -107,7 +107,7 @@ for (j in climateVars) {
         r_climVar_region_long <- tidyr::gather(r_climVar_region, valueCol, keyCol, gatherCols, factor_key=TRUE)
         
         
-        # if (l %in% startyearChoices[1]) {
+        # if (l %in% startYearChoices[1]) {
         #   dataHolder <- as.data.table(r_climVar_region)
         #   setnames(dataHolder, old = c("x", "y", new = c("longitude", "latitude")))
         # } else {

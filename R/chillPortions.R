@@ -9,7 +9,7 @@
   sspChoices <- c("ssp126", "ssp585") 
   modelChoices <- c( "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM6A-LR") #, "MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
   modelChoices_lower <- tolower(modelChoices)
-  startyearChoices <-  c(2041, 2081) 
+  startYearChoices <-  c(2041, 2081) 
   hemisphere <- c("NH", "SH")
   extent_NH <- c( -180, 180, 0, 90)
   extent_SH <-c( -180, 180, -60, 0) #-60 gets rid of Antarctica
@@ -46,7 +46,7 @@
     fileName_in <- paste0("data/cmip6/chillPortions/chill_portions/", k,"/", i, "/", k, "_", i, "_", midYear, "_chill_portions_", hem, ".tif")
     print(paste0("fileName in: ", fileName_in))
     r <- rast(fileName_in)
-    system.time(chillPortion <- app(r, fun = quantile, probs=0.1, na.rm = TRUE))
+    system.time(chillPortion <- app(r, fun = quantile, probs=0.1, na.rm = TRUE)) # means not adequate chill portions probs percent of the time
     print(chillPortion)
     chillPortion <- crop(chillPortion, get(paste0("extent_", m)))
   }
@@ -81,7 +81,7 @@
 # chill portions -----
 for (k in sspChoices) {
   #  k = "ssp585"
-  for (l in startyearChoices) {
+  for (l in startYearChoices) {
     # l <- 2041
     midYear <- l + 9
     yearSpan <- paste0(l, "_", l + yearRange)
@@ -139,7 +139,7 @@ chillPortionsGraphFun <- function() {
 
 for (k in sspChoices) {
   #  k = "ssp585"
-  for (l in startyearChoices) {
+  for (l in startYearChoices) {
     # l <- 2041
     midYear <- l + 9
     yearSpan <- paste0(l, "_", l + yearRange)
@@ -181,10 +181,6 @@ CPs <- read_excel(fileName_fruitCPs)
 titleString <- paste0("Adequate Chill Portions by Fruit, Time Period, and Scenario")
 contentString <- paste0("Powerpoint produced on ", Sys.Date())
 
-dataText1 <- "The climate data set used in these graphics was prepared initially by the ISIMIP project (www.isimip.org) using CMIP6 data. " 
-dataText2 <- "This analysis uses the ISIMIP3b output data sets (https://www.isimip.org/news/isimip3ab-protocol-released/). "
-dataText3 <- "It includes data from 5 earth system models (GFDL-ESM4, UKESM1-0-LL, MPI-ESM1-2-HR, MRI-ESM2-0, and IPSL-CM6A-LR) and three scenarios (ssp126, ssp370 and ssp585). In this powerpoint, only results using ssp 126 and ssp585 are presented. " 
-dataText4 <- "The data from a 20 year period for the individual models are averaged for each month and a coefficient of variation across the 5 models is calculated. "
 introText1 <- "These slides display locations where chill portions are adequate 90% of the time of various perennial fruits. "
 introText2 <- "The table below shows the crops we’re considering and the chill portion requirements used in the following graphs. "
 
@@ -194,16 +190,6 @@ dataText <- c(dataText1, dataText2, dataText3, dataText4) #, dataText5)
 fp_1 <- fp_text(bold = TRUE, color = "pink", font.size = 0)
 fp_2 <- fp_text(bold = FALSE, font.size = 12)
 fp_3 <- fp_text(italic = TRUE, color = "black", font.size = 14)
-
-blData <- block_list(
-  #  fpar(ftext("hello world", fp_1)),
-  fpar(
-    ftext(dataText1, fp_2),
-    ftext(dataText2, fp_2),
-    ftext(dataText3, fp_2),
-    ftext(dataText4, fp_2) #,
-    #    ftext(dataText5, fp_2)
-  ))
 
 blIntro <- block_list(
   fpar(
@@ -236,7 +222,7 @@ for (fruit in speciesChoice) {
   chillportionsPptFun(fruit)
   
   for (k in sspChoices) {
-    for (l in startyearChoices) {
+    for (l in startYearChoices) {
       yearSpan <- paste0(l, "_", l + yearRange)
       chillportionsPptFun(fruit)
     }
@@ -245,7 +231,7 @@ for (fruit in speciesChoice) {
 
 my_pres <- add_slide(my_pres, layout = "Title and Content", master = "Office Theme")
 my_pres <-  ph_with(x = my_pres, value = "Data Source", location = ph_location_type(type = "title"))
-my_pres <- ph_with(x = my_pres, value = blData, location = ph_location_type(type = "body") )
+my_pres <- f_addDataSlide()
 
 print(my_pres, target = "presentations/cmip6/perennials/adequateChillPortions.pptx") %>% browseURL()
 

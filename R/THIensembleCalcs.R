@@ -4,8 +4,8 @@ source("R/globallyUsed.R")
 # library(doParallel) #Foreach Parallel Adaptor 
 # library(foreach) #Provides foreach looping construct
 
-startyearChoices <-  c(2021, 2051, 2091) #2021, 2051, 2091) # c(2091) # c(2006) #, 2041, 2051, 2081)
-startyearChoices_ensemble <-  c(2021, 2051, 2091) # no multimodel results for observed data
+startYearChoices <-  c(2021, 2051, 2091) #2021, 2051, 2091) # c(2091) # c(2006) #, 2041, 2051, 2081)
+startYearChoices_ensemble <-  c(2021, 2051, 2091) # no multimodel results for observed data
 
 yearRange <- 9
 sspChoices <- c("ssp126", "ssp585") #"ssp126", 
@@ -19,9 +19,9 @@ j = 1 # cattle
 thiList <- c("thi.cattle", "thi.sheep", "thi.goat", "thi.yak", "thi.broiler", "thi.layer", "thi.chicken", "thi.swine")
 
 # for (k in sspChoices) {
-#   for (l in startyearChoices_ensemble) {
+#   for (l in startYearChoices_ensemble) {
 #     
-# varList <- c("modelChoices", "thiList",  "startyearChoices_ensemble", "sspChoices", "tmpDirName")
+# varList <- c("modelChoices", "thiList",  "startYearChoices_ensemble", "sspChoices", "tmpDirName")
 # libList <- c("rast", "data.table")
 
 # UseCores <- detectCores() - 1 # max number of cores
@@ -29,7 +29,7 @@ thiList <- c("thi.cattle", "thi.sheep", "thi.goat", "thi.yak", "thi.broiler", "t
 # cl <- clusterSetup(varList, libList, useCores = useCores)
 
 start_time <- Sys.time()
-# x <- foreach(l = startyearChoices_ensemble, .combine = rbind) %:%
+# x <- foreach(l = startYearChoices_ensemble, .combine = rbind) %:%
 #   foreach(k = sspChoices, .combine = rbind)  %dopar% {
 
 readRast <- function(m) {
@@ -40,7 +40,7 @@ readRast <- function(m) {
 }
 
 for (k in sspChoices) {
-  for (l in startyearChoices_ensemble) {
+  for (l in startYearChoices_ensemble) {
     yearSpan <- paste0(l, "_", l + yearRange)
     print(paste0("ssp choice: ", k, ", start year: ", l, ", pid number: ", Sys.getpid()))
     
@@ -48,23 +48,7 @@ for (k in sspChoices) {
       speciesName <- gsub("thi.", "", thiList[j])
       yearRange <- 9
       print(paste0("species names: ", speciesName, ", start year: ", l,  ", pid number: ", Sys.getpid()))
-      # rasterList <- vector(length = 0)
-      #  for (m in 1:length(modelChoices)) {
-      #  #   fileName_in <- paste0("data/cmip6/THI/", thiList[j], "_", modelChoices[m],  "_", yearSpan, "_", k, ".tif")
-      #   print(paste0("raster file name in: ", fileName_in,  ", pid number: ", Sys.getpid()))
-      #   rtemp <- rast(fileName_in)
-      #   names(rtemp) <- month.abb
-      #          rasterList <- c(rasterList, rtemp)
-      # }
-      #       rasterList <- rast(rasterList)
-      #        rasterList[rasterList < 0] <- 0 # set all negative THI values to 0
-      #       print(paste0( "Done setting negative THI values to 0 for species names: ", speciesName, ", start year: ", l))
-      #  #     indices <- format(as.Date(names(rasterList), format = "%b"), format = "%m")
-      # #      indices <- as.numeric(indices)
-      # #      index <- month.abb
-      #       index <-c(1,2,3,4,5,6,7,8,9,10,11,12)
-      
-      
+        
       # make a list of SpatRasters
       x <- lapply(modelChoices.lower, readRast)
       r <- rast(x)
@@ -97,7 +81,7 @@ thiListReduced <- thiList[!thiList %in% c("thi.yak", "thi.broiler", "thi.layer")
 #   return(x * y)
 # }
 for (k in sspChoices) {
-  for (l in startyearChoices_ensemble) {
+  for (l in startYearChoices_ensemble) {
     yearSpan <- paste0(l, "_", l + yearRange)
     print(paste0("ssp choice: ", k, ", start year: ", l))
     

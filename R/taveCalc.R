@@ -1,4 +1,4 @@
-# tave calculations from tmin and tmax
+# tas calculations from tmin and tmax
 
 #library(raster)
 library(terra)

@@ -1,5 +1,5 @@
 {source("R/globallyUsed.R")
-  terraOptions(memfrac = 4, progress = 0, tempdir =  "data/ISIMIP", verbose = TRUE)
+  terraOptions(memfrac = 2, progress = 0, tempdir =  "data/ISIMIP", verbose = TRUE)
   woptList <- list(gdal=c("COMPRESS=DEFLATE", "PREDICTOR=3", "ZLEVEL = 6"))
   locOfFiles <- "data/bigFiles/"
   
@@ -7,9 +7,9 @@
   #sspChoices <- c("ssp585") 
   modelChoices <- c( "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM6A-LR") 
   #modelChoices <- c("MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") #, "MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") #
-  startyearChoices <-  c(2041, 2081) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
-  #startyearChoices <-  c(2081) #2011, 2041, 2051, 2081) 
-  startyearChoices_historical <- c(1991)
+  startYearChoices <-  c(2041, 2081) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
+  #startYearChoices <-  c(2081) #2011, 2041, 2051, 2081) 
+  startYearChoices_historical <- c(1991)
   #scenarioChoicesEnsemble <- c("historical", sspChoices)
   northernHemExtent <- c( -180, 180, 0, 90)
   southernHemExtent <-c( -180, 180, -60, 0)
@@ -69,7 +69,7 @@
 
 for (k in sspChoices) {
   for (i in modelChoices) {
-    for (l in startyearChoices) {
+    for (l in startYearChoices) {
       yearSpan <- paste0(l, "_", l + yearRange)
       f_extremeCold()
     }
@@ -87,7 +87,7 @@ for (k in sspChoices) {
   for (m in hemisphere)
     for (i in modelChoices) {
       modelName.lower <- tolower(i)
-      for (l in startyearChoices) {
+      for (l in startYearChoices) {
         yearSpan <- paste0(l, "_", l + yearRange)
         print(m)
         yearnumberRange <- seq(l, (l + yearRange), 1)
@@ -121,7 +121,7 @@ for (m in hemisphere) {
   for (i in modelChoices) {
     modelName.lower <- tolower(i)
     print(m)
-    for (l in startyearChoices_historical) {
+    for (l in startYearChoices_historical) {
       yearSpan <- paste0(l, "_", l + yearRange)
       yearnumberRange <- seq(l, (l + yearRange), 1)
       if (m %in% "SH") {
@@ -151,7 +151,7 @@ for (m in hemisphere) {
 
 for (k in scenarioChoicesEnsemble) {
   for (m in hemisphere)
-    for (l in startyearChoices) {
+    for (l in startYearChoices) {
       for (n in c("start", "end")) {
         print(m)
         yearSpan <- paste0(l, "_", l + yearRange)
@@ -176,7 +176,7 @@ for (k in scenarioChoicesEnsemble) {
 # ensemble, growing season days -----
 for (k in scenarioChoicesEnsemble) {
   for (m in hemisphere)
-    for (l in startyearChoices) {
+    for (l in startYearChoices) {
       print(m)
       yearSpan <- paste0(l, "_", l + yearRange)
       yearnumberRange <- seq(l, (l + yearRange), 1)
@@ -206,7 +206,7 @@ locofFilesToMosaic <- "data/cmip6/"
 
 #for (i in mosaicFileTypes) {
 for (k in scenarioChoicesEnsemble) {
-  for (l in startyearChoices) {
+  for (l in startYearChoices) {
     yearRange <- 19
     yearSpan <- paste0(l, "_", l + yearRange)
     yearSpanSH <- paste0(l, "_", l + yearRangeSH)
@@ -306,7 +306,7 @@ f_graphExtremDays <- function() {
 
 for (k in sspChoices) {
   #  k = "ssp585"
-  for (l in startyearChoices) {
+  for (l in startYearChoices) {
     # l <- 2041
     yearSpan <- paste0(l, "_", l + yearRange)
     f_graphExtremDays()

@@ -3,7 +3,7 @@ source("R/globallyUsed.R")
 sspChoices <- c("ssp585") #"ssp126", 
 modelChoices <- c( "GFDL-ESM4", "UKESM1-0-LL", "MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
 #modelChoices <- c("IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
-startyearChoices <-  c(2001, 2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
+startYearChoices <-  c(2001, 2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
 yearRange <- 9
 pal <- colorRampPalette(c("green","red"))
 extentRange <- 2 # a value of 2 means 2 of the units of the raster; if it is 1/2 degree cells, this would be 1 degree
@@ -20,9 +20,9 @@ globeExtent_reduced   <- ext( -180, 180, -50, 50  )
 
 #extent is  vector (length=4; order= xmin, xmax, ymin, ymax)
 # do a globe with site location
-r_tave <- rast("data/cmip6/annualMean/ensembleAnnualMean_tave_2021_2030_ssp585.tif")
-r_tave <- rast("data/cmip6/annualMean/ensembleAnnualMean_tave_2091_2100_ssp585.tif")
-r_tave_df <- as.data.frame(r_tave, xy = TRUE)
+r_tas <- rast("data/cmip6/annualMean/ensembleAnnualMean_tas_2021_2030_ssp585.tif")
+r_tas <- rast("data/cmip6/annualMean/ensembleAnnualMean_tas_2091_2100_ssp585.tif")
+r_tas_df <- as.data.frame(r_tas, xy = TRUE)
 plotTitle <- "Average annual temperature (°C), 2021-2030; scenario = ssp 585"
 plotTitle <- "Average annual temperature (°C), 2091-2100; scenario = ssp 585"
 my_col <- heat.colors
@@ -43,7 +43,7 @@ extentWindow_xlim <- c(locLong - extentRange, locLong + extentRange)
 extentWindow_ylim <- c(locLat - extentRange, locLat + extentRange)
 
 g <- ggplot() +
-  geom_raster(data = r_tave_df, aes(x = x, y = y, fill = mean)) +
+  geom_raster(data = r_tas_df, aes(x = x, y = y, fill = mean)) +
   #theme_bw() +
   # borders(
   #   database = "world",
@@ -69,7 +69,7 @@ g <- ggplot() +
   #   # xlim = NULL,
   #   # ylim = NULL,
   #   # expand = TRUE,
-  #   crs = crs(r_tave),
+  #   crs = crs(r_tas),
 #   # #    datum = sf::st_crs(4326),
 #   # label_graticule = waiver(),
 #   # label_axes = waiver(),
@@ -102,7 +102,7 @@ fileOut <- paste0(getwd(), "/globeLocations.png")
 #     bg = "white",  res = NA, type = c("cairo", "cairo-png", "Xlib", "quartz"), antialias)
 png(filename = fileOut, bg = "white",  width = 960, height = 960)
 dev.new( , noRStudioGD = FALSE) 
-plot(r_tave, main = "Average annual temperature (°C), 2021-2030; scenario = ssp 585", col = pal(7))
+plot(r_tas, main = "Average annual temperature (°C), 2021-2030; scenario = ssp 585", col = pal(7))
 scalebar(10000, xy = NULL, type = "bar", divs = 4, below = "kilometers", 
          lonlat = TRUE, adj=c(1.1, -1.1), lwd = 2)
 
@@ -126,7 +126,7 @@ for (i in 1:nrow(regionInfoLookup)) {
   locText_region <- regionInfoLookup[i, region]
   locText_country <- regionInfoLookup[i, country]
   locText <- paste0(locText_region, ",\n ", locText_country)
-  r_crop <- crop(r_tave, locExtent)
+  r_crop <- crop(r_tas, locExtent)
   locText <- paste0(locText_region, ", ", locText_country)
   mainText <- paste0( "Average annual temperature (°C), 2021-2030; scenario = ssp 585", "\n", locText)
   plot(r_crop, main = mainText, col = pal(7))
@@ -160,11 +160,11 @@ extentToUse <- northernGhanaExtent
 
 # ensemble graphics
 # apply masks, can only do this to animals we have in THIlist and that have area mask raster
-startyearChoices_ensemble <-  c(2021, 2051, 2091) # no multimodel results for observed data
+startYearChoices_ensemble <-  c(2021, 2051, 2091) # no multimodel results for observed data
 bpList <- as.data.table(read_excel("data-raw/animals/AnimalbreakpointslistRaw.xlsx"))
 
 for (k in sspChoices) {
-  for (l in startyearChoices_ensemble) {
+  for (l in startYearChoices_ensemble) {
     yearSpan <- paste0(l, "_", l + yearRange)
     print(paste0("ssp choice: ", k, ", start year: ", l))
     for (j in 1:length(thiListReduced)) {
@@ -235,7 +235,7 @@ for (k in sspChoices) {
       # }
       write.csv(bbholder, "data-raw/regionInformation/googleBBs.csv")
       g <- ggmap(get(mapName_rds))  +  labs(title = titleText) + theme(plot.title = element_text(size = 12, hjust = 0.5)) +
-        geom_raster(data = r_tave_df, aes(x = x, y = y, fill = mean)) +
+        geom_raster(data = r_tas_df, aes(x = x, y = y, fill = mean)) +
         
         scale_fill_gradientn(colours=c("#5533FF","#FFFFFFFF","#FF0000FF"), breaks = c(-20, 0, 5, 10, 20)) +
         
@@ -283,8 +283,8 @@ for (k in sspChoices) {
       protectedAreas1 <- st_read("data-raw/regioninformation/WDPA_Aug2020-shapefile/WDPA_Aug2020-shapefile1/WDPA_Aug2020-shapefile-polygons.shp")
       protectedAreas0 <- st_read("data-raw/regioninformation/WDPA_Aug2020-shapefile/WDPA_Aug2020-shapefile0/WDPA_Aug2020-shapefile-polygons.shp")
       shadedRelief <- rast("data-raw/regioninformation/SR_HR/SR_HR.tif")
-      r_tave <- rast("data/cmip6/annualMean/ensembleAnnualMean_tave_2021_2030_ssp585.tif")
-      r_tave <- rast("data/cmip6/annualMean/ensembleAnnualMean_tave_2091_2100_ssp585.tif")
+      r_tas <- rast("data/cmip6/annualMean/ensembleAnnualMean_tas_2021_2030_ssp585.tif")
+      r_tas <- rast("data/cmip6/annualMean/ensembleAnnualMean_tas_2091_2100_ssp585.tif")
       
       
       for (i in 1:(nrow(regionInfoLookup) - 1)) {
@@ -296,8 +296,8 @@ for (k in sspChoices) {
         ylim <- c(regionInfoLookup[i, ll.lat], regionInfoLookup[i, ur.lat])
         regionExt <- ext(c(xlim, ylim))
 #        relief <- crop(shadedRelief, regionExt)
-        r_tave_region <- crop(r_tave, regionExt)
-        r_tave_region <- as.data.frame(r_tave_region, xy = TRUE)
+        r_tas_region <- crop(r_tas, regionExt)
+        r_tas_region <- as.data.frame(r_tas_region, xy = TRUE)
         my_col <-  heat.colors(5)
         
         titleText <- paste0("Location of ", regionInfoLookup[i, ctyRegion])
@@ -308,11 +308,11 @@ for (k in sspChoices) {
         pa2 <- protectedAreas2[protectedAreas2$PARENT_ISO == iso3Code,]
         world_region <- world[world$sov_a3 == iso3Code,]
         popArea_region <- populatedAreas10[populatedAreas10$ADM0_A3 == iso3Code, ]
-        r_tave_region <- r_tave_region %>% mutate(mean_breaks = cut(mean, breaks = 5))
+        r_tas_region <- r_tas_region %>% mutate(mean_breaks = cut(mean, breaks = 5))
         g <- ggplot(data = world_region) +
           geom_sf() + 
           labs(title = titleText) + theme(plot.title = element_text(size = 12, hjust = 0.5)) +
-          geom_raster(data = r_tave_region , aes(x = x, y = y, fill = mean_breaks)) + 
+          geom_raster(data = r_tas_region , aes(x = x, y = y, fill = mean_breaks)) + 
           geom_sf(data = world_region, fill = NA, color = gray(.5)) +
           geom_sf(data = roads10, color = "red", lwd = 1) +
           geom_sf(data = populatedAreas10) +

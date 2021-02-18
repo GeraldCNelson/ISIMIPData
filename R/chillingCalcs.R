@@ -10,7 +10,7 @@ modelChoices <- c("IPSL-CM6A-LR")#
 modelChoices <- c("IPSL-CM6A-LR", "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL") #, "MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
 #modelChoices <- c("GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0") #, "MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
 
-startyearChoices <-  c(2021, 2051, 2091) #, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
+startYearChoices <-  c(2021, 2051, 2091) #, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
 
 yearRange <- 9
 
@@ -33,7 +33,7 @@ southernHemSummer <- c("Nov", "Dec", "Jan", "Feb", "Mar", "Apr")
 # useCores <- detectCores() - 2 # max number of cores
 # useCores <- 2 # better for memory intensive activities
 
-# varList <- c("startyearChoices", "sspChoices", "modelChoices", "locOfFiles")
+# varList <- c("startYearChoices", "sspChoices", "modelChoices", "locOfFiles")
 # libList <- c("terra", "ncdf4")
 library(Rcpp)
 cppFunction('std::vector<double> chill(std::vector<double> tmin, std::vector<double> tmax) {
@@ -50,11 +50,11 @@ return out;
 }')
 
 # cl <- clusterSetup(varList, libList, useCores) # function created in globallyUsed.R
-# foreach(l = startyearChoices) %:%
+# foreach(l = startYearChoices) %:%
 #   foreach(i = modelChoices) %:%
 #   #  foreach(j = variableChoices) %:%
 #   foreach(k = sspChoices) %dopar% {
-for (l in startyearChoices) {
+for (l in startYearChoices) {
   for (i in modelChoices) {
     for (k in sspChoices) {
       

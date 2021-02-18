@@ -1,8 +1,8 @@
 # combine 10 year rasters across models to get ensemble means and coeffients of variation
 source("R/globallyUsed.R")
 
-startyearChoices <-  c(2021, 2051, 2091) #2021, 2051, 2091) # c(2091) # c(2006) #, 2041, 2051, 2081)
-startyearChoices_ensemble <-  c(2021, 2051, 2091) # no multimodel results for observed data
+startYearChoices <-  c(2021, 2051, 2091) #2021, 2051, 2091) # c(2091) # c(2006) #, 2041, 2051, 2081)
+startYearChoices_ensemble <-  c(2021, 2051, 2091) # no multimodel results for observed data
 
 yearRange <- 9
 sspChoices <- c("ssp585") #"ssp126", 
@@ -27,7 +27,7 @@ readRast <- function(m, yearSpan) {
 }
 
 for (k in sspChoices) {
-  for (l in startyearChoices_ensemble) {
+  for (l in startYearChoices_ensemble) {
     yearSpan <- paste0(l, "_", l + yearRange)
     print(paste0("ssp choice: ", k, ", start year: ", l, ", pid number: ", Sys.getpid()))
     

@@ -12,8 +12,8 @@ l <- 2051
 i <- 3
 
 sspChoices <- c("ssp126", "ssp585") #"ssp126"
-startyearChoices <-  c(2001, 2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
-startyearChoices_ensemble <-  c(2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
+startYearChoices <-  c(2001, 2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
+startYearChoices_ensemble <-  c(2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
 yearRange <- 9
 
 climateVars <- c("tasmax", "tas", "tasmin", "pr", "hurs") #""pr", "hurs", tasmax",   "tasmin",
@@ -70,7 +70,7 @@ for (i in 4:nrow(regionInfoLookup)) {
     meanData <- c()
     meanData <- rast(paste0("data/cmip6/monthlyMean/ensembleMonthlyMean_", j, "_historical_2001_2010.tif"))
     max(global(meanData, fun = "max", na.rm = TRUE))
-    for (q in startyearChoices_ensemble) {
+    for (q in startYearChoices_ensemble) {
       for (r in sspChoices) {
         yearSpan <- paste0(q, "_", q + yearRange)
         temp <- rast(paste0("data/cmip6/monthlyMean/ensemblemonthlyMean_", j,  "_",  yearSpan, "_", r, ".tif"))
@@ -93,7 +93,7 @@ for (i in 4:nrow(regionInfoLookup)) {
     unit_category <- "metric" # for the scale bar
     if (iso3Code == "USA") { 
       unit_category <- "imperial" # for the scale bar
-      if (j %in% c("tasmax", "tasmin", "tave")) {
+      if (j %in% c("tasmax", "tasmin", "tas")) {
         legendTitle <- "°F"
         custom_bins <- round(custom_bins * 9/5 + 32)
         climVarMax <- max(custom_bins)
@@ -108,12 +108,12 @@ for (i in 4:nrow(regionInfoLookup)) {
     }
     
     for (k in sspChoices) {
-      for (l in startyearChoices) {
+      for (l in startYearChoices) {
       yearSpan <- paste0(l, "_", l + yearRange)
-      if (l %in% startyearChoices[1]) {
+      if (l %in% startYearChoices[1]) {
         r_climVar <- paste0("data/cmip6/monthlyMean/ensembleMonthlyMean_", j, "_historical_2001_2010.tif")
       }
-        if (!l %in% startyearChoices[1]) {
+        if (!l %in% startYearChoices[1]) {
           r_climVar <- paste0(fileLoc_monthlyMean, "ensembleMonthlyMean_", j, "_", yearSpan,"_", k, ".tif")
         }
         r_climVar <- rast(r_climVar)
@@ -136,7 +136,7 @@ for (i in 4:nrow(regionInfoLookup)) {
         r_climVar_region_long$month = factor(r_climVar_region_long$month, levels = all_of(month.abb))
         
         if (iso3Code == "USA") { 
-          if (j %in% c("tasmax", "tasmin", "tave")) {
+          if (j %in% c("tasmax", "tasmin", "tas")) {
             r_climVar_region_long$value <- r_climVar_region_long$value * 9/5 + 32
           }
           if (j %in% "pr") {
@@ -147,7 +147,7 @@ for (i in 4:nrow(regionInfoLookup)) {
         
         yearSpan <- paste0(l, "_", l + yearRange)
         titleText <- paste0("Mean ", varNamesInfo[variableShortName %in% j, variableLongName], ", ", gsub("_", "-", yearSpan), ", ",  "scenario ", k, ", ", regionInfoLookup[i, ctyRegion])
-        if (l %in% startyearChoices[1]) {
+        if (l %in% startYearChoices[1]) {
           titleText <- paste0("Mean ", varNamesInfo[variableShortName %in% j, variableLongName], ", ", gsub("_", "-", yearSpan), ", ", regionInfoLookup[i, ctyRegion])
         }
         print(titleText)
@@ -188,7 +188,7 @@ for (i in 4:nrow(regionInfoLookup)) {
           #                        style = north_arrow_minimal) +
           facet_wrap(vars(month))
          outFilename <- paste0("graphics/cmip6/regionInfo/", j,"MonthlyAve_", k, "_", yearSpan, "_", regionInfoLookup[i, region], ".png")
-        if (l %in% startyearChoices[1]) {
+        if (l %in% startYearChoices[1]) {
           yearSpan <- paste0(l, "_", l + yearRange)
           outFilename <- paste0("graphics/cmip6/regionInfo/", j,"MonthlyAve_", yearSpan, "_", regionInfoLookup[i, region], ".png")
         }
@@ -201,7 +201,7 @@ for (i in 4:nrow(regionInfoLookup)) {
 #        ggsave(outFilename, plot = g, device = "png", width = 6, height = 6)
         # ggsave("map_web.png", width = 6, height = 6, dpi = "screen")
           outFilename_csv <- paste0("data/regionResults/monthlyFacet_", j, "_", regionInfoLookup[i, region], "_", k, "_", yearSpan, ".csv")
-          if (l %in% startyearChoices[1]) {
+          if (l %in% startYearChoices[1]) {
             yearSpan <- paste0(l, "_", l + yearRange)
             outFilename_csv <- paste0("data/regionResults/monthlyFacet_", j, "_", regionInfoLookup[i, region], "_", yearSpan, ".csv")
           }

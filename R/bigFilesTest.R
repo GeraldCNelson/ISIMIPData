@@ -9,9 +9,9 @@ sspChoices <- c("ssp126", "ssp585")
 modelChoices <- c( "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM6A-LR") #, "MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
 climateVarChoices <- c("tasmin", "tasmax", "hurs", "tas")#, "pr",  "rsds", "sfcwind")
 climateVarChoices <- c("tasmin")
-startyearChoices <-  c(2041, 2081) 
-#startyearChoices <-  c(2041) 
-startyearChoices_historical <- c(1991)
+startYearChoices <-  c(2041, 2081) 
+#startYearChoices <-  c(2041) 
+startYearChoices_historical <- c(1991)
 scenarioChoicesEnsemble <- c("historical", sspChoices)
 locOfFiles <- destination
 
@@ -34,7 +34,7 @@ for (m in climateVarChoices) {
   print(m)
   for (k in sspChoices) {
     print(k)
-    for (l in startyearChoices) {
+    for (l in startYearChoices) {
       print(l)
       yearSpan <- paste0(l, "_", l + yearRange)
       for (i in modelChoices) {
@@ -116,7 +116,7 @@ missing_tas <- missingFiles[grepl("tas", missingFiles, fixed = TRUE)]
 for (m in c("tas")) {
   for (k in sspChoices) {
     k = "historical"
-    for (l in startyearChoices) {
+    for (l in startYearChoices) {
       yearSpan <- paste0(l, "_", l + yearRange)
       for (i in modelChoices) {
         modelName.lower <- tolower(i)
@@ -162,7 +162,7 @@ renameFile <- function(inNCfile) {
 for (m in c( "hurs")) {
   # for (k in sspChoices) {
   for (k in "ssp126") {
-    #   for (l in startyearChoices) {
+    #   for (l in startYearChoices) {
     for (l in 2081) {
       yearSpan <- paste0(l, "_", l + yearRange)
       for (i in modelChoices) {

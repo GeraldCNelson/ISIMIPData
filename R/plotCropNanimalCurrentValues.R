@@ -6,7 +6,7 @@ library(colorspace)# use pal <- choose_palette() to see what this is about
 sspChoices <- c("ssp585") #"ssp126", 
 modelChoices <- c( "GFDL-ESM4", "UKESM1-0-LL", "MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
 #modelChoices <- c("IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
-startyearChoices <-  c(2001, 2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
+startYearChoices <-  c(2001, 2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
 yearRange <- 9
 
 #test values
@@ -77,8 +77,8 @@ for (i in crops) {
           axis.title = element_blank(), 
           axis.text.x = element_blank(),
           axis.text.y = element_blank()) 
-#    scale_fill_viridis_c(limits = c(0.0, 240427)) +
-    coord_quickmap()
+  #    scale_fill_viridis_c(limits = c(0.0, 240427)) +
+  coord_quickmap()
 }
 
 # for animals
@@ -105,21 +105,21 @@ for (i in animalsList) {
     ggthemes::theme_map() +
     borders(lwd = 0.5) + 
     ggtitle("Need to put something here") +
-   theme(axis.ticks = element_blank(), 
-                      axis.title = element_blank(), 
-                      axis.text.x = element_blank(),
-                      axis.text.y = element_blank()) +
-  #                    strip.text = element_text(family = fontFamily, face = "plain", size = 7))
+    theme(axis.ticks = element_blank(), 
+          axis.title = element_blank(), 
+          axis.text.x = element_blank(),
+          axis.text.y = element_blank()) +
+    #                    strip.text = element_text(family = fontFamily, face = "plain", size = 7))
     #    scale_fill_viridis_c(limits = c(0.0, 240427)) +
     coord_quickmap()
 }
-  
-  
-  fileName_out <- paste0("data/animals/rasterMask_", speciesName, ".tif")
-  print(fileName_out)
-  writeRaster(rIn, fileName_out, format = "GTiff", overwrite = TRUE)
+
+
+fileName_out <- paste0("data/animals/rasterMask_", speciesName, ".tif")
+print(fileName_out)
+writeRaster(rIn, fileName_out, format = "GTiff", overwrite = TRUE)
 }
- 
+
 
 # for potential use later
 #   g <- plot(rInAreaAgg, main = titleText, #col.regions = col.l, at = myat, par.settings = mapTheme, 

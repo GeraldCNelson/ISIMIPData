@@ -5,7 +5,7 @@ library(doParallel) #Foreach Parallel Adaptor
 library(foreach) #Provides foreach looping construct
 
 locOfFiles <- "data/cmip6/monthlyMean/"
-startyearChoices <-  c(2021, 2051, 2091) #2021, 2051, 2091) # c(2091) # c(2006) #, 2041, 2051, 2081)
+startYearChoices <-  c(2021, 2051, 2091) #2021, 2051, 2091) # c(2091) # c(2006) #, 2041, 2051, 2081)
 yearRange <- 9
 sspChoices <- c("ssp126","ssp585") #"ssp126", 
 modelChoices <- c( "IPSL-CM6A-LR", "MRI-ESM2-0", "MPI-ESM1-2-HR", "UKESM1-0-LL", "GFDL-ESM4") #, "MPI-ESM1-2-HR", "MRI-ESM2-0") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM6A-LR"
@@ -25,7 +25,7 @@ m <-  "thi.cattle"
 #                                     extremeStress = numeric(), max = numeric(), model = character(), period = character(), rcp = character())
 
 thiList <- c("thi.cattle", "thi.sheep", "thi.goat", "thi.yak", "thi.broiler", "thi.layer", "thi.chicken", "thi.swine")
-varList <- c("modelChoices", "thiList",  "startyearChoices", "sspChoices", "tmpDirName")
+varList <- c("modelChoices", "thiList",  "startYearChoices", "sspChoices", "tmpDirName")
 libList <- c("terra", "data.table")
 
 UseCores <- detectCores() - 1 # max number of cores
@@ -34,7 +34,7 @@ useCores <- 2 # better for memory intensive activities
 cl <- clusterSetup(varList, libList, useCores = useCores)
 start_time <- Sys.time()
 x <- foreach(i = modelChoices, .combine = rbind) %:%
-  foreach(l = startyearChoices, .combine = rbind) %:%
+  foreach(l = startYearChoices, .combine = rbind) %:%
   foreach(k = sspChoices, .combine = rbind)  %dopar% {
     # require(data.table)
     # require(terra)

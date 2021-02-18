@@ -4,10 +4,11 @@ source("R/globallyUsed.R")
 # library(doParallel) #Foreach Parallel Adaptor 
 # library(foreach) #Provides foreach looping constructThese 
 woptList <- list(gdal=c("COMPRESS=LZW"))
+woptList <- list(gdal=c("COMPRESS=DEFLATE", "PREDICTOR=3", "ZLEVEL = 6"))
 
-startyearChoices <-  c(2021, 2051, 2091) #2021, 2051, 2091) # c(2091) # c(2006) #, 2041, 2051, 2081)
-startyearChoices_ensemble <-  c(2021, 2051, 2091) # no multimodel results for observed data
-climateVars <- c( "tasmax", "tasmin", "pr", "hurs",  "rsds", "sfcwind") #"tave",
+startYearChoices <-  c(2021, 2051, 2091) #2021, 2051, 2091) # c(2091) # c(2006) #, 2041, 2051, 2081)
+startYearChoices_ensemble <-  c(2021, 2051, 2091) # no multimodel results for observed data
+climateVars <- c( "tasmax", "tasmin", "pr", "hurs",  "rsds", "sfcwind") 
 climateVars <- c(  "rsds") 
 
 yearRange <- 9
@@ -19,24 +20,24 @@ k <- "ssp585"
 l <- 2051
 j <- "hurs"
 
-# varList <- c("modelChoices", "thiList",  "startyearChoices_ensemble", "sspChoices", "tmpDirName")
+# varList <- c("modelChoices", "thiList",  "startYearChoices_ensemble", "sspChoices", "tmpDirName")
 # libList <- c("rast", "data.table")
 
 # UseCores <- detectCores() - 1 # max number of cores
 # useCores <- 3 # better for memory intensive activities
 # cl <- clusterSetup(varList, libList, useCores = useCores)
 
-# x <- foreach(l = startyearChoices_ensemble, .combine = rbind) %:%
+# x <- foreach(l = startYearChoices_ensemble, .combine = rbind) %:%
 #   foreach(k = sspChoices, .combine = rbind)  %dopar% {
 readRast <- function(m) {
-  fileNameIn <- paste0("data/cmip6/monthlyMean/monthlyMean_", j, "_", m, "_", k,  "_", yearSpan, ".tif")
-  r <- rast(fileNameIn)
+  fileName_in <- paste0("data/cmip6/monthlyMean/monthlyMean_", j, "_", m, "_", k,  "_", yearSpan, ".tif")
+  r <- rast(fileName_in)
   names(r) <- month.abb
   r
 }
 
 for (k in sspChoices) {
-  for (l in startyearChoices_ensemble) {
+  for (l in startYearChoices_ensemble) {
     yearSpan <- paste0(l, "_", l + yearRange)
     
     for (j in climateVars) {
@@ -92,9 +93,10 @@ source("R/globallyUsed.R")
 # library(doParallel) #Foreach Parallel Adaptor 
 # library(foreach) #Provides foreach looping constructThese 
 woptList <- list(gdal=c("COMPRESS=LZW"))
+woptList <- list(gdal=c("COMPRESS=DEFLATE", "PREDICTOR=3", "ZLEVEL = 6"))
 
-startyearChoices <-  c(2081) #2021, 2051, 2091) # c(2091) # c(2006) #, 2041, 2051, 2081)
-startyearChoices_ensemble <-  c(2081) # no multimodel results for observed data
+startYearChoices <-  c(2081) #2021, 2051, 2091) # c(2091) # c(2006) #, 2041, 2051, 2081)
+startYearChoices_ensemble <-  c(2081) # no multimodel results for observed data
 climateVars <- c("sfcwind")# "tasmax", "tasmin") #,  "hurs", "rsds", "sfcwind") #, "tave") "pr",
 #climateVars <- c("rsds") 
 
@@ -107,24 +109,24 @@ k <- "ssp585"
 l <- 2081
 j <- "tasmax"
 
-# varList <- c("modelChoices", "thiList",  "startyearChoices_ensemble", "sspChoices", "tmpDirName")
+# varList <- c("modelChoices", "thiList",  "startYearChoices_ensemble", "sspChoices", "tmpDirName")
 # libList <- c("rast", "data.table")
 
 # UseCores <- detectCores() - 1 # max number of cores
 # useCores <- 3 # better for memory intensive activities
 # cl <- clusterSetup(varList, libList, useCores = useCores)
 
-# x <- foreach(l = startyearChoices_ensemble, .combine = rbind) %:%
+# x <- foreach(l = startYearChoices_ensemble, .combine = rbind) %:%
 #   foreach(k = sspChoices, .combine = rbind)  %dopar% {
 readRast <- function(m) {
-  fileNameIn <- paste0("data/cmip6/monthlyMean/monthlyMean_", j, "_", m, "_", k,  "_", yearSpan, ".tif")
-  r <- rast(fileNameIn)
+  fileName_in <- paste0("data/cmip6/monthlyMean/monthlyMean_", j, "_", m, "_", k,  "_", yearSpan, ".tif")
+  r <- rast(fileName_in)
   names(r) <- month.abb
   r
 }
 
 for (k in sspChoices) {
-  for (l in startyearChoices_ensemble) {
+  for (l in startYearChoices_ensemble) {
     yearSpan <- paste0(l, "_", l + yearRange)
     
     for (j in climateVars) {

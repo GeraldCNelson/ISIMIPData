@@ -10,7 +10,7 @@ climateVars <- c("tasmax", "tasmin", "pr") # "tasmax", "pr" "tasmin"
 locOfFiles <- locOfCMIP6ncFiles
 locOfFiles <- "data-raw/ISIMIP/cmip6/unitsCorrected"
 
-startyearChoices <-  c(2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
+startYearChoices <-  c(2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
 
 yearRange <- 9
 
@@ -21,7 +21,7 @@ yearRange <- 9
 useCores <- detectCores() - 1 # max number of cores
 useCores <- 3 # better for memory intensive activities
 
-varList <- c("locOfFiles", "startyearChoices", "sspChoices", "modelChoices", "ann_crop_temp_table", "tmpDirName")
+varList <- c("locOfFiles", "startYearChoices", "sspChoices", "modelChoices", "ann_crop_temp_table", "tmpDirName")
 libList <- c("raster", "ncdf4", "stringr")
 
 #test values
@@ -30,7 +30,7 @@ k <- "ssp585"
 l <- 2051
 cl <- clusterSetup(varList, libList, useCores) # function created in globallyUsed.R
 
-foreach(l = startyearChoices) %:%
+foreach(l = startYearChoices) %:%
   foreach(i = modelChoices) %:%
   #  foreach(j = climateVars) %:%
   foreach(k = sspChoices) %dopar% {

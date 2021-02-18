@@ -31,8 +31,8 @@ climateVars <- c( "tasmax", "tasmin")
 sspChoices <- c("ssp126", "ssp585") 
 #sspChoices <- c("ssp126") 
 modelChoices <- c( "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM6A-LR") #, "MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
-startyearChoices <-  c(2041, 2081) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
-#startyearChoices <-  c(2081) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
+startYearChoices <-  c(2041, 2081) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
+#startYearChoices <-  c(2081) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
 yearRange <- 19
 readRast_climVar_ensemble <- function(i) {
   modelName.lower <- tolower(i)
@@ -52,7 +52,7 @@ dailyMean <- function() {
 
 # daily ensemble means of climate variables -----
 for (k in sspChoices) {
-  for (l in startyearChoices) {
+  for (l in startYearChoices) {
     yearSpan <- paste0(l, "_", l + yearRange)
     for (m in climateVars) {
       dailyMean()

@@ -14,7 +14,7 @@ climateVarstoKeep <- c("tasmin", "tasmax", "tas", "pr", "hurs", "huss", "rsds", 
 #climateVarstoKeep <- c("sfcwind") # "tasmax", "tasmin"
 
 startYearChoices20yr <-  c(2041, 2081) #1991, 2021, 2051, 2091) # c(2091) # c(2006) #, 2041, 2051, 2081)
-#startyearChoices <-  c(2081) #1991, 2021, 2051, 2091) # c(2091) # c(2006) #, 2041, 2051, 2081)
+#startYearChoices <-  c(2081) #1991, 2021, 2051, 2091) # c(2091) # c(2006) #, 2041, 2051, 2081)
 startYearChoices_new_historical <-  c(1991) #1991, 2021, 2051, 2091) # c(2091) # c(2006) #, 2041, 2051, 2081)
 sspChoices <- c("ssp126", "ssp585")
 #sspChoices <- c("ssp585")

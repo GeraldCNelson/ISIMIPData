@@ -8,12 +8,10 @@ sspChoices <- c("ssp585") #"ssp126",
 modelChoices <- c("UKESM1-0-LL", "IPSL-CM6A-LR") #"MPI-ESM1-2-HR", "MRI-ESM2-0")# "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM6A-LR") #, 
 #modelChoices <- c("MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM6A-LR") #, "MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
 
-startyearChoices <-  c(2051) #, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
+startYearChoices <-  c(2051) #, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
 hemisphereList <- c("Northern", "Southern")
 northerHemExtent <- c( -180, 180, 0, 90) # this is latlong
-southernHemExtent <-  c( -180, 180, -90, 0) # this is latlong
-northerHemExtentRC <- c( -180, 180, 0, 90) # this is row column
-southernHemExtent <-  c( -180, 180, -90, 0) # this is row column
+southernHemExtent <-  c( -180, 180, -60, 0) # this is latlong
 
 yearRange <- 9
 gddsfilesLoc <- "data/cmip6/growingDegreeDays/"
@@ -27,10 +25,11 @@ cropName <- m
 
 for (k in sspChoices)  {
   for (i in modelChoices)  {
-    for (l in startyearChoices) {
+    for (l in startYearChoices) {
       yearSpan <- paste0(l, "_", l + yearRange)
-      
-      layerNames <- readRDS(paste0("data-raw/ISIMIP/ISIMIPLayerNames_", yearSpan, ".RDS"))
+      startDate <- paste0(l, "-01-01"); endDate <- paste0(l + yearRange, "-12-31")
+      indices <- seq(as.Date(startDate), as.Date(endDate), 1)
+      indices <- paste0("X", as.character(indices))
       
       for (o in 1:length(cropChoices)) {
         for (m in get(cropChoices[o])) {
@@ -38,7 +37,7 @@ for (k in sspChoices)  {
           modelName.lower <- tolower(i)
           gddIn_crop <- paste0(gddsfilesLoc, modelName.lower, "_", m, "_", k, "_gdd", "_global_daily_", yearSpan, ".tif")
           gdd <- rast(gddIn_crop)
-          names(gdd) <- layerNames
+          names(gdd) <- indices
           indices <- format(as.Date(names(gdd), format = "X%Y.%m.%d"), format = "%j") # %j is day of the year
           indices <- as.numeric(indices)
           
@@ -77,9 +76,9 @@ for (k in sspChoices)  {
           
           cropCalendarName <- ann_crop_temp_table[crop %in% cropName, crop.calendar]
           cropCalFilesLoc <- paste0("data-raw/crops/cropCalendars/ALL_CROPS_netCDF_0.5deg_filled/")
-          fileInName <- paste0(cropCalendarName, ".crop.calendar.fill.nc")
-          #    locNFileIn <- paste0(filesLoc, fileInName, ".gz")
-          locNFileIn <- paste0(cropCalFilesLoc, fileInName)
+          fileName_in <- paste0(cropCalendarName, ".crop.calendar.fill.nc")
+          #    locNFileIn <- paste0(filesLoc, fileName_in, ".gz")
+          locNFileIn <- paste0(cropCalFilesLoc, fileName_in)
           R.utils::gunzip(paste0(locNFileIn, ".gz"), remove = FALSE)
           croppingCalendar <- rast(locNFileIn)
           crs(croppingCalendar) <- crs(cropMask) # needed because cropping calendar doesn't have an explicit crs

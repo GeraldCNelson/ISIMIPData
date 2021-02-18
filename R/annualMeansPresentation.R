@@ -5,7 +5,7 @@ library(magrittr)
 sspChoices <- c("ssp585") #"ssp126", 
 modelChoices <- c( "GFDL-ESM4", "UKESM1-0-LL", "MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
 #modelChoices <- c("IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
-startyearChoices <-  c(2001, 2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
+startYearChoices <-  c(2001, 2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
 climateVars <- c( "tasmin", "tasmax", "tas",  "pr", "hurs") 
 varNamesInfo <- as.data.table(read_excel("data-raw/varNamesLookup.xlsx"))
 globalMeanHolder <- as.data.table( read.csv("data/cmip6/annualMean/globalMeans.csv"))
@@ -23,7 +23,7 @@ j <- "tasmax"
 
 titleString <- paste0("Annual Land-based Means of Minimum, Average and Maximum Temperature, Relative Humidity and Precipitation")
 contentString <- paste0("Ensemble means and coefficients of key climate variables for four time periods to 2100. Powerpoint produced ", Sys.Date())
-startyearChoices_ensemble <-  c(2021, 2051, 2091) # no multimodel results for observed data
+startYearChoices_ensemble <-  c(2021, 2051, 2091) # no multimodel results for observed data
 
 my_pres <- read_pptx() %>% 
   add_slide(layout = 'Title Slide', master = 'Office Theme')  %>% 
@@ -108,7 +108,7 @@ for (k in sspChoices) {
     add_slide(my_pres, layout = 'Title Only', master = 'Office Theme') %>% 
       ph_with(value = extImgObs, location = ph_location(left = 0, top = 0, width = 5, height = 8) )
     
-    for (l in startyearChoices_ensemble) {
+    for (l in startYearChoices_ensemble) {
       yearSpan <- paste0(l, "_", l + yearRange)
       fileNameCV <- paste0("graphics/cmip6/annualMean/ensembleAnnualCV_",   varName, "_",  yearSpan, "_", k, ".jpg")
       fileNameMean <- paste0("graphics/cmip6/annualMean/ensembleannualMean_",  varName, "_",  yearSpan, "_", k, ".jpg")

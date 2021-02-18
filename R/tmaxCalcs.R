@@ -6,7 +6,7 @@ sspChoices <- c("ssp585") #"ssp126",
 modelChoices <- c( "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL") #, "IPSL-CM6A-LR") #, 
 # modelChoices <- c("IPSL-CM6A-LR") #, "MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
 
-startyearChoices <-  c(2021, 2051, 2091) #, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
+startYearChoices <-  c(2021, 2051, 2091) #, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
 
 yearRange <- 9
 
@@ -28,7 +28,7 @@ f.tmaxLimit <- function(tmax, tmaxLimit, indices) {
 # this for loop and the one below it for observed data generate the tmax damage monthly counts for all the values in the crop spreadsheet for the whole world
 for (k in sspChoices)  {
   for (i in modelChoices)  {
-    for (l in startyearChoices) {
+    for (l in startYearChoices) {
       modelName.lower <- tolower(i)
       startTime <-  Sys.time()
       yearSpan <- paste0(l, "_", l + yearRange)
@@ -60,7 +60,7 @@ overlayfunction <- function(x,y) {
 }
 for (k in sspChoices)  {
   for (i in modelChoices)  {
-    for (l in startyearChoices) {
+    for (l in startYearChoices) {
       for (o in 1:length(cropChoices)) {
         for (m in get(cropChoices[o])) {
           print(paste0("crop: ", m))  
@@ -83,24 +83,24 @@ for (k in sspChoices)  {
 }
 
 # observed results
-# now do count above tmax limit for observed period
-yearSpan <- paste0(l, "_", l + yearRange)
-fileName_in <- paste0(locOfFiles, "observed/gswp3-w5e5_obsclim_tasmax_global_daily_2001_2010.tif")
-tmax <- rast(rastfileName_in)
-indices <- format(as.Date(names(tmax), format = "X%Y.%m.%d"), format = "%m")
-indices <- as.numeric(indices)
-
-f.tmaxLimit.observed <- function(tmax, tmaxLimit, indices) {
-  tmaxSum <- tapp(tmax, indices, fun = function(x, ...){sum(x >= tmaxLimit)}) 
-  names(tmaxSum) <- month.abb
-  fileName_out <- paste0("tmaxGT_", tmaxLimit, "_observed_", yearSpan, ".tif")
-  writeRaster(tmaxSum, filename = paste0("data/cmip6/tmaxMonthlySums/", fileName_out), format = "GTiff", overwrite = TRUE)
-}
-
-for (n in tmaxList) {
-  f.tmaxLimit.observed(tmax, tmaxLimit = n, indices)
-  print(paste("Completed tmax count for ", n, "C"))
-}
+# # now do count above tmax limit for observed period
+# yearSpan <- paste0(l, "_", l + yearRange)
+# fileName_in <- paste0(locOfFiles, "observed/gswp3-w5e5_obsclim_tasmax_global_daily_2001_2010.tif")
+# tmax <- rast(rastfileName_in)
+# indices <- format(as.Date(names(tmax), format = "X%Y.%m.%d"), format = "%m")
+# indices <- as.numeric(indices)
+# 
+# f.tmaxLimit.observed <- function(tmax, tmaxLimit, indices) {
+#   tmaxSum <- tapp(tmax, indices, fun = function(x, ...){sum(x >= tmaxLimit)}) 
+#   names(tmaxSum) <- month.abb
+#   fileName_out <- paste0("tmaxGT_", tmaxLimit, "_observed_", yearSpan, ".tif")
+#   writeRaster(tmaxSum, filename = paste0("data/cmip6/tmaxMonthlySums/", fileName_out), format = "GTiff", overwrite = TRUE)
+# }
+# 
+# for (n in tmaxList) {
+#   f.tmaxLimit.observed(tmax, tmaxLimit = n, indices)
+#   print(paste("Completed tmax count for ", n, "C"))
+# }
 
 # observed results
 # now do masked versions of the count above tmax limit for observed period

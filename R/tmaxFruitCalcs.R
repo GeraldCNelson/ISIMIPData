@@ -23,9 +23,9 @@ sspChoices <- c("ssp126", "ssp585")
 #sspChoices <- c("ssp585") 
 modelChoices <- c( "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM6A-LR") #, "MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
 modelChoices <- c("UKESM1-0-LL", "GFDL-ESM4") #, "MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
-startyearChoices <-  c(2041, 2081) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
-startyearChoices <-  c(2081) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
-startyearChoices_historical <- c(1991)
+startYearChoices <-  c(2041, 2081) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
+startYearChoices <-  c(2081) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
+startYearChoices_historical <- c(1991)
 scenarioChoicesEnsemble <- c("historical", sspChoices)
 northernHemExtent <- c( -180, 180, 0, 90)
 southernHemExtent <-c( -180, 180, -90, 0)
@@ -119,7 +119,7 @@ f_Crop <- function(cvar, extent) {
 # NH heat -----
 for (k in sspChoices) {
   for (i in modelChoices) {
-    for (l in startyearChoices) {
+    for (l in startYearChoices) {
       gc()
       yearSpan <- paste0(l, "_", l + yearRange)
       modelName.lower <- tolower(i)
@@ -143,7 +143,7 @@ for (k in sspChoices) {
   for (i in modelChoices) {
     modelName.lower <- tolower(i)
     for (m in hemisphere)
-      for (l in startyearChoices) {
+      for (l in startYearChoices) {
         yearSpan <- paste0(l, "_", l + yearRange)
         print(m)
         yearnumberRange <- seq(l, (l + yearRange), 1)
@@ -162,7 +162,7 @@ k <- "historical"
 for (i in modelChoices) {
   modelName.lower <- tolower(i)
   for (m in hemisphere)
-    for (l in startyearChoices_historical) {
+    for (l in startYearChoices_historical) {
       yearSpan <- paste0(l, "_", l + yearRange)
       print(m)
       yearnumberRange <- seq(l, (l + yearRange), 1)
@@ -178,7 +178,7 @@ for (i in modelChoices) {
 # NH frost -----
 for (k in sspChoices) {
   for (i in modelChoices) {
-    for (l in startyearChoices) {
+    for (l in startYearChoices) {
       gc()
       yearSpan <- paste0(l, "_", l + yearRange)
       modelName.lower <- tolower(i)
@@ -203,7 +203,7 @@ for (k in sspChoices) {
 # NH heat historical -----
 k <- "historical"
 for (i in modelChoices) {
-  for (l in startyearChoices_historical) {
+  for (l in startYearChoices_historical) {
     gc()
     yearSpan <- paste0(l, "_", l + yearRange)
     modelName.lower <- tolower(i)
@@ -226,7 +226,7 @@ for (i in modelChoices) {
 
 for (k in sspChoices) {
   for (i in modelChoices) {
-    for (l in startyearChoices) {
+    for (l in startYearChoices) {
       gc()
       yearSpan <- paste0(l, "_", l + yearRange)
       modelName.lower <- tolower(i)
@@ -248,7 +248,7 @@ for (k in sspChoices) {
 # NH frost historical -----
 k <- "historical"
 for (i in modelChoices) {
-  for (l in startyearChoices_historical) {
+  for (l in startYearChoices_historical) {
     gc()
     yearSpan <- paste0(l, "_", l + yearRange)
     modelName.lower <- tolower(i)
@@ -276,7 +276,7 @@ for (k in sspChoices) {
   for (i in modelChoices) {
     modelName.lower <- tolower(i)
     for (m in hemisphere)
-      for (l in startyearChoices) {
+      for (l in startYearChoices) {
         yearSpan <- paste0(l, "_", l + yearRange)
         print(m)
         yearRange <- 19
@@ -297,7 +297,7 @@ k <- "historical"
 for (i in modelChoices) {
   modelName.lower <- tolower(i)
   for (m in hemisphere)
-    for (l in startyearChoices_historical) {
+    for (l in startYearChoices_historical) {
       yearSpan <- paste0(l, "_", l + yearRange)
       print(m)
       yearRange <- 19
@@ -316,7 +316,7 @@ for (i in modelChoices) {
 # SH heat -----
 for (k in sspChoices) {
   for (i in modelChoices) {
-    for (l in startyearChoices) {
+    for (l in startYearChoices) {
       gc()
       yearSpan <- paste0(l, "_", l + yearRange)
       modelName.lower <- tolower(i)
@@ -339,7 +339,7 @@ for (k in sspChoices) {
 # SH frost -----
 for (k in sspChoices) {
   for (i in modelChoices) {
-    for (l in startyearChoices) {
+    for (l in startYearChoices) {
       gc()
       yearSpan <- paste0(l, "_", l + yearRange)
       modelName.lower <- tolower(i)
@@ -362,7 +362,7 @@ for (k in sspChoices) {
 # SH heat historical -----
 k = "historical"
 for (i in modelChoices) {
-  for (l in startyearChoices_historical) {
+  for (l in startYearChoices_historical) {
     gc()
     yearSpan <- paste0(l, "_", l + yearRange)
     modelName.lower <- tolower(i)
@@ -385,7 +385,7 @@ for (i in modelChoices) {
 
 # SH frost historical -----
 for (i in modelChoices) {
-  for (l in startyearChoices_historical) {
+  for (l in startYearChoices_historical) {
     gc()
     yearSpan <- paste0(l, "_", l + yearRange)
     modelName.lower <- tolower(i)
@@ -410,7 +410,7 @@ for (i in modelChoices) {
 # extreme cold calcs -----
 for (k in sspChoices) {
   for (i in modelChoices) {
-    for (l in startyearChoices) {
+    for (l in startYearChoices) {
       gc()
       yearSpan <- paste0(l, "_", l + yearRange)
       modelName.lower <- tolower(i)
@@ -434,7 +434,7 @@ for (k in sspChoices) {
 # extreme cold historical -----
 k <- "historical"
 for (i in modelChoices) {
-  for (l in startyearChoices_historical) {
+  for (l in startYearChoices_historical) {
     gc()
     yearSpan <- paste0(l, "_", l + yearRange)
     modelName.lower <- tolower(i)
@@ -460,7 +460,7 @@ for (i in modelChoices) {
 for (k in sspChoices) {
   for (i in modelChoices) {
     modelName.lower <- tolower(i)
-    for (l in startyearChoices) {
+    for (l in startYearChoices) {
       yearSpan <- paste0(l, "_", l + yearRange)
       yearRange <- 19
       yearnumberRange <- seq(l, (l + yearRange), 1)
@@ -477,7 +477,7 @@ for (k in sspChoices) {
 k <- "historical"
 for (i in modelChoices) {
   modelName.lower <- tolower(i)
-  for (l in startyearChoices_historical) {
+  for (l in startYearChoices_historical) {
     yearSpan <- paste0(l, "_", l + yearRange)
     yearRange <- 19
     yearnumberRange <- seq(l, (l + yearRange), 1)
@@ -494,7 +494,7 @@ for (i in modelChoices) {
 # ensemble mean, extreme heat -----
 for (k in scenarioChoicesEnsemble) {
   for (m in hemisphere)
-    for (l in startyearChoices) {
+    for (l in startYearChoices) {
       print(m)
       yearRange <- 19
       #      if (m %in% "SH") yearRange <- 18
@@ -513,7 +513,7 @@ for (k in scenarioChoicesEnsemble) {
 # ensemble mean, frost days -----
 for (k in scenarioChoicesEnsemble) {
   for (m in hemisphere)
-    for (l in startyearChoices) {
+    for (l in startYearChoices) {
       print(m)
       yearRange <- 19
       #      if (m %in% "SH") yearRange <- 18
@@ -533,7 +533,7 @@ for (k in scenarioChoicesEnsemble) {
 
 # ensemble mean, extreme cold  -----
 for (k in scenarioChoicesEnsemble) {
-  for (l in startyearChoices) {
+  for (l in startYearChoices) {
     yearRange <- 19
     yearSpan <- paste0(l, "_", l + yearRange)
     if (k %in% "historical") yearSpan <- "1991_2010"
@@ -556,7 +556,7 @@ locofFilesToMosaic <- "data/cmip6/"
 
 for (i in mosaicFileTypes) {
   for (k in scenarioChoicesEnsemble) {
-    for (l in startyearChoices) {
+    for (l in startYearChoices) {
       yearRange <- 19
       yearSpan <- paste0(l, "_", l + yearRange)
       if (k %in% "historical") yearSpan <- "1991_2010"

@@ -5,8 +5,8 @@ library(magrittr)
 library(flextable)
 
 sspChoices <- c("ssp126", "ssp585") #"ssp126", 
-startyearChoices <-  c(2001, 2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
-startyearChoices_ensemble <-  c(2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
+startYearChoices <-  c(2001, 2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
+startYearChoices_ensemble <-  c(2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
 thiList <- c("thi.cattle", "thi.sheep", "thi.goat", "thi.yak", "thi.broiler", "thi.layer", "thi.chicken", "thi.swine")
 thiListReduced <- thiList[!thiList %in% c("thi.yak", "thi.broiler", "thi.layer")]
 
@@ -120,16 +120,16 @@ for (i in 3) {# 1:(nrow(regionInfoLookup))) {
     # add_slide(my_pres, layout = 'Title Only', master = 'Office Theme') %>% 
     #   ph_with(value = extImgObs, location = ph_location(left = 0, top = 0, width = 5, height = 8) )
     # 
-    for (l in startyearChoices) {
+    for (l in startYearChoices) {
       yearSpan <- paste0(l, "_", l + yearRange)
-      if (l %in% startyearChoices[1]) { 
+      if (l %in% startYearChoices[1]) { 
         fileNameMean <- paste0("graphics/cmip6/regionInfo/THI/", j, "MonthlyAve_",  yearSpan, "_", region, ".png")
         extImgMean <- external_img(src = fileNameMean, width = 5, height = 5)
         add_slide(my_pres, layout = 'Title Only', master = 'Office Theme') %>% 
           ph_with(value = extImgMean, location = ph_location(left = 1.5, top = .5, width = 7, height = 7) )
       }
       
-      if (!l %in% startyearChoices[1]) {
+      if (!l %in% startYearChoices[1]) {
         for (k in sspChoices) {
           
           #      fileNameCV <- paste0("graphics/cmip6/monthlyMean/ensemblemonthlyCV_",   varName, "_",  yearSpan, "_", k, ".jpg")
