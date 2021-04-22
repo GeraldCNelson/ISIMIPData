@@ -15,13 +15,13 @@ startYearChoices <-  c(2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(
 yearRange <- 9
 
 # commented out, now in the globallyUsed.R script
-#ann_crop_temp_table <- as.data.table(read_excel("data-raw/crops/ann_crop_temp_table_summary_02052020.xlsx", range = "A1:S26"))
-#setnames(ann_crop_temp_table, old = names(ann_crop_temp_table), new = make.names(names(ann_crop_temp_table)))
+#cropCharacteristics_annual <- as.data.table(read_excel("data-raw/crops/cropCharacteristics_annual_summary_02052020.xlsx", range = "A1:S26"))
+#setnames(cropCharacteristics_annual, old = names(cropCharacteristics_annual), new = make.names(names(cropCharacteristics_annual)))
 
 useCores <- detectCores() - 1 # max number of cores
 useCores <- 3 # better for memory intensive activities
 
-varList <- c("locOfFiles", "startYearChoices", "sspChoices", "modelChoices", "ann_crop_temp_table", "tmpDirName")
+varList <- c("locOfFiles", "startYearChoices", "sspChoices", "modelChoices", "cropCharacteristics_annual", "tmpDirName")
 libList <- c("raster", "ncdf4", "stringr")
 
 #test values
@@ -45,13 +45,13 @@ foreach(l = startYearChoices) %:%
 indices <- format(as.Date(names(tmax), format = "X%Y.%m.%d"), format = "%m")
 indices <- as.numeric(indices)
 
-for (m in 1:nrow(ann_crop_temp_table)) {
-  cropName <- as.character(ann_crop_temp_table[m, "crop"])
-  tdamage_mean <- as.numeric(ann_crop_temp_table[m, "tdamage mean"])
-  #     tLethal_min <- as.numeric(ann_crop_temp_table[m, "Tlethal_min"])
+for (m in 1:nrow(cropCharacteristics_annual)) {
+  cropName <- as.character(cropCharacteristics_annual[m, "crop"])
+  tdamage_mean <- as.numeric(cropCharacteristics_annual[m, "tdamage mean"])
+  #     tLethal_min <- as.numeric(cropCharacteristics_annual[m, "Tlethal_min"])
   
-  upperOpt <- as.numeric(ann_crop_temp_table[m, "topt mean"])
-  lowerOpt <- as.numeric(ann_crop_temp_table[m, "topt lower"])
+  upperOpt <- as.numeric(cropCharacteristics_annual[m, "topt mean"])
+  lowerOpt <- as.numeric(cropCharacteristics_annual[m, "topt lower"])
   print(paste0(cropName, ", lower optimum: ", lowerOpt, ", upper optimum: ", upperOpt, ", damage temp: ", tdamage_mean, "\n"))
   
   fileName_out_damage <- paste0("tdamage_mean_", cropName, "_", tdamage_mean, "C_", modelName.lower, "_", k, "_", yearSpan, ".tif")
@@ -82,12 +82,12 @@ tmax <- tasmax.observed
 indices <- format(as.Date(names(tmax), format = "X%Y.%m.%d"), format = "%m")
 indices <- as.numeric(indices)
 
-for (m in 1:nrow(ann_crop_temp_table)) {
-  cropName <- as.character(ann_crop_temp_table[m, "crop"])
-  tdamage_mean <- as.numeric(ann_crop_temp_table[m, "tdamage mean"])
+for (m in 1:nrow(cropCharacteristics_annual)) {
+  cropName <- as.character(cropCharacteristics_annual[m, "crop"])
+  tdamage_mean <- as.numeric(cropCharacteristics_annual[m, "tdamage mean"])
   
-  upperOpt <- as.numeric(ann_crop_temp_table[m, "topt mean"])
-  lowerOpt <- as.numeric(ann_crop_temp_table[m, "topt lower"])
+  upperOpt <- as.numeric(cropCharacteristics_annual[m, "topt mean"])
+  lowerOpt <- as.numeric(cropCharacteristics_annual[m, "topt lower"])
   #         print(paste0("years covered:", yearSpan)), 
   print(paste0(cropName, ", lower optimum: ", lowerOpt, ", upper optimum: ", upperOpt, ", damage temp: ", tdamage_mean))
   

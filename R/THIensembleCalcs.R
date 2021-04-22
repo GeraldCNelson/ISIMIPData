@@ -16,7 +16,7 @@ k <- "ssp585"
 l <- 2021
 j = 1 # cattle
 
-thiList <- c("thi.cattle", "thi.sheep", "thi.goat", "thi.yak", "thi.broiler", "thi.layer", "thi.chicken", "thi.swine")
+thiList <- c("thi.cattle", "thi.sheep", "thi.goat", "thi.yak", "thi.broiler", "thi.layer", "thi.chicken", "thi.pigs")
 
 # for (k in sspChoices) {
 #   for (l in startYearChoices_ensemble) {

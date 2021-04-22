@@ -1,4 +1,4 @@
-library(ncdf4)
+#library(ncdf4)
 #library(PCICt)
 #library(ncdf4.helpers)
 options("rgdal_show_exportToProj4_warnings"="none") # directions given with library(rgdal)
@@ -34,16 +34,17 @@ get_os <- function() {
   tolower(os)
 }
 if (get_os() %in% "osx") {
-  terraOptions(memfrac = 2,  progress = 10, tempdir =  "data/ISIMIP", verbose = TRUE) # need to use a relative path
+  terraOptions(memfrac = 2,  ncopies = 1, progress = 10, tempdir =  "data/ISIMIP", verbose = TRUE) # need to use a relative path
 }else{
   terraOptions(memfrac = .6,  progress = 10, tempdir =  "data/ISIMIP", verbose = TRUE) # need to use a relative path
 }
 
 
 RobinsonProj <-  "+proj=robin +lon_0=0 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs"
+GoodeHomolosineProj <- "+proj=goode" # see https://proj.org/operations/projections/goode.html
 crsRob <- RobinsonProj
 crslatlong <- "+proj=longlat +datum=WGS84 +no_defs"
-
+crsGoode <- GoodeHomolosineProj
 varNamesInfo <- as.data.table(read_excel("data-raw/varNamesLookup.xlsx"))
 
 # coastsCoarse <- st_read(dsn = "/Users/gcn/Documents/workspace/ISIMIPData/data-raw/naturalEarth/ne_110m_coastline/ne_110m_coastline.shp")
@@ -122,7 +123,8 @@ for (q in c("dataDirs.csv", "graphicsDirs.csv")) {
 # if (get_os() %in% "osx") locOfCMIP6tifFiles <- "/Volumes/ExtremeSSD/ISIMIP/cmip6/"
 # if (get_os() %in% c("Linux", "linux")) locOfCMIP6tifFiles <- "data-raw/ISIMIP/cmip6/"
 #locOfCMIP6tifFiles <- "data-raw/ISIMIP/cmip6/unitsCorrected/"
-locOfCMIP6tifFiles <- "/Volumes/ExtremeSSD2/climate_land_only/unitsCorrected/"
+# locOfCMIP6tifFiles <- "/Volumes/ExtremeSSD2/climate_land_only/unitsCorrected/"
+ locOfCMIP6tifFiles <- "data/bigFiles/"
 tmpDirName <- paste0(locOfCMIP6tifFiles, "rasterTmp", Sys.getpid(), "/")
 
 # gdal_polygonizeR <- function(x, outshape=NULL, gdalformat = 'ESRI Shapefile',
@@ -159,23 +161,22 @@ tmpDirName <- paste0(locOfCMIP6tifFiles, "rasterTmp", Sys.getpid(), "/")
 # }
 
 # source of crop temperature values
-ann_crop_temp_table <- as.data.table(read_excel("data-raw/crops/ann_crop_temp_table_summary_22082020.xlsx", range = "A1:T26"))
-data.table::setnames(ann_crop_temp_table, old = names(ann_crop_temp_table), new = make.names(names(ann_crop_temp_table)))
+cropCharacteristics_annual <- as.data.table(read_excel("data-raw/crops/GCB_annual_crops_temp_requirements_11032021.xlsx", range = "A1:J21"))
+cropCharacteristics_annual[, Crop := tolower(Crop)]
+# cropCharacteristics_perennial <- as.data.table(read_excel("data-raw/crops/perennnial_crop_temp_table_summary_29_52020.xlsx", range = "A1:S10"))
+# data.table::setnames(cropCharacteristics_perennial, old = names(cropCharacteristics_perennial), new = make.names(names(cropCharacteristics_perennial)))
 
-perennial_crop_temp_table <- as.data.table(read_excel("data-raw/crops/perennnial_crop_temp_table_summary_29_52020.xlsx", range = "A1:S10"))
-data.table::setnames(perennial_crop_temp_table, old = names(perennial_crop_temp_table), new = make.names(names(perennial_crop_temp_table)))
-
-cropChoice_cereals <- ann_crop_temp_table[ICC.crop.classification %in% "Cereal", crop]
-cropChoice_legumes <- ann_crop_temp_table[ICC.crop.classification %in% "Leguminous crops", crop]
-cropChoice_oilseeds <- ann_crop_temp_table[ICC.crop.classification %in% "Oilseed crops", crop]
-cropChoice_RnTubers <- ann_crop_temp_table[ICC.crop.classification %in% "Root/tuber crops", crop]
-cropChoice_vegetables <- ann_crop_temp_table[ICC.crop.classification %in% "Vegetable", crop]
-cropChoice_sugar <- ann_crop_temp_table[ICC.crop.classification %in% "Sugar crops", crop]
-cropChoice_perennials <- perennial_crop_temp_table[ICC.crop.classification %in% "Fruit and nuts", title]
-cropChoices <- c("cropChoice_cereals", "cropChoice_legumes", "cropChoice_oilseeds", "cropChoice_RnTubers", "cropChoice_vegetables", "cropChoice_sugar") # omitted until we get gdd coefficients, "cropChoice_perennials")
+# cropChoice_cereals <- cropCharacteristics_annual[Crop_type == "Cereal", Crop]
+# cropChoice_pulses <- cropCharacteristics_annual[Crop_type == "Pulse", Crop]
+# cropChoice_oilseeds <- cropCharacteristics_annual[Crop_type == "Oilseed", Crop]
+# cropChoice_RnTubers <- cropCharacteristics_annual[Crop_type == "Root/tuber", Crop]
+# cropChoice_vegetables <- cropCharacteristics_annual[Crop_type == "Vegetable", Crop]
+# cropChoice_sugar <- cropCharacteristics_annual[Crop_type == "Sugar", Crop]
+# cropChoice_perennials <- perennial_crop_temp_table[Crop_type == "Fruit and nuts", title]
+# cropChoices <- c("cropChoice_cereals", "cropChoice_legumes", "cropChoice_oilseeds", "cropChoice_RnTubers", "cropChoice_vegetables", "cropChoice_sugar") # omitted until we get gdd coefficients, "cropChoice_perennials")
 
 
-# THI formulas
+# THI formulas - now incorporated into a cpp file and run from the thiCalcs2.R script
 # mostly from Lallo
 # note: The Dry Bulb temperature, usually referred to as "air temperature", is the air property that is most commonly used. 
 # When people refer to the temperature of the air they are normally referring to the dry bulb temperature.
@@ -187,18 +188,18 @@ cropChoices <- c("cropChoice_cereals", "cropChoice_legumes", "cropChoice_oilseed
 # thi.broiler <- 0.85 * tmax + 0.15 * tmin
 # thi.layer <- 0.60 * tmax + 0.40 * tmin
 # thi.chicken <- 0.60 * tmax + 0.40 * tmin # using broiler formula
-# thi.swine <- tmax - (0.55 - (0.0055 * rh) * (tmax - 14.5))
+# thi.pigs <- tmax - (0.55 - (0.0055 * rh) * (tmax - 14.5))
 
 
-formula.thi.cattle <- "(1.8 * tmax + 32.0) - ((0.55 - 0.0055 * rh) * (1.8 * tmax - 26.8))" # rh in %, tmin and tmax in C
-formula.thi.sheep <- "tmax - ((0.31 - (0.31 * (rh / 100))) * (tmax - 14.4))" # source: Marai, I. F. M., El-Darawany, A. A., Fadiel, A., and Abdel-Hafez, M. A. M. (2007). Physiological traits as affected by heat stress in sheep—A review. Small Rumin. Res. 71, 1–12. doi:10.1016/j.smallrumres.2006.10.003.
-#      thi.goat <- tmax - (0.55 - (0.0055 * (1 - rh) * (tmax - 14.4))) #Finocchiaro, R., van Kaam, J. B. C. H. M., Portolano, B., and Misztal, I. (2005). Effect of Heat Stress on Production of Mediterranean Dairy Sheep. J. Dairy Sci. 88, 1855–1864. doi:10.3168/jds.S0022-0302(05)72860-5.
-formula.thi.goat <-  "(1.8 * tmax + 32.0) - ((0.55 - 0.0055 * rh) * (1.8 * tmax - 26.8))" # rh in %, tmin and tmax in C
-formula.thi.yak <- "(0.8 * tmax) + (rh / 100) * (tmax - 14.4) + 46.4" # Ta is air temperature in C
-formula.thi.broiler <- "0.85 * tmax + 0.15 * tmin"
-formula.thi.layer <- "0.60 * tmax + 0.40 * tmin"
-formula.thi.chicken <- "0.60 * tmax + 0.40 * tmin" # using broiler formula
-formula.thi.swine <- "tmax - (0.55 - (0.0055 * rh) * (tmax - 14.5))"
+# formula.thi.cattle <- "(1.8 * tmax + 32.0) - ((0.55 - 0.0055 * rh) * (1.8 * tmax - 26.8))" # rh in %, tmin and tmax in C
+# formula.thi.sheep <- "tmax - ((0.31 - (0.31 * (rh / 100))) * (tmax - 14.4))" # source: Marai, I. F. M., El-Darawany, A. A., Fadiel, A., and Abdel-Hafez, M. A. M. (2007). Physiological traits as affected by heat stress in sheep—A review. Small Rumin. Res. 71, 1–12. doi:10.1016/j.smallrumres.2006.10.003.
+# #      thi.goat <- tmax - (0.55 - (0.0055 * (1 - rh) * (tmax - 14.4))) #Finocchiaro, R., van Kaam, J. B. C. H. M., Portolano, B., and Misztal, I. (2005). Effect of Heat Stress on Production of Mediterranean Dairy Sheep. J. Dairy Sci. 88, 1855–1864. doi:10.3168/jds.S0022-0302(05)72860-5.
+# formula.thi.goat <-  "(1.8 * tmax + 32.0) - ((0.55 - 0.0055 * rh) * (1.8 * tmax - 26.8))" # rh in %, tmin and tmax in C
+# formula.thi.yak <- "(0.8 * tmax) + (rh / 100) * (tmax - 14.4) + 46.4" # Ta is air temperature in C
+# formula.thi.broiler <- "0.85 * tmax + 0.15 * tmin"
+# formula.thi.layer <- "0.60 * tmax + 0.40 * tmin"
+# formula.thi.chicken <- "0.60 * tmax + 0.40 * tmin" # using broiler formula
+# formula.thi.pigs <- "tmax - (0.55 - (0.0055 * rh) * (tmax - 14.5))"
 
 #list of fruits to be used
 

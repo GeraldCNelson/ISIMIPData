@@ -15,7 +15,7 @@ l <- 2091
 j = 1 # for cattle
 
 bpList <- as.data.table(read_excel("data-raw/animals/AnimalbreakpointslistRaw.xlsx"))
-thiList <- c("thi.cattle", "thi.sheep", "thi.goat", "thi.yak", "thi.broiler", "thi.layer", "thi.chicken", "thi.swine")
+thiList <- c("thi.cattle", "thi.sheep", "thi.goat", "thi.yak", "thi.broiler", "thi.layer", "thi.chicken", "thi.pigs")
 thiListReduced <- thiList[!thiList %in% c("thi.yak", "thi.broiler", "thi.layer")]
 
 # create maps of where animals are located with cts

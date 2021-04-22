@@ -36,7 +36,7 @@ f_daily_mean <- function() {
         print(paste0("fileName out: ", fileName_out))
         r <- rast(fileName_in)
         print(r)
-        print(system.time(r.mean <- tapp(r, indices_day, fun = mean, na.rm = TRUE, filename = fileName_out, overwrite = TRUE, woptList = woptList)))
+        print(system.time(r.mean <- tapp(r, indices_day, fun = mean, na.rm = TRUE, filename = fileName_out, overwrite = TRUE, wopt = woptList)))
       }
     }
   }
@@ -76,7 +76,7 @@ f_ensemble_daily_mean <- function() {
     x <- lapply(modelChoices.lower, readRast)
     r <- rast(x)
     print(r)
-    system.time(r.mean <- tapp(r, indices_day, fun = mean, na.rm = TRUE))#, filename = fileName_out, overwrite = TRUE, woptList = woptList))
+    system.time(r.mean <- tapp(r, indices_day, fun = mean, na.rm = TRUE))#, filename = fileName_out, overwrite = TRUE, wopt = woptList))
     #    r.cv <- tapp(r, 1:12, fun = raster::cv)
     names(r.mean) <- month.abb
     fileName_out <- paste0("/Volumes/PassportMac/ISIMIP/cmip6/climate3b/monthlyMn_10year/ensembleMn_mnthMn_10Yr_", k,  "_",  j, "_", yearSpan, ".tif")

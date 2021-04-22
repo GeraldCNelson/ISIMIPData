@@ -65,7 +65,7 @@ write.csv(animalStats, "data/animals/animalCt.csv")
 
 # now do plants
 
-annCropsToAnalyze <- tolower(ann_crop_temp_table$crop)
+annCropsToAnalyze <- tolower(cropCharacteristics_annual$crop)
 
 crops <- c("abaca", "agave", "alfalfa", "almond", "aniseetc", "apple", "apricot", 
            "areca", "artichoke", "asparagus", "avocado", "bambara", "banana", 

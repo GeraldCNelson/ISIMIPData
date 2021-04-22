@@ -21,9 +21,9 @@ for (k in sspChoices) {
     yearSpan <- paste0(l, "_", l + yearRange)
     print(paste0("ssp choice: ", k, "start year: ", l))
     
-    for (m in 1:nrow(ann_crop_temp_table)) {
-      cropName <- as.character(ann_crop_temp_table[m, "crop"])
-      tdamage_mean <- as.numeric(ann_crop_temp_table[m, "tdamage mean"])
+    for (m in 1:nrow(cropCharacteristics_annual)) {
+      cropName <- as.character(cropCharacteristics_annual[m, "crop"])
+      tdamage_mean <- as.numeric(cropCharacteristics_annual[m, "tdamage mean"])
       yearRange <- 9
       print(paste0(cropName, ", damage temp: ", tdamage_mean, " start year: ", l))
       modelName.lower <- tolower(i)
@@ -60,9 +60,9 @@ for (k in sspChoices) {
   for (l in startYearChoices) {
     yearSpan <- paste0(l, "_", l + yearRange)
     print(paste0("ssp choice: ", k, "start year: ", l))
-    for (m in 1:nrow(ann_crop_temp_table)) {
-      cropName <- as.character(ann_crop_temp_table[m, "crop"])
-      tdamage_mean <- as.numeric(ann_crop_temp_table[m, "tdamage mean"])
+    for (m in 1:nrow(cropCharacteristics_annual)) {
+      cropName <- as.character(cropCharacteristics_annual[m, "crop"])
+      tdamage_mean <- as.numeric(cropCharacteristics_annual[m, "tdamage mean"])
       fileNameMask.in <- paste0("data/crops/rasterMask_", tolower(cropName), ".tif")
       print(paste("fileNameMaskIn: ", fileNameMask.in))
       fileNameMean.in <- paste0("data/cmip6/damageTemp/tdamage_ensembleMean_", cropName, "_", tdamage_mean, "C_", k, "_", yearSpan, ".tif")
@@ -87,9 +87,9 @@ for (k in sspChoices) {
   l <- 2001
   yearSpan <- paste0(l, "_", l + yearRange)
   print(paste0("ssp choice: ", k, "start year: ", l))
-  for (m in 1:nrow(ann_crop_temp_table)) {
-    cropName <- as.character(ann_crop_temp_table[m, "crop"])
-    tdamage_mean <- as.numeric(ann_crop_temp_table[m, "tdamage mean"])
+  for (m in 1:nrow(cropCharacteristics_annual)) {
+    cropName <- as.character(cropCharacteristics_annual[m, "crop"])
+    tdamage_mean <- as.numeric(cropCharacteristics_annual[m, "tdamage mean"])
     fileNameMask.in <- paste0("data/crops/rasterMask_", tolower(cropName), ".tif")
     print(paste("fileNameMaskIn: ", fileNameMask.in))
     fileNameMean.in <- paste0("data/cmip6/damageTemp/tdamage_mean_", cropName, "_", tdamage_mean, "C",  "_observed_", yearSpan, ".tif")
@@ -107,9 +107,9 @@ for (k in sspChoices) {
 l <- 2001
 yearSpan <- paste0(l, "_", l + yearRange)
 print(paste0("ssp choice: ", k, "start year: ", l))
-for (m in 1:nrow(ann_crop_temp_table)) {
-  cropName <- as.character(ann_crop_temp_table[m, "crop"])
-  tdamage_mean <- as.numeric(ann_crop_temp_table[m, "tdamage mean"])
+for (m in 1:nrow(cropCharacteristics_annual)) {
+  cropName <- as.character(cropCharacteristics_annual[m, "crop"])
+  tdamage_mean <- as.numeric(cropCharacteristics_annual[m, "tdamage mean"])
   fileNameMask.in <- paste0("data/crops/rasterMask_", tolower(cropName), ".tif")
   print(paste("fileNameMaskIn: ", fileNameMask.in))
   fileNameMean.in <- paste0("data/cmip6/damageTemp/tdamage_mean_", cropName, "_", tdamage_mean, "C",  "_observed_", yearSpan, ".tif")
@@ -145,9 +145,9 @@ for (k in sspChoices) {
     yearSpan <- paste0(l, "_", l + yearRange)
     print(paste0("ssp choice: ", k, "start year: ", l))
     
-    for (m in 1:nrow(ann_crop_temp_table)) {
-      cropName <- as.character(ann_crop_temp_table[m, "crop"])
-      tdamage_mean <- as.numeric(ann_crop_temp_table[m, "tdamage mean"])
+    for (m in 1:nrow(cropCharacteristics_annual)) {
+      cropName <- as.character(cropCharacteristics_annual[m, "crop"])
+      tdamage_mean <- as.numeric(cropCharacteristics_annual[m, "tdamage mean"])
       yearRange <- 9
       print(paste0(cropName, ", damage temp: ", tdamage_mean, " start year: ", l))
       modelName.lower <- tolower(i)
@@ -184,9 +184,9 @@ for (k in sspChoices) {
   for (l in startYearChoices) {
     yearSpan <- paste0(l, "_", l + yearRange)
     print(paste0("ssp choice: ", k, "start year: ", l))
-    for (m in 1:nrow(ann_crop_temp_table)) {
-      cropName <- as.character(ann_crop_temp_table[m, "crop"])
-      tdamage_mean <- as.numeric(ann_crop_temp_table[m, "tdamage mean"])
+    for (m in 1:nrow(cropCharacteristics_annual)) {
+      cropName <- as.character(cropCharacteristics_annual[m, "crop"])
+      tdamage_mean <- as.numeric(cropCharacteristics_annual[m, "tdamage mean"])
       fileNameMask.in <- paste0("data/crops/rasterMask_", tolower(cropName), ".tif")
       print(paste("fileNameMaskIn: ", fileNameMask.in))
       fileNameMean.in <- paste0("data/cmip6/damageTemp/tdamage_ensembleMean_", cropName, "_", tdamage_mean, "C_", k, "_", yearSpan, ".tif")
@@ -211,9 +211,9 @@ for (k in sspChoices) {
   l <- 2001
   yearSpan <- paste0(l, "_", l + yearRange)
   print(paste0("ssp choice: ", k, "start year: ", l))
-  for (m in 1:nrow(ann_crop_temp_table)) {
-    cropName <- as.character(ann_crop_temp_table[m, "crop"])
-    tdamage_mean <- as.numeric(ann_crop_temp_table[m, "tdamage mean"])
+  for (m in 1:nrow(cropCharacteristics_annual)) {
+    cropName <- as.character(cropCharacteristics_annual[m, "crop"])
+    tdamage_mean <- as.numeric(cropCharacteristics_annual[m, "tdamage mean"])
     fileNameMask.in <- paste0("data/crops/rasterMask_", tolower(cropName), ".tif")
     print(paste("fileNameMaskIn: ", fileNameMask.in))
     fileNameMean.in <- paste0("data/cmip6/damageTemp/tdamage_mean_", cropName, "_", tdamage_mean, "C",  "_observed_", yearSpan, ".tif")
@@ -231,9 +231,9 @@ for (k in sspChoices) {
 l <- 2001
 yearSpan <- paste0(l, "_", l + yearRange)
 print(paste0("ssp choice: ", k, "start year: ", l))
-for (m in 1:nrow(ann_crop_temp_table)) {
-  cropName <- as.character(ann_crop_temp_table[m, "crop"])
-  tdamage_mean <- as.numeric(ann_crop_temp_table[m, "tdamage mean"])
+for (m in 1:nrow(cropCharacteristics_annual)) {
+  cropName <- as.character(cropCharacteristics_annual[m, "crop"])
+  tdamage_mean <- as.numeric(cropCharacteristics_annual[m, "tdamage mean"])
   fileNameMask.in <- paste0("data/crops/rasterMask_", tolower(cropName), ".tif")
   print(paste("fileNameMaskIn: ", fileNameMask.in))
   fileNameMean.in <- paste0("data/cmip6/damageTemp/tdamage_mean_", cropName, "_", tdamage_mean, "C",  "_observed_", yearSpan, ".tif")

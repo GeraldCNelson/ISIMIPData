@@ -23,7 +23,7 @@ m <- "Wheat"
 useCores <- detectCores() - 2 # max number of cores
 useCores <- 2 # better for memory intensive activities
 
-varList <- c("startYearChoices", "sspChoices", "modelChoices", "locOfFiles", "ann_crop_temp_table")
+varList <- c("startYearChoices", "sspChoices", "modelChoices", "locOfFiles", "cropCharacteristics_annual")
 libList <- c("terra", "ncdf4")
 
 cl <- clusterSetup(varList, libList, useCores) # function created in globallyUsed.R
@@ -98,7 +98,6 @@ foreach(l = startYearChoices) %:%
     #        indices <- format(as.Date(names(hiMasked), format = "X%Y.%m.%d"), format = "%j") # %j is day of the year
     #        indices <- as.numeric(indices)
     #        
-    #        cropCalendarName <- ann_crop_temp_table[crop %in% cropName, crop.calendar]
     #        cropCalFilesLoc <- paste0("data-raw/crops/cropCalendars/ALL_CROPS_netCDF_0.5deg_filled/")
     #        fileName_in <- paste0(cropCalendarName, ".crop.calendar.fill.nc")
     #        locNFileIn <- paste0(cropCalFilesLoc, fileName_in)

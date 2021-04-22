@@ -14,10 +14,10 @@ locOfFiles <- locOfCMIP6ncFiles
 yearRange <- 9
 
 # commented out, now in the globallyUsed.R script
-#ann_crop_temp_table <- as.data.table(read_excel("data-raw/crops/ann_crop_temp_table_summary_02052020.xlsx", range = "A1:S26"))
-#setnames(ann_crop_temp_table, old = names(ann_crop_temp_table), new = make.names(names(ann_crop_temp_table)))
+#cropCharacteristics_annual <- as.data.table(read_excel("data-raw/crops/cropCharacteristics_annual_summary_02052020.xlsx", range = "A1:S26"))
+#setnames(cropCharacteristics_annual, old = names(cropCharacteristics_annual), new = make.names(names(cropCharacteristics_annual)))
 
-cropChoices <- unique(ann_crop_temp_table$crop)
+cropChoices <- unique(cropCharacteristics_annual$crop)
 
 # info on managing raster disk use - https://stackoverflow.com/questions/25426405/raster-package-taking-all-hard-drive
 
@@ -94,7 +94,7 @@ foreach(i = modelChoices) %:%
     fileNameMask.in <- paste0("data/crops/rasterMask_", tolower(m), ".tif")
     cropMask <- rast(fileNameMask.in)
     
-    cropCalendarName <- ann_crop_temp_table[crop %in% cropName, crop.calendar]
+    cropCalendarName <- cropCharacteristics_annual[crop %in% cropName, crop.calendar]
     cropCalFilesLoc <- paste0("data-raw/crops/cropCalendars/ALL_CROPS_netCDF_0.5deg_filled/")
     fileName_in <- paste0(cropCalendarName, ".crop.calendar.fill.nc")
     #    locNFileIn <- paste0(filesLoc, fileName_in, ".gz")

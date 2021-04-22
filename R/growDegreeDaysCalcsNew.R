@@ -1,28 +1,14 @@
-#  Calculate the number of growing degrees per day for specific crops in specific areas. Main function is globallyUsed.R
-#source("R/globallyUsed.R")
-{library(terra)
+#  Calculate the number of growing degrees per day for specific crops in specific areas. 
+# use hemisphere and climate year data
+source("R/globallyUsed.R")
+{
   library(data.table)
   library(readxl)
-  get_os <- function() {
-    sysinf <- Sys.info()
-    if (!is.null(sysinf)) {
-      os <- sysinf['sysname']
-      if (os == 'Darwin')
-        os <- "osx"
-    } else {## mystery machine
-      os <- .Platform$OS.type
-      if (grepl("^darwin", R.version$os))
-        os <- "osx"
-      if (grepl("linux-gnu", R.version$os))
-        os <- "linux"
-    }
-    tolower(os)
-  }
+  
   if (get_os() %in% "osx") {
-    terraOptions(memfrac = 2,  progress = 10, tempdir =  "data/ISIMIP", verbose = TRUE) # need to use a relative path
-    locOfFiles <- "/Volumes/ExtremeSSD3/bigFiles/"
+    terraOptions(memfrac = 2,  progress = 10, tempdir =  "data/ISIMIP", verbose = TRUE) #ncopies = 1, 
+    locOfFiles <- "data/bigFiles/"
     gddsfileOutLoc <- "data/cmip6/growingDegreeDays/"
-    
   }else{
     terraOptions(progress = 10, tempdir =  "data/ISIMIP", verbose = TRUE) # need to use a relative path
     locOfFiles <- "data/tas/"
@@ -30,144 +16,113 @@
   }
   woptList <- list(gdal=c("COMPRESS=LZW"))
   woptList <- list(gdal=c("COMPRESS=DEFLATE", "PREDICTOR=3", "ZLEVEL = 6"))
+  # woptList <- list(gdal=c("COMPRESS=ZSTD", "PREDICTOR=3", "ZSTD_LEVEL=6"))
   
-  #   library(Rcpp)
-  #   
-  #   cppFunction("
-  #   NumericVector min_vec(NumericVector vec1, NumericVector vec2) {
-  #     int n = vec1.size();
-  #     if(n != vec2.size()) return 0;
-  #     else {
-  #       NumericVector out(n);
-  #       for(int i = 0; i < n; i++) {
-  #         out[i] = std::min(vec1[i], vec2[i]);
-  #       }
-  #       return out;
-  #     }
-  #   }
-  # ")
-  #   
-  #   cppFunction("
-  #   NumericVector max_vec(NumericVector vec1, NumericVector vec2) {
-  #     int n = vec1.size();
-  #     if(n != vec2.size()) return 0;
-  #     else {
-  #       NumericVector out(n);
-  #       for(int i = 0; i < n; i++) {
-  #         out[i] = std::max(vec1[i], vec2[i]);
-  #       }
-  #       return out;
-  #     }
-  #   }
-  # ")
+  #file locations -----
+  runsLoc <- "data/cmip6/runs/"
+  rasterMaskLoc <- "data/crops/rasterMask_"
+  cropCalFilesLoc <- paste0("data-raw/crops/cropCalendars/ggcmiCropCalendars/")
+  gddDaysFilesLoc <- "data/cmip6/growingDegreeDays/"
+  
   
   sspChoices <- c("ssp126", "ssp585") 
-  sspChoices <- c("ssp126") 
+  #  sspChoices <- c("ssp126") 
   modelChoices <- c( "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM6A-LR") 
-  # modelChoices <- c("UKESM1-0-LL", "IPSL-CM6A-LR") 
+   modelChoices <- c("MRI-ESM2-0") 
   modelChoices.lower <- tolower(modelChoices)
-  startYearChoices <-  c( 2041, 2081) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
-  #startYearChoices <-  c(2081) #2011, 2041, 2051, 2081) 
-  ann_crop_temp_table <- as.data.table(read_excel("data-raw/crops/ann_crop_temp_table_summary_22082020.xlsx", range = "A1:T26"))
-  data.table::setnames(ann_crop_temp_table, old = names(ann_crop_temp_table), new = make.names(names(ann_crop_temp_table)))
-  cropChoice_cereals <- ann_crop_temp_table[ICC.crop.classification %in% "Cereal", crop]
+  startYearChoices <-  c( 2041, 2081) 
+  #startYearChoices <-  c(2081) 
+  # source of crop temperature values
+  cropCharacteristics_annual <- as.data.table(read_excel("data-raw/crops/GCB_annual_crops_temp_requirements_11032021.xlsx", range = "A1:J21"))
   
+  data.table::setnames(cropCharacteristics_annual, old = names(cropCharacteristics_annual), new = make.names(names(cropCharacteristics_annual)))
+  cropChoice_cereals <- cropCharacteristics_annual[Crop_type %in% "Cereal", Crop]
+  hemispheres <- c("NH", "SH")
+  extent_NH <- c( -180, 180, 0, 90)
+  extent_SH <-c( -180, 180, -60, 0) #-60 gets rid of Antarctica
   yearRange <- 19
   
   cropChoices <- cropChoice_cereals
+  cropChoices <- c("Maize")
   #test values
   i <- "UKESM1-0-LL"
   k <- "ssp585"
   l <- 2041
-  m <- "Wheat"
+  m <- "Maize"
+  hem <- "NH"
   
-  f_gdd = function(cellVector, tbase, tbase_max){
+  f_gdd = function(cellVector, Topt_min, Topt_max){
     if (is.nan(cellVector[1])) {return(cellVector)}
-    #  y <- clamp(cellVector, lower = tbase, upper = tbase_max)
-    y <- sapply(cellVector, FUN = f_ycalc) # from Toshi email May 3, 2020
+    y <- sapply(cellVector, FUN = f_ycalc, Topt_max, Topt_min) # from Toshi email May 3, 2020
     return(y)
   }
   
-  f_ycalc <- function(cellVector){max(0, min(cellVector, tbase_max)-tbase)}
+  # f_ycalc <- function(cellVector, tbase_max, tbase){max(0, min(cellVector, tbase_max)-tbase)}
+  f_ycalc <- function(cellVector, Topt_max, Topt_min){
+    ycalc <- max(0, min(cellVector, Topt_max)-Topt_min)
+    #   print(paste0("ycalc: ", ycalc))
+    return(ycalc)
+  }
   
-  # f_gdd = function(cellVector, tbase, tbase_max){
-  #   if (is.nan(cellVector[1])) {return(cellVector)}
-  #   y <- pmax(0, pmin(cellVector, tbase_max)-tbase)
-  #   return(y)
-  # }
+  f_computeGDDs <- function(k, i, l, hem, cropCharacteristics_annual) {
+    print(paste0("start year: ", l, ", ssp: ", k,  " model: ", i, ", start year: ", l, ", hemisphere: ", hem))
+    modelName.lower <- tolower(i)
+    #    if (hem == "SH") yearRange <- 18
+    yearSpan <- paste0(l, "_", l + yearRange)
+    fileName_in <- paste0("data/cmip6/runs/", modelName.lower, "_", "tas", "_", hem, "_", "summer", "_", k, "_", yearSpan, ".tif")
+    tas <- rast(fileName_in)
+    print(tas)
+    #   print("mem_info for tas")
+    #   terra:::.mem_info(tas, 1) 
+    #   if (get_os() %in% "osx") print(system.time(tas <- tas * 1)) takes 40+ seconds to do this
+    
+    for (cropName in cropChoices) {
+      cropName_lower <- tolower(cropName)
+      fileName_out <- paste0(gddsfileOutLoc, modelName.lower, "_", "gdd", "_", hem, "_", cropName_lower, "_", k, "_", yearSpan, ".tif")
+      if (!fileName_out %in% gddFilesCompleted) {
+        #      print(paste0("Working on: ", fileName_out))
+        Topt_min <- cropCharacteristics_annual[Crop == cropName, Topt_min]
+        Topt_max <- cropCharacteristics_annual[Crop == cropName, Topt_max]
+        print(paste0("crop: ", cropName, " Topt_min: ", Topt_min, " Topt_max: ", Topt_max, " fileName_out: ", fileName_out))
+        print(system.time(gdd <- app(tas, fun=f_gdd, Topt_min, Topt_max, filename = fileName_out, overwrite = TRUE, wopt = woptList)))
+        print(paste0("gdd file out name: ", fileName_out))
+        return(gdd)
+      }else{
+        print(paste("This file has already been created: ", fileName_out))
+      }
+    }
+  }
+  
   gddFilesCompleted <- list.files(gddsfileOutLoc,  full.names = TRUE)
   gddFilesCompleted <- gddFilesCompleted[!grepl("aux.xml", gddFilesCompleted, fixed = TRUE)]
   gddFilesCompleted <- gsub("//", "/", gddFilesCompleted)
 }
 
-for (k in sspChoices)  {
-  for (i in modelChoices)  {
-    for (l in startYearChoices) {
-      print(paste0("start year: ", l, " ssp: ", k,  " model: ", i, ", start year: ", l, ", ssp choice: ", k, ", pid: ", Sys.getpid(), " systime: ", Sys.time()))
-      modelName.lower <- tolower(i)
-      yearSpan <- paste0(l, "_", l + yearRange)
-      fileIn.tas <- paste0("data/bigFiles/", modelName.lower, "_", k, "_tas_global_daily_", yearSpan, ".tif")
-            tas <- rast(fileIn.tas)
-      print("mem_info for tas")
-      terra:::.mem_info(tas, 1) 
-      if (get_os() %in% "osx") print(system.time(tas <- tas * 1))
-      
-      for (m in cropChoices) {
-        print(paste0("crop: ", m))
-        fileName_out <- paste0(gddsfileOutLoc, modelName.lower, "_", "gdd", "_", tolower(m), "_", k, "_", "global_daily", "_", yearSpan, ".tif")
-        if (!fileName_out %in% gddFilesCompleted) {
-          print(paste0("Working on: ", fileName_out))
-          tbase <- ann_crop_temp_table[crop == m, Tbase]
-          tbase_max <- ann_crop_temp_table[crop == m, Tbase_max]
-          print(Sys.time())
-          print(system.time(gdd <- app(tas, fun=f_gdd, tbase, tbase_max, filename = fileName_out, overwrite=TRUE, wopt = woptList)))
-          print(Sys.time())
-          print(paste0("gdd file out name: ", fileName_out))
-          #         writeRaster(round(gdd, 1), filename = paste0(gddsfileOutLoc, fileName_out, ".tif"), format = "GTiff", overwrite = TRUE, wopt = woptList)
-          gdd <- NULL
-          gc(reset = FALSE, full = TRUE)
-        }else{
-          print(paste("This file has already been created: ", fileName_out))
-        }
-        gc(reset = FALSE, full = TRUE)
+# calc gdds, scenarios -----
+for (k in sspChoices) {
+  #    k = "ssp126"
+  for (l in startYearChoices) {
+    yearSpan <- paste0(l, "_", l + yearRange)
+    for (i in modelChoices) {
+      for (hem in hemispheres) {
+        gdds <- f_computeGDDs(k, i, l, hem, cropCharacteristics_annual)
       }
     }
   }
 }
 
-# historical -----
+# calc gdds, historical -----
 k <- "historical"
 l <- 1991
-for (i in modelChoices)  {
-  print(paste0("start year: ", l, " ssp: ", k,  " model: ", i, ", start year: ", l, ", ssp choice: ", k, ", pid: ", Sys.getpid(), " systime: ", Sys.time()))
-  modelName.lower <- tolower(i)
-  yearSpan <- paste0(l, "_", l + yearRange)
-  fileIn.tas <- paste0("data/bigFiles/", modelName.lower, "_", k, "_tas_global_daily_", yearSpan, ".tif")
-  tas <- rast(fileIn.tas)
-  print("mem_info for tas")
-  terra:::.mem_info(tas, 1) 
-  if (get_os() %in% "osx") print(system.time(tas <- tas * 1))
-  
-  for (m in cropChoices) {
-    print(paste0("crop: ", m))
-    fileName_out <- paste0(gddsfileOutLoc, modelName.lower, "_", "gdd", "_", tolower(m), "_", k, "_", "global_daily", "_", yearSpan, ".tif")
-    if (!fileName_out %in% gddFilesCompleted) {
-      print(paste0("Working on: ", fileName_out))
-      tbase <- ann_crop_temp_table[crop == m, Tbase]
-      tbase_max <- ann_crop_temp_table[crop == m, Tbase_max]
-      print(Sys.time())
-      print(system.time(gdd <- app(tas, fun=f_gdd, tbase, tbase_max, filename = fileName_out, overwrite=TRUE, wopt = woptList)))
-      print(Sys.time())
-      print(paste0("gdd file out name: ", fileName_out))
-      #         writeRaster(round(gdd, 1), filename = paste0(gddsfileOutLoc, fileName_out, ".tif"), format = "GTiff", overwrite = TRUE, wopt = woptList)
-      gdd <- NULL
-      gc(reset = FALSE, full = TRUE)
-    }else{
-      print(paste("This file has already been created: ", fileName_out))
-    }
-    gc(reset = FALSE, full = TRUE)
+yearSpan <- paste0(l, "_", l + yearRange)
+for (i in modelChoices) {
+  for (hem in hemispheres) {
+    f_computeGDDs(k, i, l, hem, cropCharacteristics_annual)
   }
 }
+
+
+
 
 # ensemble calcs -----
 # do ensemble calcs by hemisphere, 20 years in the northern hemisphere, 19 in the southern hemisphere
@@ -179,19 +134,16 @@ k <- "ssp585"
 l <- 2041
 m <- "Wheat"
 
-hemisphere <- c("NH", "SH")
-extent_NH <- c( -180, 180, 0, 90)
-extent_SH <-c( -180, 180, -60, 0) #-60 gets rid of Antarctica
 # readRast <- function(i) {
-#   fileName_in <- paste0(gddsfileOutLoc, i, "_", "gdd", "_", tolower(m), "_", k, "_", "global_daily", "_", yearSpan, ".tif")
+#   fileName_in <- paste0(gddsfileOutLoc, i, "_", "gdd", "_", tolower(m), "_", k, "_", yearSpan, ".tif")
 #   r <- rast(fileName_in)
 #   # names(r) <- indices
 #   # r
 # }
 
-f_readRast_thi_ensemble <- function(i, m, k) {
-  fileName_in <- paste0(gddsfileOutLoc, i, "_", "gdd", "_", tolower(m), "_", k, "_", "global_daily", "_", yearSpan, ".tif")
-  print(paste0("m: ", m, ", k: ", k, ", model(i): ", i, ", fileName in: ", fileName_in))
+f_readRast_thi_ensemble <- function(i, cropName, k) {
+  fileName_in <- paste0(gddsfileOutLoc, i, "_", "gdd", "_", tolower(m), "_", k, "_", yearSpan, ".tif")
+  print(paste0("cropName: ", cropName, ", k: ", k, ", model(i): ", i, ", fileName in: ", fileName_in))
   r <- rast(fileName_in)
   indices <- seq(from = 1, to = nlyr(r), 1)
   indices <- paste0("X", as.character(indices))
@@ -199,35 +151,24 @@ f_readRast_thi_ensemble <- function(i, m, k) {
   r
 }
 
-# dailyMean <- function() {
-#   yearSpan <- paste0(l, "_", l + yearRange)
-#   x <- lapply(modelChoices, readRast_climVar_ensemble)
-#   r <- rast(x)
-#   indices_day <- rep(seq(1, nlyr(x[[1]]), 1), 5) # 5 is number of models; if omitted should get the same result
-#   fileName_out <- paste0("data/bigFiles/ensemble_dyMean20yr_", k,  "_", m, "_", yearSpan, ".tif") # note yearSpan here
-#   print(system.time(r.mean <- tapp(r, indices_day, fun = "mean", na.rm = TRUE, filename = fileName_out, overwrite = TRUE, woptList = woptList)))
-# }
-
-sspChoices <- "ssp126"
 for (k in sspChoices) {
   for (l in startYearChoices) {
     yearSpan <- paste0(l, "_", l + yearRange)
     print(paste0("ssp choice: ", k, ", start year: ", l))
     startDate <- paste0(l, "-01-01"); endDate <- paste0(l + yearRange, "-12-31")
     indices <- seq(as.Date(startDate), as.Date(endDate), 1)
-   # indices <- paste0("X", indices)
+    # indices <- paste0("X", indices)
     indices_day <- format(indices, format = "%j") # days
     indices_day <- as.numeric(indices_day)
-    for (m in cropChoices) {
-      print(paste0("crop names: ", m, ", start year: ", l))
+    for (cropName in cropChoices) {
+      print(paste0("crop names: ", cropName, ", start year: ", l))
       x <- lapply(modelChoices.lower, f_readRast_thi_ensemble, m = m, k = k)
       print(x)
-#            indices_day <- rep(seq(1, nlyr(x[[1]]), 1), 5) # 5 is number of models; if omitted should get the same result
       r <- rast(x)
       print(r)
-      fileName_out <- paste0("data/cmip6/growingDegreeDays/GDD_ensembleMean_daily_", m,  "_",  yearSpan, "_", k, ".tif")
+      fileName_out <- paste0("data/cmip6/growingDegreeDays/GDD_ensembleMean_daily_", cropName,  "_",  yearSpan, "_", k, ".tif")
       print(paste0("fileName out: ", fileName_out))
-      print(system.time(r.mean <- tapp(r, indices_day, fun = "mean", na.rm = TRUE))) #, filename = fileName_out, overwrite = TRUE, woptList = woptList)))
+      print(system.time(r.mean <- tapp(r, indices_day, fun = "mean", na.rm = TRUE, filename = fileName_out, overwrite = TRUE, wopt = woptList)))
     }
   }
 }
@@ -241,40 +182,16 @@ indices <- seq(as.Date(startDate), as.Date(endDate), 1)
 # indices <- paste0("X", indices)
 indices_day <- format(indices, format = "%j") # days
 indices_day <- as.numeric(indices_day)
-for (m in cropChoices) {
-  print(paste0("crop names: ", m, ", start year: ", l))
-  x <- lapply(modelChoices.lower, f_readRast_thi_ensemble, m = m, k = k)
+for (cropName in cropChoices) {
+  print(paste0("crop names: ", cropName, ", start year: ", l))
+  x <- lapply(modelChoices.lower, f_readRast_thi_ensemble, cropName = cropName, k = k)
   print(x)
-  #            indices_day <- rep(seq(1, nlyr(x[[1]]), 1), 5) # 5 is number of models; if omitted should get the same result
   r <- rast(x)
   print(r)
   fileName_out <- paste0("data/cmip6/growingDegreeDays/GDD_ensembleMean_daily_", m,  "_",  yearSpan, "_", k, ".tif")
   print(paste0("fileName out: ", fileName_out))
-  print(system.time(r.mean <- tapp(r, indices_day, fun = "mean", na.rm = TRUE))) #, filename = fileName_out, overwrite = TRUE, woptList = woptList)))
+  print(system.time(r.mean <- tapp(r, indices_day, fun = "mean", na.rm = TRUE, filename = fileName_out, overwrite = TRUE, wopt = woptList)))
 }
 
 
-names(r) <- indices
 
-x_ <- crop(x, get(paste0("extent_", m)))
-
-print(paste0( "Done setting raster indices for ras.test stack for crop: ", m, ", start year: ", l))
-x.mean <- tapp(x, indices, fun = mean, na.rm = TRUE)
-names(ras.test.mean) <- month.abb
-print(paste0( "Done updating raster names with month.abb for crop: ", m, ", start year: ", l))
-
-writeRaster(ras.test.mean, filename = fileNameMean, format = "GTiff", overwrite = TRUE, wopt=list(gdal="COMPRESS=LZW"))
-print(paste("fileNameMeanOut: ", fileNameMean))
-}
-  #    unlink(tmpDirName, recursive = TRUE)
-  gc(reset = FALSE, full = TRUE) 
-  }
-  }
-  
-  # check names
-  for (i in gddFilesCompleted) {
-    temp <- rast(i)
-    print(paste0("file name in: ", i))
-    print(head(names(temp)))
-  }
-  
