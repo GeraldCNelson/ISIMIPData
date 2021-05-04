@@ -30,8 +30,8 @@
   
   #locOfFiles <- locOfCMIP6tifFiles
   locOfFiles <- "data/bigFiles/"
-  speciesChoice <- c("humans", "cattle", "goat", "swine", "chicken", "sheep") 
-  speciesChoice <- c("swine", "sheep")
+  speciesChoice <- c("humans", "cattle", "goat", "pigs", "chicken", "sheep") 
+  speciesChoice <- c("pigs", "sheep")
   sspChoices <- c("ssp126", "ssp585") 
   #sspChoices <- c("ssp585") 
   modelChoices <- c( "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM6A-LR") #, "MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"

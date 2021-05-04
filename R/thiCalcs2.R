@@ -12,6 +12,7 @@
   
   # file locations -----
   locOfFiles <- "data/bigFiles/"
+  locOfDataFiles <- "data/cmip6/THI/"
   # variable definitions -----
   speciesChoice <- c("generic", "humans", "cattle",  "pigs", "chicken", "sheep") # note goats use same THI formula as cattle.
   speciesChoice <- c("generic")
@@ -42,8 +43,7 @@
   # colorList <- (RColorBrewer::brewer.pal(5, "RdYlGn"))
   colorList <- (RColorBrewer::brewer.pal(5, "YlOrRd")) # yellow to red
   
-  locOfDataFiles <- "data/cmip6/THI/"
-  #test values
+   #test values
   i <- "GFDL-ESM4"
   k <- "ssp585"
   l <- 2081

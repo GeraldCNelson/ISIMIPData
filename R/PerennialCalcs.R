@@ -85,7 +85,7 @@
     return(x)
   }
   
-  f_extremeValues <- function(k, l, yearSpan, varChoice) { #varChoice is varieties_lo, varieties_hi, varieties_main
+  f_extremeValues <- function(k, l, varChoice) { #varChoice is varieties_lo, varieties_hi, varieties_main
     for (hem in hemispheres) {
       yearSpan <- paste0(l, "_", l + yearRange)
       if (hem == "NH") startDate <- paste0(l, "-01-01"); endDate <- paste0(l+yearRange, "-12-31"); endYear <- l + yearRange
@@ -102,9 +102,9 @@
         indices_num <- as.numeric(indices)
         print(system.time(year_tmin <- tapp(rastIn_tasmin_hem, indices_num, min))) #, filename = fileName_tmin_out, overwrite = TRUE, wopt = woptList)))
         # year_tmax needs to be done by counting the days above the extreme value
-  #      print(system.time(year_tmax <- tapp(rastIn_tasmax_hem, indices_num, max)))
+        #      print(system.time(year_tmax <- tapp(rastIn_tasmax_hem, indices_num, max)))
         holder_tmin <- c(holder_tmin, year_tmin)
-        holder_tmax <- c(holder_tmax, year_tmax)
+        #        holder_tmax <- c(holder_tmax, year_tmax)
       }
       r_holder_tmin <- rast(holder_tmin) # combine all the single year rasters into 1
       r_holder_tmax <- rast(holder_tmax) # combine all the single year rasters into 1
@@ -115,13 +115,13 @@
       for (fruitSpecies in speciesChoice) {
         cpType <- unlist(strsplit(varChoice, "_"))[2]
         cropValues <- get(paste0("majorCropValues", "_", cpType)) # get the values depending on which category of chill portions to be analyzed
-        tminExtremeVal <- cropValues[cropName == fruitSpecies, low_temp_threshold]
-        tmaxExtremeVal <- cropValues[cropName == fruitSpecies, summer_heat_threshold]
+        tminExtremeVal <- cropValues[cropName == paste0(fruitSpecies, "_", cpType), low_temp_threshold]
+        tmaxExtremeVal <- cropValues[cropName ==  paste0(fruitSpecies, "_", cpType), summer_heat_threshold]
         tmaxExtremeCt <- 45 # limit of days at tmaxExtremeVal
         print(paste0("fruitSpecies: ", fruitSpecies, ", chill portions range: ", cpType, ", tmin extreme: ", tminExtremeVal, ", tmax extreme: ", tmaxExtremeVal, ", ssp: ", k, ", hem: ", hem, ", yearSpan: ", yearSpan))
         
         #print(system.time(
-          tmaxExtremeCt <- tapp(r_holder_tmax, names(r_holder_tmax), fun = function(x, ...) {sum(r_holder_tmax > tmaxExtremeVal, na.rm = FALSE)}) #)) XXXX need to convert names to some numeric indices
+        tmaxExtremeCt <- tapp(r_holder_tmax, names(r_holder_tmax), fun = function(x, ...) {sum(r_holder_tmax > tmaxExtremeVal, na.rm = FALSE)}) #)) XXXX need to convert names to some numeric indices
         temp_min <- r_holder_tmin_mean
         temp_max <- r_holder_tmax_mean
         temp_min[temp_min  > tminExtremeVal] <- 1 # suitable
@@ -440,8 +440,7 @@
 varChoice <- "varieties_main"
 for (k in sspChoices) {
   for (l in startYearChoices) {
-    yearSpan <- paste0(l, "_", l + yearRange)
-    f_extremeValues(k, l, yearSpan, varChoice) #varChoice is varieties_lo, varieties_hi, varieties_main
+    f_extremeValues(k, l, varChoice) #varChoice is varieties_lo, varieties_hi, varieties_main
     #      print(system.time(combined <- f_coldFrostHeatDamage(k, l, fruitSpecies))) # combined has three temperature-related spatrasters - hard freeze, frost, and heat. Each combined output file has all locations that are good, ok, and bad for frost and heat damage
   }
 }
@@ -450,8 +449,7 @@ for (k in sspChoices) {
 varChoice <- "varieties_main"
 k <- "historical"
 l <- 1991
-yearSpan <- paste0(l, "_", l + yearRange)
-print(system.time(f_extremeValues(k, l, yearSpan, varChoice))) #varChoice is varieties_lo, varieties_hi, varieties_main
+print(system.time(f_extremeValues(k, l, varChoice))) #varChoice is varieties_lo, varieties_hi, varieties_main
 
 
 # coldFrostHeatDamage, historical -----

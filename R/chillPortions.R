@@ -4,119 +4,118 @@
   library(sf)
   library("crayon")
   library(ggplot2)
+  woptList <- list(gdal=c("COMPRESS=DEFLATE", "PREDICTOR=3", "ZLEVEL = 6"))
   source("R/perennialsPrep.R") # get the latest chill portions data
   fileLoc <- "data/cmip6/chillPortions/chill_portions/"
-  #  speciesChoice <- sort(c("cherry", "almond", "winegrape", "apple", "olive")) #, "olive", "berries") 
-  #speciesChoice <- "olive"
+  #  speciesChoices <- sort(c("cherry", "almond", "winegrape", "apple", "olive")) #, "olive", "berries") 
+  #speciesChoices <- "olive"
   #fruitCPs <- readxl::read_excel("data-raw/crops/fruitCPs.xlsx") outdated. Info now is generated in R/perennialsPrep.R
-  sspChoices <- c("ssp126", "ssp585") 
-  modelChoices <- c( "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM6A-LR") #, "MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
-  modelChoices_lower <- tolower(modelChoices)
-  startYearChoices <-  c(2041, 2081) 
-  hemispheres <- c("NH", "SH")
-  extent_NH <- c( -180, 180, 0, 90)
-  extent_SH <-c( -180, 180, -60, 0) #-60 gets rid of Antarctica
-  
-  # choose whether to do the base cps, or the lo or hi cp requirements varieties
-  varChoices <- c("varieties_lo", "varieties_main", "varieties_hi")
   {
-    # choice for trueVal in next line-----------
-    trueVal <- "varieties_main" # this choice determines what gets run below
-    var_suffix <- gsub("varieties", "", trueVal)
-    cropVals <- get(paste0("majorCropValues", var_suffix))
-    speciesChoice <- unique(cropVals$cropName)
-    
+    sspChoices <- c("ssp126", "ssp585") 
+    modelChoices <- c( "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM6A-LR") 
+    modelChoices_lower <- tolower(modelChoices)
+    startYearChoices <-  c(2041, 2081) 
+    hemispheres <- c("NH", "SH")
+    extent_NH <- c( -180, 180, 0, 90)
+    extent_SH <-c( -180, 180, -60, 0) #-60 gets rid of Antarctica
     yearRange <- 19
-    woptList <- list(gdal=c("COMPRESS=LZW"))
-    woptList <- list(gdal=c("COMPRESS=DEFLATE", "PREDICTOR=3", "ZLEVEL = 6"))
     
-    coastline <- st_read("data-raw/regionInformation/ne_50m_coastline/ne_50m_coastline.shp")
-    
-    #function to get rid of Antarctica, used only on the coastline sf file
-    crop_custom <- function(poly.sf) {
-      poly.sp <- as(poly.sf, "Spatial")
-      extR <- raster::extent(c(-180, 180, -60, 90))
-      poly.sp.crop <- crop(poly.sp, extR)
-      st_as_sf(poly.sp.crop)
-    }
-    coastline <- crop_custom(coastline)
-    
-    RobinsonProj <-  "+proj=robin +lon_0=0 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs"
-    crsRob <- RobinsonProj
-    coastline <- st_transform(coastline, crsRob)
+    # choose whether to do the base cps, or the lo or hi cp requirements varieties
+    varChoices <- c("varieties_lo", "varieties_main", "varieties_hi")
     
     #test values
     i <- "UKESM1-0-LL"
+    modelChoice <- i
     k <- "ssp585"
     l <- 2041
+    midYear <- 2050
     hem <- "NH"
     n <- "cherry"
+    varChoice <- "varieties_main" # this choice determines what gets run below
     
-    readRast_ensemble <- function(modChoice) {
+    # choice for varChoice in next line-----------
+    var_suffix <- gsub("varieties", "", varChoice)
+    cropVals <- get(paste0("majorCropValues", var_suffix))
+    speciesChoices <- unique(cropVals$cropName)
+    
+    f_readRast_quantile <- function(modelChoice) {
       if (hem == "NH") hem_full <- "north"
       if (hem == "SH") hem_full <- "south"
-      fileName_in <- paste0("data/cmip6/chillPortions/chill_portions/", k,"/", modChoice, "/", k, "_", modChoice, "_", midYear, "_chill_portions_", hem_full, ".tif")
-      print(paste0("fileName in: ", fileName_in))
-      r <- rast(fileName_in)
-      system.time(chillPortion <- app(r, fun = quantile, probs=0.1, na.rm = TRUE)) # means not adequate chill portions probs percent of the time
+      fileName_in_hem <- paste0("data/cmip6/chillPortions/chill_portions/", k,"/", modelChoice, "/", k, "_", modelChoice, "_", midYear, "_chill_portions_", hem_full, ".tif")
+      print(paste0("fileName in: ", fileName_in_hem))
+      r <- rast(fileName_in_hem)
+      system.time(chillPortion <- quantile(r, probs = 0.1, na.rm = TRUE))
       print(chillPortion)
-      chillPortion <- crop(chillPortion, get(paste0("extent_", hem)))
+      return(chillPortion)
     }
     
     f_chillPortions <- function(k, l, midyear, yearSpan, hem) {
       ext_hem <- get(paste0("extent_", hem))
-      system.time(x <- lapply(modelChoices_lower, readRast_ensemble))
-      SWC <- rast(x)
-      SWC
+      system.time(x <- lapply(modelChoices_lower, f_readRast_quantile))
+      r <- rast(x)
+      r
       # now do ensemble
-      for (i in speciesChoice) {
-        print(paste0("working on ssp: ", k, ", start year ", l, ", hemisphere ", hem, ", crop ", i))
+      for (speciesChoice in speciesChoices) {
+        print(paste0("working on ssp: ", k, ", start year ", l, ", hemisphere ", hem, ", crop ", speciesChoice))
         cplimit <- cropVals[cropName %in% i, CR_cultivar_mean]
-        r <- SWC
         maxVal <- round(max(minmax(r)), 2)
         minVal <- round(min(minmax(r)), 2)
         #     print(r)
-        fileName_out <- paste0(fileLoc, "ensemble_chill_cutoff_", i, "_", k, "_", hem, "_", yearSpan, ".tif")
+        fileName_out <- paste0(fileLoc, "ensemble_chill_cutoff_", speciesChoice, "_", k, "_", hem, "_", yearSpan, ".tif")
         print(system.time(r.mean <- app(r, fun = "mean", na.rm = TRUE)))
-        r.mean[r.mean < cplimit] <- 0
-        r.mean[r.mean > cplimit] <- 1
-        r.mean <- crop(r.mean, ext_hem)
+        r.mean[r.mean < cplimit] <- 0 # not suitable
+        r.mean[r.mean > cplimit] <- 1 # suitable
         print(system.time(writeRaster(r.mean, filename = fileName_out, overwrite = TRUE, wopt = woptList)))
         print(paste0("fileName out: ", fileName_out))
-        cat(paste0(red("species: ", n, ", ensemble ssp: ", k, ", start year: ", l, ", minVal ", minVal,  ", maxVal ", maxVal, ", fileName out: ", fileName_out), "\n\n"))
+        cat(paste0(red("species: ", speciesChoice, ", ensemble ssp: ", k, ", start year: ", l, ", minVal ", minVal,  ", maxVal ", maxVal, ", fileName out: ", fileName_out), "\n\n"))
         # print(paste0("extent: ", r.mean))
         r.mean
       }
     }
-    
-    # chill portions, scenario -----
-    for (k in sspChoices) {
-      #  k = "ssp585"
-      for (l in startYearChoices) {
-        # l <- 2041
-        midYear <- l + 9
-        yearSpan <- paste0(l, "_", l + yearRange)
-        for (hem in hemispheres) {
-          f_chillPortions(k, l, midyear, yearSpan, hem)
-        }
-      }
+  }
+}
+
+# chill portions, scenarios -----
+for (k in sspChoices) {
+  #  k = "ssp585"
+  for (l in startYearChoices) {
+    # l <- 2041
+    midYear <- l + 9
+    yearSpan <- paste0(l, "_", l + yearRange)
+    for (hem in hemispheres) {
+      print(system.time(f_chillPortions(k, l, midyear, yearSpan, hem)))
     }
   }
-  # chill portions, historical -----
-  k <- "historical"
-  l = 1991
-  midYear <- l + 9
-  yearSpan <- paste0(l, "_", l + yearRange)
-  for (hem in hemispheres) {
-    f_chillPortions(k, l, midyear, yearSpan, hem)
-  }
+}
+
+# chill portions, historical -----
+k <- "historical"
+l = 1991
+midYear <- l + 9
+yearSpan <- paste0(l, "_", l + yearRange)
+for (hem in hemispheres) {
+  print(system.time(f_chillPortions(k, l, midyear, yearSpan, hem)))
 }
 
 # graphics -----
 ext_noAntarctica <- ext(-180, 180, -60, 90)
+coastline <- st_read("data-raw/regionInformation/ne_50m_coastline/ne_50m_coastline.shp")
+
+#function to get rid of Antarctica, used only on the coastline sf file
+crop_custom <- function(poly.sf) {
+  poly.sp <- as(poly.sf, "Spatial")
+  extR <- raster::extent(c(-180, 180, -60, 90))
+  poly.sp.crop <- crop(poly.sp, extR)
+  st_as_sf(poly.sp.crop)
+}
+coastline <- crop_custom(coastline)
+
+RobinsonProj <-  "+proj=robin +lon_0=0 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs"
+crsRob <- RobinsonProj
+coastline <- st_transform(coastline, crsRob)
 
 f_chillPortionsGraph <- function() {
-  for (n in speciesChoice) {
+  for (n in speciesChoices) {
     fileName_in_NH <- paste0(fileLoc, "ensemble_chill_cutoff_", n, "_", k, "_", "NH", "_", yearSpan, ".tif")
     fileName_in_SH <- paste0(fileLoc, "ensemble_chill_cutoff_", n, "_", k, "_", "SH", "_", yearSpan, ".tif")
     r_NH <- rast(fileName_in_NH)
@@ -224,7 +223,7 @@ my_pres <- ph_with(x = my_pres, value = blIntro, location = ph_location_type(typ
 
 # presentation for loop -----
 #browser()
-for (fruit in speciesChoice) {
+for (fruit in speciesChoices) {
   ensembleTitle <- paste("Adequate Chill Portions for ", fruit)
   my_pres <- add_slide(x = my_pres, layout = 'Section Header', master = 'Office Theme')
   my_pres <- ph_with(x = my_pres, value = ensembleTitle, location = ph_location_type(type = "title"))
