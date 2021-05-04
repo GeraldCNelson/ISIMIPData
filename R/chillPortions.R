@@ -88,13 +88,13 @@ ext_noAntarctica <- ext(-180, 180, -60, 90)
 coastline <- st_read("data-raw/regionInformation/ne_50m_coastline/ne_50m_coastline.shp")
 
 #function to get rid of Antarctica, used only on the coastline sf file
-crop_custom <- function(poly.sf) {
+f_crop_custom <- function(poly.sf) {
   poly.sp <- as(poly.sf, "Spatial")
   extR <- raster::extent(c(-180, 180, -60, 90))
   poly.sp.crop <- crop(poly.sp, extR)
   st_as_sf(poly.sp.crop)
 }
-coastline <- crop_custom(coastline)
+coastline <- f_crop_custom(coastline)
 
 RobinsonProj <-  "+proj=robin +lon_0=0 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs"
 crsRob <- RobinsonProj
@@ -171,8 +171,6 @@ f_chillportionsPpt <- function(fruit) {
   return(my_pres)
 }
 
-# library(readxl)
-# fileName_fruitCPs <- paste0("data-raw/crops/", "fruitCPs.xlsx")
 colsToDelete <- names(cropVals)[!names(cropVals) %in% c("cropName", "cultivar", "CR_cultivar_mean")]
 CPs <- cropVals[, (colsToDelete) := NULL ]
 
