@@ -10,11 +10,11 @@ coastline_cropped <- st_crop(coastline, c(xmin = -180, xmax = 180, ymin = -60, y
 coastline_cropped <- st_transform(coastline_cropped, crsRob)
 
 #function to get rid of Antarctica, used only on the coastline sf file; commenting out because probably not needed but leaving here in case that is wrong
-f_crop_custom <- function(poly.sf) {
-  poly.sp <- as(poly.sf, "Spatial")
-  extR <- raster::extent(c(-180, 180, -60, 90))
-  poly.sp.crop <- crop(poly.sp, extR)
-  st_as_sf(poly.sp.crop)
-}
-coastline <- f_crop_custom(coastline)
+# f_crop_custom <- function(poly.sf) {
+#   poly.sp <- as(poly.sf, "Spatial")
+#   extR <- raster::extent(c(-180, 180, -60, 90))
+#   poly.sp.crop <- crop(poly.sp, extR)
+#   st_as_sf(poly.sp.crop)
+# }
+# coastline <- f_crop_custom(coastline)
 
