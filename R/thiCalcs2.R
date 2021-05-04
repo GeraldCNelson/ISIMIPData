@@ -1,6 +1,7 @@
 # calculate animal and human climate stress
 {
   source("R/ISIMIPconstants.R")
+  source("R/ISIMIPspatialConstants.R")
   source("R/globallyUsed.R")
   library(Rcpp)
   sourceCpp("R/cpp/THI_functions_combined.cpp")
