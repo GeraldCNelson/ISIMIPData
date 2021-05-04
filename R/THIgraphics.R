@@ -1,4 +1,6 @@
 # script to do THI graphics
+source("R/ISIMIPconstants.R")
+source("R/ISIMIPspatialConstants.R")
 source("R/globallyUsed.R")
 library(RColorBrewer)
 library(colorspace)# use pal <- choose_palette() to see what this is about

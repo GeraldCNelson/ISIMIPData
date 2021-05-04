@@ -1,5 +1,5 @@
+# calculate animal and human climate stress
 {
-  # calculate animal and human climate stress
   source("R/ISIMIPconstants.R")
   source("R/globallyUsed.R")
   library(Rcpp)
@@ -8,8 +8,7 @@
 
   # constants, THI -----
   speciesChoice <- c("generic", "humans", "cattle",  "pigs", "chicken", "sheep") # note goats use same THI formula as cattle.
-  speciesChoice <- c("generic")
-  # speciesChoice <- c("pigs", "chickens")
+  # speciesChoice <- c("generic")
   breedChoice <- c("generic_generic", "humans", "humans_adj", "bos_Taurus", "bos_Indicus",  "goats", "pigs_temp", "pigs_trop", "chicken_temp", "chicken_trop", "sheep_temp", "sheep_trop") # note goats use same THI formula as cattle.
   breedChoice <- c( "generic_generic")
   stressLevelChoices <- c("noStress", "moderateStress", "extremeStress")
@@ -22,7 +21,6 @@
   resultsStorage <- data.table::data.table(species = character(), scenario = character(), startYear = numeric(), model = character(), ct_small= numeric(), ct_large = numeric())
   
   #test values, THI -----
-  yearNumber <- 2043
   m <- "humans"
   
   f_getStressValue <- function(m, stressLevel) {

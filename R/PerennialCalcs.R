@@ -2,6 +2,7 @@
 {
   #source("R/globallyUsed.R")
   source("R/ISIMIPconstants.R")
+  source("R/ISIMIPspatialConstants.R")
   source("R/perennialsPrep.R") # creates the data tables majorCropValues_main, majorCropValues_lo and majorCropValues_hi
   library(terra)
   library(ggplot2)
@@ -11,13 +12,6 @@
   # file locations -----
   areaYieldtifFileLoc <- "data-raw/crops/HarvestedAreaYield175Crops_Geotiff/GeoTiff/"
   # constants, general
-  RobinsonProj <-  "+proj=robin +lon_0=0 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs"
-  GoodeHomolosineProj <- "+proj=goode" # see https://proj.org/operations/projections/goode.html
-  crsRob <- RobinsonProj
-  crsGoode <- GoodeHomolosineProj
-  coastline <- st_read("data-raw/regionInformation/ne_50m_coastline/ne_50m_coastline.shp")
-  coastline_cropped <- st_crop(coastline, c(xmin = -180, xmax = 180, ymin = -60, ymax = 90))
-  coastline_cropped <- st_transform(coastline_cropped, crsRob)
   
   # choose whether to do the base cps, or the lo or hi cp requirements varieties -----
   varChoices <- c("varieties_lo", "varieties_main", "varieties_hi")

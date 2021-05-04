@@ -16,26 +16,8 @@ library(ggplot2)
 library(readxl)
 library(lubridate)
 
-RobinsonProj <-  "+proj=robin +lon_0=0 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs"
-GoodeHomolosineProj <- "+proj=goode" # see https://proj.org/operations/projections/goode.html
-crsRob <- RobinsonProj
-crslatlong <- "+proj=longlat +datum=WGS84 +no_defs"
-crsGoode <- GoodeHomolosineProj
 varNamesInfo <- as.data.table(read_excel("data-raw/varNamesLookup.xlsx"))
 
-# coastsCoarse <- st_read(dsn = "/Users/gcn/Documents/workspace/ISIMIPData/data-raw/naturalEarth/ne_110m_coastline/ne_110m_coastline.shp")
-# coastsCoarse <- st_crop(coastsCoarse, y = c(xmin = -179.95, xmax = 179.95, ymin = -60, ymax = 90))
-# 
-# coastsCoarse.Rob <- st_transform(coastsCoarse, crsRob)
-
-coastline <- st_read("data-raw/regionInformation/ne_50m_coastline/ne_50m_coastline.shp")
-coastline_cropped <- st_crop(coastline, c(xmin = -180, xmax = 180, ymin = -60, ymax = 90))
-# #coastline_cropped <- f_crop_custom(coastline)
-# 
- coastline_cropped <- st_transform(coastline_cropped, crsRob)
-
-
-library(maptools)
 # data(wrld_simpl)
 # wrld_land <- subset(wrld_simpl, !NAME == "Antarctica")
 # wrld_land@bbox <- bbox(rbind(c(-180, -90), c(180, 90)))

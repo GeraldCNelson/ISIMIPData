@@ -5,6 +5,7 @@
   library("crayon")
   library(ggplot2)
   source("R/ISIMIPconstants.R")
+  source("R/ISIMIPspatialConstants.R")
   source("R/perennialsPrep.R") # get the latest chill portions data
   {
     # choose whether to do the base cps, or the lo or hi cp requirements varieties
@@ -84,26 +85,13 @@ for (hem in hemispheres) {
 }
 
 # graphics -----
-ext_noAntarctica <- ext(-180, 180, -60, 90)
-coastline <- st_read("data-raw/regionInformation/ne_50m_coastline/ne_50m_coastline.shp")
 
-#function to get rid of Antarctica, used only on the coastline sf file
-f_crop_custom <- function(poly.sf) {
-  poly.sp <- as(poly.sf, "Spatial")
-  extR <- raster::extent(c(-180, 180, -60, 90))
-  poly.sp.crop <- crop(poly.sp, extR)
-  st_as_sf(poly.sp.crop)
-}
-coastline <- f_crop_custom(coastline)
 
-RobinsonProj <-  "+proj=robin +lon_0=0 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs"
-crsRob <- RobinsonProj
-coastline <- st_transform(coastline, crsRob)
 
 f_chillPortionsGraph <- function() {
-  for (n in speciesChoices) {
-    fileName_in_NH <- paste0(locOfCPFiles, "ensemble_chill_cutoff_", n, "_", k, "_", "NH", "_", yearSpan, ".tif")
-    fileName_in_SH <- paste0(locOfCPFiles, "ensemble_chill_cutoff_", n, "_", k, "_", "SH", "_", yearSpan, ".tif")
+  for (speciesChoice in speciesChoices) {
+    fileName_in_NH <- paste0(locOfCPFiles, "ensemble_chill_cutoff_", speciesChoice, "_", k, "_", "NH", "_", yearSpan, ".tif")
+    fileName_in_SH <- paste0(locOfCPFiles, "ensemble_chill_cutoff_", speciesChoice, "_", k, "_", "SH", "_", yearSpan, ".tif")
     r_NH <- rast(fileName_in_NH)
     r_SH <- rast(fileName_in_SH)
     r <- merge(r_NH, r_SH)
@@ -112,7 +100,7 @@ f_chillPortionsGraph <- function() {
     
     r_df <- as.data.frame(r, xy = TRUE)
     names(r_df) <- c("x", "y", "value")
-    titleText <- paste0("species: ", n, ", scenario:  ", k,  ", year span: ", gsub("_", "-", yearSpan))
+    titleText <- paste0("species: ", speciesChoice, ", scenario:  ", k,  ", year span: ", gsub("_", "-", yearSpan))
     legendTitle <- "Adequate chill portions"
     #        colorList <- (RColorBrewer::brewer.pal(2, "YlOrRd"))
     colorList <- c("white", "green")
@@ -126,7 +114,7 @@ f_chillPortionsGraph <- function() {
       theme(panel.background = element_rect(fill = "aliceblue"))
     #          theme(legend.text.align = 1) +
     #   theme(legend.position = "none")
-    fileName_out <- paste0("graphics/cmip6/chillPortions/adeqChillPortions_", n, "_", k, "_", yearSpan, ".png")
+    fileName_out <- paste0("graphics/cmip6/chillPortions/adeqChillPortions_", speciesChoice, "_", k, "_", yearSpan, ".png")
     
     ggsave(filename = fileName_out, plot = g, width = 6, height = 6, units = "in", dpi = 300)
     knitr::plot_crop(fileName_out)
