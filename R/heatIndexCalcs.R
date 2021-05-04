@@ -3,22 +3,13 @@ source("R/globallyUsed.R")
 library(doParallel) #Foreach Parallel Adaptor 
 # library(foreach) #Provides foreach looping construct, called with doParallel
 
-# locOfFiles <- locOfCMIP6tifFiles
-sspChoices <- c("ssp126", "ssp585") #"ssp126", 
-modelChoices <- c( "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM6A-LR") #, "MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
-
-startYearChoices <-  c(2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
-
-yearRange <- 9
 hifileOutLoc <- "data/cmip6/heatIndex/"
 
 tStressF <- 100 # in farenheit
 tStress <- (tStressF- 32) * 5/9 # convert to C
 
 #test values
-i <- "IPSL-CM6A-LR"
-k <- "ssp585"
-l <- 2021
+
 m <- "Wheat"
 useCores <- detectCores() - 2 # max number of cores
 useCores <- 2 # better for memory intensive activities

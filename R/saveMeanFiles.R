@@ -35,7 +35,7 @@ scenarioChoicesEnsemble <- c("historical", sspChoices)
 climateVars <- c("tasmin", "tasmax", "tas", "pr", "hurs", "rsds", "sfcwind", "ps") 
 climateVars <- c("tasmin") # "tasmax", "tasmin"
 
-meansFun <- function() {
+f_means <- function() {
   for (m in climateVars) {
     for (i in modelChoices) {
       # i = "UKESM1-0-LL"
@@ -48,7 +48,7 @@ meansFun <- function() {
         indices_day <- as.numeric(indices_day)
         names(rh) <- indices_day
         print(paste0("rh min: ", round(min(minmax(rh)), 3), " rh max: ", round(max(minmax(rh)), 3), ", rh file: ", fileName_rh ))
-        system.time(rh.mean <- tapp(rh, indices_day, fun = mean, na.rm = TRUE))#, filename = fileName_out, overwrite = TRUE, woptList = woptList))
+        system.time(rh.mean <- tapp(rh, indices_day, fun = mean, na.rm = TRUE))#, filename = fileName_out, overwrite = TRUE, wopt = woptList))
         print(paste0("rh.mean min: ", round(min(minmax(rh.mean)), 2), ", rh.mean max: ", round(max(minmax(rh.mean)), 2)))
         fileName_rh_out <- paste0(locOfFiles, "dyMean20yr_", modelName.lower, "_", k, "_hurs_global_daily_", yearSpan, ".tif")
         print(paste0("rh file out: ", fileName_rh_out))
@@ -61,7 +61,7 @@ meansFun <- function() {
         indices_day <- as.numeric(indices_day)
         names(tmax) <- indices_day
         print(paste0("tmax min: ", round(min(minmax(tmax), 2)), ", tmax max: ", round((max(minmax(tmax))), 2), ", tmax file: ", fileName_tasmax ))
-        system.time(tmax.mean <- tapp(tmax, indices_day, fun = "mean", na.rm = TRUE))#, filename = fileName_out, overwrite = TRUE, woptList = woptList))
+        system.time(tmax.mean <- tapp(tmax, indices_day, fun = "mean", na.rm = TRUE))#, filename = fileName_out, overwrite = TRUE, wopt = woptList))
         print(paste0("tmax.mean min: ", round(min(minmax(tmax.mean)), 2), ", tmax.mean max: ", round(max(minmax(tmax.mean)), 2)))
         fileName_tmax_out <- paste0(locOfFiles, "dyMean20yr_", modelName.lower, "_", k, "_tasmax_global_daily_", yearSpan, ".tif")
         print(paste0("tmax file out: ", fileName_tmax_out))
@@ -74,7 +74,7 @@ meansFun <- function() {
         indices_day <- as.numeric(indices_day)
         names(tmin) <- indices_day
         print(paste0("tmin min: ", round(min(minmax(tmin), 2)), ", tmin max: ", round((max(minmax(tmin))), 2), ", tmin file: ", fileName_tasmin ))
-        system.time(tmin.mean <- tapp(tmin, indices_day, fun = mean, na.rm = TRUE))#, filename = fileName_out, overwrite = TRUE, woptList = woptList))
+        system.time(tmin.mean <- tapp(tmin, indices_day, fun = mean, na.rm = TRUE))#, filename = fileName_out, overwrite = TRUE, wopt = woptList))
         print(paste0("tmin.mean min: ", round(min(minmax(tmin.mean)), 2), ", tmin.mean max: ", round(max(minmax(tmin.mean)), 2)))
         fileName_tmin_out <- paste0(locOfFiles, "dyMean20yr_", modelName.lower, "_", k, "_tasmin_global_daily_", yearSpan, ".tif")
         print(paste0("tmin file out: ", fileName_tmin_out))
@@ -87,7 +87,7 @@ meansFun <- function() {
         indices_day <- as.numeric(indices_day)
         names(tas) <- indices_day
         print(paste0("tas min: ", round(min(minmax(tas)), 2), " tas max: ", round(max(minmax(tas)), 2), ", tas file: ", fileName_tas ))
-        system.time(tas.mean <- tapp(tas, indices_day, fun = mean, na.rm = TRUE))#, filename = fileName_out, overwrite = TRUE, woptList = woptList))
+        system.time(tas.mean <- tapp(tas, indices_day, fun = mean, na.rm = TRUE))#, filename = fileName_out, overwrite = TRUE, wopt = woptList))
         print(paste0("tas.mean min: ", round(min(minmax(tas.mean)), 2), ", tas.mean max: ", round(max(minmax(tas.mean)), 2)))
         fileName_tas_out <- paste0(locOfFiles, "dyMean20yr_", modelName.lower, "_", k, "_tas_global_daily_", yearSpan, ".tif")
         print(paste0("tas file out: ", fileName_tas_out))
@@ -100,7 +100,7 @@ meansFun <- function() {
         indices_day <- as.numeric(indices_day)
         names(sfcWind) <- indices_day
         print(paste0("sfcWind min: ", round(min(minmax(sfcWind)), 2), " sfcWind max: ", round(max(minmax(sfcWind)), 2), ", sfcWind file: ", fileName_sfcWind ))
-        system.time(sfcWind.mean <- tapp(sfcWind, indices_day, fun = mean, na.rm = TRUE))#, filename = fileName_out, overwrite = TRUE, woptList = woptList))
+        system.time(sfcWind.mean <- tapp(sfcWind, indices_day, fun = mean, na.rm = TRUE))#, filename = fileName_out, overwrite = TRUE, wopt = woptList))
         print(paste0("sfcWind.mean min: ", round(min(minmax(sfcWind.mean)), 2), ", sfcWind.mean max: ", round(max(minmax(sfcWind.mean)), 2)))
         fileName_sfcWind_out <- paste0(locOfFiles, "dyMean20yr_", modelName.lower, "_", k, "_sfcWind_global_daily_", yearSpan, ".tif")
         print(paste0("sfcWind file out: ", fileName_sfcWind_out))
@@ -113,7 +113,7 @@ meansFun <- function() {
         indices_day <- as.numeric(indices_day)
         names(rsds) <- indices_day
         print(paste0("rsds min: ", round(min(minmax(rsds)), 2), " rsds max: ", round(max(minmax(rsds)), 2), ", rsds file: ", fileName_rsds ))
-        system.time(rsds.mean <- tapp(rsds, indices_day, fun = mean, na.rm = TRUE))#, filename = fileName_out, overwrite = TRUE, woptList = woptList))
+        system.time(rsds.mean <- tapp(rsds, indices_day, fun = mean, na.rm = TRUE))#, filename = fileName_out, overwrite = TRUE, wopt = woptList))
         print(paste0("rsds.mean min: ", round(min(minmax(rsds.mean)), 2), ", rsds.mean max: ", round(max(minmax(rsds.mean)), 2)))
         fileName_rsds_out <- paste0(locOfFiles, "dyMean20yr_", modelName.lower, "_", k, "_rsds_global_daily_", yearSpan, ".tif")
         print(paste0("rsds file out: ", fileName_rsds_out))
@@ -126,7 +126,7 @@ meansFun <- function() {
         indices_day <- as.numeric(indices_day)
         names(ps) <- indices_day
         print(paste0("ps min: ", round(min(minmax(ps)), 2), " ps max: ", round(max(minmax(ps)), 2), ", ps file: ", fileName_ps ))
-        system.time(ps.mean <- tapp(ps, indices_day, fun = mean, na.rm = TRUE))#, filename = fileName_out, overwrite = TRUE, woptList = woptList))
+        system.time(ps.mean <- tapp(ps, indices_day, fun = mean, na.rm = TRUE))#, filename = fileName_out, overwrite = TRUE, wopt = woptList))
         print(paste0("ps.mean min: ", round(min(minmax(ps.mean)), 2), ", ps.mean max: ", round(max(minmax(ps.mean)), 2)))
         fileName_ps_out <- paste0(locOfFiles, "dyMean20yr_", modelName.lower, "_", k, "_ps_global_daily_", yearSpan, ".tif")
         print(paste0("ps file out: ", fileName_ps_out))
@@ -139,7 +139,7 @@ meansFun <- function() {
         indices_day <- as.numeric(indices_day)
         names(pr) <- indices_day
         print(paste0("pr min: ", round(min(minmax(pr)), 2), " pr max: ", round(max(minmax(pr)), 2), ", pr file: ", fileName_pr ))
-        system.time(pr.mean <- tapp(pr, indices_day, fun = mean, na.rm = TRUE))#, filename = fileName_out, overwrite = TRUE, woptList = woptList))
+        system.time(pr.mean <- tapp(pr, indices_day, fun = mean, na.rm = TRUE))#, filename = fileName_out, overwrite = TRUE, wopt = woptList))
         print(paste0("pr.mean min: ", round(min(minmax(pr.mean)), 2), ", pr.mean max: ", round(max(minmax(pr.mean)), 2)))
         fileName_pr_out <- paste0(locOfFiles, "dyMean20yr_", modelName.lower, "_", k, "_pr_global_daily_", yearSpan, ".tif")
         print(paste0("pr file out: ", fileName_pr_out))
@@ -152,7 +152,7 @@ meansFun <- function() {
 for (k in sspChoices) {
   for (l in startYearChoices) {
     yearSpan <- paste0(l, "_", l + yearRange)
-    meansFun()
+    f_means()
   }
 }
 
@@ -160,7 +160,7 @@ for (k in sspChoices) {
 k = "historical"
 l = 1991
 yearSpan <- paste0(l, "_", l + yearRange)
-meansFun()
+f_means()
 
 # do monthly averages
 
@@ -186,7 +186,7 @@ for (k in sspChoices) {
       rh <- rast(fileName_rh)
       names(rh) <- indices_mnth
       print(paste0("rh min: ", round(min(minmax(rh)), 3), " rh max: ", round(max(minmax(rh)), 3), ", rh file: ", fileName_rh ))
-      system.time(rh.mean <- tapp(rh, indices_mnth, fun = mean, na.rm = TRUE))#, filename = fileName_out, overwrite = TRUE, woptList = woptList))
+      system.time(rh.mean <- tapp(rh, indices_mnth, fun = mean, na.rm = TRUE))#, filename = fileName_out, overwrite = TRUE, wopt = woptList))
       print(paste0("rh.mean min: ", round(min(minmax(rh.mean)), 2), ", rh.mean max: ", round(max(minmax(rh.mean)), 2)))
       fileName_rh_out <- paste0(locOfFiles, "mnthMean20yr_", modelName.lower, "_", k, "_hurs_global_daily_", yearSpan, ".tif")
       print(paste0("rh file out: ", fileName_rh_out))
@@ -195,7 +195,7 @@ for (k in sspChoices) {
       tmax <- rast(fileName_tasmax)
       names(tmax) <- indices_mnth
       print(paste0("tmax min: ", round(min(minmax(tmax), 2)), ", tmax max: ", round((max(minmax(tmax))), 2), ", tmax file: ", fileName_tasmax ))
-      system.time(tmax.mean <- tapp(tmax, indices_mnth, fun = "mean", na.rm = TRUE))#, filename = fileName_out, overwrite = TRUE, woptList = woptList))
+      system.time(tmax.mean <- tapp(tmax, indices_mnth, fun = "mean", na.rm = TRUE))#, filename = fileName_out, overwrite = TRUE, wopt = woptList))
       print(paste0("tmax.mean min: ", round(min(minmax(tmax.mean)), 2), ", tmax.mean max: ", round(max(minmax(tmax.mean)), 2)))
       fileName_tmax_out <- paste0(locOfFiles, "mnthMean20yr_", modelName.lower, "_", k, "_tasmax_global_daily_", yearSpan, ".tif")
       print(paste0("tmax file out: ", fileName_tmax_out))
@@ -204,7 +204,7 @@ for (k in sspChoices) {
       tmin <- rast(fileName_tasmin)
       names(tmin) <- indices_mnth
       print(paste0("tmin min: ", round(min(minmax(tmin), 2)), ", tmin max: ", round((max(minmax(tmin))), 2), ", tmin file: ", fileName_tasmin ))
-      system.time(tmin.mean <- tapp(tmin, indices_mnth, fun = mean, na.rm = TRUE))#, filename = fileName_out, overwrite = TRUE, woptList = woptList))
+      system.time(tmin.mean <- tapp(tmin, indices_mnth, fun = mean, na.rm = TRUE))#, filename = fileName_out, overwrite = TRUE, wopt = woptList))
       print(paste0("tmin.mean min: ", round(min(minmax(tmin.mean)), 2), ", tmin.mean max: ", round(max(minmax(tmin.mean)), 2)))
       fileName_tmin_out <- paste0(locOfFiles, "mnthMean20yr_", modelName.lower, "_", k, "_tasmin_global_daily_", yearSpan, ".tif")
       print(paste0("tmin file out: ", fileName_tmin_out))
@@ -213,7 +213,7 @@ for (k in sspChoices) {
       tas <- rast(fileName_tas)
       names(tas) <- indices_mnth
       print(paste0("tas min: ", round(min(minmax(tas)), 2), " tas max: ", round(max(minmax(tas)), 2), ", tas file: ", fileName_tas ))
-      system.time(tas.mean <- tapp(tas, indices_mnth, fun = mean, na.rm = TRUE))#, filename = fileName_out, overwrite = TRUE, woptList = woptList))
+      system.time(tas.mean <- tapp(tas, indices_mnth, fun = mean, na.rm = TRUE))#, filename = fileName_out, overwrite = TRUE, wopt = woptList))
       print(paste0("tas.mean min: ", round(min(minmax(tas.mean)), 2), ", tas.mean max: ", round(max(minmax(tas.mean)), 2)))
       fileName_tas_out <- paste0(locOfFiles, "mnthMean20yr_", modelName.lower, "_", k, "_tas_global_daily_", yearSpan, ".tif")
       print(paste0("tas file out: ", fileName_tas_out))
@@ -245,7 +245,7 @@ for (i in modelChoices) {
   rh <- rast(fileName_rh)
   names(rh) <- indices_mnth
   print(paste0("rh min: ", round(min(minmax(rh)), 3), " rh max: ", round(max(minmax(rh)), 3), ", rh file: ", fileName_rh ))
-  system.time(rh.mean <- tapp(rh, indices_mnth, fun = mean, na.rm = TRUE))#, filename = fileName_out, overwrite = TRUE, woptList = woptList))
+  system.time(rh.mean <- tapp(rh, indices_mnth, fun = mean, na.rm = TRUE))#, filename = fileName_out, overwrite = TRUE, wopt = woptList))
   print(paste0("rh.mean min: ", round(min(minmax(rh.mean)), 2), ", rh.mean max: ", round(max(minmax(rh.mean)), 2)))
   fileName_rh_out <- paste0(locOfFiles, "mnthMean20yr_", modelName.lower, "_", k, "_hurs_global_daily_", yearSpan, ".tif")
   print(paste0("rh file out: ", fileName_rh_out))
@@ -255,7 +255,7 @@ for (i in modelChoices) {
   tmax <- rast(fileName_tasmax)
   names(tmax) <- indices_mnth
   print(paste0("tmax min: ", round(min(minmax(tmax), 2)), ", tmax max: ", round((max(minmax(tmax))), 2), ", tmax file: ", fileName_tasmax ))
-  system.time(tmax.mean <- tapp(tmax, indices_mnth, fun = "mean", na.rm = TRUE))#, filename = fileName_out, overwrite = TRUE, woptList = woptList))
+  system.time(tmax.mean <- tapp(tmax, indices_mnth, fun = "mean", na.rm = TRUE))#, filename = fileName_out, overwrite = TRUE, wopt = woptList))
   print(paste0("tmax.mean min: ", round(min(minmax(tmax.mean)), 2), ", tmax.mean max: ", round(max(minmax(tmax.mean)), 2)))
   fileName_tmax_out <- paste0(locOfFiles, "mnthMean20yr_", modelName.lower, "_", k, "_tasmax_global_daily_", yearSpan, ".tif")
   print(paste0("tmax file out: ", fileName_tmax_out))
@@ -264,7 +264,7 @@ for (i in modelChoices) {
   tmin <- rast(fileName_tasmin)
   names(tmin) <- indices_mnth
   print(paste0("tmin min: ", round(min(minmax(tmin), 2)), ", tmin max: ", round((max(minmax(tmin))), 2), ", tmin file: ", fileName_tasmin ))
-  system.time(tmin.mean <- tapp(tmin, indices_mnth, fun = mean, na.rm = TRUE))#, filename = fileName_out, overwrite = TRUE, woptList = woptList))
+  system.time(tmin.mean <- tapp(tmin, indices_mnth, fun = mean, na.rm = TRUE))#, filename = fileName_out, overwrite = TRUE, wopt = woptList))
   print(paste0("tmin.mean min: ", round(min(minmax(tmin.mean)), 2), ", tmin.mean max: ", round(max(minmax(tmin.mean)), 2)))
   fileName_tmin_out <- paste0(locOfFiles, "mnthMean20yr_", modelName.lower, "_", k, "_tasmin_global_daily_", yearSpan, ".tif")
   print(paste0("tmin file out: ", fileName_tmin_out))
@@ -273,7 +273,7 @@ for (i in modelChoices) {
   tas <- rast(fileName_tas)
   names(tas) <- indices_mnth
   print(paste0("tas min: ", round(min(minmax(tas)), 2), " tas max: ", round(max(minmax(tas)), 2), ", tas file: ", fileName_tas ))
-  system.time(tas.mean <- tapp(tas, indices_mnth, fun = mean, na.rm = TRUE))#, filename = fileName_out, overwrite = TRUE, woptList = woptList))
+  system.time(tas.mean <- tapp(tas, indices_mnth, fun = mean, na.rm = TRUE))#, filename = fileName_out, overwrite = TRUE, wopt = woptList))
   print(paste0("tas.mean min: ", round(min(minmax(tas.mean)), 2), ", tas.mean max: ", round(max(minmax(tas.mean)), 2)))
   fileName_tas_out <- paste0(locOfFiles, "mnthMean20yr_", modelName.lower, "_", k, "_tas_global_daily_", yearSpan, ".tif")
   print(paste0("tas file out: ", fileName_tas_out))
@@ -292,3 +292,4 @@ for (i in modelChoices) {
 # for (i in 1:length(renameList)) {
 #   file.rename(from = renameList[i], to = renameList_out[i])
 # }
+s

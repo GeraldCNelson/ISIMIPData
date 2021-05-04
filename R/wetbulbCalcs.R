@@ -1,53 +1,12 @@
 # working on wet bulb temperature
 {
-  library(terra)
+  source("R/ISIMIPconstants.R")
   library(wbgt)
   
-  get_os <- function() {
-    sysinf <- Sys.info()
-    if (!is.null(sysinf)) {
-      os <- sysinf['sysname']
-      if (os == 'Darwin')
-        os <- "osx"
-    } else {## mystery machine
-      os <- .Platform$OS.type
-      if (grepl("^darwin", R.version$os))
-        os <- "osx"
-      if (grepl("linux-gnu", R.version$os))
-        os <- "linux"
-    }
-    tolower(os)
-  }
-  if (get_os() %in% "osx") {
-    terraOptions(memfrac = 2, progress = 10, tempdir =  "data/ISIMIP", verbose = TRUE) # need to use a relative path, memfrac = .9,
-  }else{
-    terraOptions(memfrac = .6,  progress = 10, tempdir =  "data/ISIMIP", verbose = TRUE) # need to use a relative path
-  }
-  
-  terraOptions(memfrac = 2, progress = 0, tempdir =  "data/ISIMIP", verbose = FALSE)
-  woptList <- list(gdal=c("COMPRESS=LZW"))
-  woptList <- list(gdal=c("COMPRESS=DEFLATE", "PREDICTOR=3", "ZLEVEL = 6"))
-  
-  #locOfFiles <- locOfCMIP6tifFiles
-  locOfFiles <- "data/bigFiles/"
   speciesChoice <- c("humans", "cattle", "goat", "pigs", "chicken", "sheep") 
   speciesChoice <- c("pigs", "sheep")
-  sspChoices <- c("ssp126", "ssp585") 
-  #sspChoices <- c("ssp585") 
-  modelChoices <- c( "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM6A-LR") #, "MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") # "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM5A-LR"
-  startYearChoices <-  c(2041, 2081) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
-  startYearChoices_historical <- c(1991)
-  scenarioChoicesEnsemble <- c("historical", sspChoices)
-  ext_noAntarctica <- ext(-180, 180, -60, 90)
-  yearRange <- 19
-  
   colorList <- (RColorBrewer::brewer.pal(5, "RdYlGn"))
   
-  #test values
-  i <- "UKESM1-0-LL"
-  k <- "ssp585"
-  l <- 2081
-  yearNumber <- 2043
   
   # convert longitude to time difference to GMT
   td <- function(lon) {

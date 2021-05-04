@@ -4,33 +4,19 @@
   library(sf)
   library("crayon")
   library(ggplot2)
-  woptList <- list(gdal=c("COMPRESS=DEFLATE", "PREDICTOR=3", "ZLEVEL = 6"))
+  source("R/ISIMIPconstants.R")
   source("R/perennialsPrep.R") # get the latest chill portions data
-  fileLoc <- "data/cmip6/chillPortions/chill_portions/"
-  #  speciesChoices <- sort(c("cherry", "almond", "winegrape", "apple", "olive")) #, "olive", "berries") 
-  #speciesChoices <- "olive"
-  #fruitCPs <- readxl::read_excel("data-raw/crops/fruitCPs.xlsx") outdated. Info now is generated in R/perennialsPrep.R
   {
-    sspChoices <- c("ssp126", "ssp585") 
-    modelChoices <- c( "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM6A-LR") 
-    modelChoices_lower <- tolower(modelChoices)
-    startYearChoices <-  c(2041, 2081) 
-    hemispheres <- c("NH", "SH")
-    extent_NH <- c( -180, 180, 0, 90)
-    extent_SH <-c( -180, 180, -60, 0) #-60 gets rid of Antarctica
-    yearRange <- 19
-    
     # choose whether to do the base cps, or the lo or hi cp requirements varieties
     varChoices <- c("varieties_lo", "varieties_main", "varieties_hi")
     
     #test values
-    i <- "UKESM1-0-LL"
-    modelChoice <- i
+    modelChoice <- "UKESM1-0-LL"
     k <- "ssp585"
     l <- 2041
     midYear <- 2050
     hem <- "NH"
-    n <- "cherry"
+    speciesChoice <- "cherry"
     varChoice <- "varieties_main" # this choice determines what gets run below
     
     # choice for varChoice in next line-----------
@@ -61,7 +47,7 @@
         maxVal <- round(max(minmax(r)), 2)
         minVal <- round(min(minmax(r)), 2)
         #     print(r)
-        fileName_out <- paste0(fileLoc, "ensemble_chill_cutoff_", speciesChoice, "_", k, "_", hem, "_", yearSpan, ".tif")
+        fileName_out <- paste0(locOfCPFiles, "ensemble_chill_cutoff_", speciesChoice, "_", k, "_", hem, "_", yearSpan, ".tif")
         print(system.time(r.mean <- app(r, fun = "mean", na.rm = TRUE)))
         r.mean[r.mean < cplimit] <- 0 # not suitable
         r.mean[r.mean > cplimit] <- 1 # suitable
@@ -116,8 +102,8 @@ coastline <- st_transform(coastline, crsRob)
 
 f_chillPortionsGraph <- function() {
   for (n in speciesChoices) {
-    fileName_in_NH <- paste0(fileLoc, "ensemble_chill_cutoff_", n, "_", k, "_", "NH", "_", yearSpan, ".tif")
-    fileName_in_SH <- paste0(fileLoc, "ensemble_chill_cutoff_", n, "_", k, "_", "SH", "_", yearSpan, ".tif")
+    fileName_in_NH <- paste0(locOfCPFiles, "ensemble_chill_cutoff_", n, "_", k, "_", "NH", "_", yearSpan, ".tif")
+    fileName_in_SH <- paste0(locOfCPFiles, "ensemble_chill_cutoff_", n, "_", k, "_", "SH", "_", yearSpan, ".tif")
     r_NH <- rast(fileName_in_NH)
     r_SH <- rast(fileName_in_SH)
     r <- merge(r_NH, r_SH)

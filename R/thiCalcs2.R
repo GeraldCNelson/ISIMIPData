@@ -1,52 +1,27 @@
 {
   # calculate animal and human climate stress
+  source("R/ISIMIPconstants.R")
   source("R/globallyUsed.R")
   library(Rcpp)
   sourceCpp("R/cpp/THI_functions_combined.cpp")
-  library("terra")
   library("crayon")
-  # library(data.table)
-  
-  woptList <- list(gdal=c("COMPRESS=LZW"))
-  woptList <- list(gdal=c("COMPRESS=DEFLATE", "PREDICTOR=3", "ZLEVEL = 6"))
-  
-  # file locations -----
-  locOfFiles <- "data/bigFiles/"
-  locOfDataFiles <- "data/cmip6/THI/"
-  # variable definitions -----
+
+  # constants, THI -----
   speciesChoice <- c("generic", "humans", "cattle",  "pigs", "chicken", "sheep") # note goats use same THI formula as cattle.
   speciesChoice <- c("generic")
   # speciesChoice <- c("pigs", "chickens")
   breedChoice <- c("generic_generic", "humans", "humans_adj", "bos_Taurus", "bos_Indicus",  "goats", "pigs_temp", "pigs_trop", "chicken_temp", "chicken_trop", "sheep_temp", "sheep_trop") # note goats use same THI formula as cattle.
   breedChoice <- c( "generic_generic")
-  sspChoices <- c("ssp126", "ssp585") 
-  #sspChoices <- c("ssp585") 
-  modelChoices <- c( "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM6A-LR") 
-  # modelChoices <- c("UKESM1-0-LL", "IPSL-CM6A-LR") 
-  startYearChoices <-  c(2041, 2081) 
-  startYearChoices_historical <- c(1991)
-  scenarioChoicesEnsemble <- c("historical", sspChoices)
   stressLevelChoices <- c("noStress", "moderateStress", "extremeStress")
   extremeStress_humans <- 60
   animalCts_global <- as.data.table(read.csv("data/animals/animalCt.csv"))
-  hemispheres <- c("NH", "SH")
-  extent_NH <- c( -180, 180, 0, 90)
-  extent_SH <-c( -180, 180, -60, 0) #-60 gets rid of Antarctica
-  
-  resultsStorage <- data.table::data.table(species = character(), scenario = character(), startYear = numeric(), model = character(), ct_small= numeric(), ct_large = numeric())
-  
   bpList <- data.table::as.data.table(readxl::read_excel("data-raw/animals/AnimalbreakpointslistRaw.xlsx"))
   
-  ext_noAntarctica <- ext(-180, 180, -60, 90)
-  
-  yearRange <- 19
-  # colorList <- (RColorBrewer::brewer.pal(5, "RdYlGn"))
+   # colorList <- (RColorBrewer::brewer.pal(5, "RdYlGn"))
   colorList <- (RColorBrewer::brewer.pal(5, "YlOrRd")) # yellow to red
+  resultsStorage <- data.table::data.table(species = character(), scenario = character(), startYear = numeric(), model = character(), ct_small= numeric(), ct_large = numeric())
   
-   #test values
-  i <- "GFDL-ESM4"
-  k <- "ssp585"
-  l <- 2081
+  #test values, THI -----
   yearNumber <- 2043
   m <- "humans"
   
@@ -59,7 +34,7 @@
   }
   
   f_readRast_thi_ensemble <- function(i, m, k) {
-    fileName_in <- paste0(locOfDataFiles, "thi.", m, "_", i, "_", k,  "_", yearSpan, ".tif") # note *yearSpan* here
+    fileName_in <- paste0(locOfDataFiles_THI, "thi.", m, "_", i, "_", k,  "_", yearSpan, ".tif") # note *yearSpan* here
     print(paste0("m: ", m, ", k: ", k, ", model(i): ", i, ", fileName in: ", fileName_in))
     r <- rast(fileName_in)
     indices <- seq(from = 1, to = nlyr(r), 1)
@@ -110,7 +85,7 @@
       for (breedNum in 1:length(breedChoice)) {
         speciesName <- unlist(strsplit(breedChoice[breedNum], "_"))[1]
         breedName <- breedChoice[breedNum]
-        fileName_out <- paste0(locOfDataFiles, "thi.", breedName, "_",  modelChoice, "_", k, "_", yearSpan, ".tif")
+        fileName_out <- paste0(locOfDataFiles_THI, "thi.", breedName, "_",  modelChoice, "_", k, "_", yearSpan, ".tif")
         print(paste0("fileName out: ", fileName_out))
         funName <- paste0("f_THI_", breedName)
         print(paste0("function name: ", funName))
@@ -146,25 +121,25 @@
         if (speciesName == "bos") {
           # cattle-specific breeds and goats
           for (breedName in c("bos_Indicus", "bos_Taurus", "goats")) {
-            fileName_out_breed <- paste0(locOfDataFiles, "thi.", breedName, "_",  modelChoice, "_", k, "_", yearSpan, ".tif")
+            fileName_out_breed <- paste0(locOfDataFiles_THI, "thi.", breedName, "_",  modelChoice, "_", k, "_", yearSpan, ".tif")
             file.copy(from = fileName_out, to = fileName_out_breed)
           }
         }
         if (speciesName == "sheep") {
           for (breedName in c("sheep_trop", "sheep_temp")) {
-            fileName_out_breed <- paste0(locOfDataFiles, "thi.", breedName, "_",  modelChoice, "_", k, "_", yearSpan, ".tif")
+            fileName_out_breed <- paste0(locOfDataFiles_THI, "thi.", breedName, "_",  modelChoice, "_", k, "_", yearSpan, ".tif")
             file.copy(from = fileName_out, to = fileName_out_breed)
           }
         }
         if (speciesName == "chicken") {
           for (breedName in c("chicken_trop", "chicken_temp")) {
-            fileName_out_breed <- paste0(locOfDataFiles, "thi.", breedName, "_",  modelChoice, "_", k, "_", yearSpan, ".tif")
+            fileName_out_breed <- paste0(locOfDataFiles_THI, "thi.", breedName, "_",  modelChoice, "_", k, "_", yearSpan, ".tif")
             file.copy(from = fileName_out, to = fileName_out_breed)
           }
         }
         if (speciesName == "pigs") {
           for (breedName in c("pigs_trop", "pigs_temp")) {
-            fileName_out_breed <- paste0(locOfDataFiles, "thi.", breedName, "_",  modelChoice, "_", k, "_", yearSpan, ".tif")
+            fileName_out_breed <- paste0(locOfDataFiles_THI, "thi.", breedName, "_",  modelChoice, "_", k, "_", yearSpan, ".tif")
             print(paste0("fileName_out: ", fileName_out, ", fileName_out_breed: ", fileName_out_breed))
             file.copy(from = fileName_out, to = fileName_out_breed)
           }        
@@ -187,12 +162,12 @@
     for (m in breedChoice) {
       for (s in stressLevelChoices) { # eg noStress, moderateStress, etc
         stressValue <- f_getStressValue(m, stressLevel = s) 
-        fileName_in <- paste0(locOfDataFiles, "ensemble_thi.", m, "_", k, "_", yearSpan, ".tif")
+        fileName_in <- paste0(locOfDataFiles_THI, "ensemble_thi.", m, "_", k, "_", yearSpan, ".tif")
         r <- rast(fileName_in)
         maxVal <- round(max(minmax(r)), 3)
         minVal <- round(min(minmax(r)), 3)
         print(paste0("species: ", m, ", minVal: ", minVal, ", maxVal: ", maxVal, ", stress value: ", stressValue, ", fileName in: ", fileName_in))
-        fileName_out <- paste0(locOfDataFiles, "stressCt_", m, "_", k, "_stressLevel_",  stressValue, "_", yearSpan,  ".tif")
+        fileName_out <- paste0(locOfDataFiles_THI, "stressCt_", m, "_", k, "_stressLevel_",  stressValue, "_", yearSpan,  ".tif")
         print(system.time(extremeCt <- app(r, fun = f_extremeTHI, stressValue, m, filename = fileName_out, overwrite = TRUE, wopt =woptList)))
         print(paste0("fileName in: ", fileName_in, ", fileName out: ", fileName_out))
         #        print(paste0("fileName out: ", fileName_out))
@@ -226,13 +201,13 @@
     #      for (s in stressLevelChoices) { # eg noStress, moderateStress, etc
     s <- "extremeStress"
     #       stressValue <- f_getStressValue(m, stressLevel = s)
-    fileName_in <- paste0(locOfDataFiles, "ensemble_thi.", m, "_", k, "_", yearSpan, ".tif")
+    fileName_in <- paste0(locOfDataFiles_THI, "ensemble_thi.", m, "_", k, "_", yearSpan, ".tif")
     r <- rast(fileName_in)
     maxVal <- round(max(minmax(r)), 3)
     minVal <- round(min(minmax(r)), 3)
     for (stressValue in stressValueList) {
       print(paste0("species: ", m, ", minVal: ", minVal, ", maxVal: ", maxVal, ", stress value: ", stressValue, ", fileName in: ", fileName_in))
-      fileName_out <- paste0(locOfDataFiles, "stressCt_", m, "_", k, "_stressLevel_",  stressValue, "_", yearSpan,  ".tif")
+      fileName_out <- paste0(locOfDataFiles_THI, "stressCt_", m, "_", k, "_stressLevel_",  stressValue, "_", yearSpan,  ".tif")
       print(system.time(extremeCt <- app(r, fun = f_extremeTHI, stressValue, m, filename = fileName_out, overwrite = TRUE, wopt =woptList)))
       print(paste0("fileName in: ", fileName_in, ", fileName out: ", fileName_out))
     }
@@ -268,7 +243,7 @@ f_ensemble_THI <- function(k, l, yearSpan) {
     maxVal <- round(max(minmax(r)), 2)
     minVal <- round(min(minmax(r)), 2)
     #     print(r)
-    fileName_out <- paste0(locOfDataFiles, "ensemble_thi.", m, "_", k, "_", yearSpan, ".tif")
+    fileName_out <- paste0(locOfDataFiles_THI, "ensemble_thi.", m, "_", k, "_", yearSpan, ".tif")
     extremeStress <- bpList[breeds %in% m, extremeStress]
     cat(paste0(red("breed: ", m, ", ensemble ssp: ", k, ", start year: ", l, ", minVal ", minVal,  ", maxVal ", maxVal,", extreme stress value: ", extremeStress , ", fileName out: ", fileName_out), "\n\n"))
     print(system.time(r.mean <- tapp(r, indices_day, fun = "mean", na.rm = TRUE, filename = fileName_out, overwrite = TRUE, wopt = woptList)))
@@ -287,7 +262,7 @@ f_mean_THI <- function(cellVector) { # get mean over all days in a year for each
 
 f_prepareR <- function() {
   yearSpan <- paste0(l, "_", l + yearRange)
-  fileName_in <- paste0(locOfDataFiles, "extremeCt.", m, "_", k, "_", yearSpan, ".tif")
+  fileName_in <- paste0(locOfDataFiles_THI, "extremeCt.", m, "_", k, "_", yearSpan, ".tif")
   print(paste0("fileName in: ", fileName_in))
   r <- rast(fileName_in)
   names(r) <- "value"
@@ -326,7 +301,7 @@ f_thi_graphing <- function(m, r, r_mask, maskMin, col, dt_stressCts) {
   if (is.na( max(minmax(r)))) stop("max is na")
   # browser()
   # # crop to eliminate Antarctica and project to Robinson
-  # r_mask <- crop(r, ext_noAntarctica)
+  # r_mask <- crop(r, extent_noAntarctica)
   # r_maskRob <- project(r_mask, crsRob)
   r <- project(r, crsRob)
   r_mask <- project(r_mask, crsRob)
@@ -564,7 +539,7 @@ f_thi_means_graphing <- function(m, r, col) {
   yearSpan <- paste0(l, "_", l + yearRange)
   f_ensemble_THI(k, l, yearSpan)
   
-  fileName_resultsStorage <- paste0(locOfDataFiles, "results/resultsStorage_all.csv")
+  fileName_resultsStorage <- paste0(locOfDataFiles_THI, "results/resultsStorage_all.csv")
   
   write.csv(resultsStorage, fileName_resultsStorage, row.names = FALSE)
   
@@ -592,7 +567,7 @@ f_thi_means_graphing <- function(m, r, col) {
   #       #      browser()      
   #       extremeStress <- f_getStressValue(m, stressLevel) # just to have something to put display
   #       print(paste0("species choice m: ", m))
-  #       fileName_in <- paste0(locOfDataFiles, "ensemble_thi.", m, "_", k, "_", yearSpan, ".tif")
+  #       fileName_in <- paste0(locOfDataFiles_THI, "ensemble_thi.", m, "_", k, "_", yearSpan, ".tif")
   #       r <- rast(fileName_in)
   #       maxVal <- round(max(minmax(r)), 3)
   #       minVal <- round(min(minmax(r)), 3)
@@ -695,7 +670,7 @@ f_thi_means_graphing <- function(m, r, col) {
     for (k in sspChoices) {
       for (l in startYearChoices) {
         yearSpan <- paste0(l, "_", l + yearRange)
-        fileName_in <- paste0(locOfDataFiles, "extremeCt.", m, "_", k, "_", yearSpan, ".tif")
+        fileName_in <- paste0(locOfDataFiles_THI, "extremeCt.", m, "_", k, "_", yearSpan, ".tif")
         print(paste0("fileName in: ", fileName_in))
         r <- rast(fileName_in)
         names(r) <- "value"
@@ -709,7 +684,7 @@ f_thi_means_graphing <- function(m, r, col) {
     k <- "historical"
     l <- 1991
     yearSpan <- paste0(l, "_", l + yearRange)
-    fileName_in <- paste0(locOfDataFiles, "extremeCt.", m, "_", k, "_", yearSpan, ".tif")
+    fileName_in <- paste0(locOfDataFiles_THI, "extremeCt.", m, "_", k, "_", yearSpan, ".tif")
     print(paste0("fileName in: ", fileName_in))
     r <- rast(fileName_in)
     names(r) <- "value"
@@ -727,8 +702,8 @@ f_thi_means_graphing <- function(m, r, col) {
         titleText <- paste0(m, ", change in days with PWC below ", extremeStress, " percent, \n early to end century ", k)
       }
       fileName_out <- paste0("graphics/cmip6/THI/THIextremeCtDelta.", m, "_", k, "_", yearSpan, ".png")
-      r_ssp <- rast(paste0(locOfDataFiles, "extremeCt.", m, "_", k, "_", yearSpan, ".tif"))
-      r_historical <- rast(paste0(locOfDataFiles, "extremeCt.", m, "_", "historical", "_", "1991_2010", ".tif"))
+      r_ssp <- rast(paste0(locOfDataFiles_THI, "extremeCt.", m, "_", k, "_", yearSpan, ".tif"))
+      r_historical <- rast(paste0(locOfDataFiles_THI, "extremeCt.", m, "_", "historical", "_", "1991_2010", ".tif"))
       r <- r_ssp - r_historical
       names(r) <- "value"
       r[r$value < 0] <- 0
@@ -748,12 +723,12 @@ f_thi_means_graphing <- function(m, r, col) {
       totalNum <- global(r_mask, fun = "sum", na.rm = TRUE)
       
       
-      r <- crop(r, ext_noAntarctica)
+      r <- crop(r, extent_noAntarctica)
       f_thi_graphing(m, r, r_mask, maskMin, col, dt_stressCts)
     }
   }
   
-  write.csv(dt_stressCts, paste0(locOfDataFiles, "stressCtsTable.csv"))
+  write.csv(dt_stressCts, paste0(locOfDataFiles_THI, "stressCtsTable.csv"))
   
   {# do ppt for THI extreme ct ensemble means -----
     library(officer)
@@ -972,7 +947,7 @@ f_thi_means_graphing <- function(m, r, col) {
   f_runs_calculator(k, l, runlengthChoices)
   
   # runs graphics -----
-  dt_stressCts<- as.data.table(read.csv(paste0(locOfDataFiles, "stressCtsTable.csv")))
+  dt_stressCts<- as.data.table(read.csv(paste0(locOfDataFiles_THI, "stressCtsTable.csv")))
   
   # runs graphics, scenarios -----
   for (k in sspChoices) {
@@ -1100,7 +1075,7 @@ f_thi_means_graphing <- function(m, r, col) {
       for (l in startYearChoices) {
         yearSpan <- paste0(l, "_", l + yearRange)
         for (m in speciesChoice) {
-          fileName_in <- paste0(locOfDataFiles, "ensemble_thi.", m, "_", k, "_", yearSpan, ".tif")
+          fileName_in <- paste0(locOfDataFiles_THI, "ensemble_thi.", m, "_", k, "_", yearSpan, ".tif")
           print(paste0("fileName in: ", fileName_in))
           r <- rast(fileName_in)
           r <- crop(r, ext_north)
@@ -1110,7 +1085,7 @@ f_thi_means_graphing <- function(m, r, col) {
           r_combined <- cbind(r_min, r_mean, r_max)
           names(r_combined) <- c(paste0(m, "_", k, "_", l, "_min"), paste0(m, "_", k, "_", l, "_mean"), paste0(m, "_", k, "_", l, "_max"))
           r_global <- cbind(r_global, r_combined)
-          #     fileName_out <- paste0(locOfDataFiles, "mean_ensemble_thi.", m, "_", k, "_", yearSpan, ".tif")
+          #     fileName_out <- paste0(locOfDataFiles_THI, "mean_ensemble_thi.", m, "_", k, "_", yearSpan, ".tif")
         }
       }
     }
@@ -1119,7 +1094,7 @@ f_thi_means_graphing <- function(m, r, col) {
     l = 1991
     yearSpan <- paste0(l, "_", l + yearRange)
     for (m in speciesChoice) {
-      fileName_in <- paste0(locOfDataFiles, "ensemble_thi.", m, "_", k, "_", yearSpan, ".tif")
+      fileName_in <- paste0(locOfDataFiles_THI, "ensemble_thi.", m, "_", k, "_", yearSpan, ".tif")
       r <- rast(fileName_in)
       r <- crop(r, ext_north)
       print(paste0("fileName in: ", fileName_in))
@@ -1129,10 +1104,10 @@ f_thi_means_graphing <- function(m, r, col) {
       r_combined <- cbind(r_min, r_mean, r_max)
       names(r_combined) <- c(paste0(m, "_", k, "_", l, "_min"), paste0(m, "_", k, "_", l, "_mean"), paste0(m, "_", k, "_", l, "_max"))
       r_global <- cbind(r_global, r_combined)
-      #     fileName_out <- paste0(locOfDataFiles, "mean_ensemble_thi.", m, "_", k, "_", yearSpan, ".tif")
+      #     fileName_out <- paste0(locOfDataFiles_THI, "mean_ensemble_thi.", m, "_", k, "_", yearSpan, ".tif")
     }
     r_global <- r_global[, sort(names(r_global))]
-    write.csv(r_global, paste0(locOfDataFiles, "thi_global_nh.csv"))
+    write.csv(r_global, paste0(locOfDataFiles_THI, "thi_global_nh.csv"))
     
   }
   
@@ -1141,7 +1116,7 @@ f_thi_means_graphing <- function(m, r, col) {
     for (l in startYearChoices) {
       yearSpan <- paste0(l, "_", l + yearRange)
       for (m in speciesChoice) {
-        fileName_in <- paste0(locOfDataFiles, "mean_ensemble_thi.", m, "_", k, "_", yearSpan, ".tif")
+        fileName_in <- paste0(locOfDataFiles_THI, "mean_ensemble_thi.", m, "_", k, "_", yearSpan, ".tif")
         print(paste0("fileName in: ", fileName_in))
         f_thi_means_graphing(m, r, col) 
       }
@@ -1165,8 +1140,8 @@ f_thi_means_graphing <- function(m, r, col) {
   # #plot data with masking
   # 
   # for (m in speciesChoice) {
-  #   fileName_century_end <- paste0(locOfDataFiles, "extremeCt.", m, "_", k, "_", yearSpan_end, ".tif")
-  #   fileName_century_begin <- paste0(locOfDataFiles, "extremeCt.", m, "_", "historical", "_", yearSpan_begin, ".tif")
+  #   fileName_century_end <- paste0(locOfDataFiles_THI, "extremeCt.", m, "_", k, "_", yearSpan_end, ".tif")
+  #   fileName_century_begin <- paste0(locOfDataFiles_THI, "extremeCt.", m, "_", "historical", "_", yearSpan_begin, ".tif")
   #   r_raster <- 
   #     r_end <- rast(fileName_century_end)
   #   r_begin <- rast(fileName_century_begin)
@@ -1214,7 +1189,7 @@ f_thi_means_graphing <- function(m, r, col) {
   # pop_mask[pop_mask < maskValLower] <- NA
   # pop_mask[pop_mask > 0] <- 1
   # 
-  # fileName_in <- locOfDataFiles, "ensemble_thi.humans_ssp585_2081_2100.tif"
+  # fileName_in <- locOfDataFiles_THI, "ensemble_thi.humans_ssp585_2081_2100.tif"
   # test <- rast(fileName_in)
   # test
   # test_brick <- raster::brick(fileName_in)
@@ -1238,34 +1213,34 @@ f_thi_means_graphing <- function(m, r, col) {
   #   return(startend) 
   # }
   # 
-  # fileName_in <- paste0(locOfDataFiles, "ensemble_thi.", m, "_", k, "_", yearSpan, ".tif")
+  # fileName_in <- paste0(locOfDataFiles_THI, "ensemble_thi.", m, "_", k, "_", yearSpan, ".tif")
   # r <- rast(fileName_in)
   # 
   # print(system.time(extremeStress <- app(r, fun)))
   # I discoverd that the functions below were not being used, as of Jan 11, 2021. I put them here temporarily 
   # f_readRast_thi_cattle <- function(yearNumber) {
-  #   fileName_in <- paste0(locOfDataFiles, "thi.cattle_", i, "_", k,  "_", yearNumber, ".tif") # note yearNumber here
+  #   fileName_in <- paste0(locOfDataFiles_THI, "thi.cattle_", i, "_", k,  "_", yearNumber, ".tif") # note yearNumber here
   #   r <- rast(fileName_in)
   # }
   # 
   # f_readRast_thi_sheep <- function(yearNumber) {
-  #   fileName_in <- paste0(locOfDataFiles, "thi.sheep_", i, "_", k,  "_", yearNumber, ".tif") # note yearNumber here
+  #   fileName_in <- paste0(locOfDataFiles_THI, "thi.sheep_", i, "_", k,  "_", yearNumber, ".tif") # note yearNumber here
   #   print(fileName_in)
   #   r <- rast(fileName_in)
   # }
   # f_readRast_thi_goat <- function(yearNumber) {
-  #   fileName_in <- paste0(locOfDataFiles, "thi.goat_", i, "_", k,  "_", yearNumber, ".tif") # note yearNumber here
+  #   fileName_in <- paste0(locOfDataFiles_THI, "thi.goat_", i, "_", k,  "_", yearNumber, ".tif") # note yearNumber here
   #   print(fileName_in)
   #   r <- rast(fileName_in)
   # }
   # f_readRast_thi_chicken <- function(yearNumber) {
-  #   fileName_in <- paste0(locOfDataFiles, "thi.chicken_", i, "_", k,  "_", yearNumber, ".tif") # note yearNumber here
+  #   fileName_in <- paste0(locOfDataFiles_THI, "thi.chicken_", i, "_", k,  "_", yearNumber, ".tif") # note yearNumber here
   #   print(fileName_in)
   #   r <- rast(fileName_in)
   # }
   # 
   # f_readRast_thi_pigs <- function(yearNumber) {
-  #   fileName_in <- paste0(locOfDataFiles, "thi.pigs_", i, "_", k,  "_", yearNumber, ".tif") # note yearNumber here
+  #   fileName_in <- paste0(locOfDataFiles_THI, "thi.pigs_", i, "_", k,  "_", yearNumber, ".tif") # note yearNumber here
   #   print(fileName_in)
   #   r <- rast(fileName_in)
   # }

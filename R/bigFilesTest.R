@@ -257,5 +257,15 @@ fileName_out <- paste0("/Volumes/PassportMac/bigFiles/", m_lower, "_ssp585_tas_g
 print(Sys.time())
 
 system.time(writeRaster(r_out, fileName_out, overwrite = TRUE, format = "GTiff", wopt= woptList)); flush.console()
-}
 
+
+# copy pr files from PassPortMac to ExtremeSSD3 bigFiles
+
+passportmac_pr <- list.files("/Volumes/PassportMac/ISIMIP/cmip6/climate3bCombined/", full.names = TRUE)
+passportmac_pr <- passportmac_pr[grep("_pr_", passportmac_pr, fixed = TRUE)]
+passportmac_pr <- gsub("//", "/", passportmac_pr)
+
+for (i in passportmac_pr) {
+file.copy(i, "/Users/gcn/Documents/workspace/ISIMIPData/data/bigFiles/")
+}
+  

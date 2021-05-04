@@ -132,7 +132,7 @@ for (k in sspChoices) {
         system.time(tmax_yr_NH <- subset(NH, indicesCharYear))
         print(system.time(extremeHtCt <- app(tmax_yr_NH, funExtremeHeat)))
         fileName_out <- paste0("data/cmip6/extremeHtCt/extremeHtCtNH_",  i, "_", k, "_", yearNumber, ".tif")
-        writeRaster(extremeHtCt, fileName_out, overwrite = TRUE, woptList = woptList)
+        writeRaster(extremeHtCt, fileName_out, overwrite = TRUE, wopt = woptList)
       }
     }
   }
@@ -142,13 +142,12 @@ for (k in sspChoices) {
 for (k in sspChoices) {
   for (i in modelChoices) {
     modelName.lower <- tolower(i)
-    for (m in hemisphere)
+    for (hem in hemisphere)
       for (l in startYearChoices) {
         yearSpan <- paste0(l, "_", l + yearRange)
-        print(m)
+        print(hem)
         yearnumberRange <- seq(l, (l + yearRange), 1)
         gc()
-        print(m)
         x <- lapply(yearnumberRange, readRastHeat)
         r <- rast(x)
         fileName_out <- paste0("data/cmip6/extremeHtCt/extremeHtCt", m, "_", i, "_", k,  "_", yearSpan, ".tif")
@@ -161,10 +160,10 @@ for (k in sspChoices) {
 k <- "historical"
 for (i in modelChoices) {
   modelName.lower <- tolower(i)
-  for (m in hemisphere)
+  for (hem in hemisphere)
     for (l in startYearChoices_historical) {
       yearSpan <- paste0(l, "_", l + yearRange)
-      print(m)
+      print(hem)
       yearnumberRange <- seq(l, (l + yearRange), 1)
       gc()
       x <- lapply(yearnumberRange, readRastHeat)
@@ -194,7 +193,7 @@ for (k in sspChoices) {
         print(system.time(frostCt <- app(tmin_yr_NH, f_Frost)))
         fileName_out <- paste0("data/cmip6/frostCt/frostCtNH_",  i, "_", k, "_", yearNumber, ".tif")
         frostCt
-        writeRaster(frostCt, fileName_out, overwrite = TRUE, woptList = woptList)
+        writeRaster(frostCt, fileName_out, overwrite = TRUE, wopt = woptList)
       }
     }
   }
@@ -217,7 +216,7 @@ for (i in modelChoices) {
       print(system.time(extremeHtCt <- app(tmax_yr_NH, funExtremeHeat)))
       print(extremeHtCt)
       fileName_out <- paste0("data/cmip6/extremeHtCt/extremeHtCtNH_",  i, "_", k, "_", yearNumber, ".tif")
-      writeRaster(extremeHtCt, fileName_out, overwrite = TRUE, woptList = woptList)
+      writeRaster(extremeHtCt, fileName_out, overwrite = TRUE, wopt = woptList)
       #      extremeHtCt <- NULL
       gc()
     }
@@ -239,7 +238,7 @@ for (k in sspChoices) {
         system.time(tmax_yr_NH <- subset(NH, indicesCharYear))
         print(system.time(extremeHtCt <- app(tmax_yr_NH, funExtremeHeat)))
         fileName_out <- paste0("data/cmip6/extremeHtCt/extremeHtCtNH_",  i, "_", k, "_", yearNumber, ".tif")
-        writeRaster(extremeHtCt, fileName_out, overwrite = TRUE, woptList = woptList)
+        writeRaster(extremeHtCt, fileName_out, overwrite = TRUE, wopt = woptList)
       }
     }
   }
@@ -263,7 +262,7 @@ for (i in modelChoices) {
       system.time(tmin_yr_NH <- subset(NH, indicesCharYear))
       print(system.time(frostCt <- app(tmin_yr_NH, f_Frost)))
       fileName_out <- paste0("data/cmip6/frostCt/frostCtNH_",  i, "_", k, "_", yearNumber, ".tif")
-      writeRaster(frostCt, fileName_out, overwrite = TRUE, woptList = woptList)
+      writeRaster(frostCt, fileName_out, overwrite = TRUE, wopt = woptList)
       #      frostCt <- NULL
       gc()
     }
@@ -275,15 +274,13 @@ for (i in modelChoices) {
 for (k in sspChoices) {
   for (i in modelChoices) {
     modelName.lower <- tolower(i)
-    for (m in hemisphere)
+    for (hem in hemisphere)
       for (l in startYearChoices) {
         yearSpan <- paste0(l, "_", l + yearRange)
-        print(m)
+        print(hem)
         yearRange <- 19
-        #        if (m %in% "SH") yearRange <- 18
-        yearnumberRange <- seq(l, (l + yearRange), 1)
+         yearnumberRange <- seq(l, (l + yearRange), 1)
         gc()
-        print(m)
         x <- lapply(yearnumberRange, readRastFrost)
         r <- rast(x)
         fileName_out <- paste0("data/cmip6/frostCt/frostCt", m, "_", i, "_", k,  "_", yearSpan, ".tif")
@@ -296,12 +293,11 @@ for (k in sspChoices) {
 k <- "historical"
 for (i in modelChoices) {
   modelName.lower <- tolower(i)
-  for (m in hemisphere)
+  for (hem in hemisphere)
     for (l in startYearChoices_historical) {
       yearSpan <- paste0(l, "_", l + yearRange)
-      print(m)
+      print(hem)
       yearRange <- 19
-      #     if (m %in% "SH") yearRange <- 18
       yearnumberRange <- seq(l, (l + yearRange), 1)
       gc()
       x <- lapply(yearnumberRange, readRastFrost)
@@ -330,7 +326,7 @@ for (k in sspChoices) {
         print(system.time(extremeHtCt <- app(tmax_yr_SH, funExtremeHeat)))
         print(paste0("extremeHtCt: ", summary(extremeHtCt))); flush.console()
         fileName_out <- paste0("data/cmip6/extremeHtCt/extremeHtCtSH_",  i, "_", k, "_", yearNumber, ".tif")
-        writeRaster(extremeHtCt, fileName_out, overwrite = TRUE, woptList = woptList)
+        writeRaster(extremeHtCt, fileName_out, overwrite = TRUE, wopt = woptList)
       }
     }
   }
@@ -353,7 +349,7 @@ for (k in sspChoices) {
         
         print(system.time(frostCt <- app(tmin_yr_SH, f_Frost)))
         fileName_out <- paste0("data/cmip6/frostCt/frostCtSH_",  i, "_", k, "_", yearNumber, ".tif")
-        writeRaster(frostCt, fileName_out, overwrite = TRUE, woptList = woptList)
+        writeRaster(frostCt, fileName_out, overwrite = TRUE, wopt = woptList)
       }
     }
   }
@@ -378,7 +374,7 @@ for (i in modelChoices) {
       print(system.time(extremeHtCt <- app(tmax_yr_SH, funExtremeHeat)))
       print(paste0("extremeHtCt: ", summary(extremeHtCt))); flush.console()
       fileName_out <- paste0("data/cmip6/extremeHtCt/extremeHtCtSH_",  i, "_", k, "_", yearNumber, ".tif")
-      writeRaster(extremeHtCt, fileName_out, overwrite = TRUE, woptList = woptList)
+      writeRaster(extremeHtCt, fileName_out, overwrite = TRUE, wopt = woptList)
     }
   }
 }
@@ -402,7 +398,7 @@ for (i in modelChoices) {
       print(frostCt)
       fileName_out <- paste0("data/cmip6/frostCt/frostCtSH_",  i, "_", k, "_", yearNumber, ".tif")
       print(paste0("frost historical outfile: ", fileName_out))
-      writeRaster(frostCt, fileName_out, overwrite = TRUE, woptList = woptList)
+      writeRaster(frostCt, fileName_out, overwrite = TRUE, wopt = woptList)
     }
   }
 }
@@ -425,7 +421,7 @@ for (k in sspChoices) {
         
         print(system.time(extremeCldCt <- app(extremeCld_yr, f_ExtremeCld)))
         fileName_out <- paste0("data/cmip6/extremeCldCt/extremeCldCt_",  i, "_", k, "_", yearNumber, ".tif")
-        writeRaster(extremeCldCt, fileName_out, overwrite = TRUE, woptList = woptList)
+        writeRaster(extremeCldCt, fileName_out, overwrite = TRUE, wopt = woptList)
       }
     }
   }
@@ -451,7 +447,7 @@ for (i in modelChoices) {
       print(extremeCldCt)
       fileName_out <- paste0("data/cmip6/extremeCldCt/extremeCldCt_",  i, "_", k, "_", yearNumber, ".tif")
       print(paste0("fileName out: ", fileName_out))
-      writeRaster(extremeCldCt, fileName_out, overwrite = TRUE, woptList = woptList)
+      writeRaster(extremeCldCt, fileName_out, overwrite = TRUE, wopt = woptList)
     }
   }
 }
@@ -493,9 +489,9 @@ for (i in modelChoices) {
 # combine all the spatrasters by model for the hemisphere, time period, and scenario and then take the mean across that combo
 # ensemble mean, extreme heat -----
 for (k in scenarioChoicesEnsemble) {
-  for (m in hemisphere)
+  for (hem in hemisphere)
     for (l in startYearChoices) {
-      print(m)
+      print(hem)
       yearRange <- 19
       #      if (m %in% "SH") yearRange <- 18
       yearSpan <- paste0(l, "_", l + yearRange)
@@ -505,27 +501,27 @@ for (k in scenarioChoicesEnsemble) {
       x <- lapply(modelChoices, readRastHeatEnsemble)
       r <- rast(x)
       fileName_out <- paste0("data/cmip6/extremeHtCt/ensemble_extremeHtCt", m, "_", k, "_", yearSpan, ".tif")
-      system.time(r_mean <- app(r, fun = "mean", filename = fileName_out, overwrite = TRUE, woptList = woptList))
+      system.time(r_mean <- app(r, fun = "mean", filename = fileName_out, overwrite = TRUE, wopt = woptList))
       plot(r_mean, main = paste0("Extreme heat days count ", m, ", ", k, ", period ", yearSpan))
     }
 }
 
 # ensemble mean, frost days -----
 for (k in scenarioChoicesEnsemble) {
-  for (m in hemisphere)
+  for (hem in hemisphere)
     for (l in startYearChoices) {
-      print(m)
+      print(hem)
       yearRange <- 19
       #      if (m %in% "SH") yearRange <- 18
       yearSpan <- paste0(l, "_", l + yearRange)
       if (k %in% "historical") yearSpan <- "1991_2010"
       #      yearnumberRange <- seq(l, (l + yearRange), 1)
       gc()
-      print(m)
+      print(hem)
       x <- lapply(modelChoices, readRastFrostEnsemble)
       r <- rast(x)
       fileName_out <- paste0("data/cmip6/frostCt/ensemble_frostCt", m, "_", k, "_", yearSpan, ".tif")
-      r_mean <- app(r, fun = "mean", filename = fileName_out, overwrite = TRUE, woptList = woptList)
+      r_mean <- app(r, fun = "mean", filename = fileName_out, overwrite = TRUE, wopt = woptList)
       r_mean
       plot(r_mean, main = paste0("Frost days count ", m, ", ", k, ", period ", yearSpan))
     }
@@ -542,7 +538,7 @@ for (k in scenarioChoicesEnsemble) {
     x <- lapply(modelChoices, readRastExtremeCldEnsemble)
     r <- rast(x)
     fileName_out <- paste0("data/cmip6/extremeCldCt/ensemble_extremeCldtCt_", k, "_", yearSpan, ".tif")
-    r_mean <- app(r, fun = "mean", filename = fileName_out, overwrite = TRUE, woptList = woptList)
+    r_mean <- app(r, fun = "mean", filename = fileName_out, overwrite = TRUE, wopt = woptList)
     # truncate number of cold days at 3, so the values show up elsewhere besides the arctic
     r_mean_capped <- r_mean
     r_mean_capped[r_mean_capped > 3] <- 3

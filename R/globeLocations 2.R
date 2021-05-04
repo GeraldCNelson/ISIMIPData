@@ -55,7 +55,7 @@ for (k in sspChoices) {
         names(growingSeasonGlobe) <- c("growingSeason_start", "growingSeason_end")
         
         fileName_out <- paste0("data/cmip6/growingSeasons/growSeasonGlobe_",  i, "_", k, "_", yearNumber, ".tif")
-        writeRaster(growingSeasonGlobe, fileName_out, overwrite = TRUE, woptList = woptList)
+        writeRaster(growingSeasonGlobe, fileName_out, overwrite = TRUE, wopt = woptList)
       }
     }
   }
@@ -91,7 +91,7 @@ for (k in sspChoices) {
         names(growingSeasonSH) <- c("growingSeason_start", "growingSeason_end")
         
         fileName_out <- paste0("data/cmip6/growingSeasons/growSeasonSH_",  i, "_", k, "_", yearNumber, ".tif")
-        writeRaster(growingSeasonSH, fileName_out, overwrite = TRUE, woptList = woptList)
+        writeRaster(growingSeasonSH, fileName_out, overwrite = TRUE, wopt = woptList)
       }
     }
   }

@@ -11,22 +11,9 @@
   climateVars <- c("tasmax", "tasmin", "tas", "pr", "hurs",  "rsds", "sfcwind") 
   climateVars <- c("pr") #, "hurs") # "tasmin", tasmax
   
-  #startYearChoices <-  c(2021, 2051, 2091) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
-  startYearChoices <- c(2041, 2081)
-  locOfFiles <- locOfCMIP6tifFiles <- "data/bigFiles/"
-  yearRange <- 19
-  northernHemExtent <- c( -180, 180, 0, 90)
-  southernHemExtent <-c( -180, 180, -60, 0)
-  hemispheres <- c("NH", "SH")
-  
   # test values
-  i <- "UKESM1-0-LL"
-  k <- "ssp126"
-  l <- 2041
-  yearSpan <- paste0(l, "_", l + yearRange)
   climvar <- "pr"
-  hem <- "NH"
-  
+
   f_means <- function() {
     gc()
     modelName.lower <- tolower(i)
@@ -42,13 +29,13 @@
     if (climvar %in% "pr") { 
       # moved filename in stuff to here because the pr file names don't currently include "global_daily"
       fileName_in <- paste(modelName.lower, k, climvar, yearSpan, sep = "_")
-      fileName_in <- paste0(locOfFiles, fileName_in, ".tif")
+      fileName_in <- paste0(locOfClimFiles, fileName_in, ".tif")
       rastIn <- rast(fileName_in)
       names(rastIn) <- indices # may not be necessary now, but keep it around
       
-      fileName_out_dailyMean <- paste0(locOfFiles, "dailyMean/dailyMean_", "pr", "_", modelName.lower, "_", k,  "_", yearSpan, ".tif")
-      fileName_out_monthlyMean <- paste0(locOfFiles, "monthlyMean/monthlyMean_", "pr", "_", modelName.lower, "_", k,  "_", yearSpan, ".tif")
-      fileName_out_annualSum <- paste0(locOfFiles, "annualMean/annualSum_", "pr", "_", modelName.lower, "_", k,  "_", yearSpan, ".tif")
+      fileName_out_dailyMean <- paste0(locOfClimFiles, "dailyMean/dailyMean_", "pr", "_", modelName.lower, "_", k,  "_", yearSpan, ".tif")
+      fileName_out_monthlyMean <- paste0(locOfClimFiles, "monthlyMean/monthlyMean_", "pr", "_", modelName.lower, "_", k,  "_", yearSpan, ".tif")
+      fileName_out_annualSum <- paste0(locOfClimFiles, "annualMean/annualSum_", "pr", "_", modelName.lower, "_", k,  "_", yearSpan, ".tif")
       
 #      print(system.time(rast.dailyMean <- tapp(rastIn, indices_day, fun = mean, filename=fileName_out_dailyMean, overwrite = TRUE, wopt=list()))) # daily mean rainfall over the data set
       # sum for pr. this sums the values for all days in a month across the whole data set. Need to divide by yearRange to get the per month value
@@ -64,14 +51,14 @@
       
     } else {
       fileName_in <- paste(modelName.lower, k, climvar, "global_daily", yearSpan, sep = "_")
-      fileName_in <- paste0(locOfFiles, fileName_in, ".tif")
+      fileName_in <- paste0(locOfClimFiles, fileName_in, ".tif")
       rastIn <- rast(fileName_in)
       names(rastIn) <- indices # may not be necessary now, but keep it around
       
-       fileName_out_annualMean <- paste0(locOfFiles, "annualMean/annualMean_", climvar, "_", modelName.lower, "_", k,  "_", yearSpan, ".tif")
-      # fileName_out_monthlyMean <- paste0(locOfFiles, "monthlyMean/monthlyMean_", climvar, "_", modelName.lower, "_", k,  "_", yearSpan, ".tif")
-     # fileName_out_dailyMean <- paste0(locOfFiles, "dailyMean/dailyMean_", climvar, "_", modelName.lower, "_", k,  "_", yearSpan, ".tif")
-      # fileName_out_dailySD <- paste0(locOfFiles, "dailyMean/dailySD_", climvar, "_", modelName.lower, "_", k,  "_", yearSpan, ".tif")
+       fileName_out_annualMean <- paste0(locOfClimFiles, "annualMean/annualMean_", climvar, "_", modelName.lower, "_", k,  "_", yearSpan, ".tif")
+      # fileName_out_monthlyMean <- paste0(locOfClimFiles, "monthlyMean/monthlyMean_", climvar, "_", modelName.lower, "_", k,  "_", yearSpan, ".tif")
+     # fileName_out_dailyMean <- paste0(locOfClimFiles, "dailyMean/dailyMean_", climvar, "_", modelName.lower, "_", k,  "_", yearSpan, ".tif")
+      # fileName_out_dailySD <- paste0(locOfClimFiles, "dailyMean/dailySD_", climvar, "_", modelName.lower, "_", k,  "_", yearSpan, ".tif")
 #      print(system.time(rast.dailyMean <- tapp(rastIn, indices_day, fun = mean, filename = fileName_out_dailyMean, overwrite = TRUE, wopt=list()))) # daily mean over the data set, output has 366 layers        
  #     print(system.time(rast.dailySD <- tapp(rastIn, indices_day, fun = "sd", filename = fileName_out_dailySD, overwrite = TRUE, wopt=list()))) # daily mean over the data set, output has 366 layers        
       # print(system.time(rast.monthlyMean <- tapp(rastIn, indices_month, fun = mean, filename=fileName_out_monthlyMean, overwrite = TRUE, wopt=list()))) # Output has 12 layers
@@ -116,7 +103,7 @@ for (i in modelChoices) {
 #  ensemble calcs -----
 f_readRast <- function(modelChoice.lower) {
   model.name <- tolower(i)
-  fileName_in <- paste0(locOfFiles, meanChoice, "Mean/", meanChoice, "Mean_", climvar, "_", modelChoice.lower, "_", k,  "_", yearSpan, ".tif")
+  fileName_in <- paste0(locOfClimFiles, meanChoice, "Mean/", meanChoice, "Mean_", climvar, "_", modelChoice.lower, "_", k,  "_", yearSpan, ".tif")
   print(paste0("climvar: ", climvar, ", k: ", k, ", model: ", modelChoice.lower, ", fileName in: ", fileName_in))
   r <- rast(fileName_in)
   # indices <- seq(from = 1, to = nlyr(r), 1)
@@ -132,9 +119,9 @@ for (k in sspChoices) {
   for (l in startYearChoices) {
     yearSpan <- paste0(l, "_", l + yearRange)
     for (climvar in climateVars) {
-      fileName_in_annualMean <- paste0(locOfFiles, "annualMean/annualMean_", climvar, "_", modelName.lower, "_", k,  "_", yearSpan, ".tif")
-      fileName_in_monthlyMean <- paste0(locOfFiles, "monthlyMean/monthlyMean_", climvar, "_", modelName.lower, "_", k,  "_", yearSpan, ".tif")
-      fileName_in_dailyMean <- paste0(locOfFiles, "dailyMean/dailyMean_", climvar, "_", modelName.lower, "_", k,  "_", yearSpan, ".tif")
+      fileName_in_annualMean <- paste0(locOfClimFiles, "annualMean/annualMean_", climvar, "_", modelName.lower, "_", k,  "_", yearSpan, ".tif")
+      fileName_in_monthlyMean <- paste0(locOfClimFiles, "monthlyMean/monthlyMean_", climvar, "_", modelName.lower, "_", k,  "_", yearSpan, ".tif")
+      fileName_in_dailyMean <- paste0(locOfClimFiles, "dailyMean/dailyMean_", climvar, "_", modelName.lower, "_", k,  "_", yearSpan, ".tif")
       for (meanChoice in meanChoices) {
         x <- lapply(modelChoices.lower, f_readRast)
         r <- rast(x)
@@ -176,7 +163,7 @@ for (climvar in climateVars) {
 # climateVars <- c("tasmax", "tasmin", "hurs") #"hurs",
 # startYearChoices <-  c(1991, 2001) 
 # startYearChoices <-  c(2001) 
-# locOfFiles <- "/Volumes/ExtremeSSD2/climate_land_only/unitsCorrected/historical/ensemble/"
+# locOfClimFiles <- "/Volumes/ExtremeSSD2/climate_land_only/unitsCorrected/historical/ensemble/"
 # 
 # #test values
 # l = 2001
@@ -197,7 +184,7 @@ for (climvar in climateVars) {
 #     print(paste0("working on start year: ", l, ", variable: ", climvar, ", pid: ", Sys.getpid(), " systime: ", Sys.time()))
 #     fileName_in <- paste("ensemble_historical",  climvar, yearSpan, sep = "_")
 #     fileName_in <- paste0(fileName_in, ".tif")
-#     temp <- paste(locOfFiles, fileName_in, sep = "")
+#     temp <- paste(locOfClimFiles, fileName_in, sep = "")
 #     rastIn <- rast(temp)
 #     print(rastIn)
 #     
@@ -236,7 +223,7 @@ modelChoices <- c(  "MPI-ESM1-2-HR", "UKESM1-0-LL",  "IPSL-CM6A-LR", "MRI-ESM2-0
 climateVars <- c( "tasmax", "tasmin")#, "pr", "hurs",  "rsds", "sfcwind") 
 
 startYearChoices <-  c(2041, 2081) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
-# locOfFiles <- locOfCMIP6tifFiles
+# locOfClimFiles <- locOfCMIP6tifFiles
 yearRange <- 19
 
 # test values
@@ -260,7 +247,7 @@ for (k in sspChoices) {
         
         fileName_in <- paste(modelName.lower, k, climvar, "global_daily", yearSpan, sep = "_")
         fileName_in <- paste0(fileName_in, ".tif")
-        temp <- paste(locOfFiles, k, "/", i, "/", fileName_in, sep = "")
+        temp <- paste(locOfClimFiles, k, "/", i, "/", fileName_in, sep = "")
         rastIn <- rast(temp)
         names(rastIn) <- indices
         print(rastIn)
@@ -304,7 +291,7 @@ for (k in sspChoices) {
 climateVars <- c( "tasmax", "tasmin",  "pr", "rsds", "sfcwind", "hurs") #"hurs", "tas", 
 #climateVars <- c( "hurs") #"hurs",
 startYearChoices <-  c(1991) 
-locOfFiles <- "/Volumes/ExtremeSSD2/climate_land_only/unitsCorrected/historical/ensemble/"
+locOfClimFiles <- "/Volumes/ExtremeSSD2/climate_land_only/unitsCorrected/historical/ensemble/"
 yearRange = 19
 #test values
 l = 1991
@@ -327,7 +314,7 @@ for (l in startYearChoices) {
     print(paste0("working on start year: ", l, ", variable: ", climvar))
     fileName_in <- paste("ensemble_historical",  climvar, yearSpan, sep = "_")
     fileName_in <- paste0(fileName_in, ".tif")
-    temp <- paste(locOfFiles, fileName_in, sep = "")
+    temp <- paste(locOfClimFiles, fileName_in, sep = "")
     rastIn <- rast(temp)
     print(rastIn)
     
@@ -369,7 +356,7 @@ for (l in startYearChoices) {
 #     indices <- seq(as.Date(startDate), as.Date(endDate), 1)
 #     indices <- paste0("X", as.character(indices))
 #     fileName_in <- paste(modelName.lower, k, climvar, "global_daily", yearSpan, sep = "_")
-#     fileName_in <- paste0(locOfFiles, fileName_in, ".tif")
+#     fileName_in <- paste0(locOfClimFiles, fileName_in, ".tif")
 #     print(paste0("working on start year: ", l, ", variable: ", climvar, ", ssp choice: ", k, ", model: ", i, ", filename in: ", fileName_in))
 #     rastIn <- rast(fileName_in)
 #     names(rastIn) <- indices # may not be necessary now, but keep it around
@@ -401,13 +388,13 @@ for (l in startYearChoices) {
 #   indices <- seq(as.Date(startDate), as.Date(endDate), 1)
 #   indices <- paste0("X", as.character(indices))
 #   print(paste0("working on start year: ", l, ", variable: ", climvar, ", ssp choice: ", k, ", model: ", i))
-#   fileName_tasmax_in <- paste0(locOfFiles, modelName.lower, "_", k, "_", "tasmax", "_", "global_daily", "_",yearSpan, ".tif")
-#   fileName_tasmin_in <- paste0(locOfFiles, modelName.lower, "_", k, "_", "tasmin", "_", "global_daily", "_",yearSpan, ".tif")
+#   fileName_tasmax_in <- paste0(locOfClimFiles, modelName.lower, "_", k, "_", "tasmax", "_", "global_daily", "_",yearSpan, ".tif")
+#   fileName_tasmin_in <- paste0(locOfClimFiles, modelName.lower, "_", k, "_", "tasmin", "_", "global_daily", "_",yearSpan, ".tif")
 #   r_tasmax <- rast(fileName_tasmax_in)
 #   r_tasmin <- rast(fileName_tasmin_in)
 #   r_tas <-( r_tasmax + r_tasmin)/2
 #   names(r_tas) <- indices
-#   fileName_tas_out <- paste0(locOfFiles, modelName.lower, "_", k, "_", "tas", "_", "global_daily", "_",yearSpan, ".tif")
+#   fileName_tas_out <- paste0(locOfClimFiles, modelName.lower, "_", k, "_", "tas", "_", "global_daily", "_",yearSpan, ".tif")
 #   print(system.time(writeRaster(r_tas, filename = fileName_tas_out, overwrite = TRUE, wopt = woptList)))
 # }
 # 

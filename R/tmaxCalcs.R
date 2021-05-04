@@ -10,7 +10,7 @@ startYearChoices <-  c(2021, 2051, 2091) #, 2051, 2091) #2011, 2041, 2051, 2081)
 
 yearRange <- 9
 
-tmaxList <- sort(unique(ann_crop_temp_table$tdamage.mean)) #get all the damaging temperature levels for the annual crops
+tmaxList <- sort(unique(cropCharacteristics_annual$tdamage.mean)) #get all the damaging temperature levels for the annual crops
 
 #test values
 i <- "GFDL-ESM4"
@@ -66,7 +66,7 @@ for (k in sspChoices)  {
           print(paste0("crop: ", m))  
           modelName.lower <- tolower(i)
           yearSpan <- paste0(l, "_", l + yearRange)
-          tmaxLimit <- ann_crop_temp_table[crop %in% m, tdamage.mean]
+          tmaxLimit <- cropCharacteristics_annual[crop %in% m, tdamage.mean]
           
           fileName_in <- paste0("tmaxGT_", tmaxLimit, "_", modelName.lower, "_", k, "_", yearSpan, ".tif")
           tdamage <- rast(paste0("data/cmip6/tmaxMonthlySums/", fileName_in))
@@ -109,7 +109,7 @@ for (o in 1:length(cropChoices)) {
   for (m in get(cropChoices[o])) {
     print(paste0("crop: ", m))  
     modelName.lower <- tolower(i)
-    tmaxLimit <- ann_crop_temp_table[crop %in% m, tdamage.mean]
+    tmaxLimit <- cropCharacteristics_annual[crop %in% m, tdamage.mean]
     
     fileName_in <- paste0("tmaxGT_", tmaxLimit, "_observed_", yearSpan, ".tif")
     tdamage <- rast(paste0("data/cmip6/tmaxMonthlySums/", fileName_in))

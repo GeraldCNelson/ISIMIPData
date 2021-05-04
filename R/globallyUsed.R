@@ -10,35 +10,11 @@ library(sf)
 library(maps)
 library(maptools)
 library(data.table)
-library(terra)
 #library(raster)
 library(rasterVis)
 library(ggplot2)
 library(readxl)
 library(lubridate)
-
-# function to identify operating system
-get_os <- function() {
-  sysinf <- Sys.info()
-  if (!is.null(sysinf)) {
-    os <- sysinf['sysname']
-    if (os == 'Darwin')
-      os <- "osx"
-  } else {## mystery machine
-    os <- .Platform$OS.type
-    if (grepl("^darwin", R.version$os))
-      os <- "osx"
-    if (grepl("linux-gnu", R.version$os))
-      os <- "linux"
-  }
-  tolower(os)
-}
-if (get_os() %in% "osx") {
-  terraOptions(memfrac = 2,  ncopies = 1, progress = 10, tempdir =  "data/ISIMIP", verbose = TRUE) # need to use a relative path
-}else{
-  terraOptions(memfrac = .6,  progress = 10, tempdir =  "data/ISIMIP", verbose = TRUE) # need to use a relative path
-}
-
 
 RobinsonProj <-  "+proj=robin +lon_0=0 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs"
 GoodeHomolosineProj <- "+proj=goode" # see https://proj.org/operations/projections/goode.html
@@ -90,28 +66,6 @@ library(maptools)
 # write.csv(paste0("data-raw/", dataDirs, col.names = false))
 #graphicsDirs <- list.dirs(path = "graphics")
 
-# function to identify operating system
-get_os <- function() {
-  sysinf <- Sys.info()
-  if (!is.null(sysinf)) {
-    os <- sysinf['sysname']
-    if (os == 'Darwin')
-      os <- "osx"
-  } else {## mystery machine
-    os <- .Platform$OS.type
-    if (grepl("^darwin", R.version$os))
-      os <- "osx"
-    if (grepl("linux-gnu", R.version$os))
-      os <- "linux"
-  }
-  tolower(os)
-}
-
-# set the proj path if on the mac. Hopefully it works ok on linux.
-# if(get_os() %in% "osx") {
-# Sys.setenv(PROJ_LIB = "/usr/local/Cellar/proj/7.0.1/share/proj") # use until the sf and gdal issues get sorted out. If you get the error pj_obj_create: Cannot find proj.db, check to see if the proj version (currently 7.0.0) has changed
-# }
-
 
 for (q in c("dataDirs.csv", "graphicsDirs.csv")) {
   dirList <- read.csv(paste0("data-raw/", q), header = FALSE)
@@ -119,12 +73,6 @@ for (q in c("dataDirs.csv", "graphicsDirs.csv")) {
   for (r in 1:length(temp)) if (!dir.exists(temp[r])) dir.create(temp[r])
 }
 
-# paths to manage large data sets across machines. I don't think this is needed anymore
-# if (get_os() %in% "osx") locOfCMIP6tifFiles <- "/Volumes/ExtremeSSD/ISIMIP/cmip6/"
-# if (get_os() %in% c("Linux", "linux")) locOfCMIP6tifFiles <- "data-raw/ISIMIP/cmip6/"
-#locOfCMIP6tifFiles <- "data-raw/ISIMIP/cmip6/unitsCorrected/"
-# locOfCMIP6tifFiles <- "/Volumes/ExtremeSSD2/climate_land_only/unitsCorrected/"
- locOfCMIP6tifFiles <- "data/bigFiles/"
 tmpDirName <- paste0(locOfCMIP6tifFiles, "rasterTmp", Sys.getpid(), "/")
 
 # gdal_polygonizeR <- function(x, outshape=NULL, gdalformat = 'ESRI Shapefile',

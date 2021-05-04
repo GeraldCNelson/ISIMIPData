@@ -1,3 +1,4 @@
+#  creates the data tables majorCropValues_main, majorCropValues_lo and majorCropValues_hi
 library(readxl)
 library(data.table)
 supp_materials_chill_portions <- as.data.table(read_excel("data-raw/crops/perennials/supp_materials_2020_04_07.xlsx")) #, col_types = c("text", "text", "numeric", "text", "text")))
@@ -11,6 +12,7 @@ test <- test[, CR_cultivar_mean := round(mean(chill_requirement), 1), by = "cult
 test <- test[, CR_crop_mean := round(mean(chill_requirement, na.rm = TRUE), 1), by = "cropName"][, CR_crop_min := min(chill_requirement, na.rm = TRUE), by = "cropName"][, CR_crop_max := max(chill_requirement, na.rm = TRUE), by = "cropName"]
 test[CR_crop_max =="Inf" | CR_crop_max =="-Inf", CR_crop_max := NA]
 test[CR_crop_min =="Inf" | CR_crop_min =="-Inf", CR_crop_min := NA]
+
 # remove extraneous columns
 test [, c("chill_requirement", "comment", "reference_chill_portions", "reference_other_information", "other_comments") := NULL]
 test <- unique(test)

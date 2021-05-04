@@ -5,7 +5,7 @@ library(ggspatial)
 library(sf)
 library(dplyr)
 
-thiList <- c("thi.cattle", "thi.sheep", "thi.goat", "thi.yak", "thi.broiler", "thi.layer", "thi.chicken", "thi.swine")
+thiList <- c("thi.cattle", "thi.sheep", "thi.goat", "thi.yak", "thi.broiler", "thi.layer", "thi.chicken", "thi.pigs")
 thiListReduced <- thiList[!thiList %in% c("thi.yak", "thi.broiler", "thi.layer")]
 
 varNamesInfo <- as.data.table(read_excel("data-raw/varNamesLookup.xlsx"))
