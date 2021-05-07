@@ -1,5 +1,5 @@
 # ISIMIP project spatial constants
-
+library(sf) # only needed for doing some spatial stuff
 RobinsonProj <-  "+proj=robin +lon_0=0 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs"
 GoodeHomolosineProj <- "+proj=goode" # see https://proj.org/operations/projections/goode.html
 crsRob <- RobinsonProj
