@@ -188,90 +188,85 @@
   }
   
   f_combinedDamage <- function(k, l, speciesChoice) {
-    for (hem in hemispheres) {
-      for (suitabilityLevel in c("good")) { #, "acceptable", "bad"
+    # combine suitability metrics from chill portions, extreme cold, flowering frost, and summer heat; locations with value 1 is suitable
+    for (suitabilityLevel in c("good")) { #, "acceptable", "bad"
+      for (hem in hemispheres) {
+        
+        # read in all the rasters needed
         fileName_extremeColdCt_in <- paste0(locOfDataFiles_perennials, "extremeCold_cutoff_", speciesChoice, "_", k, "_", hem, "_", yearSpan, ".tif")
         extremeColdCt <- rast(fileName_extremeColdCt_in) # 1 is good; 0 is bad
-        extremeColdCt[extremeColdCt == 0] <- NA # keep only the good locations; value is 1
         fileName_fr_in <- paste0(locOfDataFiles_perennials, "floweringDamage_", speciesChoice, "_", k, "_", suitabilityLevel, "_", hem, "_", yearSpan, ".tif") 
         frostCt <- rast(fileName_fr_in) # number of frost days below the damage threshold of zero; locations outside the range are NA; outside land is NaN
         fileName_hd_in <- paste0(locOfDataFiles_perennials, "heatDamage_", speciesChoice, "_", k, "_", suitabilityLevel, "_", hem, "_", yearSpan, ".tif") 
         heatCt <- rast(fileName_hd_in) # number of high heat days below the damage threshold; locations outside the range are NA; outside land is NaN
         fileName_cp_in <- paste0("data/cmip6/chillPortions/chill_portions/", "ensemble_chill_cutoff_", speciesChoice, "_", k, "_", hem, "_", yearSpan, ".tif")
         chillPortionsCutoff <- rast(fileName_cp_in) # 1 is good, 0 is bad
+        chillPortionsCutoff[chillPortionsCutoff == 0] <- NA
+        extremeColdCt[extremeColdCt == 0] <- NA # keep only the good locations; value is 1
+        
+        # convert day counts to 1 (suitable, 0 - not suitable)
+        heatCt[heatCt >= 0] <- 1 # convert the number of days that meet the suitability criterion to 1
+        frostCt[frostCt >= 0] <- 1 # convert the number of days that meet the suitability criterion to 1
         
         print(paste0("working on combined damage ", speciesChoice, " in hemisphere ", hem, ", year ", l, ", scenario ", k))
         
-        #combine them all
-        # start with locations where chillPortions are adequate
-        r <- chillPortionsCutoff # 1 is where chill portions is adequate 
-        print(r)
-        plot(r, main = paste0("1 is locations where chill portions are adequate for ", speciesChoice))
-        tminExtremeVal <- cropVals[cropName == speciesChoice, low_temp_threshold]
-        print(extremeColdCt)
-        plot(extremeColdCt, main = paste0("extreme Cold Mask (locs with value of 0 have temp less than ", tminExtremeVal, " for at least one day)"))
-        r <- mask(r, extremeColdCt) # 1 is no extreme cold; 0 is extreme cold, this sets masked areas to NA
-        plot(r, main = "chillPortionsCutoff masked with extremeCold Mask; 1 is ok")
-        frostCt[frostCt >= 0] <- 1 # 1 is suitable
-        r <- mask(r, frostCt, maskvalue = NA)
-        plot(r, main = "chillPortionsCutoff masked with \nextremeCold and unsuitable flower damage masks; 1 is ok")
-        plot(r, main = "chillPortions adequate masked with extremeCold and \nfrost Ct is in the suitable range; 1 is ok")
-        heatCt[heatCt >= 0] <- 1 # 1 is suitable
-        r <- mask(r, heatCt, maskvalue = NA) # 1 is where heat Ct is below the unsuitable level
-        plot(r, main = "chillPortionsCutoff masked with extremeCold Mask, \nflower damage Ct and heat damage ct are in the suitable ranges; 1 is ok")
-        r[r == 0] <- NA
+        r_combined <- c(extremeColdCt, frostCt, heatCt, chillPortionsCutoff)
+        r_suitable <- sum(r_combined)/4
         fileName_out <- paste0(locOfDataFiles_perennials, "suitable_", speciesChoice, "_",  k, "_", suitabilityLevel, "_", hem, "_", yearSpan, ".tif")
-        writeRaster(r, fileName_out, overwrite = TRUE, wopt = woptList)
+        writeRaster(r_suitable, fileName_out, overwrite = TRUE, wopt = woptList)
         print(paste0("file name out: ", fileName_out))
+        # titleText <- paste0("Locations where suitability is ", suitabilityLevel, " for ", speciesChoice, ", scenario ", k, ", period ", yearSpan, ", hemisphere ", hem)
+        # plot(r_suitable, main = titleText)
+        r_suit_hem <- paste0("r_suitable_", hem)
+        assign(r_suit_hem, r_suitable)
       }
+      r_suitable_globe <- merge(r_suitable_NH, r_suitable_SH)
+      titleText <- paste0("Locations where suitability is ", suitabilityLevel, " for ", speciesChoice, ", scenario ", k, ", period ", yearSpan)
+      
+      plot(r_suitable_globe, main = titleText, legend = FALSE, xlab = FALSE, axes=FALSE)
+      plot(coastline_cropped_spvect, add = TRUE)
     }
   }
   
-  f_favorableLoc <- function(fruitSpecies) { xxxxxxxxx
-    for (hem in hemispheres) {
-      fileName_in_baseCt <- paste0(locOfDataFiles_perennials, "suitable_", speciesChoice, "_", k, "_", hem, "_", yearSpan, ".tif")
-      baseCt <- rast(fileName_in_baseCt)  #suitable/not suitable - 1/NA - because some combo of chill portions, extreme cold, and frost or heat outside the suitable level
-      
-      #frostRiskDays
-      fileName_fr_in <- paste0(locOfDataFiles_perennials, "floweringDamage_", speciesChoice, "_", k, "_", suitabilityLevel, "_", hem, "_", yearSpan, ".tif")
-      fr_mean <- rast(fileName_fr_in) # number of days with temps below zero
-      fr_mean[fr_mean > 0] <- 1
-      
-      #heatRiskDays
-      fileName_hd_in <- paste0(locOfDataFiles_perennials, "heatDamage_", speciesChoice, "_", k, "_", suitabilityLevel, "_", hem, "_", yearSpan, ".tif")
-      hd_mean <- rast(fileName_hd_in)
-      hd_mean[hd_mean > 0] <- 1
-      
-      for (suitabilityLevel in suitabilityLevels) {
-        frDays <- switch(
-          suitabilityLevel,
-          "good" = frostRiskDays[1:2],
-          "acceptable" = frostRiskDays[3:4],
-          "bad" = frostRiskDays[5:6],
-        )
-        fr <- f_range(frostCt, frDays) # f_range sets values at locations outside the range to be NA
-        hdDays <- switch(
-          suitabilityLevel,
-          "good" = heatRiskDays[1:2],
-          "acceptable" = heatRiskDays[3:4],
-          "bad" = heatRiskDays[5:6],
-        )
-        hr <- f_range(heatCt, hdDays)
-      }
-      r <- mask(get(paste0("heatRisk_", suitabilityLevel)), baseCt)
-      r <- mask(r, get(paste0("frostRisk_", suitabilityLevel)))
-      fileName_out <- paste0(locOfDataFiles_perennials, speciesChoice, "_frost_", suitabilityLevel, "_heat_", suitabilityLevel, "_", k, "_", hem, "_", yearSpan, ".tif")
-      print(paste0("file name out: ", fileName_out))
-      writeRaster(r, fileName_out, overwrite = TRUE, wopt = woptList)
-    }
+  f_suitableLocsPpt <- function(k, l, yearSpan, suitabilityLevel) {
+    #
+    fileName_in <- paste0("graphics/cmip6/perennials/", speciesChoice, "_", suitabilityLevel, "_", k, "_", yearSpan, ".png")
+    extImg <- external_img(src = fileName_in, width = defaultWidth, height = defaultHeight)
+    my_pres <- add_slide(x = my_pres, layout = 'Title Only', master = 'Office Theme')
+    my_pres <- ph_with(x = my_pres, value = extImg, location = ph_location(left = defaultLeft, top = defaultTop, width = defaultWidth, height = defaultHeight - 0.5))
+    return(my_pres)
+  }
+  
+  f_graphics_demoSlides <- function(r, titleText, caption, fileName_out, col) {
+    r <- project(r, crsRob, method = "near")
+    r_df <- as.data.frame(r, xy = TRUE)
+    names(r_df) <-   c("x", "y", "value")
+    r_df$value <- as.factor(r_df$value)
     
-    f_suitableLocsPpt <- function(k, l, yearSpan, suitabilityLevel) {
-      fileName_in <- paste0("graphics/cmip6/perennials/", speciesChoice, "_", suitabilityLevel, "_", k, "_", yearSpan, ".png")
-      extImg <- external_img(src = fileName_in, width = defaultWidth, height = defaultHeight)
-      my_pres <- add_slide(x = my_pres, layout = 'Title Only', master = 'Office Theme')
-      my_pres <- ph_with(x = my_pres, value = extImg, location = ph_location(left = defaultLeft, top = defaultTop, width = defaultWidth, height = defaultHeight - 0.5))
-      return(my_pres)
-    }
+    print(paste0("file name out: ", fileName_out))
+    g <- ggplot() +
+      geom_tile(data = r_df, aes(x, y,  fill = value), show.legend = FALSE) +
+      #              scale_fill_discrete(colors = col, drop = FALSE, na.value = 'grey95') +
+      scale_fill_manual(values = col) +
+      # the na.value doesn't work yet. See https://stackoverflow.com/questions/45144630/scale-fill-manual-define-color-for-na-values/45147172 for a possible solution
+      labs(title = titleText, fill = legendTitle, x = "", y = "", caption = caption) + 
+      theme_bw()  +
+      #      theme(plot.title = element_text(size = 12, hjust = 0.5), plot.caption = element_text(hjust = 0, size = 8)) +
+      theme(
+        legend.position = "none",
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks = element_blank(),
+        plot.title = element_text(size = 12, hjust = 0.5),
+        plot.caption = element_text(hjust = 0, vjust = 7.0, size = 8)
+      ) +
+      geom_sf(data = coastline_cropped , 
+              color = "black", size = 0.1, stat = "sf", fill = NA,
+              position = "identity")
+    
+    print(g)
+    ggsave(filename = fileName_out, plot = g, width = 8, height = 4, units = "in", dpi = 300)
+    knitr::plot_crop(fileName_out) # gets rid of margins around the plot
   }
 }
 
@@ -499,37 +494,6 @@ for (speciesChoice in speciesChoices) {
 }
 
 # demo slides ------
-f_graphics_demoSlides <- function(r, titleText, caption, fileName_out, col) {
-  r <- project(r, crsRob, method = "near")
-  r_df <- as.data.frame(r, xy = TRUE)
-  names(r_df) <-   c("x", "y", "value")
-  r_df$value <- as.factor(r_df$value)
-  
-  print(paste0("file name out: ", fileName_out))
-  g <- ggplot() +
-    geom_tile(data = r_df, aes(x, y,  fill = value), show.legend = FALSE) +
-    #              scale_fill_discrete(colors = col, drop = FALSE, na.value = 'grey95') +
-    scale_fill_manual(values = col) +
-    # the na.value doesn't work yet. See https://stackoverflow.com/questions/45144630/scale-fill-manual-define-color-for-na-values/45147172 for a possible solution
-    labs(title = titleText, fill = legendTitle, x = "", y = "", caption = caption) + 
-    theme_bw()  +
-    #      theme(plot.title = element_text(size = 12, hjust = 0.5), plot.caption = element_text(hjust = 0, size = 8)) +
-    theme(
-      legend.position = "none",
-      axis.text.x = element_blank(),
-      axis.text.y = element_blank(),
-      axis.ticks = element_blank(),
-      plot.title = element_text(size = 12, hjust = 0.5),
-      plot.caption = element_text(hjust = 0, vjust = 7.0, size = 8)
-    ) +
-    geom_sf(data = coastline_cropped , 
-            color = "black", size = 0.1, stat = "sf", fill = NA,
-            position = "identity")
-  
-  print(g)
-  ggsave(filename = fileName_out, plot = g, width = 8, height = 4, units = "in", dpi = 300)
-  knitr::plot_crop(fileName_out) # gets rid of margins around the plot
-}
 
 k = "ssp126"
 l = 2041
@@ -538,7 +502,7 @@ speciesChoice <- "cherry_main"
 suitabilityLevel = "good"
 legendTitle <- "Suitable"
 defaultColor <- c("green", "red")
-CPfruit <- CPs$chillRequirement[CPs$crop==fruitSpecies] xxxxxx
+CPfruit <- cropVals[cropName == speciesChoice, chill_hours]
 if (i == "good") {
   caption <- paste0("Note: ", suitabilityLevel, " growing conditions for ", speciesChoice, " include chill portions of at least ", CPfruit, ", ", frostRiskDays[3], "-",  frostRiskDays[4], 
                     " days of flowering frost risk and \n",   heatRiskDays[3], "-",  heatRiskDays[4], " days of summer excessive heat.")
@@ -1192,4 +1156,45 @@ print(my_pres, target = "presentations/cmip6/perennials/summerHeatandfloweringFr
 #   }
 # }
 # 
+
+# this function seems to be no longer needed but keeping it around just in case
+# f_favorableLocs <- function(k, l, speciesChoice) { 
+#   for (hem in hemispheres) {
+#     fileName_in_baseCt <- paste0(locOfDataFiles_perennials, "suitable_", speciesChoice, "_", k, "_", hem, "_", yearSpan, ".tif")
+#     baseCt <- rast(fileName_in_baseCt)  #suitable/not suitable - 1/NA - because some combo of chill portions, extreme cold, and frost or heat outside the suitable level
+#     
+#     #frostRiskDays
+#     fileName_fr_in <- paste0(locOfDataFiles_perennials, "floweringDamage_", speciesChoice, "_", k, "_", suitabilityLevel, "_", hem, "_", yearSpan, ".tif")
+#     fr_mean <- rast(fileName_fr_in) # number of days with temps below zero
+#     fr_mean[fr_mean > 0] <- 1
+#     
+#     #heatRiskDays
+#     fileName_hd_in <- paste0(locOfDataFiles_perennials, "heatDamage_", speciesChoice, "_", k, "_", suitabilityLevel, "_", hem, "_", yearSpan, ".tif")
+#     hd_mean <- rast(fileName_hd_in)
+#     hd_mean[hd_mean > 0] <- 1
+#     
+#     for (suitabilityLevel in suitabilityLevels) {
+#       frDays <- switch(
+#         suitabilityLevel,
+#         "good" = frostRiskDays[1:2],
+#         "acceptable" = frostRiskDays[3:4],
+#         "bad" = frostRiskDays[5:6],
+#       )
+#       fr <- f_range(frostCt, frDays) # f_range sets values at locations outside the range to be NA
+#       hdDays <- switch(
+#         suitabilityLevel,
+#         "good" = heatRiskDays[1:2],
+#         "acceptable" = heatRiskDays[3:4],
+#         "bad" = heatRiskDays[5:6],
+#       )
+#       hr <- f_range(heatCt, hdDays)
+#     }
+#     r <- mask(get(paste0("heatRisk_", suitabilityLevel)), baseCt)
+#     r <- mask(r, get(paste0("frostRisk_", suitabilityLevel)))
+#     fileName_out <- paste0(locOfDataFiles_perennials, speciesChoice, "_frost_", suitabilityLevel, "_heat_", suitabilityLevel, "_", k, "_", hem, "_", yearSpan, ".tif")
+#     print(paste0("file name out: ", fileName_out))
+#     writeRaster(r, fileName_out, overwrite = TRUE, wopt = woptList)
+#   }
+# }
+
 

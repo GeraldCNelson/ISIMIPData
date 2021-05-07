@@ -7,7 +7,8 @@ crsGoode <- GoodeHomolosineProj
 crslatlong <- "+proj=longlat +datum=WGS84 +no_defs"
 coastline <- st_read("data-raw/regionInformation/ne_50m_coastline/ne_50m_coastline.shp")
 coastline_cropped <- st_crop(coastline, c(xmin = -180, xmax = 180, ymin = -60, ymax = 90))
-coastline_cropped <- st_transform(coastline_cropped, crsRob)
+coastline_cropped_spvect <- vect(coastline_cropped) # convert coastline_cropped to a spatvector
+coastline_cropped_Rob <- st_transform(coastline_cropped, crsRob)
 
 #function to get rid of Antarctica, used only on the coastline sf file; commenting out because probably not needed but leaving here in case that is wrong
 # f_crop_custom <- function(poly.sf) {
@@ -17,4 +18,9 @@ coastline_cropped <- st_transform(coastline_cropped, crsRob)
 #   st_as_sf(poly.sp.crop)
 # }
 # coastline <- f_crop_custom(coastline)
+
+# examples of adding a coastline and removing x and y axis labels and legend
+plot(r_suitable_globe, main = titleText, legend = FALSE, xlab = FALSE, axes=FALSE)
+plot(coastline_cropped_spvect, add = TRUE)
+
 
