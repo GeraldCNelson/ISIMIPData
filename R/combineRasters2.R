@@ -66,7 +66,7 @@ for (k in sspChoices) {
         #       unlink(fileName_out) # use this when you want fileName_out to be redone
         terra:::readAll(rout) # notation needed to access the readAll function
         print(paste0("fileName_out: ", fileName_out))
-        print(system.time(writeRaster(rout, fileName_out, overwrite = TRUE, format = "GTiff", wopt= woptList))); flush.console()
+        print(system.time(writeRaster(rout, fileName_out, overwrite = TRUE,  wopt= woptList))); flush.console()
         print(paste("Done with ", fileName_out))
         rout <- NULL
         gc()
@@ -101,7 +101,7 @@ for (i in modelChoices) {
     #       unlink(fileName_out) # use this when you want fileName_out to be redone
     print(system.time(terra:::readAll(rout))) # notation needed to access the readAll function
     print(paste0("fileName_out: ", fileName_out))
-    print(system.time(writeRaster(rout, fileName_out, overwrite = TRUE, format = "GTiff", wopt= woptList))); flush.console()
+    print(system.time(writeRaster(rout, fileName_out, overwrite = TRUE,  wopt= woptList))); flush.console()
     print(paste("Done with ", fileName_out))
     rout <- NULL
     gc()

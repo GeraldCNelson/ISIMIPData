@@ -51,7 +51,7 @@ for (j in climateVars) {
     fileName_out_dailyMean <- paste0("ensemble_historical_", j, "_", yearSpan, ".tif")
     
     print(paste0("writing ensemble historical daily mean: ", fileName_out_dailyMean))
-    writeRaster(r.mean, filename = paste0(locOfFiles, "ensemble/", fileName_out_dailyMean), format = "GTiff", overwrite = TRUE, wopt= woptList)
+    writeRaster(r.mean, filename = paste0(locOfFiles, "ensemble/", fileName_out_dailyMean),  overwrite = TRUE, wopt= woptList)
     r.mean <- x <- r <- NULL
   }
 }
@@ -98,7 +98,7 @@ for (j in climateVars) {
     fileName_out_dailyMean <- paste0("ensemble_historical_", j, "_", yearSpan, ".tif")
     
     print(paste0("writing ensemble historical daily mean: ", fileName_out_dailyMean))
-    writeRaster(r.mean, filename = paste0(locOfFiles, "ensemble/", fileName_out_dailyMean), format = "GTiff", overwrite = TRUE, wopt= woptList)
+    writeRaster(r.mean, filename = paste0(locOfFiles, "ensemble/", fileName_out_dailyMean),  overwrite = TRUE, wopt= woptList)
     r.mean <- x <- r <- NULL
   }
 }

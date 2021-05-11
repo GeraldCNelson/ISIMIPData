@@ -80,7 +80,7 @@ f_ensemble_daily_mean <- function() {
     #    r.cv <- tapp(r, 1:12, fun = raster::cv)
     names(r.mean) <- month.abb
     fileName_out <- paste0("/Volumes/PassportMac/ISIMIP/cmip6/climate3b/monthlyMn_10year/ensembleMn_mnthMn_10Yr_", k,  "_",  j, "_", yearSpan, ".tif")
-    print(system.time(writeRaster(r.mean, fileName_out, overwrite = TRUE, format = "GTiff", wopt= woptList))); flush.console()
+    print(system.time(writeRaster(r.mean, fileName_out, overwrite = TRUE,  wopt= woptList))); flush.console()
   }
 }
 

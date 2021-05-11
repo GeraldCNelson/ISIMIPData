@@ -140,7 +140,7 @@ for (m in c("tas")) {
           # names(rout) <- indices
           fileName_out <- paste0(locOfFiles, fileNameOnly)
           print(paste0("fileName_out: ", fileName_out))
-          print(system.time(writeRaster(rout, fileName_out, overwrite = TRUE, format = "GTiff", wopt= woptList))); flush.console()
+          print(system.time(writeRaster(rout, fileName_out, overwrite = TRUE,  wopt= woptList))); flush.console()
           print(paste0("Done with ", fileName_out))
           rout <- NULL
         }
@@ -195,9 +195,9 @@ for (m in c( "hurs")) {
           outFile1 <- renameFile(paste0(fileloc, k, "/", i, "/", fileNameR1))
           outFile2 <- renameFile(paste0(fileloc, k, "/", i, "/", fileNameR2))
           #
-          print(system.time(writeRaster(r1, outFile1, overwrite = TRUE, format = "GTiff", wopt= woptList))); flush.console()
+          print(system.time(writeRaster(r1, outFile1, overwrite = TRUE,  wopt= woptList))); flush.console()
           print(paste0("Done with ", outFile1))
-          print(system.time(writeRaster(r2, outFile1, overwrite = TRUE, format = "GTiff", wopt= woptList))); flush.console()
+          print(system.time(writeRaster(r2, outFile1, overwrite = TRUE,  wopt= woptList))); flush.console()
           print(paste0("Done with ", outFile2))
           unlink(fileName_in)
           r1 <- r2 <- NULL
@@ -241,7 +241,7 @@ for (m in modelChoices) {
   print(Sys.time())
   fileName_out <- paste0("/Volumes/ExtremeSSD/data/bigFiles/", m_lower,  "_", k, "_", climVar, "_global_daily_", yearSpanFinal, ".tif")
   #  fileName_out <- paste0("/Volumes/PassportMac/bigFiles/", m_lower,  "_", k, "_", climVar, "_global_daily_", yearSpanFinal, ".tif")
-  print(system.time(writeRaster(r_out, fileName_out, overwrite = TRUE, format = "GTiff", wopt= woptList))); flush.console()
+  print(system.time(writeRaster(r_out, fileName_out, overwrite = TRUE,  wopt= woptList))); flush.console()
 }
 
 
@@ -256,7 +256,7 @@ m_lower <- tolower(m)
 fileName_out <- paste0("/Volumes/PassportMac/bigFiles/", m_lower, "_ssp585_tas_global_daily_2081_2090.tif")
 print(Sys.time())
 
-system.time(writeRaster(r_out, fileName_out, overwrite = TRUE, format = "GTiff", wopt= woptList)); flush.console()
+system.time(writeRaster(r_out, fileName_out, overwrite = TRUE,  wopt= woptList)); flush.console()
 
 
 # copy pr files from PassPortMac to ExtremeSSD3 bigFiles

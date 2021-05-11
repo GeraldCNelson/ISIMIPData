@@ -19,6 +19,6 @@ for (i in bigfilesIn) {
   r = rast(paste0(locOfFiles, i))
   fileOut <- paste0(locOfFiles, "small/", i)
   print(paste0("file out: ", fileOut))
-  system.time(writeRaster(bigToSmall(r), fileOut, overwrite = TRUE, format = "GTiff", wopt = woptList))
+  system.time(writeRaster(bigToSmall(r), fileOut, overwrite = TRUE,  wopt = woptList))
 }
 

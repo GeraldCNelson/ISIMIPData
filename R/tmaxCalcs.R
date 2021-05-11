@@ -22,7 +22,7 @@ f.tmaxLimit <- function(tmax, tmaxLimit, indices) {
   tmaxSum <- tapp(tmax, indices, fun = function(x, ...){(mean(x >= tmaxLimit))})  # divide by 10 to get the annual average number of days above tmaxLimit
   names(tmaxSum) <- month.abb
   fileName_out <- paste0("tmaxGT_", tmaxLimit, "_", modelName.lower, "_", k, "_", yearSpan, ".tif")
-  writeRaster(tmaxSum, filename = paste0("data/cmip6/tmaxMonthlySums/", fileName_out), format = "GTiff", overwrite = TRUE)
+  writeRaster(tmaxSum, filename = paste0("data/cmip6/tmaxMonthlySums/", fileName_out),  overwrite = TRUE)
 }
 
 # this for loop and the one below it for observed data generate the tmax damage monthly counts for all the values in the crop spreadsheet for the whole world
@@ -75,7 +75,7 @@ for (k in sspChoices)  {
           mask <- rast(fileNameMask.in)
           tdamage.masked <- mask(tdamage, mask)
           fileName_out <- paste0("tmaxGT_masked_", m, "_", tmaxLimit, "_", modelName.lower, "_", k, "_", yearSpan, ".tif")
-          writeRaster(tdamage.masked, filename = paste0("data/cmip6/tmaxMonthlySums/", fileName_out), format = "GTiff", overwrite = TRUE)
+          writeRaster(tdamage.masked, filename = paste0("data/cmip6/tmaxMonthlySums/", fileName_out),  overwrite = TRUE)
         }
       }
     }
@@ -94,7 +94,7 @@ for (k in sspChoices)  {
 #   tmaxSum <- tapp(tmax, indices, fun = function(x, ...){sum(x >= tmaxLimit)}) 
 #   names(tmaxSum) <- month.abb
 #   fileName_out <- paste0("tmaxGT_", tmaxLimit, "_observed_", yearSpan, ".tif")
-#   writeRaster(tmaxSum, filename = paste0("data/cmip6/tmaxMonthlySums/", fileName_out), format = "GTiff", overwrite = TRUE)
+#   writeRaster(tmaxSum, filename = paste0("data/cmip6/tmaxMonthlySums/", fileName_out),  overwrite = TRUE)
 # }
 # 
 # for (n in tmaxList) {
@@ -118,6 +118,6 @@ for (o in 1:length(cropChoices)) {
     mask <- rast(fileNameMask.in)
     tdamage.masked <- overlay(tdamage, mask, fun = overlayfunction)
     fileName_out <- paste0("tmaxGT_masked", m, "_", tmaxLimit, "_observed_", yearSpan, ".tif")
-    writeRaster(tdamage.masked, filename = paste0("data/cmip6/tmaxMonthlySums/", fileName_out), format = "GTiff", overwrite = TRUE)
+    writeRaster(tdamage.masked, filename = paste0("data/cmip6/tmaxMonthlySums/", fileName_out),  overwrite = TRUE)
   }
 }

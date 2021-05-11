@@ -31,7 +31,7 @@ for (k in sspChoices)  {
       system.time(tave <- (tmax + tmin)/2)
       outFile <- gsub("tasmax", "tave", fileName.tmax)
       print(paste0("file out: ", outFile))
-      print(system.time(writeRaster(tave, outFile, overwrite = TRUE, format = "GTiff", wopt= woptList))); flush.console()
+      print(system.time(writeRaster(tave, outFile, overwrite = TRUE,  wopt= woptList))); flush.console()
     }
   }
 }
@@ -54,7 +54,7 @@ for (l in startYearChoices) {
     system.time(tave <- (tmax + tmin)/2)
     outFile <- gsub("tasmax", "tave", fileName.tmax)
     print(paste0("file out: ", outFile))
-    print(system.time(writeRaster(tave, outFile, overwrite = TRUE, format = "GTiff", wopt= woptList))); flush.console()
+    print(system.time(writeRaster(tave, outFile, overwrite = TRUE,  wopt= woptList))); flush.console()
   }
 }
 

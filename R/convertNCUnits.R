@@ -90,7 +90,7 @@ for (j in 1:length(filestoKeep)) {
   setMinMax(rastIn)
   print(rastIn)
   print(paste0("max rastIn: ", max(minmax(rastIn)), ", min rastIn: ", min(minmax(rastIn)), ", fileName_out :", fileName_out))
-  print(system.time(writeRaster(rastIn, fileName_out,  overwrite = TRUE, format = "GTiff", wopt= woptList))); flush.console()
+  print(system.time(writeRaster(rastIn, fileName_out,  overwrite = TRUE,  wopt= woptList))); flush.console()
   rastIn <- NULL
 }
 

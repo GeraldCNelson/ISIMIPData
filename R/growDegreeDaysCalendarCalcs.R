@@ -160,7 +160,7 @@ for (k in sspChoices)  {
           }
           
           gddfileOut <- paste0(gddsfileOutLoc, "cumgdds_", m, "_", yearSpan, "_", i,  ".tif")
-          writeRaster(stack.temp, filename = gddfileOut, format = "GTiff", overwrite = TRUE)
+          writeRaster(stack.temp, filename = gddfileOut,  overwrite = TRUE)
           endtime <- Sys.time()
           round(difftime(endTime, startTime,  units = "mins"), digits = 2)
           

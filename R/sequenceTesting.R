@@ -54,7 +54,7 @@ for (k in sspChoices) {
     r <- rast(fileName_in)
     print(system.time(r_runs <- app(r, runsfun)))
     fileName_out <- paste0("data/cmip6/THI/run_", test_length, "_lim_gt", thiMax, "_ensemble_thi.cattle_", k, "_", yearSpan, ".tif")
-    print(system.time(writeRaster(r_runs, filename = fileName_out,  overwrite = TRUE, format = "GTiff", wopt= woptList))); flush.console()
+    print(system.time(writeRaster(r_runs, filename = fileName_out,  overwrite = TRUE,  wopt= woptList))); flush.console()
     plot(r_runs$lyr.1, main = paste0("Cattle THI gt ", thiMax, ", \nminimum length is ", test_length, " days, ", k, ", ", yearSpan))
     plot(r_runs$lyr.2, main = paste0("Cattle THI gt ", thiMax, ", \nlongest days in a single run ", test_length, " days, ", k, ", ", yearSpan))
   }
@@ -75,7 +75,7 @@ for (k in sspChoices) {
     r <- rast(fileName_in)
     print(system.time(r_runs <- app(r, runsfun)))
     fileName_out <- paste0("data/cmip6/tmaxRuns/run_10_lim_gt35_ensemble_tmax_", k, "_", yearSpan, ".tif")
-    print(system.time(writeRaster(r_runs, filename = fileName_out,  overwrite = TRUE, format = "GTiff", wopt= woptList))); flush.console()
+    print(system.time(writeRaster(r_runs, filename = fileName_out,  overwrite = TRUE,  wopt= woptList))); flush.console()
     
   }
 }

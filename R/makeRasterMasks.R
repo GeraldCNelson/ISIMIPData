@@ -13,7 +13,7 @@ pastureMask <- aggregate(pastureMask, 6, fun = max)
 pastureMask[pastureMask == 0] <- NA
 pastureMask[pastureMask > 0] <- 1
 fileName_mask <- paste0("data/animals/rasterMask_", "pasture", ".tif")
-writeRaster(pastureMask, filename = fileName_mask, format = "GTiff", overwrite = TRUE)
+writeRaster(pastureMask, filename = fileName_mask,  overwrite = TRUE)
 
 i = "glw3-cattle-numbers.asc" # for testing
 animalStats <- data.table(species = character(), ct = numeric())
@@ -32,10 +32,10 @@ for (i in animalsList) {
   }
   print(paste0(fileName))
   print(rAnimal)
-  writeRaster(rAnimal, filename = fileName, format = "GTiff", overwrite = TRUE)
+  writeRaster(rAnimal, filename = fileName,  overwrite = TRUE)
   rAnimal[rAnimal <= 100] <- NA
   fileName_mask <- paste0("data/animals/rasterMask_", species, ".tif")
-  writeRaster(rAnimal, filename = fileName_mask, format = "GTiff", overwrite = TRUE)
+  writeRaster(rAnimal, filename = fileName_mask,  overwrite = TRUE)
   print(paste0(fileName_mask))
   print(rAnimal)
 }
@@ -60,7 +60,7 @@ write.csv(animalStats, "data/animals/animalCt.csv")
 #   
 #   fileName_out <- paste0("data/animals/rasterMask_", speciesName, ".tif")
 #   print(fileName_out)
-#   writeRaster(r, fileName_out, format = "GTiff", overwrite = TRUE)
+#   writeRaster(r, fileName_out,  overwrite = TRUE)
 # }
 
 # now do plants
@@ -127,7 +127,7 @@ for (i in crops.new) {
   
   fileName_out <- paste0("data/crops/rasterMask_", i, ".tif")
   print(fileName_out)
-  writeRaster(r, fileName_out, format = "GTiff", overwrite = TRUE)
+  writeRaster(r, fileName_out,  overwrite = TRUE)
   
 }
 

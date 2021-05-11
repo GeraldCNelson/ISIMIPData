@@ -233,7 +233,10 @@
     r_suitable_globe <- merge(r_suitable_NH, r_suitable_SH)
     r_suitable_all_globe <- merge(r_suitable_all_NH, r_suitable_all_SH)
     r_suitable_all_globe_df <- as.data.frame(r_suitable_all_globe, xy = TRUE, na.rm = FALSE)
-    
+    fileName_suitable_all_out <- paste0(locOfDataFiles_perennials, "suitable_all", speciesChoice, "_",  k, "_", suitabilityLevel, "_", hem, "_", yearSpan, ".tif")
+    print(system.time(writeRaster(r_suitable_all_globe, filename = fileName_suitable_all_out,  overwrite = TRUE,  wopt= woptList))); flush.console()
+    fileName_suitable_all_df_out <- paste0(locOfDataFiles_perennials, "suitable_all", speciesChoice, "_",  k, "_", suitabilityLevel, "_", hem, "_", yearSpan, ".csv")
+    write.csv(r_suitable_all_globe_df, fileName_suitable_all_df_out)
     titleText <- paste0("Locations where suitability is ", suitabilityLevel, " for ", speciesChoice, ", scenario ", k, ", period ", yearSpan)
     
     plot(r_suitable_globe, main = titleText, legend = FALSE, xlab = FALSE, axes=FALSE)
@@ -944,7 +947,7 @@ print(my_pres, target = "presentations/cmip6/perennials/summerHeatandfloweringFr
 #     r <- rast(fileName_in)
 #     print(system.time(r_runs <- app(r, f_runs)))
 #     fileName_out <- paste0("data/cmip6/tmaxRuns/run_10_lim_gt35_ensemble_tmax_", k, "_", yearSpan, ".tif")
-#     print(system.time(writeRaster(r_runs, filename = fileName_out,  overwrite = TRUE, format = "GTiff", wopt= woptList))); flush.console()
+#     print(system.time(writeRaster(r_runs, filename = fileName_out,  overwrite = TRUE,  wopt= woptList))); flush.console()
 #     
 #   }
 # }

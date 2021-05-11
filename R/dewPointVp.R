@@ -83,6 +83,6 @@ RHmax_jan <- subset(RHmax, 1)
 RHmax_jul <- subset(RHmax, 7)
 
 vapPresTmax_1981_2010 <- vapres(tmaxave_IM)
-print(system.time(writeRaster(vapPresTmax_1981_2010, "vapPresTmax_1981_2010.tif", format = "GTiff", wopt= woptList, overwrite = TRUE))); flush.console()
-print(system.time(writeRaster(dewPtTemp, "dewPtTemp.tif", format = "GTiff", wopt= woptList, overwrite = TRUE))); flush.console()
+print(system.time(writeRaster(vapPresTmax_1981_2010, "vapPresTmax_1981_2010.tif",  wopt= woptList, overwrite = TRUE))); flush.console()
+print(system.time(writeRaster(dewPtTemp, "dewPtTemp.tif",  wopt= woptList, overwrite = TRUE))); flush.console()
 

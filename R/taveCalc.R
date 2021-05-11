@@ -24,7 +24,7 @@ for (i in 1:length(bigFileList_tasmax)) {
   print(system.time(tas <- (tmax + tmin)/2))
   tasOut <-  gsub("tasmax", "tas", bigFileList_tasmax[i])
   print(paste0("file name out: ", tasOut))
-  print(system.time(writeRaster(tas, tasOut, format = "GTiff", overwrite = TRUE, wopt=list(gdal="COMPRESS=LZW"))))
+  print(system.time(writeRaster(tas, tasOut,  overwrite = TRUE, wopt=list(gdal="COMPRESS=LZW"))))
   gc()
 }
 
@@ -41,4 +41,4 @@ tmin <- rast(bigFileList_tasmin[i])
 print(system.time(tas <- (tmax + tmin)/2))
 tasOut <-  gsub("tasmax", "tas", bigFileList_tasmax[i])
 print(paste0("file name out: ", tasOut))
-print(system.time(writeRaster(tas, tasOut, format = "GTiff", overwrite = TRUE, wopt=list(gdal="COMPRESS=LZW"))))
+print(system.time(writeRaster(tas, tasOut,  overwrite = TRUE, wopt=list(gdal="COMPRESS=LZW"))))

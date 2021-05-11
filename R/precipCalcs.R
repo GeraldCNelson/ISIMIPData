@@ -79,8 +79,8 @@ foreach(i = modelChoices) %:%
        fileNameMean.masked <- paste0("data/cmip6/chillingHours/chillHrs_", hemisphereName, "_ensembleMean_masked_", cropName, "_",  yearSpan, "_", k, ".tif")
       fileNameCV.masked <- paste0("data/cmip6/chillingHours/chillHrs_", hemisphereName, "_ensembleCV_masked_", cropName, "_",  yearSpan, "_", k, ".tif")
       print(paste("fileNameMean.masked: ", fileNameMean.masked))
-      writeRaster(mean.masked, filename = fileNameMean.masked, format = "GTiff", overwrite = TRUE)
-      writeRaster(CV.masked, filename = fileNameCV.masked, format = "GTiff", overwrite = TRUE)
+      writeRaster(mean.masked, filename = fileNameMean.masked,  overwrite = TRUE)
+      writeRaster(CV.masked, filename = fileNameCV.masked,  overwrite = TRUE)
     }
     
     

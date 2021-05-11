@@ -75,7 +75,7 @@ foreach(l = startYearChoices) %:%
       # 
       fileOutLoc <- "data/cmip6/heatIndex/"
       print(paste0("Writing out : " , paste0(fileOutLoc, fileName_out)))
-      writeRaster(hiSimple, filename = paste0(fileOutLoc, fileName_out), format = "GTiff", overwrite = TRUE, wopt=list(gdal="COMPRESS=LZW"))
+      writeRaster(hiSimple, filename = paste0(fileOutLoc, fileName_out),  overwrite = TRUE, wopt=list(gdal="COMPRESS=LZW"))
       
     }
     
@@ -162,7 +162,7 @@ if (!paste0(hifileOutLoc, fileName_out) %in% hiFilesCompleted) {
   # 
   fileOutLoc <- "data/cmip6/heatIndex/"
   print(paste0("Writing out : ", paste0(fileOutLoc, fileName_out)))
-  writeRaster(hiSimple, filename = paste0(fileOutLoc, fileName_out), format = "GTiff", overwrite = TRUE, wopt=list(gdal="COMPRESS=LZW"))
+  writeRaster(hiSimple, filename = paste0(fileOutLoc, fileName_out),  overwrite = TRUE, wopt=list(gdal="COMPRESS=LZW"))
 }
 
 # # do same calculations on observed data
@@ -222,7 +222,7 @@ if (!paste0(hifileOutLoc, fileName_out) %in% hiFilesCompleted) {
 #   # 
 #   fileOutLoc <- "data/cmip6/heatIndex/"
 #   print(paste0("Writing out : ", paste0(fileOutLoc, fileName_out)))
-#   writeRaster(hiSimple, filename = paste0(fileOutLoc, fileName_out), format = "GTiff", overwrite = TRUE, wopt=list(gdal="COMPRESS=LZW"))
+#   writeRaster(hiSimple, filename = paste0(fileOutLoc, fileName_out),  overwrite = TRUE, wopt=list(gdal="COMPRESS=LZW"))
 # }
 
 

@@ -96,7 +96,7 @@ for (k in sspChoices) {
           names(rout) <- indices
           fileName_out <- gsub("__", "_", fileName_out) # a kludge until I can figure out the underscore sources.
           print(paste0("fileName_out", fileName_out))
-          print(system.time(writeRaster(rout, fileName_out, overwrite = TRUE, format = "GTiff", wopt= woptList))); flush.console()
+          print(system.time(writeRaster(rout, fileName_out, overwrite = TRUE,  wopt= woptList))); flush.console()
           print(paste("Done with ", fileName_out))
           rout <- NULL
           gc()
@@ -169,7 +169,7 @@ for (k in sspChoices) {
           names(rout) <- indices
           fileName_out <- gsub("__", "_", fileName_out) # a kludge until I can figure out the underscore sources.
           print(paste0("fileName_out", fileName_out))
-          print(system.time(writeRaster(rout, fileName_out, overwrite = TRUE, format = "GTiff", wopt= woptList))); flush.console()
+          print(system.time(writeRaster(rout, fileName_out, overwrite = TRUE,  wopt= woptList))); flush.console()
           print(paste("Done with ", fileName_out))
           rout <- NULL
           gc()
@@ -244,7 +244,7 @@ for (i in modelChoices) {
       names(rout) <- indices
       fileName_out <- gsub("__", "_", fileName_out) # a kludge until I can figure out the underscore sources.
       print(paste0("fileName_out", fileName_out))
-      print(system.time(writeRaster(rout, fileName_out, overwrite = TRUE, format = "GTiff", wopt= woptList))); flush.console()
+      print(system.time(writeRaster(rout, fileName_out, overwrite = TRUE,  wopt= woptList))); flush.console()
       print(paste("Done with ", fileName_out))
       rout <- NULL
       gc()
@@ -314,7 +314,7 @@ for (l in startYearChoices_new) {
       indices <- paste0("X", as.character(indices))
       names(rout) <- indices
       print(fileName_out)
-      print(system.time(writeRaster(rout, fileName_out, overwrite = TRUE, format = "GTiff", wopt= woptList))); flush.console()}
+      print(system.time(writeRaster(rout, fileName_out, overwrite = TRUE,  wopt= woptList))); flush.console()}
   }
 }
 

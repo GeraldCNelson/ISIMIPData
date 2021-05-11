@@ -75,8 +75,8 @@ for (k in sspChoices) {
       # print(paste0( "Done updating raster names with month.abb for species: ", speciesName, ", start year: ", l))
       fileNameMean <- paste0("data/cmip6/monthlyMean/ensembleMonthlyMean_", j,  "_",  yearSpan, "_", k, ".tif") 
       fileNameCV <-   paste0("data/cmip6/monthlyMean/ensembleMonthlyCV_", j,  "_",  yearSpan, "_", k, ".tif")
-      writeRaster(r.mean, filename = fileNameMean, format = "GTiff", overwrite = TRUE, wopt=list(gdal="COMPRESS=LZW"))
-      writeRaster(r.cv, filename = fileNameCV, format = "GTiff", overwrite = TRUE, wopt=list(gdal="COMPRESS=LZW"))
+      writeRaster(r.mean, filename = fileNameMean,  overwrite = TRUE, wopt=list(gdal="COMPRESS=LZW"))
+      writeRaster(r.cv, filename = fileNameCV,  overwrite = TRUE, wopt=list(gdal="COMPRESS=LZW"))
       print(paste("fileNameMeanOut: ", fileNameMean))
       print(paste0( "Done writing out files for variable: ", j, ", start year: ", l, ", pid number: ", Sys.getpid()))
     }
@@ -164,8 +164,8 @@ for (k in sspChoices) {
       # print(paste0( "Done updating raster names with month.abb for species: ", speciesName, ", start year: ", l))
       fileNameMean <- paste0("data/cmip6/monthlyMean/ensembleMonthlyMean_", j,  "_",  yearSpan, "_", k, ".tif") 
       fileNameCV <-   paste0("data/cmip6/monthlyMean/ensembleMonthlyCV_", j,  "_",  yearSpan, "_", k, ".tif")
-      writeRaster(r.mean, filename = fileNameMean, format = "GTiff", overwrite = TRUE, wopt=list(gdal="COMPRESS=LZW"))
-      writeRaster(r.cv, filename = fileNameCV, format = "GTiff", overwrite = TRUE, wopt=list(gdal="COMPRESS=LZW"))
+      writeRaster(r.mean, filename = fileNameMean,  overwrite = TRUE, wopt=list(gdal="COMPRESS=LZW"))
+      writeRaster(r.cv, filename = fileNameCV,  overwrite = TRUE, wopt=list(gdal="COMPRESS=LZW"))
       print(paste("fileNameMeanOut: ", fileNameMean))
       print(paste0( "Done writing out files for variable: ", j, ", start year: ", l, ", pid number: ", Sys.getpid()))
     }

@@ -44,8 +44,8 @@ for (k in sspChoices) {
       names(ras.test.cv) <- month.abb
       fileNameMean <- paste0("data/cmip6/damageTemp/tdamage_ensembleMean_", cropName, "_", tdamage_mean, "C_", k, "_", yearSpan, ".tif")
       fileNameCV <- paste0("data/cmip6/damageTemp/tdamage_ensembleCV_", cropName, "_", tdamage_mean, "C_", k, "_", yearSpan, ".tif")
-      writeRaster(ras.test.mean, filename = fileNameMean, format = "GTiff", overwrite = TRUE)
-      writeRaster(ras.test.cv, filename = fileNameCV, format = "GTiff", overwrite = TRUE)
+      writeRaster(ras.test.mean, filename = fileNameMean,  overwrite = TRUE)
+      writeRaster(ras.test.cv, filename = fileNameCV,  overwrite = TRUE)
     }
   }
 }
@@ -79,8 +79,8 @@ for (k in sspChoices) {
       fileNameMean.masked <- paste0("data/cmip6/damageTemp/tdamage_ensembleMean_masked_", cropName, "_", tdamage_mean, "C_", k, "_", yearSpan, ".tif")
       fileNameCV.masked <- paste0("data/cmip6/damageTemp/tdamage_ensembleCV_masked_", cropName, "_", tdamage_mean, "C_", k, "_", yearSpan, ".tif")
       print(fileNameMean.masked)
-      writeRaster(mean.masked, filename = fileNameMean.masked, format = "GTiff", overwrite = TRUE)
-      writeRaster(CV.masked, filename = fileNameCV.masked, format = "GTiff", overwrite = TRUE)
+      writeRaster(mean.masked, filename = fileNameMean.masked,  overwrite = TRUE)
+      writeRaster(CV.masked, filename = fileNameCV.masked,  overwrite = TRUE)
     }
   }
   # do observed data
@@ -99,7 +99,7 @@ for (k in sspChoices) {
     mean.masked <- overlay(meanData, mask, fun = overlayfunction)
     names(mean.masked) <- month.abb
     fileNameMean.masked <- paste0("data/cmip6/damageTemp/tdamage_mean_masked_", cropName, "_", tdamage_mean, "C",  "_observed_", yearSpan, ".tif")
-    writeRaster(mean.masked, filename = fileNameMean.masked, format = "GTiff", overwrite = TRUE)
+    writeRaster(mean.masked, filename = fileNameMean.masked,  overwrite = TRUE)
   }
 }
 
@@ -119,7 +119,7 @@ for (m in 1:nrow(cropCharacteristics_annual)) {
   mean.masked <- overlay(meanData, mask, fun = overlayfunction)
   names(mean.masked) <- month.abb
   fileNameMean.masked <- paste0("data/cmip6/damageTemp/tdamage_mean_masked_", cropName, "_", tdamage_mean, "C",  "_observed_", yearSpan, ".tif")
-  writeRaster(mean.masked, filename = fileNameMean.masked, format = "GTiff", overwrite = TRUE)
+  writeRaster(mean.masked, filename = fileNameMean.masked,  overwrite = TRUE)
 }
 
 
@@ -168,8 +168,8 @@ for (k in sspChoices) {
       names(ras.test.cv) <- month.abb
       fileNameMean <- paste0("data/cmip6/damageTemp/tdamage_ensembleMean_", cropName, "_", tdamage_mean, "C_", k, "_", yearSpan, ".tif")
       fileNameCV <- paste0("data/cmip6/damageTemp/tdamage_ensembleCV_", cropName, "_", tdamage_mean, "C_", k, "_", yearSpan, ".tif")
-      writeRaster(ras.test.mean, filename = fileNameMean, format = "GTiff", overwrite = TRUE)
-      writeRaster(ras.test.cv, filename = fileNameCV, format = "GTiff", overwrite = TRUE)
+      writeRaster(ras.test.mean, filename = fileNameMean,  overwrite = TRUE)
+      writeRaster(ras.test.cv, filename = fileNameCV,  overwrite = TRUE)
     }
   }
 }
@@ -203,8 +203,8 @@ for (k in sspChoices) {
       fileNameMean.masked <- paste0("data/cmip6/damageTemp/tdamage_ensembleMean_masked_", cropName, "_", tdamage_mean, "C_", k, "_", yearSpan, ".tif")
       fileNameCV.masked <- paste0("data/cmip6/damageTemp/tdamage_ensembleCV_masked_", cropName, "_", tdamage_mean, "C_", k, "_", yearSpan, ".tif")
       print(fileNameMean.masked)
-      writeRaster(mean.masked, filename = fileNameMean.masked, format = "GTiff", overwrite = TRUE)
-      writeRaster(CV.masked, filename = fileNameCV.masked, format = "GTiff", overwrite = TRUE)
+      writeRaster(mean.masked, filename = fileNameMean.masked,  overwrite = TRUE)
+      writeRaster(CV.masked, filename = fileNameCV.masked,  overwrite = TRUE)
     }
   }
   # do observed data
@@ -223,7 +223,7 @@ for (k in sspChoices) {
     mean.masked <- overlay(meanData, mask, fun = overlayfunction)
     names(mean.masked) <- month.abb
     fileNameMean.masked <- paste0("data/cmip6/damageTemp/tdamage_mean_masked_", cropName, "_", tdamage_mean, "C",  "_observed_", yearSpan, ".tif")
-    writeRaster(mean.masked, filename = fileNameMean.masked, format = "GTiff", overwrite = TRUE)
+    writeRaster(mean.masked, filename = fileNameMean.masked,  overwrite = TRUE)
   }
 }
 
@@ -243,6 +243,6 @@ for (m in 1:nrow(cropCharacteristics_annual)) {
   mean.masked <- overlay(meanData, mask, fun = overlayfunction)
   names(mean.masked) <- month.abb
   fileNameMean.masked <- paste0("data/cmip6/damageTemp/tdamage_mean_masked_", cropName, "_", tdamage_mean, "C",  "_observed_", yearSpan, ".tif")
-  writeRaster(mean.masked, filename = fileNameMean.masked, format = "GTiff", overwrite = TRUE)
+  writeRaster(mean.masked, filename = fileNameMean.masked,  overwrite = TRUE)
 
 

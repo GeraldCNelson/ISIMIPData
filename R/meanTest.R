@@ -36,7 +36,7 @@ for (k in sspChoices) {
           # ncin.cv <- tapp(ncin, indices, fun = cv, na.rm = TRUE)
           names(ncin.mean) <- month.abb
           fileName_out_monthlyMean <- paste0("monthlyMean_", j, "_", modelName.lower, "_", k,  "_", yearSpan, ".tif")
-          writeRaster(ncin.mean, filename = paste0("data/cmip6/monthlyMean/", fileName_out_monthlyMean), format = "GTiff", overwrite = TRUE)
+          writeRaster(ncin.mean, filename = paste0("data/cmip6/monthlyMean/", fileName_out_monthlyMean),  overwrite = TRUE)
           print(paste0("Done with :" , fileName_out_monthlyMean))
         }else{
           print(paste("This file has already been created: ", fileName_out_monthlyMean))
@@ -73,7 +73,7 @@ for (j in observedlist) {
   fileName_out_monthlyMean <- paste0("monthlyMean_", j, "_", "observed_", yearSpan, ".tif")
  # fileName_out_monthCV <- paste0("monthCV_", j, "_", "observed_", yearSpan, ".tif")
   
-  writeRaster(ncin.mean, filename = paste0("data/cmip6/monthlyMean/", fileName_out_monthlyMean), format = "GTiff", overwrite = TRUE)
+  writeRaster(ncin.mean, filename = paste0("data/cmip6/monthlyMean/", fileName_out_monthlyMean),  overwrite = TRUE)
   
   gc(reset = FALSE, full = TRUE)
 }  

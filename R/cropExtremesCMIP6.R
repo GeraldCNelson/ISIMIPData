@@ -67,8 +67,8 @@ for (m in 1:nrow(cropCharacteristics_annual)) {
   print(paste0("time to calc optimum range: ", difftime(Sys.time(), startTime, units = "mins")))
   print(paste0("damage  file name out: ", fileName_out_damage))
   print(paste0("optTempRange file name out: ", fileName_out_optTemp))
-  writeRaster(monthDamageCount, filename = paste0("data/cmip6/damageTemp/", fileName_out_damage), format = "GTiff", overwrite = TRUE)
-  writeRaster(monthOptTempRangeCount, filename = paste0("data/cmip6/optTempRange/", fileName_out_optTemp), format = "GTiff", overwrite = TRUE)
+  writeRaster(monthDamageCount, filename = paste0("data/cmip6/damageTemp/", fileName_out_damage),  overwrite = TRUE)
+  writeRaster(monthOptTempRangeCount, filename = paste0("data/cmip6/optTempRange/", fileName_out_optTemp),  overwrite = TRUE)
 }
 unlink(tmpDirName, recursive = TRUE)
 gc(reset = FALSE, full = TRUE) 
@@ -105,7 +105,7 @@ for (m in 1:nrow(cropCharacteristics_annual)) {
   print(paste0("time to calc monthly opt temp range: ", difftime(Sys.time(), startTime, units = "mins")))
   print(paste0("damage  file name out: ", fileName_out_damage))
   print(paste0("optTempRange file name out: ", fileName_out_optTemp))
-  writeRaster(monthDamageCount, filename = paste0("data/cmip6/damageTemp/", fileName_out_damage), format = "GTiff", overwrite = TRUE)
-  writeRaster(monthOptTempRangeCount, filename = paste0("data/cmip6/optTempRange/", fileName_out_optTemp), format = "GTiff", overwrite = TRUE)
+  writeRaster(monthDamageCount, filename = paste0("data/cmip6/damageTemp/", fileName_out_damage),  overwrite = TRUE)
+  writeRaster(monthOptTempRangeCount, filename = paste0("data/cmip6/optTempRange/", fileName_out_optTemp),  overwrite = TRUE)
 }
 

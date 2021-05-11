@@ -60,8 +60,8 @@ for (k in sspChoices) {
       
       fileNameMean <- paste0("data/cmip6/THI/THI_ensembleMean_", speciesName,  "_",  yearSpan, "_", k, ".tif") 
       fileNameCV <- paste0("data/cmip6/THI/THI_ensembleCV_", speciesName,  "_",  yearSpan, "_", k, ".tif")
-      writeRaster(r.mean, filename = fileNameMean, format = "GTiff", overwrite = TRUE, wopt=list(gdal="COMPRESS=LZW"))
-      writeRaster(r.cv, filename = fileNameCV, format = "GTiff", overwrite = TRUE, wopt=list(gdal="COMPRESS=LZW"))
+      writeRaster(r.mean, filename = fileNameMean,  overwrite = TRUE, wopt=list(gdal="COMPRESS=LZW"))
+      writeRaster(r.cv, filename = fileNameCV,  overwrite = TRUE, wopt=list(gdal="COMPRESS=LZW"))
       print(paste("fileNameMeanOut: ", fileNameMean))
       print(paste0( "Done writing out files for species: ", speciesName, ", start year: ", l, ", pid number: ", Sys.getpid()))
     }
@@ -106,8 +106,8 @@ for (k in sspChoices) {
       fileNameMean.masked <- paste0("data/cmip6/THI/THI_ensembleMean_masked_",speciesName, "_",  yearSpan, "_", k, ".tif")
       fileNameCV.masked <- paste0("data/cmip6/THI/THI_ensembleCV_masked_", speciesName, "_",  yearSpan, "_", k, ".tif")
       print(fileNameMean.masked)
-      writeRaster(mean.masked, filename = fileNameMean.masked, format = "GTiff", overwrite = TRUE, wopt=list(gdal="COMPRESS=LZW"))
-      writeRaster(CV.masked, filename = fileNameCV.masked, format = "GTiff", overwrite = TRUE, wopt=list(gdal="COMPRESS=LZW"))
+      writeRaster(mean.masked, filename = fileNameMean.masked,  overwrite = TRUE, wopt=list(gdal="COMPRESS=LZW"))
+      writeRaster(CV.masked, filename = fileNameCV.masked,  overwrite = TRUE, wopt=list(gdal="COMPRESS=LZW"))
     }
   }
 }
@@ -129,7 +129,7 @@ for (j in 1:length(thiListReduced)) {
   names(mean.masked) <- month.abb
   fileNameMean.masked <- paste0("data/cmip6/THI/THI_masked_",speciesName, "_historical_", yearSpan, ".tif")
   print(fileNameMean.masked)
-  writeRaster(mean.masked, filename = fileNameMean.masked, format = "GTiff", overwrite = TRUE)
+  writeRaster(mean.masked, filename = fileNameMean.masked,  overwrite = TRUE)
 }
 
 # # do observed data
@@ -149,5 +149,5 @@ for (j in 1:length(thiListReduced)) {
 #   names(mean.masked) <- month.abb
 #   fileNameMean.masked <- paste0("data/cmip6/THI/THI_masked_",speciesName, "_observed_", yearSpan, ".tif")
 #   print(fileNameMean.masked)
-#   writeRaster(mean.masked, filename = fileNameMean.masked, format = "GTiff", overwrite = TRUE)
+#   writeRaster(mean.masked, filename = fileNameMean.masked,  overwrite = TRUE)
 # }
