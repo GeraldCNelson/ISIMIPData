@@ -285,7 +285,7 @@ g <- ggplot(data = test_df_long) +
   theme(axis.text.y=element_text(size=rel(0.6)))
 
 g <- g +  facet_wrap(vars(gs))
-outFilename <- paste0("graphics/cmip6/growingSeasons/gs", "_", l, "SH",".png")
+outFilename <- paste0(lofOfGraphicsFiles, "growingSeasons/gs", "_", l, "SH",".png")
 png(filename = outFilename, width = 6, height = 6, units = "in", res = 300)
 print(g)
 dev.off()
@@ -316,7 +316,7 @@ f_graphExtremDays <- function() {
     theme(panel.background = element_rect(fill = "aliceblue"))
   #          theme(legend.text.align = 1) +
   #   theme(legend.position = "none")
-  outFilename <- paste0("graphics/cmip6/growingSeasons/extremeColdCt_", k, "_", yearSpan, ".png")
+  outFilename <- paste0(lofOfGraphicsFiles, "growingSeasons/extremeColdCt_", k, "_", yearSpan, ".png")
   
   ggsave(filename = outFilename, plot = g, width = 6, height = 6, units = "in", dpi = 300)
   print(paste0("out file name: ", outFilename))

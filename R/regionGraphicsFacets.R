@@ -187,10 +187,10 @@ for (i in 4:nrow(regionInfoLookup)) {
           #                        pad_x = unit(0.75, "in"), pad_y = unit(0.5, "in"),
           #                        style = north_arrow_minimal) +
           facet_wrap(vars(month))
-         outFilename <- paste0("graphics/cmip6/regionInfo/", j,"MonthlyAve_", k, "_", yearSpan, "_", regionInfoLookup[i, region], ".png")
+         outFilename <- paste0(lofOfGraphicsFiles, "regionInfo/", j,"MonthlyAve_", k, "_", yearSpan, "_", regionInfoLookup[i, region], ".png")
         if (l %in% startYearChoices[1]) {
           yearSpan <- paste0(l, "_", l + yearRange)
-          outFilename <- paste0("graphics/cmip6/regionInfo/", j,"MonthlyAve_", yearSpan, "_", regionInfoLookup[i, region], ".png")
+          outFilename <- paste0(lofOfGraphicsFiles, "regionInfo/", j,"MonthlyAve_", yearSpan, "_", regionInfoLookup[i, region], ".png")
         }
         unlink(outFilename)
         print(paste0("writing out ", outFilename))

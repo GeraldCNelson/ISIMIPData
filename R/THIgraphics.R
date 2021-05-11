@@ -50,7 +50,7 @@ for (j in 1:length(thiListReduced)) {
   g$legend$top <- g$legend$right <-  NULL # get rid of the graphs above and to the right of a single layer levelplot
   
   g <- g + latticeExtra::layer(sp.polygons(coastsCoarse.Rob, col = "black", lwd = 0.5))
-  plotFileName <- paste0("graphics/cmip6/THI/counts_",  speciesName, ".jpg")
+  plotFileName <- paste0(lofOfGraphicsFiles, "THI/counts_",  speciesName, ".jpg")
   print(paste0("plot file name: ", plotFileName))
   jpeg(plotFileName, width = 8, height = 8, quality = 100, units = "in", res = 300)
   print(g)
@@ -96,7 +96,7 @@ for (k in sspChoices) {
                      xlab = "", ylab = "", scales  = list(x = list(draw = FALSE), y = list(draw = FALSE)))
       
       g <- g + latticeExtra::layer(sp.polygons(coastsCoarse.Rob, col = "black", lwd = 0.5))
-      plotFileName <- paste0("graphics/cmip6/THI/THI_ensembleMean_masked_",  speciesName, "_",  yearSpan, "_", k, ".jpg")
+      plotFileName <- paste0(lofOfGraphicsFiles, "THI/THI_ensembleMean_masked_",  speciesName, "_",  yearSpan, "_", k, ".jpg")
       print(paste0("plot file name: ", plotFileName, " for species ", speciesName))
       jpeg(plotFileName, width = 6, height = 6, quality = 100, units = "in", res = 300)
       print(g)
@@ -111,7 +111,7 @@ for (k in sspChoices) {
                      xlab = "", ylab = "", scales  = list(x = list(draw = FALSE), y = list(draw = FALSE)))
       
       g <- g + latticeExtra::layer(sp.polygons(coastsCoarse.Rob, col = "black", lwd = 0.5))
-      plotFileName <- paste0("graphics/cmip6/THI/THI_ensembleCV_masked_",   speciesName, "_",  yearSpan, "_", k, ".jpg")
+      plotFileName <- paste0(lofOfGraphicsFiles, "THI/THI_ensembleCV_masked_",   speciesName, "_",  yearSpan, "_", k, ".jpg")
       jpeg(plotFileName, width = 6, height = 6, quality = 100, units = "in", res = 300)
       print(g)
       dev.off()
@@ -150,7 +150,7 @@ for (j in 1:length(thiListReduced)) {
                  xlab = "", ylab = "", scales  = list(x = list(draw = FALSE), y = list(draw = FALSE)))
   
   g <- g + latticeExtra::layer(sp.polygons(coastsCoarse.Rob, col = "black", lwd = 0.5))
-  plotFileName <- paste0("graphics/cmip6/THI/masked_",  speciesName, "_historical_",  yearSpan, ".jpg")
+  plotFileName <- paste0(lofOfGraphicsFiles, "THI/masked_",  speciesName, "_historical_",  yearSpan, ".jpg")
   print(paste0("plot file name: ", plotFileName, " for species ", speciesName))
   jpeg(plotFileName, width = 6, height = 6, quality = 100, units = "in", res = 300)
   print(g)
@@ -188,7 +188,7 @@ for (j in 1:length(thiListReduced)) {
 #                  xlab = "", ylab = "", scales  = list(x = list(draw = FALSE), y = list(draw = FALSE)))
 #   
 #   g <- g + latticeExtra::layer(sp.polygons(coastsCoarse.Rob, col = "black", lwd = 0.5))
-#   plotFileName <- paste0("graphics/cmip6/THI/masked_",  speciesName, "_observed_",  yearSpan, ".jpg")
+#   plotFileName <- paste0(lofOfGraphicsFiles, "THI/masked_",  speciesName, "_observed_",  yearSpan, ".jpg")
 #   print(paste0("plot file name: ", plotFileName, " for species ", speciesName))
 #   jpeg(plotFileName, width = 6, height = 6, quality = 100, units = "in", res = 300)
 #   print(g)

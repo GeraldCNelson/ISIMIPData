@@ -114,7 +114,7 @@ f_chillPortionsGraph <- function() {
       theme(panel.background = element_rect(fill = "aliceblue"))
     #          theme(legend.text.align = 1) +
     #   theme(legend.position = "none")
-    fileName_out <- paste0("graphics/cmip6/chillPortions/adeqChillPortions_", speciesChoice, "_", k, "_", yearSpan, ".png")
+    fileName_out <- paste0(lofOfGraphicsFiles, "chillPortions/adeqChillPortions_", speciesChoice, "_", k, "_", yearSpan, ".png")
     
     ggsave(filename = fileName_out, plot = g, width = 6, height = 6, units = "in", dpi = 300)
     knitr::plot_crop(fileName_out)
@@ -152,7 +152,7 @@ defaultTop <- 1
 
 f_chillportionsPpt <- function(fruit) {
   fileNameStart <- paste0("adeqChillPortions_")
-  fileName_in <- paste0("graphics/cmip6/chillPortions/", fileNameStart, fruit, "_", k, "_", yearSpan, ".png")
+  fileName_in <- paste0(lofOfGraphicsFiles, "chillPortions/", fileNameStart, fruit, "_", k, "_", yearSpan, ".png")
   extImg_cp <- external_img(src = fileName_in, width = defaultWidth, height = defaultHeight)
   my_pres <- add_slide(x = my_pres, layout = 'Title Only', master = 'Office Theme')
   my_pres <- ph_with(x = my_pres, value = extImg_cp, location = ph_location(left = defaultLeft, top = defaultTop, width = defaultWidth, height = defaultHeight - 0.5) )

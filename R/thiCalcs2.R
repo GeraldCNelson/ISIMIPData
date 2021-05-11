@@ -343,7 +343,7 @@ f_thi_graphing <- function(m, r, r_mask, maskMin, col, dt_stressCts) {
   #    if (! m == "humans") g <- g + geom_tile(data = r_mask_df, aes(x, y, fill = value), alpha = .2, show.legend = FALSE) # +
   
   print(g)
-  fileName_out <- paste0("graphics/cmip6/THI/THIextremeCt.", m, "_", k, "_", yearSpan, ".png")
+  fileName_out <- paste0(lofOfGraphicsFiles, "THI/THIextremeCt.", m, "_", k, "_", yearSpan, ".png")
   
   ggsave(filename = fileName_out, plot = g, device = "png", width = 6, height = 6, units = "in", dpi = 300)
   knitr::plot_crop(fileName_out) # gets rid of margins around the plot
@@ -402,7 +402,7 @@ f_thi_runs_graphing <- function(m, r, col, dt_stressCts, run_length) {
   #    if (! m == "humans") g <- g + geom_tile(data = r_mask_df, aes(x, y, fill = value), alpha = .2, show.legend = FALSE) # +
   
   print(g)
-  fileName_out <- paste0("graphics/cmip6/THI/runsCt.", m, "_", k, "_", yearSpan, ".png")
+  fileName_out <- paste0(lofOfGraphicsFiles, "THI/runsCt.", m, "_", k, "_", yearSpan, ".png")
   
   ggsave(filename = fileName_out, plot = g, device = "png", width = 6, height = 6, units = "in", dpi = 300)
   knitr::plot_crop(fileName_out) # gets rid of margins around the plot
@@ -441,7 +441,7 @@ f_thi_runs_graphing <- function(m, r, col, dt_stressCts, run_length) {
   #    if (! m == "humans") g <- g + geom_tile(data = r_mask_df, aes(x, y, fill = value), alpha = .2, show.legend = FALSE) # +
   
   print(g)
-  fileName_out <- paste0("graphics/cmip6/THI/runLength.", m, "_", k, "_", yearSpan, ".png")
+  fileName_out <- paste0(lofOfGraphicsFiles, "THI/runLength.", m, "_", k, "_", yearSpan, ".png")
   
   ggsave(filename = fileName_out, plot = g, device = "png", width = 6, height = 6, units = "in", dpi = 300)
   knitr::plot_crop(fileName_out) # gets rid of margins around the plot
@@ -494,7 +494,7 @@ f_thi_means_graphing <- function(m, r, col) {
   #    if (! m == "humans") g <- g + geom_tile(data = r_mask_df, aes(x, y, fill = value), alpha = .2, show.legend = FALSE) # +
   
   print(g)
-  fileName_out <- paste0("graphics/cmip6/THI/mean.", m, "_", k, "_", yearSpan, ".png")
+  fileName_out <- paste0(lofOfGraphicsFiles, "THI/mean.", m, "_", k, "_", yearSpan, ".png")
   
   ggsave(filename = fileName_out, plot = g, device = "png", width = 6, height = 6, units = "in", dpi = 300)
   knitr::plot_crop(fileName_out) # gets rid of margins around the plot
@@ -578,7 +578,7 @@ f_thi_means_graphing <- function(m, r, col) {
   #       indices_day <- format(indices, "%b %d")
   #       indices_date <- format(indices, "%j")
   #       #      names(r) <- gsub("X", "Day.", names(r))
-  #       videoName_out <- paste0("graphics/cmip6/THI/ensemble_thi.", m, "_", k, "_", yearSpan, ".mp4")
+  #       videoName_out <- paste0(lofOfGraphicsFiles, "THI/ensemble_thi.", m, "_", k, "_", yearSpan, ".mp4")
   #       print(paste0("video fileName out: ", videoName_out))
   #       #     x.cv <- tapp(x, indices_date, fun = cv, na.rm = TRUE)
   #       system.time(r.mean <- tapp(r, indices_date, fun = mean, na.rm = TRUE)) #, filename = fileName_out, overwrite = TRUE, wopt = woptList))
@@ -700,7 +700,7 @@ f_thi_means_graphing <- function(m, r, col) {
       if (m == "humans") {
         titleText <- paste0(m, ", change in days with PWC below ", extremeStress, " percent, \n early to end century ", k)
       }
-      fileName_out <- paste0("graphics/cmip6/THI/THIextremeCtDelta.", m, "_", k, "_", yearSpan, ".png")
+      fileName_out <- paste0(lofOfGraphicsFiles, "THI/THIextremeCtDelta.", m, "_", k, "_", yearSpan, ".png")
       r_ssp <- rast(paste0(locOfDataFiles_THI, "extremeCt.", m, "_", k, "_", yearSpan, ".tif"))
       r_historical <- rast(paste0(locOfDataFiles_THI, "extremeCt.", m, "_", "historical", "_", "1991_2010", ".tif"))
       r <- r_ssp - r_historical
@@ -734,7 +734,7 @@ f_thi_means_graphing <- function(m, r, col) {
     source("R/pptFunctions.R")
     f_extremeCtSpeciesForPptx <- function(m) {
       fileNameStart <- paste0("THIextremeCt.", m, "_")
-      fileName_in <- paste0("graphics/cmip6/THI/", fileNameStart, k, "_", yearSpan, ".png")
+      fileName_in <- paste0(lofOfGraphicsFiles, "THI/", fileNameStart, k, "_", yearSpan, ".png")
       print(paste0("fileName in: ", fileName_in))
       extImg_favLocs <- external_img(src = fileName_in, width = defaultWidth, height = defaultHeight)
       my_pres <- add_slide(x = my_pres, layout = 'Title Only', master = 'Office Theme')
@@ -812,7 +812,7 @@ f_thi_means_graphing <- function(m, r, col) {
     my_pres <- add_slide(x = my_pres, layout = 'Section Header', master = 'Office Theme')
     my_pres <- ph_with(x = my_pres, value = ensembleTitle, location = ph_location_type(type = "title"))
     for (k in sspChoices) {
-      fileName_in <- paste0("graphics/cmip6/THI/THIextremeCtDelta.", m, "_", k, "_", "2081_2100.png")
+      fileName_in <- paste0(lofOfGraphicsFiles, "THI/THIextremeCtDelta.", m, "_", k, "_", "2081_2100.png")
       my_pres <- f_deltaExtremeCtSpeciesForPptx()
     }
     my_pres <- f_addDataSlide()
@@ -830,13 +830,13 @@ f_thi_means_graphing <- function(m, r, col) {
   #     add_slide(my_pres, layout = 'Section Header', master = 'Office Theme')  %>% 
   #       ph_with(value = ensembleTitle, location = ph_location_type(type = "body"))
   #     
-  #     fileNameCts <- paste0("graphics/cmip6/THI/THIextremeCt.", speciesName, "_", k, "_", yearSpan, ".png")
+  #     fileNameCts <- paste0(lofOfGraphicsFiles, "THI/THIextremeCt.", speciesName, "_", k, "_", yearSpan, ".png")
   #     extImgObs <- external_img(src = fileNameCts, width = 5, height = 8)
   #     
   #     add_slide(my_pres, layout = 'Title Only', master = 'Office Theme') %>% 
   #       ph_with(value = extImgObs, location = ph_location(left = 2, top = 0, width = 5, height = 8) )
   #     
-  #     fileNameObserved <- paste0("graphics/cmip6/THI/THIextremeCt.", speciesName, "_historical_",  "1991_2010", ".png")
+  #     fileNameObserved <- paste0(lofOfGraphicsFiles, "THI/THIextremeCt.", speciesName, "_historical_",  "1991_2010", ".png")
   #     
   #     extImgObs <- external_img(src = fileNameObserved, width = 5, height = 8)
   #     add_slide(my_pres, layout = 'Title Only', master = 'Office Theme') %>% 
@@ -844,8 +844,8 @@ f_thi_means_graphing <- function(m, r, col) {
   #     
   #     for (l in startYearChoices_ensemble) {
   #       yearSpan <- paste0(l, "_", l + yearRange)
-  # #      fileNameCV <- paste0("graphics/cmip6/THI/THI_ensembleCV_masked_",   speciesName, "_",  yearSpan, "_", k, ".jpg")
-  #       fileNameMean <- paste0("graphics/cmip6/THI/THI_ensembleMean_masked_",  speciesName, "_",  yearSpan, "_", k, ".png")
+  # #      fileNameCV <- paste0(lofOfGraphicsFiles, "THI/THI_ensembleCV_masked_",   speciesName, "_",  yearSpan, "_", k, ".jpg")
+  #       fileNameMean <- paste0(lofOfGraphicsFiles, "THI/THI_ensembleMean_masked_",  speciesName, "_",  yearSpan, "_", k, ".png")
   #       
   #       extImgMean <- external_img(src = fileNameMean, width = 5, height = 8)
   # #      extImgCV <- external_img(src = fileNameCV, width = 5, height = 8)
@@ -998,8 +998,8 @@ f_thi_means_graphing <- function(m, r, col) {
   source("R/pptFunctions.R")
   
   f_runsCtForPptx <- function(m) {
-    fileName_in_rl <- paste0("graphics/cmip6/THI/runLength.", m, "_", k, "_", yearSpan, ".png")
-    fileName_in_rCt <- paste0("graphics/cmip6/THI/runsCt.", m, "_", k, "_", yearSpan, ".png")
+    fileName_in_rl <- paste0(lofOfGraphicsFiles, "THI/runLength.", m, "_", k, "_", yearSpan, ".png")
+    fileName_in_rCt <- paste0(lofOfGraphicsFiles, "THI/runsCt.", m, "_", k, "_", yearSpan, ".png")
     print(paste0("fileName in, rl: ", fileName_in_rl, ", fileName in, cts: ", fileName_in_rCt))
     extImg_rl <- external_img(src = fileName_in_rl, width = defaultWidth, height = defaultHeight)
     extImg_rCt <- external_img(src = fileName_in_rCt, width = defaultWidth, height = defaultHeight)
@@ -1169,7 +1169,7 @@ f_thi_means_graphing <- function(m, r, col) {
   #                          limits = c(0, maxVal)) + 
   #     geom_sf(fill = NA, color = "gray")
   #   g
-  #   fileName_out <- paste0("graphics/cmip6/THI/THIextremeCtDelta.", m, "_", k, ".png")
+  #   fileName_out <- paste0(lofOfGraphicsFiles, "THI/THIextremeCtDelta.", m, "_", k, ".png")
   #   png(filename = fileName_out, width = 6, height = 6, units = "in", res = 300)
   #   print(g)
   #   dev.off()

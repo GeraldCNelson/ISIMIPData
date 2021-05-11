@@ -44,9 +44,9 @@ yearRange <- 19
 locOfClimFiles <- "data/bigFiles/"
 locOfDataFiles_perennials <- "data/cmip6/perennials/"
 locOfCPFiles <- "data/cmip6/chillPortions/chill_portions/"
-
 locOfDataFiles_THI <- "data/cmip6/THI/"
-
+locOfResultsFiles <- "results/"
+lofOfGraphicsFiles <- "graphics/cmip6/"
 
 # general test values
 modelChoice <-  "IPSL-CM6A-LR"

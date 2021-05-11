@@ -201,7 +201,7 @@ for (k in sspChoices) {
                      xlab = "", ylab = "", scales  = list(x = list(draw = FALSE), y = list(draw = FALSE)))
       
       g <- g + latticeExtra::layer(sp.polygons(coastsCoarse.Rob, col = "black", lwd = 0.5))
-      plotFileName <- paste0("graphics/cmip6/THI/THI_ensembleMean_masked_",  speciesName, "_",  yearSpan, "_", k, ".jpg")
+      plotFileName <- paste0(lofOfGraphicsFiles, "THI/THI_ensembleMean_masked_",  speciesName, "_",  yearSpan, "_", k, ".jpg")
       print(paste0("plot file name: ", plotFileName, " for species ", speciesName))
       jpeg(plotFileName, width = 8, height = 8, quality = 100, units = "in", res = 300)
       print(g)
@@ -343,7 +343,7 @@ for (k in sspChoices) {
                                  style = north_arrow_fancy_orienteering) 
         
         print(g)
-        outFilename <- paste0("graphics/cmip6/regionInfo/", regionInfoLookup[i, region], ".png")
+        outFilename <- paste0(lofOfGraphicsFiles, "regionInfo/", regionInfoLookup[i, region], ".png")
         unlink(outFilename)
         ggsave(outFilename, plot = last_plot(), device = "png", overwrite = TRUE)
         # ggsave("map_web.png", width = 6, height = 6, dpi = "screen")

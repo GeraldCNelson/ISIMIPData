@@ -20,7 +20,7 @@ coastline_cropped_Rob <- st_transform(coastline_cropped, crsRob)
 # coastline <- f_crop_custom(coastline)
 
 # examples of adding a coastline and removing x and y axis labels and legend
-plot(r_suitable_globe, main = titleText, legend = FALSE, xlab = FALSE, axes=FALSE)
-plot(coastline_cropped_spvect, add = TRUE)
+# plot(r_suitable_globe, main = titleText, legend = FALSE, xlab = FALSE, axes=FALSE)
+# plot(coastline_cropped_spvect, add = TRUE)
 
 

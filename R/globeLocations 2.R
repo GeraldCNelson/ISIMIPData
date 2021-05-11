@@ -121,7 +121,7 @@ g <- ggplot(data = test_df_long) +
   theme(axis.text.y=element_text(size=rel(0.6)))
 
 g <- g +  facet_wrap(vars(gs))
-outFilename <- paste0("graphics/cmip6/growingSeasons/gs", "_", l, "SH",".png")
+outFilename <- paste0(lofOfGraphicsFiles, "growingSeasons/gs", "_", l, "SH",".png")
 png(filename = outFilename, width = 6, height = 6, units = "in", res = 300)
 print(g)
 dev.off()

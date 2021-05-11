@@ -96,13 +96,13 @@ for (k in sspChoices) {
     #    add_slide(my_pres, layout = 'Section Header', master = 'Office Theme')  %>% 
     #   ph_with(value = ensembleTitle, location = ph_location_type(type = "body"))
     # 
-    # fileNameCts <- paste0("graphics/cmip6/annualMean_", varName, ".jpg")
+    # fileNameCts <- paste0(lofOfGraphicsFiles, "annualMean_", varName, ".jpg")
     # extImgObs <- external_img(src = fileNameCts, width = 5, height = 8)
     # 
     # add_slide(my_pres, layout = 'Title Only', master = 'Office Theme') %>% 
     # ph_with(value = extImgObs, location = ph_location(left = 2, top = 0, width = 5, height = 8) )
     # 
-    fileNameObserved <- paste0("graphics/cmip6/annualMean/annualMean_",  varName, "_observed_",  "2001_2010", ".jpg")
+    fileNameObserved <- paste0(lofOfGraphicsFiles, "annualMean/annualMean_",  varName, "_observed_",  "2001_2010", ".jpg")
     
     extImgObs <- external_img(src = fileNameObserved, width = 5, height = 8)
     add_slide(my_pres, layout = 'Title Only', master = 'Office Theme') %>% 
@@ -110,8 +110,8 @@ for (k in sspChoices) {
     
     for (l in startYearChoices_ensemble) {
       yearSpan <- paste0(l, "_", l + yearRange)
-      fileNameCV <- paste0("graphics/cmip6/annualMean/ensembleAnnualCV_",   varName, "_",  yearSpan, "_", k, ".jpg")
-      fileNameMean <- paste0("graphics/cmip6/annualMean/ensembleannualMean_",  varName, "_",  yearSpan, "_", k, ".jpg")
+      fileNameCV <- paste0(lofOfGraphicsFiles, "annualMean/ensembleAnnualCV_",   varName, "_",  yearSpan, "_", k, ".jpg")
+      fileNameMean <- paste0(lofOfGraphicsFiles, "annualMean/ensembleannualMean_",  varName, "_",  yearSpan, "_", k, ".jpg")
       
       extImgMean <- external_img(src = fileNameMean, width = 5, height = 8)
       extImgCV <- external_img(src = fileNameCV, width = 5, height = 8)

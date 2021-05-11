@@ -112,7 +112,7 @@ for (k in sspChoices) {
                      xlab = "", ylab = "", scales  = list(x = list(draw = FALSE), y = list(draw = FALSE)))
       
       g <- g + latticeExtra::layer(sp.polygons(coastsCoarse.Rob, col = "black", lwd = 0.5))
-      plotFileName <- paste0("graphics/cmip6/monthlyMean/ensembleMonthlyMean_",  varName, "_",  yearSpan, "_", k, ".jpg")
+      plotFileName <- paste0(lofOfGraphicsFiles, "monthlyMean/ensembleMonthlyMean_",  varName, "_",  yearSpan, "_", k, ".jpg")
       print(paste0("plot file name: ", plotFileName, " for climate variable ", varNameLong))
       jpeg(plotFileName, width = jpgWidth, height = jpgHeight, quality = 100, units = "in", res = 300)
       print(g)
@@ -138,7 +138,7 @@ for (k in sspChoices) {
                      xlab = "", ylab = "", scales  = list(x = list(draw = FALSE), y = list(draw = FALSE)))
       
       g <- g + latticeExtra::layer(sp.polygons(coastsCoarse.Rob, col = "black", lwd = 0.5))
-      plotFileName <- paste0("graphics/cmip6/monthlyMean/ensembleMonthlyCV_",  varName, "_",  yearSpan, "_", k, ".jpg")
+      plotFileName <- paste0(lofOfGraphicsFiles, "monthlyMean/ensembleMonthlyCV_",  varName, "_",  yearSpan, "_", k, ".jpg")
       print(paste0("plot file name: ", plotFileName, " for climate variable ", varNameLong))
       jpeg(plotFileName, width = jpgWidth, height = jpgHeight, quality = 100, units = "in", res = 300)
       print(g)
@@ -190,7 +190,7 @@ for (k in sspChoices) {
 #   
 #   g <- g + latticeExtra::layer(sp.polygons(coastsCoarse.Rob, col = "black", lwd = 0.5))
 #   
-#   plotFileName <- paste0("graphics/cmip6/monthlyMean/monthlyMean_",  varName, "_observed_",  yearSpan, ".jpg")
+#   plotFileName <- paste0(lofOfGraphicsFiles, "monthlyMean/monthlyMean_",  varName, "_observed_",  yearSpan, ".jpg")
 #   jpeg(plotFileName, width = jpgWidth, height = jpgHeight, quality = 100, units = "in", res = 300)
 #   print(g)
 #   dev.off()
@@ -241,7 +241,7 @@ for (j in climateVars) {
   
   g <- g + latticeExtra::layer(sp.polygons(coastsCoarse.Rob, col = "black", lwd = 0.5))
   
-  plotFileName <- paste0("graphics/cmip6/monthlyMean/monthlyMean_",  varName, "_observed_",  yearSpan, ".jpg")
+  plotFileName <- paste0(lofOfGraphicsFiles, "monthlyMean/monthlyMean_",  varName, "_observed_",  yearSpan, ".jpg")
   jpeg(plotFileName, width = jpgWidth, height = jpgHeight, quality = 100, units = "in", res = 300)
   print(g)
   dev.off()

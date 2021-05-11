@@ -110,13 +110,13 @@ for (i in 1:nrow(regionInfoLookup)) {
     # #       ph_with(value = paste0("Ensemble-based monthly mean values, ", varNameLong), location = ph_location_type(type = "title")) %>%
     #        ph_with(value = myft, location = ph_location_type(type = "body")) #ph_location(left = .5, top = 1.5, width = 10, height = 4)) #location = ph_location_types(type = "body"))
     #      
-    # fileNameCts <- paste0("graphics/cmip6/monthlyMean_", varName, ".jpg")
+    # fileNameCts <- paste0(lofOfGraphicsFiles, "monthlyMean_", varName, ".jpg")
     # extImgObs <- external_img(src = fileNameCts, width = 5, height = 8)
     # 
     # add_slide(my_pres, layout = 'Title Only', master = 'Office Theme') %>% 
     # ph_with(value = extImgObs, location = ph_location(left = 2, top = 0, width = 5, height = 8) )
     # 
-    # fileNameObserved <- paste0("graphics/cmip6/monthlyMean/monthlyMean_",  varName, "_observed_",  "2001_2010", ".jpg")
+    # fileNameObserved <- paste0(lofOfGraphicsFiles, "monthlyMean/monthlyMean_",  varName, "_observed_",  "2001_2010", ".jpg")
     # 
     # extImgObs <- external_img(src = fileNameObserved, width = 5, height = 8)
     # add_slide(my_pres, layout = 'Title Only', master = 'Office Theme') %>% 
@@ -125,7 +125,7 @@ for (i in 1:nrow(regionInfoLookup)) {
     for (l in startYearChoices) {
       yearSpan <- paste0(l, "_", l + yearRange)
       if (l %in% startYearChoices[1]) { 
-        fileNameMean <- paste0("graphics/cmip6/regionInfo/", j, "MonthlyAve_",  yearSpan, "_", region, ".png")
+        fileNameMean <- paste0(lofOfGraphicsFiles, "regionInfo/", j, "MonthlyAve_",  yearSpan, "_", region, ".png")
         extImgMean <- external_img(src = fileNameMean, width = 5, height = 5)
         add_slide(my_pres, layout = 'Title Only', master = 'Office Theme') %>% 
           ph_with(value = extImgMean, location = ph_location(left = 1.5, top = .5, width = 7, height = 7) )
@@ -133,8 +133,8 @@ for (i in 1:nrow(regionInfoLookup)) {
       if (!l %in% startYearChoices[1]) {
         for (k in sspChoices) {
           
-          #      fileNameCV <- paste0("graphics/cmip6/monthlyMean/ensemblemonthlyCV_",   varName, "_",  yearSpan, "_", k, ".jpg")
-          fileNameMean <- paste0("graphics/cmip6/regionInfo/", j, "MonthlyAve_", k, "_",  yearSpan, "_", region, ".png")
+          #      fileNameCV <- paste0(lofOfGraphicsFiles, "monthlyMean/ensemblemonthlyCV_",   varName, "_",  yearSpan, "_", k, ".jpg")
+          fileNameMean <- paste0(lofOfGraphicsFiles, "regionInfo/", j, "MonthlyAve_", k, "_",  yearSpan, "_", region, ".png")
           extImgMean <- external_img(src = fileNameMean, width = 5, height = 5)
           #     extImgCV <- external_img(src = fileNameCV, width = 5, height = 8)
           
