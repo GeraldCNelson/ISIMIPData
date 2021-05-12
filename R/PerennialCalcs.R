@@ -40,17 +40,17 @@
   var_suffix <- gsub("varieties", "", varChoice)
   cropVals <- get(paste0("majorCropValues", var_suffix))
   speciesChoices <- unique(cropVals$cropName)
-  speciesChoice <- "apple_main"
+  speciesChoice <- "olive_main"
   suitabilityLevel <- "good"
   climVarChoice <- "tasmin"
   
   # functions -----
-  f_range <- function(x, range) {
-    # set locations with values outside the range to 999 as an indicator for later adjustment
-    # x[x < range[1]] <- NA
-    # x[x > range[2]] <- NA
-    x[x < range[1]] <- 999
-    x[x > range[2]] <- 999
+  f_range <- function(x, rangeVals) {
+    # set locations with values outside the range to 999 as an indicator where land is for later adjustment
+    # x[x < rangeVals[1]] <- NA
+    # x[x > rangeVals[2]] <- NA
+    x[x < rangeVals[1]] <- 999
+    x[x > rangeVals[length(rangeVals)]] <- 999 # length needed because rangeVals can sometimes have more than 2 entries.
     return(x)
   }
   
@@ -116,10 +116,16 @@
     print(paste0("Working on extreme cold for speciesChoice: ", speciesChoice, ", working on ssp: ", k, ", start year ", l, ", hemisphere ", hem))
     fileName_out <- paste0(locOfDataFiles_perennials, "extremeCold_cutoff_", speciesChoice, "_", k, "_", hem, "_", yearSpan, ".tif")
     print(system.time(extremeCold_quant <- quantile(r, probs = probVal, na.rm = TRUE)))
-    extremeCold_quant[extremeCold_quant < extremeColdCutoff] <- 0 # not suitable
-    extremeCold_quant[extremeCold_quant >= extremeColdCutoff] <- 1 # suitable
+    # extremeCold_quant[extremeCold_quant < extremeColdCutoff] <- 0 # not suitable
+    # extremeCold_quant[extremeCold_quant >= extremeColdCutoff] <- 1 # suitable
+    rangeVals <- c(extremeColdCutoff, 50)
+    extremeCold_quant <- f_range(extremeCold_quant, rangeVals) 
+    extremeCold_quant[extremeCold_quant >= extremeColdCutoff & extremeCold_quant < 999] <- 1 # use of 999 here and in f_range is a kludge to set unsuitable land areas to zero.
+    extremeCold_quant[extremeCold_quant == 999] <- 0
+    
     print(system.time(writeRaster(extremeCold_quant, filename = fileName_out, overwrite = TRUE, wopt = woptList)))
     print(paste0("fileName_out extreme cold: ", fileName_out))
+    plot(extremeCold_quant, main = speciesChoice)
     return(extremeCold_quant)
   }
   
@@ -206,9 +212,7 @@
       heatCt <- rast(fileName_hd_in) # number of high heat days below the damage threshold; locations outside the range are NA; outside land is NaN
       fileName_cp_in <- paste0("data/cmip6/chillPortions/chill_portions/", "ensemble_chill_cutoff_", speciesChoice, "_", k, "_", hem, "_", yearSpan, ".tif")
       chillPortionsCutoff <- rast(fileName_cp_in) # 1 is good, 0 is bad
-      #      chillPortionsCutoff[chillPortionsCutoff == 0] <- NA
-      #     extremeColdCt[extremeColdCt == 0] <- NA # keep only the good locations; value is 1
-      
+ 
       # convert day counts to 1 (suitable, 0 - not suitable)
       heatCt[heatCt >= 0] <- 1 # convert the number of days that meet the suitability criterion to 1
       frostCt[frostCt >= 0] <- 1 # convert the number of days that meet the suitability criterion to 1
@@ -220,9 +224,7 @@
       r_suitable <- app(r_combined, prod)
       names(r_suitable) <- "combinedSuit"
       r_all <- c(r_suitable, r_combined)
-      fileName_out <- paste0(locOfDataFiles_perennials, "suitable_", speciesChoice, "_",  k, "_", suitabilityLevel, "_", hem, "_", yearSpan, ".tif")
-      writeRaster(r_suitable, fileName_out, overwrite = TRUE, wopt = woptList)
-      print(paste0("file name out: ", fileName_out))
+     print(paste0("file name out: ", fileName_out))
       # titleText <- paste0("Locations where suitability is ", suitabilityLevel, " for ", speciesChoice, ", scenario ", k, ", period ", yearSpan, ", hemisphere ", hem)
       # plot(r_suitable, main = titleText)
       r_suit_hem <- paste0("r_suitable_", hem)
@@ -233,13 +235,14 @@
     r_suitable_globe <- merge(r_suitable_NH, r_suitable_SH)
     r_suitable_all_globe <- merge(r_suitable_all_NH, r_suitable_all_SH)
     r_suitable_all_globe_df <- as.data.frame(r_suitable_all_globe, xy = TRUE, na.rm = FALSE)
-    fileName_suitable_all_out <- paste0(locOfDataFiles_perennials, "suitable_all", speciesChoice, "_",  k, "_", suitabilityLevel, "_", hem, "_", yearSpan, ".tif")
+    fileName_suitable_all_out <- paste0(locOfDataFiles_perennials, "suitable_all", speciesChoice, "_",  k, "_", suitabilityLevel, "_", yearSpan, ".tif")
     print(system.time(writeRaster(r_suitable_all_globe, filename = fileName_suitable_all_out,  overwrite = TRUE,  wopt= woptList))); flush.console()
-    fileName_suitable_all_df_out <- paste0(locOfDataFiles_perennials, "suitable_all", speciesChoice, "_",  k, "_", suitabilityLevel, "_", hem, "_", yearSpan, ".csv")
+    fileName_suitable_all_df_out <- paste0(locOfDataFiles_perennials, "suitable_all_", speciesChoice, "_",  k, "_", suitabilityLevel, "_", yearSpan, ".csv")
     write.csv(r_suitable_all_globe_df, fileName_suitable_all_df_out)
-    titleText <- paste0("Locations where suitability is ", suitabilityLevel, " for ", speciesChoice, ", scenario ", k, ", period ", yearSpan)
+    titleText <- paste0("Locations where suitability is ", suitabilityLevel, " for ", speciesChoice, ", scenario: ", k, ", period: ", yearSpan)
+    pal <- colorRampPalette(c("white", "green"))
     
-    plot(r_suitable_globe, main = titleText, legend = FALSE, xlab = FALSE, axes=FALSE)
+    plot(r_suitable_globe, main = titleText, legend = FALSE, xlab = FALSE, axes=FALSE, col = pal(2))
     plot(coastline_cropped_spvect, add = TRUE)
   }
   
