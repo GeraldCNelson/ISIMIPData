@@ -1,26 +1,25 @@
 # ISIMIP project spatial constants
-library(sf) # only needed for doing some spatial stuff
+require(terra)
+source("R/ISIMIPconstants.R")
 RobinsonProj <-  "+proj=robin +lon_0=0 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs"
-GoodeHomolosineProj <- "+proj=goode" # see https://proj.org/operations/projections/goode.html
+GoodeHomolosineProj <- "+proj=goode +lon_0=0 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs" # see https://proj.org/operations/projections/goode.html
 crsRob <- RobinsonProj
 crsGoode <- GoodeHomolosineProj
 crslatlong <- "+proj=longlat +datum=WGS84 +no_defs"
-coastline <- st_read("data-raw/regionInformation/ne_50m_coastline/ne_50m_coastline.shp")
-coastline_cropped <- st_crop(coastline, c(xmin = -180, xmax = 180, ymin = -60, ymax = 90))
-coastline_cropped_spvect <- vect(coastline_cropped) # convert coastline_cropped to a spatvector
-coastline_cropped_Rob <- st_transform(coastline_cropped, crsRob)
+coastline <- vect("data-raw/regionInformation/ne_50m_coastline/ne_50m_coastline.shp")
+coastline_cropped <- crop(coastline, extent_noAntarctica )
 
-#function to get rid of Antarctica, used only on the coastline sf file; commenting out because probably not needed but leaving here in case that is wrong
-# f_crop_custom <- function(poly.sf) {
-#   poly.sp <- as(poly.sf, "Spatial")
-#   extR <- raster::extent(c(-180, 180, -60, 90))
-#   poly.sp.crop <- crop(poly.sp, extR)
-#   st_as_sf(poly.sp.crop)
-# }
-# coastline <- f_crop_custom(coastline)
+coastline_cropped_Rob <- project(coastline_cropped, RobinsonProj)
+coastline_cropped_igh <- project(coastline_cropped, GoodeHomolosineProj)
+
+landOnlyMask <- rast(paste0(locOfRawDataFiles, "landseamask.nc"))
+landOnlyMaskNoAntarctica <- rast(paste0(locOfRawDataFiles, "landseamask_no_antarctica.nc"))
 
 # examples of adding a coastline and removing x and y axis labels and legend
 # plot(r_suitable_globe, main = titleText, legend = FALSE, xlab = FALSE, axes=FALSE)
 # plot(coastline_cropped_spvect, add = TRUE)
 
 
+# testing interrupted good homolosine
+
+crsGoode <- "+proj=igh +ellps=sphere +towgs84=0,0,0 +lon_0=100w +x_0=-11119487.43"

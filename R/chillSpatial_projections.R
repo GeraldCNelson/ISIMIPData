@@ -10,25 +10,38 @@ require(future)
 require(future.apply)
 require(terra)
 
-source('chillSpatial_functions.R')
+source('R/chillSpatial_functions.R')
 
 plan(multiprocess, workers=6, gc=TRUE)
 
-models <- tolower(c("GFDL-ESM4", "IPSL-CM6A-LR", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL"))
-scenarios <- c("historical", "ssp126", "ssp585")
+# models <- tolower(c("GFDL-ESM4", "IPSL-CM6A-LR", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL"))
+# scenarios <- c("historical", "ssp126", "ssp585")
 
 # an alternative approach is some nested for loops that replace all the individaul lines of code below
 source("R/ISIMIPconstants.R") # loads a bunch of constants
 
+# chill portions, scenarios -----
 for (k in sspChoices) {
   for (l in startYearChoices) {
     yearSpan <- paste0(l, ":", l + yearRange) 
     for (modelChoice in modelChoices) {
-    cp <- getChillWorld(scenario=k, model=modelChoice, year_range=yearSpan)
+    cp <- getChillWorld(scenario = k, model = modelChoice, year_range = yearSpan)
     cpName <- paste0(k, "_", modelChoice)
     assign(cpName, cp)
     }
   }
+}
+
+# chill portions, historical -----
+k <- "historical"
+l <- 1991
+  for (l in startYearChoices) {
+    yearSpan <- paste0(l, ":", l + yearRange) 
+    for (modelChoice in modelChoices) {
+      cp <- getChillWorld(scenario=k, model=modelChoice, year_range=yearSpan)
+      cpName <- paste0(k, "_", modelChoice)
+      assign(cpName, cp)
+    }
 }
     
 

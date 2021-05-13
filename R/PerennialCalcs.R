@@ -1,7 +1,7 @@
 # code to do various perennial crop calculations
 {
   #source("R/globallyUsed.R")
-  library(terra)
+  require(terra)
   library(ggplot2)
   source("R/ISIMIPconstants.R")
   source("R/ISIMIPspatialConstants.R")
@@ -84,11 +84,10 @@
     indices <- format(as.Date(names(r), format = "X%Y-%m-%d"), format = "%y") # %y is year 2 digit number
     indices <- as.numeric(indices)
     indices <- indices - l + 2000 + 1
-    print(system.time(tempCt <- tapp(r, indices, f_ct))) #indices are from 1 to the number of years in the subsetted file. The f_ct is the sum function created in the calling script
-    system.time(tempCt <- quantile(tempCt, probs = probVal, na.rm = TRUE)) # note: if all layers have the same value quantile returns that value
-    system.time(tempCt <- round(tempCt, 0)) # make sure it is an integer
+    print(system.time(tempCt <- tapp(r, indices, f_ct))) #indices values are from 1 to the number of years in the subsetted file, usually 20. layersToKeep are the layer numbers to keep in each year. The f_ct is the sum function created in the calling script
     print(tempCt)
     return(tempCt)
+    #    return(r)
   }
   
   f_readRast_extreme <- function(modelChoice, varName, funDir) {
@@ -133,7 +132,7 @@
   
   # flowering and heat damage -----
   f_frostHeatDamage <- function(k, l, speciesChoice, hem, varChoice, suitabilityLevel) {
-    
+    yearSpan <- paste0(l, "_", l + yearRange)
     # frost and heat damage day windows -----
     spLyrStart <- get(paste0("floweringStart_", hem))
     spLyrEnd <- spLyrStart + floweringLength
@@ -142,34 +141,42 @@
     hdLyrStart <- get(paste0("floweringStart_", hem))
     hdLyrEnd <- hdLyrStart + floweringLength
     hdLyrs <- hdLyrStart:hdLyrEnd
+    
     for (season in c("flowering", "summer")) {
       if (season == "flowering") {
-        climVarChoice <- "tasmin"
-        flowerDamage_threshold <- cropVals[cropName == speciesChoice, chill_threshold]
-        layersToKeep <- spLyrs
-        probVal <- 0.90
-        f_ct <- function(x) (sum(x < flowerDamage_threshold)) # created here; used in  f_readRast_count
-        system.time(x <- lapply(modelChoices_lower, f_readRast_count, climVarChoice, layersToKeep, probVal, f_ct))
-        r <- rast(x)
-        r
         frDays <- switch(suitabilityLevel,
                          "good" = frostRiskDays[1:2],
                          "acceptable" = frostRiskDays[3:4],
                          "bad" = frostRiskDays[5:6],
                          "unsuitable" = frostRiskDays[7:8]
         )
+        climVarChoice <- "tasmin"
+        flowerDamage_threshold <- cropVals[cropName == speciesChoice, chill_threshold]
+        layersToKeep <- spLyrs
+        probVal <- 0.90
+        f_ct <- function(x) (sum(x < flowerDamage_threshold)) # created here; used in f_readRast_count
+        system.time(x <- lapply(modelChoices_lower, f_readRast_count, climVarChoice, layersToKeep, probVal, f_ct))
+        r <- rast(x)
+        r
         fr <- f_range(r, frDays) #f_range sets area outside the suitable range to NA
+        system.time(fr <- quantile(fr, probs = probVal, na.rm = TRUE)) # note: if all layers have the same value quantile returns that value
+        #       system.time(fr <- round(fr, 0)) # make sure it is an integer
+        
         fr[fr >= 0 & fr < 999] <- 1 # use of 999 here and in f_range is a kludge to set unsuitable land areas to zero.
         fr[fr == 999] <- 0
-        fr_mean <- mean(fr, na.rm = TRUE)
-        fr_mean <- round(fr_mean)
-        titleText_fr <- paste0(suitabilityLevel, " flowering suitability. Frost risk is frost days between ", frDays[1], " and ", frDays[2], ".\n scenario ", k, ", ", yearSpan)
-        plot(fr_mean, main = titleText_fr)
+        titleText_fr <- paste0("Flowering suitability is ", suitabilityLevel, ". Frost risk is frost days between ", frDays[1], " and ", frDays[2], ".\n scenario ", k, ", ", yearSpan)
+        plot(fr, main = titleText_fr)
         fileName_fr_out <- paste0(locOfDataFiles_perennials, "floweringDamage_", speciesChoice, "_", k, "_", suitabilityLevel, "_", hem, "_", yearSpan, ".tif")
-        writeRaster(fr_mean, fileName_fr_out, overwrite = TRUE, wopt = woptList)
+        writeRaster(fr, fileName_fr_out, overwrite = TRUE, wopt = woptList)
         print(paste0(" flower damage fileName out: ", fileName_fr_out))
       }
       if (season == "summer") {
+        hdDays <- switch(suitabilityLevel,
+                         "good" = heatRiskDays[1:2],
+                         "acceptable" = heatRiskDays[3:4],
+                         "bad" = heatRiskDays[5:6],
+                         "unsuitable" = heatRiskDays[7:8]
+        )
         climVarChoice <- "tasmax"
         summer_heat_threshold <- cropVals[cropName == speciesChoice, summer_heat_threshold]
         layersToKeep <- hdLyrs
@@ -178,22 +185,13 @@
         system.time(x <- lapply(modelChoices_lower, f_readRast_count, climVarChoice, layersToKeep, probVal, f_ct))
         r <- rast(x)
         r
-        hdDays <- switch(suitabilityLevel,
-                         "good" = heatRiskDays[1:2],
-                         "acceptable" = heatRiskDays[3:4],
-                         "bad" = heatRiskDays[5:6],
-                         "unsuitable" = heatRiskDays[7:8]
-        )
         hd <- f_range(r, hdDays)
         hd[hd >= 0 & hd < 999] <- 1
         hd[hd == 999] <- 0
-        
-        hd_mean <- mean(hd, na.rm = TRUE)
-        hd_mean <- round(hd_mean)
-        titleText_hd <- paste0(suitabilityLevel, " summer heat suitability. Summer heat risk is days over ", summer_heat_threshold, "C between ", hdDays[1], " and ", hdDays[2], ".\n scenario ", k, ", ", yearSpan)
-        plot(hd_mean, main = titleText_hd)
+        titleText_hd <- paste0("Summer heat suitability is ",suitabilityLevel, ". Summer heat risk is days over ", summer_heat_threshold, "C between ", hdDays[1], " and ", hdDays[2], ".\n scenario ", k, ", ", yearSpan)
+        plot(hd, main = titleText_hd)
         fileName_hd_out <- paste0(locOfDataFiles_perennials, "heatDamage_", speciesChoice, "_", k, "_", suitabilityLevel, "_", hem, "_", yearSpan, ".tif")
-        writeRaster(hd_mean, fileName_hd_out, overwrite = TRUE, wopt = woptList)
+        writeRaster(hd, fileName_hd_out, overwrite = TRUE, wopt = woptList)
         print(paste0(" heat damage fileName out: ", fileName_hd_out))
       }
       print("--------------------------------------------")
@@ -212,7 +210,7 @@
       heatCt <- rast(fileName_hd_in) # number of high heat days below the damage threshold; locations outside the range are NA; outside land is NaN
       fileName_cp_in <- paste0("data/cmip6/chillPortions/chill_portions/", "ensemble_chill_cutoff_", speciesChoice, "_", k, "_", hem, "_", yearSpan, ".tif")
       chillPortionsCutoff <- rast(fileName_cp_in) # 1 is good, 0 is bad
- 
+      
       # convert day counts to 1 (suitable, 0 - not suitable)
       heatCt[heatCt >= 0] <- 1 # convert the number of days that meet the suitability criterion to 1
       frostCt[frostCt >= 0] <- 1 # convert the number of days that meet the suitability criterion to 1
@@ -224,9 +222,6 @@
       r_suitable <- app(r_combined, prod)
       names(r_suitable) <- "combinedSuit"
       r_all <- c(r_suitable, r_combined)
-     print(paste0("file name out: ", fileName_out))
-      # titleText <- paste0("Locations where suitability is ", suitabilityLevel, " for ", speciesChoice, ", scenario ", k, ", period ", yearSpan, ", hemisphere ", hem)
-      # plot(r_suitable, main = titleText)
       r_suit_hem <- paste0("r_suitable_", hem)
       r_suit_all_hem <- paste0("r_suitable_all_", hem)
       assign(r_suit_hem, r_suitable)
@@ -243,7 +238,7 @@
     pal <- colorRampPalette(c("white", "green"))
     
     plot(r_suitable_globe, main = titleText, legend = FALSE, xlab = FALSE, axes=FALSE, col = pal(2))
-    plot(coastline_cropped_spvect, add = TRUE)
+    plot(coastline_cropped, add = TRUE)
   }
   
   
@@ -391,7 +386,7 @@ for (k in sspChoices) {
     yearSpan <- paste0(l, "_", l + yearRange)
     for (hem in hemispheres) {
       for (speciesChoice in speciesChoices) {
-        f_frostHeatDamage(k, l, speciesChoice, hem, varChoice)
+        f_frostHeatDamage(k, l, speciesChoice, hem, varChoice, suitabilityLevel)
       }
     }
   }
@@ -404,7 +399,7 @@ l <- 1991
 yearSpan <- paste0(l, "_", l + yearRange)
 for (hem in hemispheres) {
   for (speciesChoice in speciesChoices) {
-    f_frostHeatDamage(k, l, speciesChoice, hem, varChoice)
+    f_frostHeatDamage(k, l, speciesChoice, hem, varChoice, suitabilityLevel)
   }
 }
 
@@ -431,7 +426,6 @@ for (speciesChoice in speciesChoices) {
 } 
 
 # area calculations -----
-
 {
   dt_area <- data.table(species = character(), hemisphere = character(), ssp = character(), yearSpan = character(), quality = character(), area_suitable = numeric(), rasterName = character())
   suitabilityLevels <- "good"
@@ -443,8 +437,9 @@ for (speciesChoice in speciesChoices) {
           for (suitabilityLevel in suitabilityLevels) {
             fileName_in <- paste0(locOfDataFiles_perennials, "suitable_", speciesChoice, "_", k, "_", suitabilityLevel, "_", hem, "_", yearSpan, ".tif")
             rastName <- paste0("suitable_", speciesChoice, "_", hem, "_", k, "_", suitabilityLevel, "_", yearSpan)
-            assign(rastName, rast(fileName_in))
-            r_area <- size(get(rastName), unit = "km")
+            r <- rast(fileName_in)
+            r[r == 0] <- NA # only want to get area of cells that have a value of 1; ie, suitable
+            r_area <- expanse(r, unit = "km")
             dt_area <- rbind(dt_area, list(speciesChoice, hem, k, yearSpan, suitabilityLevel, r_area, rastName))
           }
         }
@@ -460,8 +455,9 @@ for (speciesChoice in speciesChoices) {
       for (suitabilityLevel in suitabilityLevels) {
         fileName_in <- paste0(locOfDataFiles_perennials, "suitable_", speciesChoice, "_", k, "_", suitabilityLevel, "_", hem, "_", yearSpan, ".tif")
         rastName <- paste0("suitable_", speciesChoice, "_", hem, "_", k, "_", suitabilityLevel, "_", yearSpan)
-        assign(rastName, rast(fileName_in))
-        r_area <- size(get(rastName), unit = "km")
+        r <- rast(fileName_in)
+        r[r == 0] <- NA # only want to get area of cells that have a value of 1; ie, suitable
+        r_area <- expanse(r, unit = "km")
         dt_area <- rbind(dt_area, list(speciesChoice, hem, k, yearSpan, suitabilityLevel, r_area, rastName))
       }
     }
@@ -477,13 +473,13 @@ for (speciesChoice in speciesChoices) {
   for (hem in hemispheres) {
     for (suitabilityLevel in suitabilityLevels) {
       r_historical <- rast(paste0(locOfDataFiles_perennials, "suitable_", speciesChoice, "_", "historical", "_", suitabilityLevel, "_", hem, "_", "1991_2010.tif"))
-      area_base <- size(r_historical, unit = "km")
+      area_base <- expanse(r_historical, unit = "km")
       for (l in startYearChoices) {
         yearSpan <- paste0(l, "_", l + yearRange)
         for (k in sspChoices) {
           rastName <- paste0(locOfDataFiles_perennials, "suitable_", speciesChoice, "_",  k, "_", suitabilityLevel, "_", hem, "_", yearSpan, ".tif")
           r_delta <- rast(rastName) - r_historical
-          r_delta_area <- size(r_delta, unit = "km")
+          r_delta_area <- expanse(r_delta, unit = "km")
           delta_ratio <- r_delta_area/area_base
           dt_area_delta <- rbind(dt_area_delta, list(speciesChoice, hem, "historical", k, yearSpan, suitabilityLevel, area_base, r_delta_area, delta_ratio))
         }
@@ -520,8 +516,8 @@ for (speciesChoice in speciesChoices) {
   harvestArea_earlyCent <- crop(harvestArea_earlyCent, extent_noAntarctica)
   harvestArea_earlyCent_NH <- crop(harvestArea_earlyCent, extent_NH)
   harvestArea_earlyCent_SH <- crop(harvestArea_earlyCent, extent_SH)
-  # dt_area_common <- rbind(dt_area_common, list(speciesChoice, "NH", "historical", size(harvestArea_earlyCent_NH, unit = "km")))
-  # dt_area_common <- rbind(dt_area_common, list(speciesChoice, "SH", "historical", size(harvestArea_earlyCent_SH, unit = "km")))
+  # dt_area_common <- rbind(dt_area_common, list(speciesChoice, "NH", "historical", expanse(harvestArea_earlyCent_NH, unit = "km")))
+  # dt_area_common <- rbind(dt_area_common, list(speciesChoice, "SH", "historical", expanse(harvestArea_earlyCent_SH, unit = "km")))
   
   for (k in sspChoices) {
     #suitable areas -----
@@ -537,8 +533,8 @@ for (speciesChoice in speciesChoices) {
     commonArea <- harvestArea_earlyCent + suitableArea_endCent # areas where both early and end century rasters = 1
     commonArea_NH <- suitableArea_endCent_NH + harvestArea_earlyCent_NH
     commonArea_SH <- suitableArea_endCent_SH + harvestArea_earlyCent_SH
-    dt_area_common <- rbind(dt_area_common, list(speciesChoice, "NH", k, size(commonArea_NH, unit = "km")))
-    dt_area_common <- rbind(dt_area_common, list(speciesChoice, "SH", k, size(commonArea_SH, unit = "km")))
+    dt_area_common <- rbind(dt_area_common, list(speciesChoice, "NH", k, expanse(commonArea_NH, unit = "km")))
+    dt_area_common <- rbind(dt_area_common, list(speciesChoice, "SH", k, expanse(commonArea_SH, unit = "km")))
   }# end of ssp loop
   
 } 

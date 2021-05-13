@@ -1,7 +1,7 @@
 # constants to be used in the various ISIMIP data crunching scripts The idea is to save some space in each of the scripts and to be a central place to look for what constants are available
 
 #compression code for use with writeRaster
-library("terra") # always used so load it here
+require("terra") # always used so load it here
 woptList <- list(gdal=c("COMPRESS=DEFLATE", "PREDICTOR=3", "ZLEVEL = 6"))
 
 # function to identify operating system
@@ -47,6 +47,7 @@ locOfCPFiles <- "data/cmip6/chillPortions/chill_portions/"
 locOfDataFiles_THI <- "data/cmip6/THI/"
 locOfResultsFiles <- "results/"
 lofOfGraphicsFiles <- "graphics/cmip6/"
+locOfRawDataFiles <- "data-raw/"
 
 # general test values
 modelChoice <-  "IPSL-CM6A-LR"
