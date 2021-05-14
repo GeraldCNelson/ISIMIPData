@@ -68,22 +68,30 @@
     return(calIn)
   }
   
-  f_readRast_count <- function(modelChoice, climVarChoice, layersToKeep, probVal, f_ct) {
+  f_readRast_count <- function(modelChoice, climVarChoice, layersToKeep, probVal, f_ct, k, l) {
+    yearSpan <- paste0(l, "_", l + yearRange)
     fileName_in_hem <- paste0("data/bigFiles/", modelChoice, "_", k, "_", climVarChoice, "_", hem, "_global_daily_", yearSpan, ".tif") 
     print(paste0("climate fileName_in_hem in: ", fileName_in_hem))
     r <- rast(fileName_in_hem)
     #    print(r)
     # convert day numbers to calendar days to subset
     datesToKeep <- c()
+    indices <- c()
     for (yearNum in l:(l + yearRange)) {
       temp <- as.Date(layersToKeep, origin = paste0(yearNum, "-01-01"))
+      indices_yearNum <- rep(yearNum - l + 1, length(layersToKeep))
+      indices <-c(indices, indices_yearNum)
       temp <- paste0("X", temp)
       datesToKeep <- c(datesToKeep, temp)
     }
+    #    print(paste0("indices_yearNum: ", indices))
     r <- subset(r, datesToKeep)
-    indices <- format(as.Date(names(r), format = "X%Y-%m-%d"), format = "%y") # %y is year 2 digit number
-    indices <- as.numeric(indices)
-    indices <- indices - l + 2000 + 1
+    # indices <- format(as.Date(names(r), format = "X%Y-%m-%d"), format = "%y") # %y is year 2 digit number
+    # indices <- as.numeric(indices)
+    # indices <- indices - l + 2000 + 1
+    # print(paste0("indices_v2: ", indices))
+    # 
+    print(paste0("length r: ", length(names(r)), ", length indices: ", length(indices)))
     print(system.time(tempCt <- tapp(r, indices, f_ct))) #indices values are from 1 to the number of years in the subsetted file, usually 20. layersToKeep are the layer numbers to keep in each year. The f_ct is the sum function created in the calling script
     print(tempCt)
     return(tempCt)
@@ -103,7 +111,8 @@
     return(extremeTemp)
   }
   
-  f_extremeCold <- function(k, l, speciesChoice, yearSpan, hem) {
+  f_extremeCold <- function(k, l, speciesChoice, hem) {
+    yearSpan <- paste0(l, "_", l + yearRange)
     tempVar <- "tasmin"
     funDir <- "min"
     probVal <- 0.90
@@ -155,7 +164,7 @@
         layersToKeep <- spLyrs
         probVal <- 0.90
         f_ct <- function(x) (sum(x < flowerDamage_threshold)) # created here; used in f_readRast_count
-        system.time(x <- lapply(modelChoices_lower, f_readRast_count, climVarChoice, layersToKeep, probVal, f_ct))
+        system.time(x <- lapply(modelChoices_lower, f_readRast_count, climVarChoice, layersToKeep, probVal, f_ct, k, l))
         r <- rast(x)
         r
         fr <- f_range(r, frDays) #f_range sets area outside the suitable range to NA
@@ -164,7 +173,7 @@
         
         fr[fr >= 0 & fr < 999] <- 1 # use of 999 here and in f_range is a kludge to set unsuitable land areas to zero.
         fr[fr == 999] <- 0
-        titleText_fr <- paste0("Flowering suitability is ", suitabilityLevel, ". Frost risk is frost days between ", frDays[1], " and ", frDays[2], ".\n scenario ", k, ", ", yearSpan)
+        titleText_fr <- paste0("1 indicates locs where flowering suit. is ", suitabilityLevel, " for ", speciesChoice, " during scenario ", k, ", ", yearSpan, ". \nUnsuitable frost risk is more than ", frDays[2], " frost days during flowering window.")
         plot(fr, main = titleText_fr)
         fileName_fr_out <- paste0(locOfDataFiles_perennials, "floweringDamage_", speciesChoice, "_", k, "_", suitabilityLevel, "_", hem, "_", yearSpan, ".tif")
         writeRaster(fr, fileName_fr_out, overwrite = TRUE, wopt = woptList)
@@ -182,13 +191,15 @@
         layersToKeep <- hdLyrs
         probVal <- 0.90
         f_ct <- function(x) (sum(x > summer_heat_threshold))
-        system.time(x <- lapply(modelChoices_lower, f_readRast_count, climVarChoice, layersToKeep, probVal, f_ct))
+        system.time(x <- lapply(modelChoices_lower, f_readRast_count, climVarChoice, layersToKeep, probVal, f_ct, k, l))
         r <- rast(x)
         r
         hd <- f_range(r, hdDays)
+        system.time(hd <- quantile(hd, probs = probVal, na.rm = TRUE)) # note: if all layers have the same value quantile returns that value
         hd[hd >= 0 & hd < 999] <- 1
         hd[hd == 999] <- 0
-        titleText_hd <- paste0("Summer heat suitability is ",suitabilityLevel, ". Summer heat risk is days over ", summer_heat_threshold, "C between ", hdDays[1], " and ", hdDays[2], ".\n scenario ", k, ", ", yearSpan)
+        titleText_hd <- paste0("1 indicates locs where summer heat suit. is ",suitabilityLevel, " for ", speciesChoice, " during scenario ", k, ", ", yearSpan, ". \nUnsuitable heat risk is more than ", hdDays[2], " days of temperature above ", summer_heat_threshold, "C during summer window.")
+        
         plot(hd, main = titleText_hd)
         fileName_hd_out <- paste0(locOfDataFiles_perennials, "heatDamage_", speciesChoice, "_", k, "_", suitabilityLevel, "_", hem, "_", yearSpan, ".tif")
         writeRaster(hd, fileName_hd_out, overwrite = TRUE, wopt = woptList)
@@ -200,6 +211,7 @@
   
   f_combinedDamage <- function(k, l, speciesChoice, suitabilityLevel) {
     # combine suitability metrics from chill portions, extreme cold, flowering frost, and summer heat; locations with value 1 is suitable
+    yearSpan <- paste0(l, "_", l + yearRange)
     for (hem in hemispheres) {
       # read in all the rasters needed
       fileName_extremeColdCt_in <- paste0(locOfDataFiles_perennials, "extremeCold_cutoff_", speciesChoice, "_", k, "_", hem, "_", yearSpan, ".tif")
@@ -230,7 +242,7 @@
     r_suitable_globe <- merge(r_suitable_NH, r_suitable_SH)
     r_suitable_all_globe <- merge(r_suitable_all_NH, r_suitable_all_SH)
     r_suitable_all_globe_df <- as.data.frame(r_suitable_all_globe, xy = TRUE, na.rm = FALSE)
-    fileName_suitable_all_out <- paste0(locOfDataFiles_perennials, "suitable_all", speciesChoice, "_",  k, "_", suitabilityLevel, "_", yearSpan, ".tif")
+    fileName_suitable_all_out <- paste0(locOfDataFiles_perennials, "suitable_all ", speciesChoice, "_",  k, "_", suitabilityLevel, "_", yearSpan, ".tif")
     print(system.time(writeRaster(r_suitable_all_globe, filename = fileName_suitable_all_out,  overwrite = TRUE,  wopt= woptList))); flush.console()
     fileName_suitable_all_df_out <- paste0(locOfDataFiles_perennials, "suitable_all_", speciesChoice, "_",  k, "_", suitabilityLevel, "_", yearSpan, ".csv")
     write.csv(r_suitable_all_globe_df, fileName_suitable_all_df_out)
@@ -359,10 +371,9 @@
 # extreme cold calcs, scenarios -----
 for (k in sspChoices) {
   for (l in startYearChoices) {
-    yearSpan <- paste0(l, "_", l + yearRange)
     for (hem in hemispheres) {
       for (speciesChoice in speciesChoices) {
-        f_extremeCold(k, l, speciesChoice, yearSpan, hem)
+        f_extremeCold(k, l, speciesChoice, hem)
       }
     }
   }
@@ -375,7 +386,7 @@ l <- 1991
 yearSpan <- paste0(l, "_", l + yearRange)
 for (hem in hemispheres) {
   for (speciesChoice in speciesChoices){
-    f_extremeCold(k, l, speciesChoice, yearSpan, hem)
+    f_extremeCold(k, l, speciesChoice, hem)
   }
 }
 
@@ -383,7 +394,6 @@ for (hem in hemispheres) {
 varChoice <- "varieties_main"
 for (k in sspChoices) {
   for (l in startYearChoices) {
-    yearSpan <- paste0(l, "_", l + yearRange)
     for (hem in hemispheres) {
       for (speciesChoice in speciesChoices) {
         f_frostHeatDamage(k, l, speciesChoice, hem, varChoice, suitabilityLevel)
@@ -396,7 +406,6 @@ for (k in sspChoices) {
 varChoice <- "varieties_main"
 k <- "historical"
 l <- 1991
-yearSpan <- paste0(l, "_", l + yearRange)
 for (hem in hemispheres) {
   for (speciesChoice in speciesChoices) {
     f_frostHeatDamage(k, l, speciesChoice, hem, varChoice, suitabilityLevel)
@@ -408,7 +417,6 @@ for (hem in hemispheres) {
 
 for (k in sspChoices) {
   for (l in startYearChoices) {
-    yearSpan <- paste0(l, "_", l + yearRange)
     for (speciesChoice in speciesChoices) {
       print(paste0("speciesChoice: ", speciesChoice, ", ssp choice: ", k, ", start year: ", l))
       f_combinedDamage(k, l, speciesChoice, suitabilityLevel) 
@@ -419,7 +427,6 @@ for (k in sspChoices) {
 # combined damage, historical -----
 k <- "historical"
 l <- 1991
-yearSpan <- paste0(l, "_", l + yearRange)
 for (speciesChoice in speciesChoices) {
   print(paste0("speciesChoice: ", speciesChoice, ", ssp choice: ", k, ", start year: ", l))
   f_combinedDamage(k, l, speciesChoice, suitabilityLevel) 

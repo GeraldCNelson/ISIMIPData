@@ -12,7 +12,7 @@ coastline_cropped <- crop(coastline, extent_noAntarctica )
 coastline_cropped_Rob <- project(coastline_cropped, RobinsonProj)
 coastline_cropped_igh <- project(coastline_cropped, GoodeHomolosineProj)
 
-landOnlyMask <- rast(paste0(locOfRawDataFiles, "landseamask.nc"))
+landOnlyMask <- rast(paste0(locOfRawDataFiles, "landseamask.nc")) # 0 is water; 1 is land
 landOnlyMaskNoAntarctica <- rast(paste0(locOfRawDataFiles, "landseamask_no_antarctica.nc"))
 
 # examples of adding a coastline and removing x and y axis labels and legend
