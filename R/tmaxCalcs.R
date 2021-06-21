@@ -46,7 +46,7 @@ for (k in sspChoices)  {
       
       for (n in tmaxList) {
         f.tmaxLimit(tmax, tmaxLimit = n, indices)
-        print(paste("Completed tmax damage count for ", n, "C"))
+        print(paste("Completed tmax damage count for ", n, "°C"))
       }
       print(paste("Completed tmax damage count for start year ", l))
     }
@@ -99,7 +99,7 @@ for (k in sspChoices)  {
 # 
 # for (n in tmaxList) {
 #   f.tmaxLimit.observed(tmax, tmaxLimit = n, indices)
-#   print(paste("Completed tmax count for ", n, "C"))
+#   print(paste("Completed tmax count for ", n, "°C"))
 # }
 
 # observed results

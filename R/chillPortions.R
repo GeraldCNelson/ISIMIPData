@@ -1,63 +1,163 @@
 # calculate 1-0 values for locations where chill portions are enough, by fruit
 {
-  library(terra)
-  library(sf)
-  library("crayon")
-  library(ggplot2)
+  require(terra)
+  require(sf)
+  library("crayon") # for red color in cat
+  require(ggplot2)
   source("R/ISIMIPconstants.R")
   source("R/ISIMIPspatialConstants.R")
   source("R/perennialsPrep.R") # get the latest chill portions data
-  {
-    # choose whether to do the base cps, or the lo or hi cp requirements varieties
-    varChoices <- c("varieties_lo", "varieties_main", "varieties_hi")
+  # choose whether to do the base cps, or the lo or hi cp requirements varieties
+  varietyChoices <- c("varieties_lo", "varieties_main", "varieties_hi")
+  
+  #test values
+  modelChoice <- "UKESM1-0-LL"
+  k <- "ssp585"
+  l <- 2041
+  midYear <- 2050
+  hem <- "NH"
+  speciesChoice <- "winegrape_main"
+  varietyChoice <- "varieties_main" # this choice determines what gets run below
+  
+  # choice for varietyChoice in next line-----------
+  var_suffix <- gsub("varieties", "", varietyChoice)
+  cropVals <- get(paste0("majorCropValues", var_suffix))
+  speciesChoices <- sort(unique(cropVals$cropName))
+  
+  f_readRast_quantile <- function(modelChoice, k, l, hem) {
+    modelChoice_lower <- tolower(modelChoice)
+    midYear <- l + 9
+    if (hem == "NH") hem_full <- "north"
+    if (hem == "SH") hem_full <- "south"
+    fileName_in_hem <- paste0(locOfCPFiles, k,"/", modelChoice_lower, "/", k, "_", modelChoice_lower, "_", midYear, "_chill_portions_", hem_full, ".tif")
+    print(paste0("fileName in: ", fileName_in_hem))
+    r <- rast(fileName_in_hem)
+    if (hem == "NH") r <- subset(r, 1:19) # because NH chill season crosses end of calendar year
+    system.time(chillPortion <- quantile(r, probs = 0.1, na.rm = TRUE))
+    print(chillPortion)
+    return(chillPortion)
+  }
+  
+  f_chillPortions <- function(k, l, hem) {
+    midYear <- l + 9
+    yearSpan <- paste0(l, "_", l + yearRange)
+    ext_hem <- get(paste0("extent_", hem))
+    system.time(x <- lapply(modelChoices_lower, f_readRast_quantile, k, l, hem))
+    r <- rast(x)
+    r
+    print(system.time(r.mean <- app(r, fun = "mean", na.rm = TRUE)))
+    print(r.mean)
+#    browser()
+    fileNameCP_out <- paste0(locOfCPFiles, "ensemble_chill_portions", "_", k, "_", hem, "_", yearSpan, ".tif")
+    writeRaster(r.mean, filename = fileNameCP_out, overwrite = TRUE, wopt = woptList)
+    # now do ensemble 1-0 calcs
+    for (speciesChoice in speciesChoices) {
+      r.mean_copy <-r.mean
+      cplimit <- cropVals[cropName == speciesChoice, CR_cultivar_mean]
+      print(paste0("working on ssp: ", k, ", start year ", l, ", hemisphere ", hem, ", crop ", speciesChoice, ", cplimit: ", cplimit))
+      maxVal <- round(max(minmax(r)), 2)
+      minVal <- round(min(minmax(r)), 2)
+       fileName_out <- paste0(locOfCPFiles, "ensemble_chill_cutoff_", speciesChoice, "_", k, "_", hem, "_", yearSpan, ".tif")
+       r.mean_copy[r.mean_copy < cplimit] <- 0 # not suitable
+       r.mean_copy[r.mean_copy >= cplimit] <- 1 # suitable
+      print(r.mean_copy)
+      titleText <- paste0("ensemble_chill_cutoff_", speciesChoice, "_", k, "_", hem, "_", yearSpan)
+      plot(r.mean_copy, main = titleText)
+      print(system.time(writeRaster(r.mean_copy, filename = fileName_out, overwrite = TRUE, wopt = woptList)))
+      print(paste0("fileName out: ", fileName_out))
+      cat(paste0(red("species: ", speciesChoice, ", ensemble ssp: ", k, ", start year: ", l, ", minVal ", minVal,  ", maxVal ", maxVal, ", fileName out: ", fileName_out), "\n\n"))
+     }
+  }
+  
+  f_chillPortionsGraphs <- function(k, l) {
+    gc()
+    midYear <- l + 9
+    yearSpan <- paste0(l, "_", l + yearRange)
     
-    #test values
-    modelChoice <- "UKESM1-0-LL"
-    k <- "ssp585"
-    l <- 2041
-    midYear <- 2050
-    hem <- "NH"
-    speciesChoice <- "cherry"
-    varChoice <- "varieties_main" # this choice determines what gets run below
+    # graphics for total chill portions 
+    fileNameCP_NH_in <- paste0(locOfCPFiles, "ensemble_chill_portions", "_", k, "_", "NH", "_", yearSpan, ".tif")
+    fileNameCP_SH_in <- paste0(locOfCPFiles, "ensemble_chill_portions", "_", k, "_", "SH", "_", yearSpan, ".tif")
+    r_CP_NH <- rast(fileNameCP_NH_in)
+    r_CP_SH <- rast(fileNameCP_SH_in)
+    r_CP <- merge(r_CP_NH, r_CP_SH)
+#    r_CP <- crop(r_CP, extent_noAntarctica)
+    r_CP_Rob <- project(r_CP, crsRob)
+    r_CP_Rob_df <- as.data.frame(r_CP_Rob, xy = TRUE)
+    names(r_CP_Rob_df) <- c("x", "y", "value")
     
-    # choice for varChoice in next line-----------
-    var_suffix <- gsub("varieties", "", varChoice)
-    cropVals <- get(paste0("majorCropValues", var_suffix))
-    speciesChoices <- unique(cropVals$cropName)
+    # code for the chill portions values
+    titleText <- paste0("Total chill portions, scenario:  ", k,  ", year span: ", gsub("_", "-", yearSpan))
+    legendTitle <- "Chill portions"
+    #        colorList <- (RColorBrewer::brewer.pal(2, "YlOrRd"))
+#    colorList <- c( "yellow", "green")
+    g <- ggplot() +
+#      geom_sf(data = coastline_cropped_Rob_sf,  color="black", size = 0.2) +
+      geom_tile(data = r_CP_Rob_df, aes(x, y, fill = value), show.legend = TRUE) +
+      labs(title = titleText, fill = legendTitle) + theme(plot.title = element_text(size = 12, hjust = 0.5)) +
+      labs(x = "", y = "") +
+#      scale_fill_gradientn(limits = c(1, 100), colours=colorList, na.value = "white") +
+      scale_fill_viridis_c(option = "D",  direction = -1, limits = c(1, 100), na.value = "white") +
+      geom_sf(color = "ghostwhite", lwd = 0.2) +
+      theme(axis.ticks = element_blank(), axis.text.x = element_blank(), axis.text.y = element_blank(), ) +
+      theme(panel.background = element_rect(fill = "aliceblue")) +
+      NULL
+    print(g)
+    #          theme(legend.text.align = 1) +
+    #   theme(legend.position = "none")
+    fileName_out <- paste0(lofOfGraphicsFiles, "chillPortions/ChillPortions", "_", k, "_", yearSpan, ".png")
+    ggsave(filename = fileName_out, plot = g, width = 6, height = 6, units = "in", dpi = 300)
+    knitr::plot_crop(fileName_out)
+    print(paste0("file name out: ", fileName_out))
+    g <- NULL
     
-    f_readRast_quantile <- function(modelChoice) {
-      if (hem == "NH") hem_full <- "north"
-      if (hem == "SH") hem_full <- "south"
-      fileName_in_hem <- paste0("data/cmip6/chillPortions/chill_portions/", k,"/", modelChoice, "/", k, "_", modelChoice, "_", midYear, "_chill_portions_", hem_full, ".tif")
-      print(paste0("fileName in: ", fileName_in_hem))
-      r <- rast(fileName_in_hem)
-      system.time(chillPortion <- quantile(r, probs = 0.1, na.rm = TRUE))
-      print(chillPortion)
-      return(chillPortion)
-    }
-    
-    f_chillPortions <- function(k, l, midyear, yearSpan, hem) {
-      ext_hem <- get(paste0("extent_", hem))
-      system.time(x <- lapply(modelChoices_lower, f_readRast_quantile))
-      r <- rast(x)
-      r
-      # now do ensemble
-      for (speciesChoice in speciesChoices) {
-        print(paste0("working on ssp: ", k, ", start year ", l, ", hemisphere ", hem, ", crop ", speciesChoice))
-        cplimit <- cropVals[cropName %in% i, CR_cultivar_mean]
-        maxVal <- round(max(minmax(r)), 2)
-        minVal <- round(min(minmax(r)), 2)
-        #     print(r)
-        fileName_out <- paste0(locOfCPFiles, "ensemble_chill_cutoff_", speciesChoice, "_", k, "_", hem, "_", yearSpan, ".tif")
-        print(system.time(r.mean <- app(r, fun = "mean", na.rm = TRUE)))
-        r.mean[r.mean < cplimit] <- 0 # not suitable
-        r.mean[r.mean > cplimit] <- 1 # suitable
-        print(system.time(writeRaster(r.mean, filename = fileName_out, overwrite = TRUE, wopt = woptList)))
-        print(paste0("fileName out: ", fileName_out))
-        cat(paste0(red("species: ", speciesChoice, ", ensemble ssp: ", k, ", start year: ", l, ", minVal ", minVal,  ", maxVal ", maxVal, ", fileName out: ", fileName_out), "\n\n"))
-        # print(paste0("extent: ", r.mean))
-        r.mean
-      }
+    # graphics for species-specific cutoff
+    for (speciesChoice in speciesChoices) {
+      gc()
+      cplimit <- cropVals[cropName == speciesChoice, CR_cultivar_mean]
+      cultivar <-  cropVals[cropName == speciesChoice, cultivar]
+      
+      fileNameCP_cutoff_NH_in <- paste0(locOfCPFiles, "ensemble_chill_cutoff_", speciesChoice, "_", k, "_", "NH", "_", yearSpan, ".tif")
+      fileNameCP_cutoff_SH_in <- paste0(locOfCPFiles, "ensemble_chill_cutoff_", speciesChoice, "_", k, "_", "SH", "_", yearSpan, ".tif")
+      
+      r_cutoff_NH <- rast(fileNameCP_cutoff_NH_in)
+      r_cutoff_SH <- rast(fileNameCP_cutoff_SH_in)
+      r_cutoff <- merge(r_cutoff_NH, r_cutoff_SH)
+      
+#      r_cutoff <- crop(r_cutoff, extent_noAntarctica)
+      r_cutoff_Rob <- project(r_cutoff, crsRob)
+      
+      r_cutoff_Rob_df <- as.data.frame(r_cutoff_Rob, xy = TRUE)
+      names(r_cutoff_Rob_df) <- c("x", "y", "value")
+      r_cutoff_Rob_df <- round(r_cutoff_Rob_df, 0) # get the value back to 0s and 1s
+      
+      # code for the cutoff
+      titleText <- paste0("Minimum chill portion requirement met, species: ", speciesChoice, ", \nscenario:  ", k,  ", year span: ", gsub("_", "-", yearSpan))
+      legendTitle <- "Adequate chill portions"
+      caption <- paste0("Chill portion requirement for ", speciesChoice, " (cultivar ", cultivar, ") is ", cplimit, ".")
+      #        colorList <- (RColorBrewer::brewer.pal(2, "YlOrRd"))
+      colorList <- c("white", "green")
+      #    custom_bins = c(0, 1)
+      g <- ggplot() +
+        labs(title = titleText, fill = legendTitle) + theme(plot.title = element_text(size = 12, hjust = 0.5)) +
+        labs(x = "", y = "", caption = caption) +
+        geom_tile(data = r_cutoff_Rob_df, aes(x, y, fill = value), show.legend = FALSE) +
+        scale_fill_gradientn(colours=c("white","green")) +
+        geom_sf(color = "ghostwhite", lwd = 0.2) +
+        theme(axis.ticks = element_blank(), axis.text.x = element_blank(), axis.text.y = element_blank(), ) +
+        #       geom_sf(data = coastline_cropped_Rob_sf,  color="black", size = 0.2) +
+        theme(panel.background = element_rect(fill = "aliceblue"), 
+              plot.caption = element_text(hjust = 0, vjust = 7.0, size = 8)
+        ) +
+        NULL
+      print(g)
+      
+      #          theme(legend.text.align = 1) +
+      #   theme(legend.position = "none")
+      fileName_out <- paste0(lofOfGraphicsFiles, "chillPortions/adeqChillPortions_", speciesChoice, "_", k, "_", yearSpan, ".png")
+      ggsave(filename = fileName_out, plot = g, width = 6, height = 6, units = "in", dpi = 300)
+      knitr::plot_crop(fileName_out)
+      print(paste0("file name out: ", fileName_out))
+      g <- NULL
     }
   }
 }
@@ -67,10 +167,8 @@ for (k in sspChoices) {
   #  k = "ssp585"
   for (l in startYearChoices) {
     # l <- 2041
-    midYear <- l + 9
-    yearSpan <- paste0(l, "_", l + yearRange)
     for (hem in hemispheres) {
-      print(system.time(f_chillPortions(k, l, midyear, yearSpan, hem)))
+      print(system.time(f_chillPortions(k, l, hem)))
     }
   }
 }
@@ -78,66 +176,27 @@ for (k in sspChoices) {
 # chill portions, historical -----
 k <- "historical"
 l = 1991
-midYear <- l + 9
-yearSpan <- paste0(l, "_", l + yearRange)
 for (hem in hemispheres) {
-  print(system.time(f_chillPortions(k, l, midyear, yearSpan, hem)))
+  print(system.time(f_chillPortions(k, l, hem)))
 }
 
 # graphics -----
 
-
-
-f_chillPortionsGraph <- function() {
-  for (speciesChoice in speciesChoices) {
-    fileName_in_NH <- paste0(locOfCPFiles, "ensemble_chill_cutoff_", speciesChoice, "_", k, "_", "NH", "_", yearSpan, ".tif")
-    fileName_in_SH <- paste0(locOfCPFiles, "ensemble_chill_cutoff_", speciesChoice, "_", k, "_", "SH", "_", yearSpan, ".tif")
-    r_NH <- rast(fileName_in_NH)
-    r_SH <- rast(fileName_in_SH)
-    r <- merge(r_NH, r_SH)
-    r <- crop(r, ext_noAntarctica)
-    r <- project(r, crsRob)
-    
-    r_df <- as.data.frame(r, xy = TRUE)
-    names(r_df) <- c("x", "y", "value")
-    titleText <- paste0("species: ", speciesChoice, ", scenario:  ", k,  ", year span: ", gsub("_", "-", yearSpan))
-    legendTitle <- "Adequate chill portions"
-    #        colorList <- (RColorBrewer::brewer.pal(2, "YlOrRd"))
-    colorList <- c("white", "green")
-    #    custom_bins = c(0, 1)
-    g <- ggplot(data = coastline) +
-      labs(title = titleText, fill = legendTitle) + theme(plot.title = element_text(size = 12, hjust = 0.5)) +
-      labs(x = "", y = "") +
-      geom_tile(data = r_df, aes(x, y, fill = value), show.legend = FALSE) +
-      scale_fill_gradientn(colours=c("white","green")) +
-      geom_sf(color = "ghostwhite", lwd = 0.2) +
-      theme(panel.background = element_rect(fill = "aliceblue"))
-    #          theme(legend.text.align = 1) +
-    #   theme(legend.position = "none")
-    fileName_out <- paste0(lofOfGraphicsFiles, "chillPortions/adeqChillPortions_", speciesChoice, "_", k, "_", yearSpan, ".png")
-    
-    ggsave(filename = fileName_out, plot = g, width = 6, height = 6, units = "in", dpi = 300)
-    knitr::plot_crop(fileName_out)
-    print(paste0("file name out: ", fileName_out))
-    g <- NULL
-  }
-}
-
+# chill portions graphics, scenarios -----
 for (k in sspChoices) {
   #  k = "ssp585"
   for (l in startYearChoices) {
     # l <- 2041
-    midYear <- l + 9
-    yearSpan <- paste0(l, "_", l + yearRange)
-    f_chillPortionsGraph()
+    f_chillPortionsGraphs(k, l)
   }
 }
 
-k = "historical"
-l <- 1991
-midYear <- l + 9
-yearSpan <- paste0(l, "_", l + yearRange)
-f_chillPortionsGraph()
+# chill portions graphics, historical -----
+{
+  k = "historical"
+  l <- 1991
+  f_chillPortionsGraphs(k, l)
+}
 
 # chillPortions ppt -----
 library(officer)

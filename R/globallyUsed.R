@@ -55,7 +55,7 @@ for (q in c("dataDirs.csv", "graphicsDirs.csv")) {
   for (r in 1:length(temp)) if (!dir.exists(temp[r])) dir.create(temp[r])
 }
 
-tmpDirName <- paste0(locOfCMIP6tifFiles, "rasterTmp", Sys.getpid(), "/")
+# tmpDirName <- paste0(locOfCMIP6tifFiles, "rasterTmp", Sys.getpid(), "/")
 
 # gdal_polygonizeR <- function(x, outshape=NULL, gdalformat = 'ESRI Shapefile',
 #                              pypath=NULL, readpoly=TRUE, quiet=TRUE) {
@@ -163,14 +163,14 @@ clusterSetup <- function(varList, libList, useCores) {
 #   return(ncin.brick)
 # }
 
-# historical data names and locations
-
-hurs.historical <- paste0(locOfCMIP6tifFiles,   "historical/ensemble/ensemble_historical_hurs_2001_2010.tif")
-tasmax.historical <- paste0(locOfCMIP6tifFiles, "historical/ensemble/ensemble_historical_tasmax_2001_2010.tif")
-tasmin.historical <- paste0(locOfCMIP6tifFiles, "historical/ensemble/ensemble_historical_tasmin_2001_2010.tif")
-pr.historical <- paste0(locOfCMIP6tifFiles, "historical/ensemble/ensemble_historical_pr_2001_2010.tif")
-tas.historical <- paste0(locOfCMIP6tifFiles, "historical/ensemble/ensemble_historical_tas_2001_2010.tif")
-historicallist <- c("hurs", "tasmax", "tasmin", "pr", "tas")
+# # historical data names and locations
+# 
+# hurs.historical <- paste0(locOfCMIP6tifFiles,   "historical/ensemble/ensemble_historical_hurs_2001_2010.tif")
+# tasmax.historical <- paste0(locOfCMIP6tifFiles, "historical/ensemble/ensemble_historical_tasmax_2001_2010.tif")
+# tasmin.historical <- paste0(locOfCMIP6tifFiles, "historical/ensemble/ensemble_historical_tasmin_2001_2010.tif")
+# pr.historical <- paste0(locOfCMIP6tifFiles, "historical/ensemble/ensemble_historical_pr_2001_2010.tif")
+# tas.historical <- paste0(locOfCMIP6tifFiles, "historical/ensemble/ensemble_historical_tas_2001_2010.tif")
+# historicallist <- c("hurs", "tasmax", "tasmin", "pr", "tas")
 
 ##' To check if files (incl. directories) are symbolic links:
 is.symlink <- function(paths) isTRUE(nzchar(Sys.readlink(paths), keepNA = TRUE))

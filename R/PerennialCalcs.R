@@ -6,17 +6,25 @@
   source("R/ISIMIPconstants.R")
   source("R/ISIMIPspatialConstants.R")
   source("R/perennialsPrep.R") # creates the data tables majorCropValues_main, majorCropValues_lo and majorCropValues_hi
+  # library(Rcpp)
+  # sourceCpp("R/cpp/gdd.cpp")
+  
   options(warn = 1)
   # file locations -----
+  locOfClimFiles <- "/Volumes/ExtremeSSD2/ISIMIP/cmip6/"
+  locOfgddsFiles <- "data/cmip6/growingDegreeDays/"
   areaYieldtifFileLoc <- "data-raw/crops/HarvestedAreaYield175Crops_Geotiff/GeoTiff/"
   # constants, general
   
   # choose whether to do the base cps, or the lo or hi cp requirements varieties -----
-  varChoices <- c("varieties_lo", "varieties_main", "varieties_hi")
+  varietiesChoices <- c("varieties_lo", "varieties_main", "varieties_hi")
   suitabilityLevels <- c("good", "acceptable", "bad")
   yearRangeSH <- 18 # one less year because of 6 month offset
-  speciesList <- c("almond", "apple", "cherry", "winegrape", "olive") #, "blueberries") 
+  speciesChoices <- c("almond", "apple", "cherry", "olive", "winegrape") #, "blueberries") 
   
+  varietiesChoice <- "varieties_main"
+  varietiesChoiceSuffix <- gsub("varieties", "", varietiesChoice) # whether to use lo, main, or hi cp values
+
   # constants, perennials -----
   minimumGrwSeasonLength = 100
   # All day numbers are Julian calendar days
@@ -36,13 +44,11 @@
   heatRiskDays <- c(0, 9, 10, 30, 31, 45, 46, heatDamageLength) 
   
   #test values, perennials -----
-  varChoice <- "varieties_main"
-  var_suffix <- gsub("varieties", "", varChoice)
-  cropVals <- get(paste0("majorCropValues", var_suffix))
+  cropVals <- eval(parse(text = (paste0(" majorCropValues", varietiesChoiceSuffix))))
   speciesChoices <- unique(cropVals$cropName)
-  speciesChoice <- "olive_main"
+  speciesChoice <- "olive_lo"
   suitabilityLevel <- "good"
-  climVarChoice <- "tasmin"
+  climateVarChoice <- "tasmin"
   
   # functions -----
   f_range <- function(x, rangeVals) {
@@ -68,11 +74,12 @@
     return(calIn)
   }
   
-  f_readRast_count <- function(modelChoice, climVarChoice, layersToKeep, probVal, f_ct, k, l) {
+  f_readRast_count <- function(modelChoice, climateVarChoice, layersToKeep, probVal, f_ct, k, l) {
+    modelChoice_lower <- tolower(modelChoice)
     yearSpan <- paste0(l, "_", l + yearRange)
-    fileName_in_hem <- paste0("data/bigFiles/", modelChoice, "_", k, "_", climVarChoice, "_", hem, "_global_daily_", yearSpan, ".tif") 
-    print(paste0("climate fileName_in_hem in: ", fileName_in_hem))
-    r <- rast(fileName_in_hem)
+    fileName_hem_in <- paste0(locOfClimFiles, modelChoice_lower, "_", climateVarChoice, "_", k, "_", hem, "_", yearSpan, ".tif")
+    print(paste0("climate fileName_hem_in: ", fileName_hem_in))
+    r <- rast(fileName_hem_in)
     #    print(r)
     # convert day numbers to calendar days to subset
     datesToKeep <- c()
@@ -84,13 +91,7 @@
       temp <- paste0("X", temp)
       datesToKeep <- c(datesToKeep, temp)
     }
-    #    print(paste0("indices_yearNum: ", indices))
     r <- subset(r, datesToKeep)
-    # indices <- format(as.Date(names(r), format = "X%Y-%m-%d"), format = "%y") # %y is year 2 digit number
-    # indices <- as.numeric(indices)
-    # indices <- indices - l + 2000 + 1
-    # print(paste0("indices_v2: ", indices))
-    # 
     print(paste0("length r: ", length(names(r)), ", length indices: ", length(indices)))
     print(system.time(tempCt <- tapp(r, indices, f_ct))) #indices values are from 1 to the number of years in the subsetted file, usually 20. layersToKeep are the layer numbers to keep in each year. The f_ct is the sum function created in the calling script
     print(tempCt)
@@ -98,10 +99,12 @@
     #    return(r)
   }
   
-  f_readRast_extreme <- function(modelChoice, varName, funDir) {
-    fileName_in_hem <- paste0("data/bigFiles/", modelChoice, "_", k, "_", varName, "_", hem, "_global_daily_", yearSpan, ".tif") 
-    print(paste0("climate fileName_in_hem in: ", fileName_in_hem))
-    r <- rast(fileName_in_hem)
+  f_readRast_extreme <- function(modelChoice_lower, climateVarChoice, funDir, hem) {
+    #   modelChoice_lower <- tolower(modelChoice)
+    fileName_hem_in <- paste0(locOfClimFiles, modelChoice_lower, "_", climateVarChoice, "_", k, "_", hem, "_", yearSpan, ".tif")
+    # fileName_hem_in <- paste0(locOfClimFiles, "mean_daily/", "mean_daily", "_", climateVarChoice, "_", modelChoice_lower, "_", k, "_", hem, "_", yearSpan, ".tif") 
+    print(paste0("climate fileName_hem_in in: ", fileName_hem_in))
+    r <- rast(fileName_hem_in)
     print(r)
     indices <- format(as.Date(names(r), format = "X%Y-%m-%d"), format = "%y") # %y is year 2 digit number
     indices <- as.numeric(indices)
@@ -111,18 +114,22 @@
     return(extremeTemp)
   }
   
-  f_extremeCold <- function(k, l, speciesChoice, hem) {
+  f_extremeCold <- function(k, l, speciesChoice, hem, varietiesChoiceSuffix) {
     yearSpan <- paste0(l, "_", l + yearRange)
-    tempVar <- "tasmin"
+    climateVarChoice <- "tasmin"
     funDir <- "min"
     probVal <- 0.90
-    system.time(x <- lapply(modelChoices_lower, f_readRast_extreme, tempVar, funDir)) # read in tasmin for the relevant period and all ESMs
+    speciesName <- gsub(varietiesChoiceSuffix, "", speciesChoice) # needed for the harvested area data
+    system.time(x <- lapply(modelChoices_lower, f_readRast_extreme, climateVarChoice, funDir, hem)) # read in tasmin for the relevant period and all ESMs
     r <- rast(x)
     r
-    extremeColdCutoff <- majorCropValues_main[cropName == speciesChoice, low_temp_threshold] # the extreme cold cutoff is common to a species so majorCropValues_main works regardless of what the cp requirements are
+    extremeColdCutoff <- cropVals[cropName == speciesChoice, low_temp_threshold] 
+    
     # now do ensemble mean and cutoff
     print(paste0("Working on extreme cold for speciesChoice: ", speciesChoice, ", working on ssp: ", k, ", start year ", l, ", hemisphere ", hem))
-    fileName_out <- paste0(locOfDataFiles_perennials, "extremeCold_cutoff_", speciesChoice, "_", k, "_", hem, "_", yearSpan, ".tif")
+    fileName_lo_out <- paste0(locOfDataFiles_perennials, "extremeCold_cutoff_", speciesName, "_lo", "_", k, "_", hem, "_", yearSpan, ".tif")
+    fileName_main_out <- paste0(locOfDataFiles_perennials, "extremeCold_cutoff_", speciesName, "_main", "_", k, "_", hem, "_", yearSpan, ".tif")
+    fileName_high_out <- paste0(locOfDataFiles_perennials, "extremeCold_cutoff_", speciesName, "_hi", "_", k, "_", hem, "_", yearSpan, ".tif")
     print(system.time(extremeCold_quant <- quantile(r, probs = probVal, na.rm = TRUE)))
     # extremeCold_quant[extremeCold_quant < extremeColdCutoff] <- 0 # not suitable
     # extremeCold_quant[extremeCold_quant >= extremeColdCutoff] <- 1 # suitable
@@ -131,8 +138,11 @@
     extremeCold_quant[extremeCold_quant >= extremeColdCutoff & extremeCold_quant < 999] <- 1 # use of 999 here and in f_range is a kludge to set unsuitable land areas to zero.
     extremeCold_quant[extremeCold_quant == 999] <- 0
     
-    print(system.time(writeRaster(extremeCold_quant, filename = fileName_out, overwrite = TRUE, wopt = woptList)))
-    print(paste0("fileName_out extreme cold: ", fileName_out))
+    print(system.time(writeRaster(extremeCold_quant, filename = fileName_lo_out, overwrite = TRUE, wopt = woptList)))
+    print(paste0("fileName_out extreme cold: ", fileName_lo_out))
+  file.copy(from = fileName_lo_out, to = fileName_main_out)
+  file.copy(from = fileName_lo_out, to = fileName_high_out)
+  
     plot(extremeCold_quant, main = speciesChoice)
     return(extremeCold_quant)
   }
@@ -140,7 +150,7 @@
   # chillPortions calcs done in chillPortions.R -----
   
   # flowering and heat damage -----
-  f_frostHeatDamage <- function(k, l, speciesChoice, hem, varChoice, suitabilityLevel) {
+  f_frostHeatDamage <- function(k, l, speciesChoice, hem, varietiesChoice, suitabilityLevel) {
     yearSpan <- paste0(l, "_", l + yearRange)
     # frost and heat damage day windows -----
     spLyrStart <- get(paste0("floweringStart_", hem))
@@ -238,11 +248,14 @@
       r_suit_all_hem <- paste0("r_suitable_all_", hem)
       assign(r_suit_hem, r_suitable)
       assign(r_suit_all_hem, r_all)
+      # write out hemisphere-specific suitable all files
+      fileName_suitable_all_hem_out <- paste0(locOfDataFiles_perennials, "suitable_all_", speciesChoice, "_",  k, "_", suitabilityLevel, "_", hem, "_", yearSpan, ".tif")
+      print(system.time(writeRaster(r_all, filename = fileName_suitable_all_hem_out,  overwrite = TRUE,  wopt= woptList))); flush.console()
     }
     r_suitable_globe <- merge(r_suitable_NH, r_suitable_SH)
     r_suitable_all_globe <- merge(r_suitable_all_NH, r_suitable_all_SH)
     r_suitable_all_globe_df <- as.data.frame(r_suitable_all_globe, xy = TRUE, na.rm = FALSE)
-    fileName_suitable_all_out <- paste0(locOfDataFiles_perennials, "suitable_all ", speciesChoice, "_",  k, "_", suitabilityLevel, "_", yearSpan, ".tif")
+    fileName_suitable_all_out <- paste0(locOfDataFiles_perennials, "suitable_all_", speciesChoice, "_",  k, "_", suitabilityLevel, "_", yearSpan, ".tif")
     print(system.time(writeRaster(r_suitable_all_globe, filename = fileName_suitable_all_out,  overwrite = TRUE,  wopt= woptList))); flush.console()
     fileName_suitable_all_df_out <- paste0(locOfDataFiles_perennials, "suitable_all_", speciesChoice, "_",  k, "_", suitabilityLevel, "_", yearSpan, ".csv")
     write.csv(r_suitable_all_globe_df, fileName_suitable_all_df_out)
@@ -253,7 +266,6 @@
     plot(coastline_cropped, add = TRUE)
   }
   
-  
   f_suitableLocsPpt <- function(k, l, yearSpan, suitabilityLevel) {
     #
     fileName_in <- paste0(lofOfGraphicsFiles, "perennials/", speciesChoice, "_", suitabilityLevel, "_", k, "_", yearSpan, ".png")
@@ -263,76 +275,106 @@
     return(my_pres)
   }
   
-  f_suitableLocsGraphics <- function(k, yearSpan, speciesChoice, suitabilityLevel) {
+  f_suitableLocsGraphics <- function(k, l, speciesChoice, suitabilityLevel) {
+    yearSpan <- paste0(l, "_", l + yearRange)
     legendTitle <- suitabilityLevel
-    speciesName <- gsub(var_suffix, "", speciesChoice) # needed for the harvested area data
+    speciesName <- gsub(varietiesChoiceSuffix, "", speciesChoice) # needed for the harvested area data
     # the harvested area data is just for grapes so need to get rid of wine in the names
-    if (speciesChoice == paste0("winegrape", var_suffix)) speciesName <- "grape"
+    if (speciesChoice == paste0("winegrape", varietiesChoiceSuffix)) speciesName <- "grape"
     
-    #   for (hem in hemispheres) {
     # crop out areas where summer heat or spring frost are greater than the unsuitable values, either unsuitable_springFreezeDays or unsuitable_summerHotDays
-    CPfruit <- majorCropValues_main[cropName == speciesChoice, chill_hours]
-    for (suitabilityLevel in c("good", "acceptable", "bad")) {
-      titleText <- paste0("Growing conditions for ", speciesChoice," are suitable;  quality:  ", i, "\n" , "scenario: ", k, ", period: ", gsub("_", "-", yearSpan))
-      if (i == "good") {
-        caption <- paste0("Note: Good growing conditions for ", speciesChoice, " include chill portions of at least ", CPfruit, ", less than ", frostRiskDays[3], 
-                          " days of spring frost risk and \nless than ", heatRiskDays[3], " days of summer excessive heat. Gray hatching indicates early 21st century area.")
-        col = "green"}
-      if (i == "acceptable") {
-        caption <- paste0("Note: acceptable growing conditions for ", speciesChoice, " include chill portions of at least ", CPfruit, ", ", frostRiskDays[3], "-",  frostRiskDays[4], 
-                          " days of spring frost risk and \n",   heatRiskDays[3], "-",  heatRiskDays[4], " days of summer excessive heat. Gray hatching indicates early 21st century area.")
-        col = "yellow"}
-      if (i == "bad") {
-        caption <- paste0("Note: Bad growing conditions for ",speciesChoice, " include chill portions of at least ", CPfruit, ", ", frostRiskDays[5], "-",  frostRiskDays[6], 
-                          " days of spring frost risk and \n",  heatRiskDays[5], "-",  heatRiskDays[6], " days of summer excessive heat. Gray hatching indicates early 21st century area.")
-        col = "red"}
+    CPfruit <- cropVals[cropName == speciesChoice, CR_cultivar_mean]
+    summerHeat <- cropVals[cropName == speciesChoice, summer_heat_threshold]
+    cultivar <-  cropVals[cropName == speciesChoice, cultivar]
+    titleText <- paste0("Growing conditions for ", speciesName,", cultivar ", cultivar, ", are ", suitabilityLevel, "\n" , "scenario: ", k, ", period: ", gsub("_", "-", yearSpan))
+    if (suitabilityLevel == "good") {
+      # caption <- paste0("Note: Good growing conditions for ", speciesName, ", cultivar ", cultivar, " include chill portions of at least ", CPfruit, ", less than ", frostRiskDays[3], " days of spring frost risk and \nless than ", heatRiskDays[3], " days of summer heat greater than ", summerHeat )#, "°C. Gray chading indicates early 21st century area.")
+      captionString <- "Note: Good growing conditions for %s, cultivar %s, include at least %s chill portions, fewer than %s days of spring frost risk and \n%s days of summer heat greater than %s°C. Gray shading indicates early 21st century area for all %s varieties according to data from \nhttp://www.earthstat.org. Pink shading indicates suitable areas in the beginning of the century."
+      caption <- sprintf(paste(captionString, collapse = " ") , speciesName, cultivar, CPfruit, frostRiskDays[3], heatRiskDays[3], summerHeat,speciesName)
+      suitcol = "green"}
+    
+    if (suitabilityLevel == "acceptable") {
+      captionString <-   "Note: Acceptable growing conditions for %s, cultivar %s, include at least %s chill portions, %s - %s  days of spring frost risk and \n%s - %s days of summer heat greater than %s°C. Gray shading indicates early 21st century area for all %s varieties according to data from \nhttp://www.earthstat.org. Pink shading indicates suitable areas in the beginning of the century."
+      caption <- sprintf(paste(captionString, collapse = " ") , speciesName, cultivar, CPfruit, frostRiskDays[3], frostRiskDays[4], heatRiskDays[3], heatRiskDays[4], summerHeat, speciesName)
+      suitcol = "yellow"}
+    
+    if (suitabilityLevel == "bad") {
+      captionString <-   "Note: Bad growing conditions for %s, cultivar %s, include at least %s chill portions, %s - %s  days of spring frost risk and \n%s - %s days of summer heat greater than %s°C. Gray shading indicates early 21st century area for all %s varieties according to data from \nhttp://www.earthstat.org. Pink shading indicates suitable areas in the beginning of the century."
+      caption <- sprintf(paste(captionString, collapse = " ") , speciesName, cultivar, CPfruit, frostRiskDays[5], frostRiskDays[6], heatRiskDays[5], heatRiskDays[6], summerHeat, speciesName)
+      suitcol = "red"}
+    
+    # this file has 5 layers. The first one is the combined suitable locations. The list of layer names - "combinedSuit"      "extremeColdSuit"   "floweringSuit"     "heatSuit"          "chillPortionsSuit"
+    fileName_in <- paste0("data/cmip6/perennials/suitable_all_", speciesChoice, "_", k, "_", suitabilityLevel, "_", yearSpan, ".tif")
+    r_combined <- rast(fileName_in)
+    r <- r_combined[[1]]
+    # if not historical, get historical suitability for use as background shading
+#    if (!k == "historical") {
+      fileName_hist_suit_in <- paste0("data/cmip6/perennials/suitable_all_", speciesChoice, "_", "historical", "_", suitabilityLevel, "_", "1991_2010", ".tif")
+      r_combined_hist <- rast(fileName_hist_suit_in)
+      r_hist <- r_combined_hist[[1]]
+      suitableArea_historical <- project(r_hist, crsRob)
+      suitableArea_historical_df <- as.data.frame(suitableArea_historical, xy = TRUE)
+      names(suitableArea_historical_df) <- c("x", "y", "value")
+      suitableArea_historical_df <- round(suitableArea_historical_df, 0)
+      suitableArea_historical_df[suitableArea_historical_df == 0] <- NA
+      suitableArea_historical_df$value = as.factor(suitableArea_historical_df$value)
+#    }
+    # now get harvested area map
+    rInArea <- rast(paste0(locOfHarvestDataFiles, speciesName,"/",  speciesName, "_HarvestedAreaHectares.tif"))
+    harvestArea_earlyCent <- aggregate(rInArea, fact = 6, fun = "sum") # convert 5 arc minutes to 1/2 degrees
+    maskMin <- switch(
+      speciesName,
+      "almond" = 100,
+      "apple" = 100,
+      "cherry" = 100,
+      "grape" = 100,
+      "olive" = 100
+    )
+    harvestArea_earlyCent[harvestArea_earlyCent < maskMin] <- 0 # set minimum area to be greater than 50 hectares per grid cell
+    harvestArea_earlyCent[harvestArea_earlyCent > 0] <- 1
+    r <- project(r, crsRob)
+    harvestArea_earlyCent <- project(harvestArea_earlyCent, crsRob)
+    r_df <- as.data.frame(r, xy = TRUE)
+    names(r_df) <-   c("x", "y", "value")
+    r_df <- round(r_df, 0)
+    r_df$value = as.factor(r_df$value)
+    harvestArea_df <- as.data.frame(harvestArea_earlyCent, xy = TRUE)
+    names(harvestArea_df) <-   c("x", "y", "value_harvest")
+    harvestArea_df <- round(harvestArea_df, 0)
+    harvestArea_df[harvestArea_df == 0] <- NA
+    harvestArea_df$value_harvest = as.factor(harvestArea_df$value_harvest)
+    fileName_out <- paste0(lofOfGraphicsFiles, "perennials/", speciesChoice, "_", k, "_", yearSpan, ".png")
+
+    # do without legend
+    g <- ggplot() +
+      geom_tile(data = r_df, aes(x, y, fill = value), show.legend = FALSE) +
+      #      geom_raster(data = r_df, aes(x, y, fill = value)) +
+      scale_fill_manual(values = c("white", "green", "grey")) +
+      labs(title = titleText, fill = legendTitle, x = "", y = "", caption = caption) + 
       
-      fileName_in_NH <- paste0("data/cmip6/annuals/suitable_", speciesChoice, "_", "NH", "_", k, "_", i, "_", yearSpan, ".tif")
-      fileName_in_SH <- paste0("data/cmip6/annuals/suitable_", speciesChoice, "_", "SH", "_", k, "_", i, "_", yearSpan, ".tif")
-      
-      r_nh <- rast(fileName_in_NH)
-      r_sh <- rast(fileName_in_SH)
-      
-      # now get harvested area map
-      rInArea <- rast(paste0(tifFileLoc, fruit_in,"/",  fruit_in, "_HarvestedAreaHectares.tif"))
-      harvestArea <- aggregate(rInArea, fact = 6, fun = "sum") # convert 5 arc minutes to 1/2 degrees
-      #     harvestArea[harvestArea == 0] <- NA
-      harvestArea[harvestArea > 0] <- 1
-      
-      r <- merge(r_nh, r_sh)
-      
-      r <- project(r, crsRob)
-      harvestArea <- project(harvestArea, crsRob)
-      r_df <- as.data.frame(r, xy = TRUE)
-      names(r_df) <-   c("x", "y", "value")
-      harvestArea_df <- as.data.frame(harvestArea, xy = TRUE)
-      names(harvestArea_df) <-   c("x", "y", "value")
-      fileName_out <- paste0(lofOfGraphicsFiles, "annuals/", fruitSpecies, "_", i, "_", k, "_", yearSpan, ".png")
-      
-      # do without legend
-      g <- ggplot() +
-        geom_tile(data = r_df, aes(x, y), fill = col) +
-        labs(title = titleText, fill = legendTitle, x = "", y = "", caption = caption) + 
-        theme_bw()  +
-        theme(
-          legend.text.align = 1,
-          axis.text.x = element_blank(),
-          axis.text.y = element_blank(),
-          axis.ticks = element_blank(),
-          plot.title = element_text(size = 12, hjust = 0.5),
-          plot.caption = element_text(hjust = 0, vjust = 7.0, size = 8)
-        ) +
-        geom_sf(data = coastline_cropped , 
-                color = "black", size = 0.1, stat = "sf", fill = NA,
-                position = "identity") +
-        geom_tile(data = harvestArea_df, aes(x, y, fill = value), alpha = .2, show.legend = FALSE) 
-      
-      print(g)
-      ggsave(filename = fileName_out, plot = g, width = 8, height = 4, units = "in", dpi = 300)
-      knitr::plot_crop(fileName_out) # gets rid of margins around the plot
-      print(paste0("file name out: ", fileName_out))
-      g <- NULL
-    }
+      geom_sf(data = coastline_cropped_Rob_sf,  color="black", size = 0.2) +
+      #     coord_sf(xlim=c(3,35), ylim=c(52,72)) + 
+      theme_bw() +
+      theme(
+        legend.text.align = 1,
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks = element_blank(),
+        plot.title = element_text(size = 12, hjust = 0.5),
+        plot.caption = element_text(hjust = 0, vjust = 7.0, size = 8)
+      ) +
+      #      geom_tile(data = harvestArea_df, aes(x, y), fill = "gray", alpha = .2, show.legend = FALSE)
+      geom_tile(data = dplyr::filter(harvestArea_df, !is.na(value_harvest)), 
+                aes(x = x, y = y), fill = "grey60", alpha = .2, show.legend = FALSE) +
+      geom_tile(data = dplyr::filter(suitableArea_historical_df, !is.na(value)), 
+                aes(x = x, y = y), fill = "chocolate1", alpha = .2, show.legend = FALSE) +
+      NULL
+    
+    print(g)
+    ggsave(filename = fileName_out, plot = g, width = 8, height = 4, units = "in", dpi = 300)
+    knitr::plot_crop(fileName_out) # gets rid of margins around the plot
+    print(paste0("file name out: ", fileName_out))
+    g <- NULL
   }
   
   f_graphics_demoSlides <- function(r, titleText, caption, fileName_out, col) {
@@ -360,11 +402,53 @@
       ) +
       geom_sf(data = coastline_cropped , 
               color = "black", size = 0.1, stat = "sf", fill = NA,
-              position = "identity")
-    
+              position = "identity") +
+      NULL
     print(g)
     ggsave(filename = fileName_out, plot = g, width = 8, height = 4, units = "in", dpi = 300)
     knitr::plot_crop(fileName_out) # gets rid of margins around the plot
+  }
+  
+  f_computeGDDs <- function(k, l, modelChoice, cropVals, hem) {
+    print(paste0("start year: ", l, ", ssp: ", k,  " model: ", modelChoice, ", start year: ", l, ", hemisphere: ", hem))
+    modelChoice.lower <- tolower(modelChoice)
+    #    if (hem == "SH") yearRange <- 18
+    yearSpan <- paste0(l, "_", l + yearRange)
+    #     fileName_in <- paste0("data/cmip6/runs/", modelChoice.lower, "_", "tas", "_", hem, "_", "summer", "_", k, "_", yearSpan, ".tif")
+    fileName_tas_in <- paste0(locOfClimFiles, modelChoice.lower, "_", "tas", "_", k, "_", yearSpan, ".tif")
+    tas <- rast(fileName_tas_in)
+    print(tas)
+    
+    for (cropChoice in cropChoices) {
+      fileName_out <- paste0(locOfgddsFiles, modelChoice.lower, "_", "gdd", "_", cropChoice, "_", k, "_", yearSpan, ".tif")
+      if (!fileName_out %in% gddFilesCompleted) {
+        #      print(paste0("Working on: ", fileName_out))
+        topt_min <- cropVals[cropName == cropChoice, gddtb]
+        topt_max <- cropVals[cropName == cropChoice, summer_heat_threshold]
+        print(paste0("crop: ", cropChoice, " topt_min: ", topt_min, " topt_max: ", topt_max, " fileName_out: ", fileName_out))
+        print(system.time(gdd <- app(tas, fun = f_gdd, topt_min, topt_max, cores = 4, filename = fileName_out, overwrite = TRUE, wopt = woptList)))
+        print(paste0("gdd file out name: ", fileName_out))
+        return(gdd)
+      }else{
+        print(paste("This file has already been created: ", fileName_out))
+      }
+    }
+  }
+  
+  # replaced with gdd.cpp
+  f_gdd = function(cellVector, topt_min, topt_max){
+ #   print(cellVector[1])
+ #   if (is.nan(cellVector[1])) {return(cellVector)}
+    ycalc <- max(0, min(cellVector, topt_max)-topt_min)
+#    y <- sapp(cellVector, FUN = f_ycalc, topt_max, topt_min) # from Toshi email May 3, 2020
+    return(ycalc)
+  }
+  
+  # replaced with gdd.cpp
+  f_ycalc <- function(cellVector, topt_max, topt_min){
+    ycalc <- max(0, min(cellVector, topt_max)-topt_min)
+    #   print(paste0("ycalc: ", ycalc))
+    return(ycalc)
   }
 }
 
@@ -373,42 +457,59 @@ for (k in sspChoices) {
   for (l in startYearChoices) {
     for (hem in hemispheres) {
       for (speciesChoice in speciesChoices) {
-        f_extremeCold(k, l, speciesChoice, hem)
+        f_extremeCold(k, l, speciesChoice, hem, varietiesChoiceSuffix)
       }
     }
   }
 }
 
 # extreme cold calcs, historical -----
-varChoice <- "varieties_main"
 k <- "historical"
 l <- 1991
-yearSpan <- paste0(l, "_", l + yearRange)
 for (hem in hemispheres) {
   for (speciesChoice in speciesChoices){
-    f_extremeCold(k, l, speciesChoice, hem)
+    f_extremeCold(k, l, speciesChoice, hem, varietiesChoiceSuffix)
   }
 }
 
 # flowering and heat damage, scenarios -----
-varChoice <- "varieties_main"
 for (k in sspChoices) {
   for (l in startYearChoices) {
     for (hem in hemispheres) {
       for (speciesChoice in speciesChoices) {
-        f_frostHeatDamage(k, l, speciesChoice, hem, varChoice, suitabilityLevel)
+        f_frostHeatDamage(k, l, speciesChoice, hem, varietiesChoice, suitabilityLevel)
       }
     }
   }
 }
 
 # flowering and heat damage, historical -----
-varChoice <- "varieties_main"
 k <- "historical"
 l <- 1991
 for (hem in hemispheres) {
   for (speciesChoice in speciesChoices) {
-    f_frostHeatDamage(k, l, speciesChoice, hem, varChoice, suitabilityLevel)
+    f_frostHeatDamage(k, l, speciesChoice, hem, varietiesChoice, suitabilityLevel)
+  }
+}
+
+# gdd calcs ----
+gddFilesCompleted <- list.files(locOfgddsFiles,  full.names = TRUE)
+gddFilesCompleted <- gddFilesCompleted[!grepl("aux.xml", gddFilesCompleted, fixed = TRUE)]
+gddFilesCompleted <- gsub("//", "/", gddFilesCompleted)
+
+# gdds, scenarios -----
+for (k in sspChoices) {
+  for (l in startYearChoices) {
+    for (hem in hemispheres) {
+  f_computeGDDs(k, l, modelChoice, cropVals, hem) {
+  }
+}
+
+# gdds, historical -----
+k <- "historical"
+l <- 1991
+for (hem in hemispheres) {
+  f_computeGDDs(k, l, modelChoice, cropVals, hem) {
   }
 }
 
@@ -434,20 +535,25 @@ for (speciesChoice in speciesChoices) {
 
 # area calculations -----
 {
-  dt_area <- data.table(species = character(), hemisphere = character(), ssp = character(), yearSpan = character(), quality = character(), area_suitable = numeric(), rasterName = character())
+  dt_area <- data.table(species = character(), cultivar = character(), chillPortions= numeric(), hemisphere = character(), ssp = character(), yearSpan = character(), quality = character(), area_suitable = numeric(), rasterName = character())
   suitabilityLevels <- "good"
   for (k in sspChoices) {
     for (l in startYearChoices) {
       yearSpan <- paste0(l, "_", l + yearRange)
       for (speciesChoice in speciesChoices) {
+        CPfruit <- cropVals[cropName == speciesChoice, CR_cultivar_mean]
+        cultivar <-  cropVals[cropName == speciesChoice, cultivar]
+        
         for (hem in hemispheres) {
           for (suitabilityLevel in suitabilityLevels) {
-            fileName_in <- paste0(locOfDataFiles_perennials, "suitable_", speciesChoice, "_", k, "_", suitabilityLevel, "_", hem, "_", yearSpan, ".tif")
+            fileName_in <- paste0(locOfDataFiles_perennials, "suitable_all_", speciesChoice, "_", k, "_", suitabilityLevel, "_", hem, "_", yearSpan, ".tif")
             rastName <- paste0("suitable_", speciesChoice, "_", hem, "_", k, "_", suitabilityLevel, "_", yearSpan)
             r <- rast(fileName_in)
+            # r has all 5 suitability layers, get just the combined one
+            r <- r$combinedSuit
             r[r == 0] <- NA # only want to get area of cells that have a value of 1; ie, suitable
             r_area <- expanse(r, unit = "km")
-            dt_area <- rbind(dt_area, list(speciesChoice, hem, k, yearSpan, suitabilityLevel, r_area, rastName))
+            dt_area <- rbind(dt_area, list(speciesChoice, cultivar, CPfruit, hem, k, yearSpan, suitabilityLevel, r_area, rastName))
           }
         }
       }
@@ -458,135 +564,148 @@ for (speciesChoice in speciesChoices) {
   l <- 1991
   yearSpan <- paste0(l, "_", l + yearRange)
   for (speciesChoice in speciesChoices) {
+    CPfruit <- cropVals[cropName == speciesChoice, CR_cultivar_mean]
+    cultivar <-  cropVals[cropName == speciesChoice, cultivar]
     for (hem in hemispheres) {
       for (suitabilityLevel in suitabilityLevels) {
-        fileName_in <- paste0(locOfDataFiles_perennials, "suitable_", speciesChoice, "_", k, "_", suitabilityLevel, "_", hem, "_", yearSpan, ".tif")
-        rastName <- paste0("suitable_", speciesChoice, "_", hem, "_", k, "_", suitabilityLevel, "_", yearSpan)
-        r <- rast(fileName_in)
+        fileName_in <- paste0(locOfDataFiles_perennials, "suitable_all_", speciesChoice, "_", k, "_", suitabilityLevel, "_", hem, "_", yearSpan, ".tif")
+        r <- rast(fileName_in) 
+        # r has all 5 suitability layers, get just the combined one
+        r <- r$combinedSuit
         r[r == 0] <- NA # only want to get area of cells that have a value of 1; ie, suitable
         r_area <- expanse(r, unit = "km")
-        dt_area <- rbind(dt_area, list(speciesChoice, hem, k, yearSpan, suitabilityLevel, r_area, rastName))
+        dt_area <- rbind(dt_area, list(speciesChoice, cultivar, CPfruit, hem, k, yearSpan, suitabilityLevel, r_area, rastName))
       }
     }
   }
-  fileName_out <- paste0(locOfDataFiles_perennials, "areaCalcs", var_suffix, ".csv")
+  fileName_out <- paste0(locOfDataFiles_perennials, "areaCalcs", varietiesChoiceSuffix, ".csv")
   write.csv(dt_area, file = fileName_out, row.names = FALSE)
   print(paste0("fileName out: ", fileName_out))
 }
 
 # area deltas, need to run code above first -----
-dt_area_delta <- data.table(species = character(), hemisphere = character(), ssp_base = character(), ssp = character(), yearSpan = character(), quality = character(), area_base = numeric(), area_delta = numeric(), delta_share = numeric())
+dt_area_delta <- data.table(species = character(), cultivar = character(), chillPortions= numeric(), hemisphere = character(), ssp_base = character(), ssp = character(), yearSpan = character(), quality = character(), area_base = numeric(), area_delta = numeric(), delta_share = numeric())
 for (speciesChoice in speciesChoices) {
+  CPfruit <- cropVals[cropName == speciesChoice, CR_cultivar_mean]
+  cultivar <-  cropVals[cropName == speciesChoice, cultivar]
   for (hem in hemispheres) {
     for (suitabilityLevel in suitabilityLevels) {
-      r_historical <- rast(paste0(locOfDataFiles_perennials, "suitable_", speciesChoice, "_", "historical", "_", suitabilityLevel, "_", hem, "_", "1991_2010.tif"))
+      r_historical <- rast(paste0(locOfDataFiles_perennials, "suitable_all_", speciesChoice, "_", "historical", "_", suitabilityLevel, "_", hem, "_", "1991_2010.tif"))
+      r_historical[r_historical == 0] <- NA
       area_base <- expanse(r_historical, unit = "km")
       for (l in startYearChoices) {
         yearSpan <- paste0(l, "_", l + yearRange)
         for (k in sspChoices) {
-          rastName <- paste0(locOfDataFiles_perennials, "suitable_", speciesChoice, "_",  k, "_", suitabilityLevel, "_", hem, "_", yearSpan, ".tif")
+          rastName <- paste0(locOfDataFiles_perennials, "suitable_all_", speciesChoice, "_",  k, "_", suitabilityLevel, "_", hem, "_", yearSpan, ".tif")
           r_delta <- rast(rastName) - r_historical
+          r_delta[r_delta == 0] <- NA
           r_delta_area <- expanse(r_delta, unit = "km")
           delta_ratio <- r_delta_area/area_base
-          dt_area_delta <- rbind(dt_area_delta, list(speciesChoice, hem, "historical", k, yearSpan, suitabilityLevel, area_base, r_delta_area, delta_ratio))
+          dt_area_delta <- rbind(dt_area_delta, list(speciesChoice, cultivar, CPfruit, hem, "historical", k, yearSpan, suitabilityLevel, area_base, r_delta_area, delta_ratio))
         }
       }
     }
   }
 }
 
-fileName_out <- paste0(locOfDataFiles_perennials, "areaCalcs_delta", var_suffix, ".csv")
+fileName_out <- paste0(locOfDataFiles_perennials, "areaCalcs_delta", varietiesChoiceSuffix, ".csv")
 write.csv(dt_area_delta, file = fileName_out, row.names = FALSE)
 print(paste0("fileName out: ", fileName_out))
 
 # harvest and suitability area calcs ------
 # area common to early and end century -----
-dt_area_common <- data.table(species = character(), hemisphere = character(), ssp = character(), area_common = numeric())
+dt_area_common <- data.table(species = character(), cultivar = character(), chillPortions= numeric(), hemisphere = character(), ssp = character(), area_common = numeric())
 for (speciesChoice in speciesChoices) {
-  speciesName <- gsub(var_suffix, "", speciesChoice) # needed for the harvested area data
+  CPfruit <- cropVals[cropName == speciesChoice, CR_cultivar_mean]
+  cultivar <-  cropVals[cropName == speciesChoice, cultivar]
+  speciesName <- gsub(varietiesChoiceSuffix, "", speciesChoice) # needed for the harvested area data
   # the harvested area data is just for grapes so need to get rid of wine in the names
-  if (speciesChoice == paste0("winegrape", var_suffix)) speciesName <- "grape"
+  if (speciesChoice == paste0("winegrape", varietiesChoiceSuffix)) speciesName <- "grape"
   fileName_in <- paste0(areaYieldtifFileLoc, speciesName,"/",  speciesName, "_HarvestedAreaHectares.tif")
   rInArea <- rast(fileName_in)
   harvestArea_earlyCent <- aggregate(rInArea, fact = 6, fun = "sum") # convert 5 arc minutes to 1/2 degrees
+  # crop to no Antarctica
+  harvestArea_earlyCent <- crop(harvestArea_earlyCent, extent_noAntarctica)
+  # mask to land only
+  harvestArea_earlyCent <- mask(harvestArea_earlyCent, landOnlyMaskNoAntarctica, maskvalues = 0)
   maskMin <- switch(
     speciesName,
-    "cherry" = 50,
-    "almond" = 50,
-    "grape" = 50,
-    "apple" = 50,
-    "olive" = 50
+    "almond" = 100,
+    "apple" = 100,
+    "cherry" = 100,
+    "grape" = 100,
+    "olive" = 100
   )
-  #  harvestArea_earlyCent[harvestArea_earlyCent < maskMin] <- NA # set minimum area to be greater than 50 hectares per grid cell
-  harvestArea_earlyCent[harvestArea_earlyCent < maskMin] <- 0 # set minimum area to be greater than 50 hectares per grid cell
+  #  harvestArea_earlyCent[harvestArea_earlyCent < maskMin] <- NA # set minimum area to be greater than maxmin hectares per grid cell
+  harvestArea_earlyCent[harvestArea_earlyCent < maskMin] <- 0 # set minimum area to be greater than maxmin hectares per grid cell
   harvestArea_earlyCent[harvestArea_earlyCent > 0] <- 1
-  harvestArea_earlyCent <- crop(harvestArea_earlyCent, extent_noAntarctica)
   harvestArea_earlyCent_NH <- crop(harvestArea_earlyCent, extent_NH)
   harvestArea_earlyCent_SH <- crop(harvestArea_earlyCent, extent_SH)
-  # dt_area_common <- rbind(dt_area_common, list(speciesChoice, "NH", "historical", expanse(harvestArea_earlyCent_NH, unit = "km")))
-  # dt_area_common <- rbind(dt_area_common, list(speciesChoice, "SH", "historical", expanse(harvestArea_earlyCent_SH, unit = "km")))
   
   for (k in sspChoices) {
     #suitable areas -----
-    suitabilityLevel <- "good"
+    #   suitabilityLevel <- "good" defined above. Don't need this and could cause confusion.
     # suitable area end century
     yearSpan <- "2081_2100"
-    fileName_in_SH <- paste0(locOfDataFiles_perennials, "suitable_", speciesChoice, "_", k, "_", suitabilityLevel, "_", "SH", "_", yearSpan, ".tif")
-    fileName_in_NH <- paste0(locOfDataFiles_perennials, "suitable_", speciesChoice, "_", k, "_", suitabilityLevel, "_", "NH", "_", yearSpan, ".tif")
+    fileName_in_SH <- paste0(locOfDataFiles_perennials, "suitable_all_", speciesChoice, "_", k, "_", suitabilityLevel, "_", "SH", "_", yearSpan, ".tif")
+    fileName_in_NH <- paste0(locOfDataFiles_perennials, "suitable_all_", speciesChoice, "_", k, "_", suitabilityLevel, "_", "NH", "_", yearSpan, ".tif")
     suitableArea_endCent_SH <- rast(fileName_in_SH)
     suitableArea_endCent_NH <- rast(fileName_in_NH)
+    # get just the overall suitability
+    suitableArea_endCent_SH <- suitableArea_endCent_SH$combinedSuit
+    suitableArea_endCent_NH <- suitableArea_endCent_NH$combinedSuit
     
     suitableArea_endCent <- merge(suitableArea_endCent_SH, suitableArea_endCent_NH)
-    commonArea <- harvestArea_earlyCent + suitableArea_endCent # areas where both early and end century rasters = 1
-    commonArea_NH <- suitableArea_endCent_NH + harvestArea_earlyCent_NH
-    commonArea_SH <- suitableArea_endCent_SH + harvestArea_earlyCent_SH
-    dt_area_common <- rbind(dt_area_common, list(speciesChoice, "NH", k, expanse(commonArea_NH, unit = "km")))
-    dt_area_common <- rbind(dt_area_common, list(speciesChoice, "SH", k, expanse(commonArea_SH, unit = "km")))
+    r_combined <- c(harvestArea_earlyCent, suitableArea_endCent)
+    commonArea <- app(r_combined, prod) #???
+    
+    commonArea_NH <- suitableArea_endCent_NH * harvestArea_earlyCent_NH # changed to * June 9, 2021
+    commonArea_SH <- suitableArea_endCent_SH * harvestArea_earlyCent_SH
+    commonArea_NH[commonArea_NH == 0] <- NA
+    commonArea_SH[commonArea_SH == 0] <- NA
+    
+    cellSize(commonArea_NH, mask=TRUE, unit="km")
+    
+    dt_area_common <- rbind(dt_area_common, list(speciesChoice, cultivar, CPfruit, "NH", k, expanse(commonArea_NH, unit = "km")))
+    dt_area_common <- rbind(dt_area_common, list(speciesChoice, cultivar, CPfruit, "SH", k, expanse(commonArea_SH, unit = "km")))
   }# end of ssp loop
   
 } 
-# fileName_out <- paste0(locOfDataFiles_perennials, "areaCalcs_common", "_", k, var_suffix, ".csv")
+# fileName_out <- paste0(locOfDataFiles_perennials, "areaCalcs_common", "_", k, varietiesChoiceSuffix, ".csv")
 # write.csv(dt_area_common, file = fileName_out, row.names = FALSE)
 # print(paste0("fileName out: ", fileName_out))
 
 # create table of area changes ------
-dt_area <- as.data.table(read.csv(file = paste0(locOfDataFiles_perennials, "areaCalcs", var_suffix, ".csv")))
-# fileName_in <- paste0(locOfDataFiles_perennials, "areaCalcs_common", "_", k, var_suffix, ".csv")
+dt_area <- as.data.table(read.csv(file = paste0(locOfDataFiles_perennials, "areaCalcs", varietiesChoiceSuffix, ".csv")))
+# fileName_in <- paste0(locOfDataFiles_perennials, "areaCalcs_common", "_", k, varietiesChoiceSuffix, ".csv")
 # dt_area_common <- as.data.table(read.csv(fileName_in))
 
 # delete rows that are for suitability bad or acceptable and mid century - keeping just early and end century
 dt_area <- dt_area[!quality %in% c("bad", "acceptable") & !yearSpan %in% "2041_2060",]
 dt_area[, c("quality", "rasterName", "yearSpan") := NULL]
-dt_area_wide <- dcast(dt_area, species + hemisphere ~ ssp, value.var = "area_suitable")
-dt_area_common_wide <- dcast(dt_area_common, species + hemisphere ~ ssp, value.var = "area_common")
+dt_area_wide <- dcast(dt_area, species + cultivar + chillPortions + hemisphere ~ ssp, value.var = "area_suitable")
+dt_area_common_wide <- dcast(dt_area_common, species + cultivar + chillPortions + hemisphere ~ ssp, value.var = "area_common")
 setnames(dt_area_common_wide, old = c("ssp126", "ssp585"), c("ssp126_common", "ssp585_common"))
 # dt_area_common[, ssp := NULL]
 combined <- merge(dt_area_wide, dt_area_common_wide)
 # convert units
 colsToConvert <- c("historical", "ssp126", "ssp585", "ssp126_common", "ssp585_common")
-combined[, (colsToConvert) := lapply(.SD, '/', 1000), .SDcols = (colsToConvert)]
-combined[, ratioEnd2Early_585 := -1 + ssp585/historical]
+combined[, (colsToConvert) := lapply(.SD, '/', 1000), .SDcols = (colsToConvert)] # convert to 1000 sq km
 combined[, ratioEnd2Early_126 := -1 + ssp126/historical]
-combined[, ratioCommon2Early_585 := ssp585_common/historical]
+combined[, ratioEnd2Early_585 := -1 + ssp585/historical]
 combined[, ratioCommon2Early_126 := ssp126_common/historical]
+combined[, ratioCommon2Early_585 := ssp585_common/historical]
 combined[, RatioLossOfEarly_585 := (historical - ssp585_common)/historical]
 combined[, RatioLossOfEarly_126 := (historical - ssp126_common)/historical]
-write.csv(combined_wide, file = paste0(locOfDataFiles_perennials, "sumTable", var_suffix, ".csv", row.names = FALSE))
-
-#library(gtsummary)
-k = "ssp126"
-l = 2041
-i = "good"
-speciesChoice = "cherry"
-m = "NH"
+write.csv(combined, file = paste0(locOfDataFiles_perennials, "sumTable", varietiesChoiceSuffix, ".csv"), row.names = FALSE)
 
 #suitable locations graphics, scenarios -----
 for (k in sspChoices) {
   for (l in startYearChoices) {
     yearSpan <- paste0(l, "_", l + yearRange)
     for (speciesChoice in speciesChoices) {
-      print(paste0(" favorable locs, speciesChoice: ", speciesChoice, ", ssp choice: ", k, ", start year: ", l))
-      f_suitableLocsGraphics(k, yearSpan, speciesChoice)
+      print(paste0("Suitability level:  ", suitabilityLevel, ", speciesChoice: ", speciesChoice, ", ssp choice: ", k, ", start year: ", l))
+      f_suitableLocsGraphics(k, l, speciesChoice, suitabilityLevel)
     }
   }
 }
@@ -594,10 +713,9 @@ for (k in sspChoices) {
 #suitable locations graphics, historical -----
 k <- "historical"
 l <- 1991
-yearSpan <- paste0(l, "_", l + yearRange)
 for (speciesChoice in speciesChoices) {
-  print(paste0(" favorable locs, speciesChoice: ", speciesChoice, ", ssp choice: ", k, ", start year: ", l))
-  f_suitableLocsGraphics(k, yearSpan, speciesChoice)
+  print(paste0("Suitability level:  ", suitabilityLevel, ", speciesChoice: ", speciesChoice, ", ssp choice: ", k, ", start year: ", l))
+  f_suitableLocsGraphics(k, l, speciesChoice, suitabilityLevel)
 }
 
 # demo slides ------
@@ -609,7 +727,7 @@ speciesChoice <- "cherry_main"
 suitabilityLevel = "good"
 legendTitle <- "Suitable"
 defaultColor <- c("green", "red")
-CPfruit <- cropVals[cropName == speciesChoice, chill_hours]
+CPfruit <- cropVals[cropName == speciesChoice, CR_cultivar_mean]
 if (i == "good") {
   caption <- paste0("Note: ", suitabilityLevel, " growing conditions for ", speciesChoice, " include chill portions of at least ", CPfruit, ", ", frostRiskDays[3], "-",  frostRiskDays[4], 
                     " days of flowering frost risk and \n",   heatRiskDays[3], "-",  heatRiskDays[4], " days of summer excessive heat.")
@@ -1115,8 +1233,8 @@ print(my_pres, target = "presentations/cmip6/perennials/summerHeatandfloweringFr
 #     holder_tmin <- c() # to hold the individual model and year results
 #     for (modelChoice in modelChoices_lower) {
 #       print(paste0("model: ", modelChoice, ", ssp: ", k, ", hem: ", hem, ", yearSpan: ", yearSpan))
-#       fileName_in_hem_tmin <- paste0("data/bigFiles/", modelChoice, "_", k, "_", "tasmin", "_", hem, "_global_daily_", yearSpan, ".tif") # needed for heat stress
-#       rastIn_tasmin_hem <- rast(fileName_in_hem_tmin)
+#       fileName_hem_in_tmin <- paste0("data/bigFiles/", modelChoice, "_", k, "_", "tasmin", "_", hem, "_global_daily_", yearSpan, ".tif") # needed for heat stress
+#       rastIn_tasmin_hem <- rast(fileName_hem_in_tmin)
 #       indices <- format(as.Date(names(rastIn_tasmin_hem), format = "X%Y-%m-%d"), format = "%y") # %y is year 2 digit number
 #       indices_num <- as.numeric(indices)
 #       indices_num <- indices_num - (l - 2000 - 1)
@@ -1146,15 +1264,15 @@ print(my_pres, target = "presentations/cmip6/perennials/summerHeatandfloweringFr
 #   CPfruit <- cropVals[cropName == fruitSpecies, CR_cultivar_mean]
 #   for (i in c("good", "acceptable", "bad")) {
 #     fruitSpeciesTitleText <- fruitSpecies
-#     if (fruitSpecies %in% paste0("winegrape", var_suffix)) fruitSpeciesTitleText <- "wine grape"
+#     if (fruitSpecies %in% paste0("winegrape", varietiesChoiceSuffix)) fruitSpeciesTitleText <- "wine grape"
 #     titleText <- paste0("Growing conditions for ", fruitSpeciesTitleText," where suitability was classified as ", i, "\n" , "scenario: ", k, ", period: ", gsub("_", "-", yearSpan))
 #     if (i == "good") {
 #       caption <- paste0("Note: Good growing conditions for ", fruitSpeciesTitleText, " include chill portions of at least ", CPfruit, ", less than ", frostRiskDays[3], 
-#                         " days of flowering frost risk and \nless than ", heatRiskDays[3], " days of summer excessive heat. Gray hatching indicates early 21st century area.")
+#                         " days of flowering frost risk and \nless than ", heatRiskDays[3], " days of summer excessive heat. Gray shading indicates early 21st century area.")
 #       colVal <- "green"}
 #     if (i == "acceptable") {
 #       caption <- paste0("Note: Ok growing conditions for ", fruitSpeciesTitleText, " include chill portions of at least ", CPfruit, ", ", frostRiskDays[3], "-",  frostRiskDays[4], 
-#                         " days of flowering frost risk and \n",   heatRiskDays[3], "-",  heatRiskDays[4], " days of summer excessive heat. Gray hatching indicates early 21st century area.")
+#                         " days of flowering frost risk and \n",   heatRiskDays[3], "-",  heatRiskDays[4], " days of summer excessive heat. Gray chading indicates early 21st century area.")
 #       colVal <- "yellow"}
 #     if (i == "bad") {
 #       caption <- paste0("Note: Bad growing conditions for ",fruitSpeciesTitleText, " include chill portions of at least ", CPfruit, ", ", frostRiskDays[5], "-",  frostRiskDays[6], 
@@ -1169,17 +1287,17 @@ print(my_pres, target = "presentations/cmip6/perennials/summerHeatandfloweringFr
 #     
 #     # now get harvested area map
 #     fruit_in <- fruitSpecies
-#     # if (fruitSpecies == paste0("winegrape", var_suffix)) fruit_in <- "grape"
+#     # if (fruitSpecies == paste0("winegrape", varietiesChoiceSuffix)) fruit_in <- "grape"
 #     # rInArea <- rast(paste0(areaYieldtifFileLoc, fruit_in,"/",  fruit_in, "_HarvestedAreaHectares.tif"))
 #     # harvestArea <- aggregate(rInArea, fact = 6, fun = "sum") # convert 5 arc minutes to 1/2 degrees
 #     # #    harvestArea[harvestArea == 0] <- NA
 #     # harvestArea[harvestArea < 3] <- NA # set minimum area to be greater than 3 hectares per grid cell
 #     # harvestArea[harvestArea > 0] <- 1
-#     speciesName <- gsub(var_suffix, "", fruitSpecies) # needed for the harvested area data
+#     speciesName <- gsub(varietiesChoiceSuffix, "", fruitSpecies) # needed for the harvested area data
 #     # the harvested area data is just for grapes so need to get rid of wine in the names
-#     if (fruitSpecies == paste0("winegrape", var_suffix)) speciesName <- "grape"
+#     if (fruitSpecies == paste0("winegrape", varietiesChoiceSuffix)) speciesName <- "grape"
 #     fileName_in <- paste0(areaYieldtifFileLoc, speciesName,"/",  speciesName, "_HarvestedAreaHectares.tif")
-#     #      if (speciesName == paste0("winegrape", var_suffix)) fileName_in <- paste0(areaYieldtifFileLoc, "grape", "/",  "grape", "_HarvestedAreaHectares.tif")
+#     #      if (speciesName == paste0("winegrape", varietiesChoiceSuffix)) fileName_in <- paste0(areaYieldtifFileLoc, "grape", "/",  "grape", "_HarvestedAreaHectares.tif")
 #     
 #     rInArea <- rast(fileName_in)
 #     harvestArea <- aggregate(rInArea, fact = 6, fun = "sum") # convert 5 arc minutes to 1/2 degrees
@@ -1242,7 +1360,7 @@ print(my_pres, target = "presentations/cmip6/perennials/summerHeatandfloweringFr
 #     g <- NULL
 #   }
 
-# f_extremeValues <- function(k, l, varChoice) { #varChoice is varieties_lo, varieties_hi, varieties_main
+# f_extremeValues <- function(k, l, varietiesChoice) { #varChoice is varieties_lo, varieties_hi, varieties_main
 #   for (hem in hemispheres) {
 #     yearSpan <- paste0(l, "_", l + yearRange)
 #     if (hem == "NH") startDate <- paste0(l, "-01-01"); endDate <- paste0(l+yearRange, "-12-31"); endYear <- l + yearRange
@@ -1250,8 +1368,8 @@ print(my_pres, target = "presentations/cmip6/perennials/summerHeatandfloweringFr
 #     holder_tmax <- c() # to hold the individual model and year results
 #     for (modelChoice in modelChoices_lower) {
 #       print(paste0("model: ", modelChoice, ", ssp: ", k, ", hem: ", hem, ", yearSpan: ", yearSpan))
-#       fileName_in_hem_tmax <- paste0("data/bigFiles/", modelChoice, "_", k, "_", "tasmax", "_", hem, "_global_daily_", yearSpan, ".tif") # needed for heat stress
-#       rastIn_tasmax_hem <- rast(fileName_in_hem_tmax)
+#       fileName_hem_in_tmax <- paste0("data/bigFiles/", modelChoice, "_", k, "_", "tasmax", "_", hem, "_global_daily_", yearSpan, ".tif") # needed for heat stress
+#       rastIn_tasmax_hem <- rast(fileName_hem_in_tmax)
 #       indices <- format(as.Date(names(rastIn_tasmax_hem), format = "X%Y-%m-%d"), format = "%y") # %y is year 2 digit number
 #       indices_num <- as.numeric(indices)
 #       # year_tmax needs to be done by counting the days above the extreme value
