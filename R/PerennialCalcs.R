@@ -421,7 +421,7 @@
     print(tas)
     
     for (speciesChoice in speciesChoices[!speciesChoices %in% "cherry_main"]) {
-      fileName_out <- paste0(locOfgddsFiles, modelChoice.lower, "_", "gdd", "_", speciesChoice, "_", k, "_", yearSpan, ".tif")
+      fileName_out <- paste0(locOfgddsFiles, modelChoice.lower, "_", hem, "_", "gdd", "_", speciesChoice, "_", k, "_", yearSpan, ".tif")
       if (!fileName_out %in% gddFilesCompleted) {
         #      print(paste0("Working on: ", fileName_out))
         topt_min <- cropVals[cropName == speciesChoice, gddtb]
@@ -440,7 +440,7 @@
   f_gdd = function(cellVector, topt_min, topt_max){
     # max1 <- pmin(cellVector, topt_max)-topt_min
     # ycalc <- pmax(0, max1)
-    ycalc <- clamp(r - topt_min, 0, (topt_max-topt_min))  
+    ycalc <- clamp(cellVector - topt_min, 0, (topt_max-topt_min))  
     return(ycalc)
   }
 }
