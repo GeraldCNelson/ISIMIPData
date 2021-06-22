@@ -82,7 +82,7 @@ DL <- function (latitude, JDay, notimes.as.na = FALSE)
 }
 
 # calculate chill portions from daily tmin and tmax
-getCP <- function (tmin=tmin, tmax=tmax, dates, Day_times=daytimes, keep_sunrise_sunset = FALSE, template=NULL, ...) 
+getCP <- function (tmin=tmin, tmax=tmax, dates, Day_times=daytimes, keep_sunrise_sunset = FALSE, template=NULL, datClass, ...) 
 {
   # if (missing(latitude)) 
   #   stop("'latitude' not specified")
@@ -111,21 +111,44 @@ getCP <- function (tmin=tmin, tmax=tmax, dates, Day_times=daytimes, keep_sunrise
   pb <- txtProgressBar(max=length(datcells), style=3)
   for(n in datcells) {
     # message(n)
-    setTxtProgressBar(pb, n)
-
-    dates.cell <- data.frame(Year = dates$Year,
-                             JDay = dates$JDay,
-                              Tmax = tmax[n,][dates$JDay],
-                              Tmin = tmin[n,][dates$JDay],
-                              cell = n,
-                              Sunrise = NA,
-                              Sunset = NA,
-                              Daylength = NA,
-                              prev_Sunset = NA,
-                              next_Sunrise = NA,
-                              prev_max = NA,
-                              next_min = NA,
-                              prev_min = NA)                           
+    
+    if(datClass=='list') {
+      
+      setTxtProgressBar(pb, n)
+      dates.cell <- data.frame(Year = dates$Year,
+                               JDay = dates$JDay,
+                               Tmax = tmax[n,][dates$JDay],
+                               Tmin = tmin[n,][dates$JDay],
+                               cell = n,
+                               Sunrise = NA,
+                               Sunset = NA,
+                               Daylength = NA,
+                               prev_Sunset = NA,
+                               next_Sunrise = NA,
+                               prev_max = NA,
+                               next_min = NA,
+                               prev_min = NA)    
+    } else if (datClass=='stack') {
+      
+      setTxtProgressBar(pb, n)
+      dates.cell <- data.frame(Year = dates$Year,
+                               JDay = dates$JDay,
+                               Tmax = tmax[n,], # tmax is pre-cropped to JDay range
+                               Tmin = tmin[n,], # tmin is pre-cropped to JDay range
+                               cell = n,
+                               Sunrise = NA,
+                               Sunset = NA,
+                               Daylength = NA,
+                               prev_Sunset = NA,
+                               next_Sunrise = NA,
+                               prev_max = NA,
+                               next_min = NA,
+                               prev_min = NA)            
+      
+    } else {
+      stop('Invalid datclass')
+    }
+                   
 
     Day_times.cell <- list(Sunrise=Day_times$Sunrise[[n]], Sunset=Day_times$Sunset[[n]], Daylength=Day_times$Daylength[[n]])
     dates.cell$Sunrise[2:(length(Day_times.cell$Sunrise) - 1)] <- Day_times.cell$Sunrise[2:(length(Day_times.cell$Sunrise) - 1)]
@@ -266,8 +289,9 @@ getChillSpatial <- function(years, lat, JDay, tmin, tmax, template, writeToDisk=
   # change this to convert to SpatRaster if input data is in raster:: format
   if(class(tmin)=='list') {
 
+    datclass='list'
+    
     # interpolate hourly temperatures  
-
     daytimes <-  DL(lat, JDay)
     
     CP <- lapply(seq_along(years), function(x) getCP(tmin=tmin[[x]],
@@ -275,9 +299,12 @@ getChillSpatial <- function(years, lat, JDay, tmin, tmax, template, writeToDisk=
                                                    Day_times=daytimes,
                                                    template=tmin[[1]][[1]],
                                                    dates = data.frame(Year = years[x],
-                                                                      JDay = JDay)))
+                                                                      JDay = JDay),
+                                                   datClass=datclass))
     
   } else {
+    
+    datclass='stack'
     
       if(class(tmin[[1]]) %in% c("RasterBrick", "RasterStack", "RasterLayer")) {
         dates <- as.Date(1:nlayers(tmin), origin=as.Date(paste0(years[1], "-01-01"))-1)
@@ -302,7 +329,6 @@ getChillSpatial <- function(years, lat, JDay, tmin, tmax, template, writeToDisk=
       # }
       
       pb <- txtProgressBar(max=length(yearRange), style=3)
-      
       for(i in seq_along(yearRange)) {
         setTxtProgressBar(pb, i)
         firstDay <- which(dates.year %in% years[i])[JDay][1]
@@ -335,8 +361,8 @@ getChillSpatial <- function(years, lat, JDay, tmin, tmax, template, writeToDisk=
       message('  Calculating chill portions..')
       
       tmp <- raster(tmin[[1]][[1]])
-      
-      dates.list <- lapply(seq_along(years), function(x) data.frame(Year = year(period.dates[[i]]),
+
+      dates.list <- lapply(seq_along(years), function(x) data.frame(Year = year(period.dates[[x]]),
                                                              JDay = yday(period.dates[[x]])))
       
       rm(tmin, tmax)
@@ -346,7 +372,8 @@ getChillSpatial <- function(years, lat, JDay, tmin, tmax, template, writeToDisk=
                                                             tmax=tmax.out[[x]],
                                                             Day_times=daytimes,
                                                             template=tmp,
-                                                            dates = dates.list[[x]]))
+                                                            dates = dates.list[[x]],
+                                                            datClass=datclass))
       
   }
 
@@ -383,7 +410,7 @@ getChillWorld <- function(scenario, model, year_range) {
   
   testVal_min <- min(minmax(tmin.in))
   testVal_max <- max(minmax(tmin.in))
-  if(testVal_min < -75 | testVal_max > 100) {
+  if(testVal_min < -80 | testVal_max > 100) {
     stop(paste0("min: ", testVal_min, ", max: ", testVal_max, ", file: ", scenario, " ", model, " tmin ", year_range[1]))
   }
   
@@ -419,8 +446,11 @@ getChillWorld <- function(scenario, model, year_range) {
   template.ras <- tmin.north[[1]]
   
   # process daily temperatures
+  
+  year_range.north <- year_range[1:(length(year_range)-1)]
+  
   t <- proc.time()
-  chill_portions.north <- getChillSpatial(years=year_range, lat, JDay.north, tmin=tmin.north, tmax=tmax.north, template=template.ras)
+  chill_portions.north <- getChillSpatial(years=year_range.north, lat, JDay.north, tmin=tmin.north, tmax=tmax.north, template=template.ras)
   t1 <- t-proc.time()
   t1/60
   
@@ -485,21 +515,21 @@ getChillWorld <- function(scenario, model, year_range) {
   rm(hourly_temps.south, tmin.south, tmax.south)
   gc()
   
-  # stitch northern and southern hemisphere rasters together
-  
-  world <- lapply(seq_along(1:length(chill_portions.north)), function(x) {
-    north.x <- raster(chill_portions.north[[x]])
-    south.x <- raster(chill_portions.south[[x]])
-    world.x <- mosaic(north.x, south.x, fun=min)
-    return(world.x)
-  })
-  
-  writeRaster(rast(stack(world)), 
-              paste0('../../chillPortions/worldchill/chill_portions/', 
-                     scenario, '/', model, '/', scenario, '_', model, '_', year_range[10], '_', 'chill_portions_world.tif'),
-              overwrite=TRUE)
-  
-  return(world)
+  # # stitch northern and southern hemisphere rasters together
+  # 
+  # world <- lapply(seq_along(1:length(chill_portions.north)), function(x) {
+  #   north.x <- raster(chill_portions.north[[x]])
+  #   south.x <- raster(chill_portions.south[[x]])
+  #   world.x <- mosaic(north.x, south.x, fun=min)
+  #   return(world.x)
+  # })
+  # 
+  # writeRaster(rast(stack(world)), 
+  #             paste0('../../chillPortions/worldchill/chill_portions/', 
+  #                    scenario, '/', model, '/', scenario, '_', model, '_', year_range[10], '_', 'chill_portions_world.tif'),
+  #             overwrite=TRUE)
+  # 
+  # return(world)
   
 }
 
