@@ -11,7 +11,8 @@
   
   options(warn = 1)
   # file locations -----
-  locOfClimFiles <- "/Volumes/ExtremeSSD2/ISIMIP/cmip6/"
+#  locOfClimFiles <- "/Volumes/ExtremeSSD2/ISIMIP/cmip6/"
+  locOfClimFiles <- "climdata/"
   locOfgddsFiles <- "data/cmip6/growingDegreeDays/"
   areaYieldtifFileLoc <- "data-raw/crops/HarvestedAreaYield175Crops_Geotiff/GeoTiff/"
   # constants, general
@@ -437,8 +438,9 @@
   }
   
   f_gdd = function(cellVector, topt_min, topt_max){
-    max1 <- pmin(cellVector, topt_max)-topt_min
-    ycalc <- pmax(0, max1)
+    # max1 <- pmin(cellVector, topt_max)-topt_min
+    # ycalc <- pmax(0, max1)
+    ycalc <- clamp(r - topt_min, 0, (topt_max-topt_min))  
     return(ycalc)
   }
 }
@@ -502,7 +504,7 @@ k <- "historical"
 l <- 1991
 for (hem in hemispheres) {
   f_computeGDDs(k, l, modelChoice, cropVals, hem) 
-  }
+}
 
 
 # combined damage, scenarios -----
