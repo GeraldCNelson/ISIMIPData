@@ -1,25 +1,12 @@
 # calculates periods where the temperature is above 0 for at least minimumGrwSeasonLength days
-{source("R/globallyUsed.R")
-  terraOptions(memfrac = 2, progress = 0, tempdir =  "data/ISIMIP", verbose = TRUE)
-  woptList <- list(gdal=c("COMPRESS=DEFLATE", "PREDICTOR=3", "ZLEVEL = 6"))
+{
+    # source("R/globallyUsed.R")
   locOfFiles <- "data/bigFiles/"
   
   sspChoices <- c("ssp126", "ssp585") 
   #sspChoices <- c("ssp585") 
-  modelChoices <- c( "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM6A-LR") 
-  #modelChoices <- c("MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") #, "MPI-ESM1-2-HR", "MRI-ESM2-0", "IPSL-CM6A-LR") #
-  startYearChoices <-  c(2041, 2081) #2011, 2041, 2051, 2081) # c(2091) # c(2006) #, 2041, 2051, 2081)
-  #startYearChoices <-  c(2081) #2011, 2041, 2051, 2081) 
-  startYearChoices_historical <- c(1991)
-  #scenarioChoicesEnsemble <- c("historical", sspChoices)
-  northernHemExtent <- c( -180, 180, 0, 90)
-  southernHemExtent <-c( -180, 180, -60, 0)
-  hemispheres <- c("NH", "SH")
   options(warn=0) # convert warnings to errors
-  
-  yearRange <- 19
-  yearRangeSH <- 18 # one less year because of 6 month offset
-  
+    
   # constants
   tminExtremeVal <- -30
   minimumGrwSeasonLength = 100

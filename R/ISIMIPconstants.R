@@ -21,22 +21,19 @@ get_os <- function() {
   tolower(os)
 }
 if (get_os() %in% "osx") {
-  terraOptions(memfrac = 2,  ncopies = 1, progress = 10, tempdir =  "data/ISIMIP", verbose = TRUE) # need to use a relative path
+  terraOptions(memfrac = 2,  ncopies = 1, progress = 10, tempdir =  "data/ISIMIP", verbose = FALSE) # need to use a relative path
 }else{
   terraOptions(memfrac = .6,  progress = 10, tempdir =  "data/ISIMIP", verbose = TRUE) # need to use a relative path
 }
 
-
-
 # choice variables, often used in for loops
 sspChoices <- c("ssp126", "ssp585") 
-modelChoices <- c( "GFDL-ESM4", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL", "IPSL-CM6A-LR") 
+modelChoices <- c( "GFDL-ESM4", "IPSL-CM6A-LR", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL") 
 modelChoices_lower <- tolower(modelChoices)
 startYearChoices <-  c(2041, 2081) 
 hemispheres <- c("NH", "SH")
 extent_NH <- c( -180, 180, 0, 90)
 extent_SH <-c( -180, 180, -60, 0) #-60 gets rid of Antarctica for SH
-extent_noAntarctica <- ext(-180, 180, -60, 90) #-60 gets rid of Antarctica for global
 
 yearRange <- 19
 
@@ -48,6 +45,7 @@ locOfDataFiles_THI <- "data/cmip6/THI/"
 locOfResultsFiles <- "results/"
 lofOfGraphicsFiles <- "graphics/cmip6/"
 locOfRawDataFiles <- "data-raw/"
+locOfHarvestDataFiles <- "data-raw/crops/HarvestedAreaYield175Crops_Geotiff/GeoTiff/"
 
 # general test values
 modelChoice <-  "IPSL-CM6A-LR"

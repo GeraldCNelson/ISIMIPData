@@ -1,6 +1,6 @@
 #  chilling hours calculations
 source("R/globallyUsed.R")
-library(doParallel) #Foreach Parallel Adaptor 
+#library(doParallel) #Foreach Parallel Adaptor 
 # library(foreach) #Provides foreach looping construct, called with doParallel
 
 locOfFiles <- locOfCMIP6ncFiles
@@ -151,7 +151,7 @@ writeRaster(monthZeroCount, filename = paste0("data/cmip6/belowZero/", fileName_
 # tmaxfunctionStart <- Sys.time()
 # #tmax > 31
 # f.tmaxLimit(tmax, tmaxLimit = 31, indices)
-# print(paste("Completed tmaxlimit for 31C"))
+# print(paste("Completed tmaxlimit for 31°C"))
 # #tmax > 35
 # f.tmaxLimit(tmax, tmaxLimit = 35, indices)
 # #tmax > 38
@@ -160,7 +160,7 @@ writeRaster(monthZeroCount, filename = paste0("data/cmip6/belowZero/", fileName_
 # f.tmaxLimit(tmax, tmaxLimit = 45, indices)
 # #tmax > 48
 # f.tmaxLimit(tmax, tmaxLimit = 48, indices)
-# print(paste("Completed tmaxlimit for 48C"))
+# print(paste("Completed tmaxlimit for 48°C"))
 
 rm(list = c("tmax", "tmin"))
 chillHrs.sumMonth <- tapp(chillHrs, indices, fun = sum, na.rm = TRUE)
