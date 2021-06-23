@@ -11,7 +11,7 @@
   
   options(warn = 1)
   # file locations -----
-#  locOfClimFiles <- "/Volumes/ExtremeSSD2/ISIMIP/cmip6/"
+  #  locOfClimFiles <- "/Volumes/ExtremeSSD2/ISIMIP/cmip6/"
   locOfClimFiles <- "climdata/"
   locOfgddsFiles <- "data/cmip6/growingDegreeDays/"
   areaYieldtifFileLoc <- "data-raw/crops/HarvestedAreaYield175Crops_Geotiff/GeoTiff/"
@@ -46,7 +46,7 @@
   
   #test values, perennials -----
   cropVals <- eval(parse(text = (paste0(" majorCropValues", varietiesChoiceSuffix))))
-  speciesChoices <- unique(cropVals$cropName)
+  #  speciesChoices <- unique(cropVals$cropName)
   speciesChoice <- "olive_lo"
   suitabilityLevel <- "good"
   climateVarChoice <- "tasmin"
@@ -420,6 +420,7 @@
     tas <- rast(fileName_tas_in)
     print(tas)
     
+    # split tas up into individual years and run gdd on those
     for (speciesChoice in speciesChoices[!speciesChoices %in% "cherry_main"]) {
       fileName_out <- paste0(locOfgddsFiles, modelChoice.lower, "_", hem, "_", "gdd", "_", speciesChoice, "_", k, "_", yearSpan, ".tif")
       if (!fileName_out %in% gddFilesCompleted) {
@@ -431,6 +432,8 @@
         print(paste0("gdd file out name: ", fileName_out))
         if (speciesChoice == "apple_main") fileName_cherry_out = paste0(locOfgddsFiles, modelChoice.lower, "_", "gdd", "_", "cherry_main", "_", k, "_", yearSpan, ".tif") # apple and cherry have the same topt_min and max values
         return(gdd)
+        gdd <- NULL
+        gc()
       }else{
         print(paste("This file has already been created: ", fileName_out))
       }
@@ -440,8 +443,19 @@
   f_gdd = function(cellVector, topt_min, topt_max){
     # max1 <- pmin(cellVector, topt_max)-topt_min
     # ycalc <- pmax(0, max1)
-    ycalc <- clamp(cellVector - topt_min, 0, (topt_max-topt_min))  
-    return(ycalc)
+    gdd <- clamp(cellVector - topt_min, 0, (topt_max-topt_min))  
+    return(gdd)
+  }
+  
+  #  Growing season of ‘frost free season’ for all crops is assumed to be the period from last spring frost to first autumn frost (Tmin≤0°C).
+  # get a years worth of data
+  f_yearSubset <- function(l, yearRange, r, hem) {
+    yearSpan <- paste0(l, "_", l + yearRange)
+    startDate <- paste0(l, "-01-01"); endDate <- paste0(l, "-12-31") # one year of data
+    if (hem == "SH") startDate <-  paste0(yearnum, "-07-01"); endDate <- paste0(yearnum + 1, "-06-30")
+    indices <- seq(as.Date(startDate), as.Date(endDate), 1)
+    indices <- paste0("X", as.character(indices))
+    yearLayers <- subset(r, indexList)
   }
 }
 

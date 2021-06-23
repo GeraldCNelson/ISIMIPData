@@ -50,7 +50,7 @@ for (k in sspChoices)  {
           # - tot.days: number of days between planting and harvest
           # Source: https://nelson.wisc.edu/sage/data-and-models/crop-calendar-dataset/netCDF0-5degree.php
           
-          # the overlay function needs a user defined function on the relationship between the two rasters
+          # the lapp function needs a user defined function on the relationship between the two rasters
           overlayFunction <- function(x,y) {
             return(x * y)
           }
@@ -78,8 +78,8 @@ for (k in sspChoices)  {
           calS[calS < 0] <- 1 # raster where all non-NC values are where the harvest date is less than the plant date, ie is in the new year
           
           
-          calN <- overlay(cal, calN, fun = overlayfunction_mask, recycle = FALSE)
-          calS <- overlay(cal, calS, fun = overlayfunction_mask, recycle = FALSE)
+          calN <- lapp(cal, calN, fun = overlayfunction_mask, recycle = FALSE)
+          calS <- lapp(cal, calS, fun = overlayfunction_mask, recycle = FALSE)
           
           
           # this function sums the number of degree days during the cropping calendar
@@ -101,13 +101,12 @@ for (k in sspChoices)  {
             r
           }
           
-          # return a year's worth of day layers from the yearHolder brick
+          # return a year's worth of day layers from the yearHolder raster
           yearSubsetter <- function(l, yearRange, yearHolder) {
             yearSpan <- paste0(l, "_", l + yearRange)
-            layerNames <- readRDS(paste0("data-raw/ISIMIP/ISIMIPLayerNames_", yearSpan, ".RDS"))
             indices <- format(as.Date(layerNames, format = "X%Y.%m.%d"), format = "%Y")
             indexList <- which(!indices %in% l)
-            yearLayers <- dropLayer(yearHolder, indexList)
+            yearLayers <- subset(yearHolder, indexList)
           }
           
           gdd_year <- yearSubsetter(l, yearRange, yearHolder = gdd)

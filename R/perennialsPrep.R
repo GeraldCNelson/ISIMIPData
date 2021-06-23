@@ -1,9 +1,9 @@
 #  creates the data tables majorCropValues_main, majorCropValues_lo and majorCropValues_hi
 library(readxl)
 library(data.table)
-supp_materials_chill_portions <- as.data.table(read_excel("data-raw/crops/perennials/supp_materials_2021_06_19.xlsx")) #, col_types = c("text", "text", "numeric", "text", "text")))
+supp_materials_chill_portions <- as.data.table(read_excel("data-raw/crops/perennials/supp_materials_2021_06_22.xlsx")) #, col_types = c("text", "text", "numeric", "text", "text")))
 setnames(supp_materials_chill_portions, old = names(supp_materials_chill_portions), 
-         new = c("cropName", "cultivar", "chill_requirement", "comment", "chill_threshold", "low_temp_threshold", "chill_hours", "summer_heat_threshold", "gdd", "gddtb", "reference_chill_portions", "reference_other_information", "reference_gdd", "other_comments"))
+         new = c("cropName", "cultivar", "chill_requirement", "comment", "chill_threshold", "low_temp_threshold", "chill_hours", "summer_heat_threshold", "gdd", "gddtb", "GDD_opt", "reference_chill_portions", "reference_other_information", "reference_gdd", "other_comments"))
 supp_materials_chill_portions[, cropName := tolower(cropName)]
 
 # get rid of blueberries row for now
@@ -17,7 +17,7 @@ test[CR_crop_min =="Inf" | CR_crop_min =="-Inf", CR_crop_min := NA]
 # remove extraneous columns
 test [, c("chill_requirement", "comment", "reference_chill_portions", "reference_other_information", "other_comments", "chill_hours", "reference_gdd") := NULL]
 test <- unique(test)
-dominantVarieties <- c("Golden Delicious", "Nonpareil", "Lapins", "Picual", "Northern highbush", "Chardonnay")
+dominantVarieties <- c("Gala", "Nonpareil", "Lapins", "Picual", "Northern highbush", "Chardonnay")
 majorCropValues_main <- data.table::copy(test)
 majorCropValues_main <- majorCropValues_main[cultivar %in% dominantVarieties,]
 majorCropValues_lo <- data.table::copy(majorCropValues_main)
@@ -48,9 +48,9 @@ for (i in cropList_lo[!cropList_lo == "winegrape_lo"]) {
   print(paste("i: ", i, ", varCultivar_min: ", varCultivar_min, ", varValue_min: ", varValue_min))
   majorCropValues_lo[cropName == i, cultivar:=  varCultivar_min]
   majorCropValues_lo[cropName == i, CR_cultivar_mean:=  varValue_min]
- }
+}
 
-deleteListCol <- c("CR_cultivar_min", "CR_cultivar_max", "CR_crop_mean", "CR_crop_min", "CR_crop_max") 
+deleteListCol <- c("CR_cultivar_min", "CR_cultivar_max", "CR_crop_mean", "CR_crop_min", "CR_crop_max", "CR_cultivar_mean") 
 majorCropValues_main[, (deleteListCol) := NULL]
 majorCropValues_lo[, (deleteListCol) := NULL]
 majorCropValues_hi[, (deleteListCol) := NULL]
