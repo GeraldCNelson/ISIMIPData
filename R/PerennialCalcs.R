@@ -21,8 +21,7 @@
   varietiesChoices <- c("varieties_lo", "varieties_main", "varieties_hi")
   suitabilityLevels <- c("good", "acceptable", "bad")
   yearRangeSH <- 18 # one less year because of 6 month offset
-  speciesChoices <- c("almond", "apple", "cherry", "olive", "winegrape") #, "blueberries") 
-  
+   
   varietiesChoice <- "varieties_main"
   varietiesChoiceSuffix <- gsub("varieties", "", varietiesChoice) # whether to use lo, main, or hi cp values
   
@@ -44,12 +43,13 @@
   frostRiskDays <- c(0, 5, 6, 20, 21, 45, 46, floweringLength) 
   heatRiskDays <- c(0, 9, 10, 30, 31, 45, 46, heatDamageLength) 
   
-  #test values, perennials -----
   cropVals <- eval(parse(text = (paste0(" majorCropValues", varietiesChoiceSuffix))))
-  #  speciesChoices <- unique(cropVals$cropName)
-  speciesChoice <- "olive_lo"
+  #test values, perennials -----
+  speciesChoices <- unique(cropVals$cropName)
+  speciesChoice <- "cherry_main"
   suitabilityLevel <- "good"
   climateVarChoice <- "tasmin"
+  hem <- "NH"
   
   # functions -----
   f_range <- function(x, rangeVals) {
@@ -422,16 +422,17 @@
     
     # split tas up into individual years and run gdd on those
     for (speciesChoice in speciesChoices[!speciesChoices %in% "cherry_main"]) {
+      if (speciesChoice == "apple_main") fileName_cherry_out = paste0(locOfgddsFiles, modelChoice.lower, "_", "gdd", "_", "cherry_main", "_", k, "_", yearSpan, ".tif") # apple and cherry have the
       fileName_out <- paste0(locOfgddsFiles, modelChoice.lower, "_", hem, "_", "gdd", "_", speciesChoice, "_", k, "_", yearSpan, ".tif")
       if (!fileName_out %in% gddFilesCompleted) {
         #      print(paste0("Working on: ", fileName_out))
         topt_min <- cropVals[cropName == speciesChoice, gddtb]
-        topt_max <- cropVals[cropName == speciesChoice, summer_heat_threshold]
+        topt_max <- cropVals[cropName == speciesChoice, GDD_opt]
         print(paste0("crop: ", speciesChoice, " topt_min: ", topt_min, " topt_max: ", topt_max, " fileName_out: ", fileName_out))
         print(system.time(gdd <- app(tas, fun = f_gdd, topt_min, topt_max, cores = 1, filename = fileName_out, overwrite = TRUE, wopt = woptList)))
         print(paste0("gdd file out name: ", fileName_out))
         if (speciesChoice == "apple_main") fileName_cherry_out = paste0(locOfgddsFiles, modelChoice.lower, "_", "gdd", "_", "cherry_main", "_", k, "_", yearSpan, ".tif") # apple and cherry have the same topt_min and max values
-        return(gdd)
+ #       return(gdd)
         gdd <- NULL
         gc()
       }else{
