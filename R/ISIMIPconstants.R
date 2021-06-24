@@ -38,7 +38,7 @@ extent_SH <-c( -180, 180, -60, 0) #-60 gets rid of Antarctica for SH
 yearRange <- 19
 
 # file locations -----
-locOfClimFiles <- "data/bigFiles/"
+locOfClimFiles <- "climdata/"
 locOfDataFiles_perennials <- "data/cmip6/perennials/"
 locOfCPFiles <- "data/cmip6/chillPortions/chill_portions/"
 locOfDataFiles_THI <- "data/cmip6/THI/"

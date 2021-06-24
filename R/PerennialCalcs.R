@@ -21,7 +21,7 @@
   varietiesChoices <- c("varieties_lo", "varieties_main", "varieties_hi")
   suitabilityLevels <- c("good", "acceptable", "bad")
   yearRangeSH <- 18 # one less year because of 6 month offset
-   
+  
   varietiesChoice <- "varieties_main"
   varietiesChoiceSuffix <- gsub("varieties", "", varietiesChoice) # whether to use lo, main, or hi cp values
   
@@ -432,7 +432,7 @@
         print(system.time(gdd <- app(tas, fun = f_gdd, topt_min, topt_max, cores = 1, filename = fileName_out, overwrite = TRUE, wopt = woptList)))
         print(paste0("gdd file out name: ", fileName_out))
         if (speciesChoice == "apple_main") fileName_cherry_out = paste0(locOfgddsFiles, modelChoice.lower, "_", "gdd", "_", "cherry_main", "_", k, "_", yearSpan, ".tif") # apple and cherry have the same topt_min and max values
- #       return(gdd)
+        #       return(gdd)
         gdd <- NULL
         gc()
       }else{
@@ -508,8 +508,10 @@ gddFilesCompleted <- gsub("//", "/", gddFilesCompleted)
 # gdds, scenarios -----
 for (k in sspChoices) {
   for (l in startYearChoices) {
-    for (hem in hemispheres) {
-      f_computeGDDs(k, l, modelChoice, cropVals, hem) 
+    for (modelChoice in modelChoices) {
+      for (hem in hemispheres) {
+        f_computeGDDs(k, l, modelChoice, cropVals, hem) 
+      }
     }
   }
 }
@@ -517,10 +519,11 @@ for (k in sspChoices) {
 # gdds, historical -----
 k <- "historical"
 l <- 1991
-for (hem in hemispheres) {
-  f_computeGDDs(k, l, modelChoice, cropVals, hem) 
+for (modelChoice in modelChoices) {
+  for (hem in hemispheres) {
+    f_computeGDDs(k, l, modelChoice, cropVals, hem) 
+  }
 }
-
 
 # combined damage, scenarios -----
 # code to read in chill portions, cold, freeze and heat stress 1/0 files and produce 1/0 tifs where the crop is potentially growable. The chill portions files are created in the chillPortions.R script
