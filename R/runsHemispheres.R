@@ -117,11 +117,11 @@ for (runlength in runlengthChoices) {
         r_yr <- crop(r_yr, get(paste0("extent_", hem)))
         print(system.time(r_runs <- app(r_yr, f_runs)))
         if (yearNumber == l ) {
-          runs_length <- subset(r_yr, 2)
-          runs_ct <- subset(r_yr, 1)
+          runs_ct <- subset(r_runs, 1)
+          runs_length <- subset(r_runs, 2)
         } else {
-          runs_length <- c(runs_length, subset(r_yr, 2))
-          runs_ct <- c(runs_ct, subset(r_yr, 1))
+          runs_ct <- c(runs_ct, subset(r_runs, 1))
+          runs_length <- c(runs_length, subset(r_runs, 2))
         }
       }
       fileName_ct_out <- paste0("data/cmip6/runs/", "runs_ct_", varName,"_",modelChoice_lower, "_run_", runlength, "_lim_", ldtext, climVal, "_", hem, "_", k, "_", yearSpan, ".tif")
@@ -131,8 +131,8 @@ for (runlength in runlengthChoices) {
       print(paste0("fileName_ct_out: ", fileName_ct_out))
       print(paste0("fileName_length_out: ", fileName_length_out))
     }
-    mainct <- paste0("NUmber of runs of consecutive days of at least 100 where temp is greater than 0°C, \nssp: ", k, ", yearspan: ", yearSpan, ", model: ", modelChoice)
-    mainrl <- paste0("Consecutive days of at least 100 where temp is greater than 0°C, \nssp: ", k, ", yearspan: ", yearSpan, ", model: ", modelChoice)
+    mainct <- paste0("Count of consecutive days of at least 100 where temp is greater than 0°C, \nssp: ", k, ", yearspan: ", yearSpan, ", model: ", modelChoice)
+    mainrl <- paste0("Locations with at least 100 consecutive days where temp is greater than 0°C, \nssp: ", k, ", yearspan: ", yearSpan, ", model: ", modelChoice)
     plot(r_runs$lyr.1, main = mainct)
     plot(r_runs$lyr.2, main = mainrl)
   }
