@@ -23,7 +23,6 @@
     }
     seqLengthCode <- paste0("1{", runlength, ",}") #A regular expression  to get the first item of gregexpr. It says look for  run_length times See http://xenon.stanford.edu/~xusch/regexp/
     g <- gregexpr(seqLengthCode, paste(+eval(parse(text = logicString)), collapse = ""))[[1]] # The + converts TRUE and FALSE to 1 and 0
-    print(paste0("g1: ", g[1]))
     if ((g[1] == -1)) { # no need to write to growing season if g returns -1, return 0,0
       runResult <- c(0, 0)
       #    print("no runs")
