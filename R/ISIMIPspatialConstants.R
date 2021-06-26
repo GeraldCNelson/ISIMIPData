@@ -39,4 +39,4 @@ crsGoode <- "+proj=igh +ellps=sphere +towgs84=0,0,0 +lon_0=100w +x_0=-11119487.4
 
 sf::st_as_sf(coastline_cropped)
 
-# degree symbol - °C
+# degree symbol - "°C"
