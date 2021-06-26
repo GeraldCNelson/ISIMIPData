@@ -53,7 +53,7 @@
     # now do ensemble 1-0 calcs
     for (speciesChoice in speciesChoices) {
       r.mean_copy <-r.mean
-      cplimit <- cropVals[cropName == speciesChoice, CR_cultivar_mean]
+      cplimit <- cropVals[cropName == speciesChoice, chill_portions]
       print(paste0("working on ssp: ", k, ", start year ", l, ", hemisphere ", hem, ", crop ", speciesChoice, ", cplimit: ", cplimit))
       maxVal <- round(max(minmax(r)), 2)
       minVal <- round(min(minmax(r)), 2)
@@ -113,7 +113,7 @@
     # graphics for species-specific cutoff
     for (speciesChoice in speciesChoices) {
       gc()
-      cplimit <- cropVals[cropName == speciesChoice, CR_cultivar_mean]
+      cplimit <- cropVals[cropName == speciesChoice, chill_portions]
       cultivar <-  cropVals[cropName == speciesChoice, cultivar]
       
       fileNameCP_cutoff_NH_in <- paste0(locOfCPFiles, "ensemble_chill_cutoff_", speciesChoice, "_", k, "_", "NH", "_", yearSpan, ".tif")
@@ -218,7 +218,7 @@ f_chillportionsPpt <- function(fruit) {
   return(my_pres)
 }
 
-colsToDelete <- names(cropVals)[!names(cropVals) %in% c("cropName", "cultivar", "CR_cultivar_mean")]
+colsToDelete <- names(cropVals)[!names(cropVals) %in% c("cropName", "cultivar", "chill_portions")]
 CPs <- cropVals[, (colsToDelete) := NULL ]
 
 # presentation intro -----
