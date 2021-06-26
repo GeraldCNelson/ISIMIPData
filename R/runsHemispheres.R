@@ -69,7 +69,7 @@ for (runlength in runlengthChoices) {
             indicesChar <- paste0("X", indices)
             r_yr <- subset(r, indicesChar)
             r_yr <- crop(r_yr, get(paste0("extent_", hem)))
-            print(system.time(r_runs <- lapp(r_yr, f_runs)))
+            print(system.time(r_runs <- app(r_yr, f_runs)))
             if (yearNumber == l ) {
               runs_ct <- subset(r_runs, 1)
               runs_length <- subset(r_runs, 2)
