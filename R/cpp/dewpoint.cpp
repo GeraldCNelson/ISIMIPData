@@ -17,7 +17,8 @@ std::vector<double> f_tDewp(std::vector<double> relh, std::vector<double> tmp) {
     double vp = svp * relh[i]/100.0;
     double y = log10(vp/0.611)/7.5;
     tDew[i] = (y * 237.7)/(1.0 - y);
-    }
+      Rcpp::Rcout << i << std::endl;
+  }
   return tDew;
 }
 

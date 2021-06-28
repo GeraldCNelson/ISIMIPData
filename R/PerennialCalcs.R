@@ -412,18 +412,18 @@
   
   f_computeGDDs <- function(k, l, modelChoice, cropVals, hem) {
     print(paste0("start year: ", l, ", ssp: ", k,  " model: ", modelChoice, ", start year: ", l, ", hemisphere: ", hem))
-    modelChoice.lower <- tolower(modelChoice)
+    modelChoice_lower <- tolower(modelChoice)
     #    if (hem == "SH") yearRange <- 18
     yearSpan <- paste0(l, "_", l + yearRange)
-    #     fileName_in <- paste0("data/cmip6/runs/", modelChoice.lower, "_", "tas", "_", hem, "_", "summer", "_", k, "_", yearSpan, ".tif")
-    fileName_tas_in <- paste0(locOfClimFiles, modelChoice.lower, "_", "tas", "_", k, "_", yearSpan, ".tif")
+    #     fileName_in <- paste0("data/cmip6/runs/", modelChoice_lower, "_", "tas", "_", hem, "_", "summer", "_", k, "_", yearSpan, ".tif")
+    fileName_tas_in <- paste0(locOfClimFiles, modelChoice_lower, "_", "tas", "_", k, "_", yearSpan, ".tif")
     tas <- rast(fileName_tas_in)
     print(tas)
     
     # split tas up into individual years and run gdd on those
     for (speciesChoice in speciesChoices[!speciesChoices %in% "cherry_main"]) {
-      if (speciesChoice == "apple_main") fileName_cherry_out = paste0(locOfgddsFiles, modelChoice.lower, "_", "gdd", "_", "cherry_main", "_", k, "_", yearSpan, ".tif") # apple and cherry have the
-      fileName_out <- paste0(locOfgddsFiles, modelChoice.lower, "_", hem, "_", "gdd", "_", speciesChoice, "_", k, "_", yearSpan, ".tif")
+      if (speciesChoice == "apple_main") fileName_cherry_out = paste0(locOfgddsFiles, modelChoice_lower, "_", "gdd", "_", "cherry_main", "_", k, "_", yearSpan, ".tif") # apple and cherry have the
+      fileName_out <- paste0(locOfgddsFiles, modelChoice_lower, "_", hem, "_", "gdd", "_", speciesChoice, "_", k, "_", yearSpan, ".tif")
       if (!fileName_out %in% gddFilesCompleted) {
         #      print(paste0("Working on: ", fileName_out))
         topt_min <- cropVals[cropName == speciesChoice, gddtb]
@@ -431,7 +431,7 @@
         print(paste0("crop: ", speciesChoice, " topt_min: ", topt_min, " topt_max: ", topt_max, " fileName_out: ", fileName_out))
         print(system.time(gdd <- app(tas, fun = f_gdd, topt_min, topt_max, cores = 1, filename = fileName_out, overwrite = TRUE, wopt = woptList)))
         print(paste0("gdd file out name: ", fileName_out))
-        if (speciesChoice == "apple_main") fileName_cherry_out = paste0(locOfgddsFiles, modelChoice.lower, "_", "gdd", "_", "cherry_main", "_", k, "_", yearSpan, ".tif") # apple and cherry have the same topt_min and max values
+        if (speciesChoice == "apple_main") fileName_cherry_out = paste0(locOfgddsFiles, modelChoice_lower, "_", "gdd", "_", "cherry_main", "_", k, "_", yearSpan, ".tif") # apple and cherry have the same topt_min and max values
         #       return(gdd)
         gdd <- NULL
         gc()

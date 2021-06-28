@@ -46,6 +46,7 @@ locOfResultsFiles <- "results/"
 lofOfGraphicsFiles <- "graphics/cmip6/"
 locOfRawDataFiles <- "data-raw/"
 locOfHarvestDataFiles <- "data-raw/crops/HarvestedAreaYield175Crops_Geotiff/GeoTiff/"
+locOfgddsFiles <- "data/cmip6/growingDegreeDays/"
 
 # general test values
 modelChoice <-  "IPSL-CM6A-LR"
