@@ -50,16 +50,16 @@
   
   f_computeGDDs <- function(k, modelChoice, l, cropCharacteristics_annual) {
     print(paste0("start year: ", l, ", ssp: ", k,  " model: ", modelChoice, ", start year: ", l, ", hemisphere: ", hem))
-    modelChoice.lower <- tolower(modelChoice)
+    modelChoice_lower <- tolower(modelChoice)
     #    if (hem == "SH") yearRange <- 18
     yearSpan <- paste0(l, "_", l + yearRange)
-    #     fileName_in <- paste0("data/cmip6/runs/", modelChoice.lower, "_", "tas", "_", hem, "_", "summer", "_", k, "_", yearSpan, ".tif")
-    fileName_in <- paste0(locOfClimFiles, modelChoice.lower, "_", "tas", "_", k, "_", yearSpan, ".tif")
+    #     fileName_in <- paste0("data/cmip6/runs/", modelChoice_lower, "_", "tas", "_", hem, "_", "summer", "_", k, "_", yearSpan, ".tif")
+    fileName_in <- paste0(locOfClimFiles, modelChoice_lower, "_", "tas", "_", k, "_", yearSpan, ".tif")
     tas <- rast(fileName_in)
     print(tas)
     
     for (cropChoice in cropChoices) {
-      fileName_out <- paste0(locOfgddsFiles, modelChoice.lower, "_", "gdd", "_", cropChoice, "_", k, "_", yearSpan, ".tif")
+      fileName_out <- paste0(locOfgddsFiles, modelChoice_lower, "_", "gdd", "_", cropChoice, "_", k, "_", yearSpan, ".tif")
       if (!fileName_out %in% gddFilesCompleted) {
         #      print(paste0("Working on: ", fileName_out))
         topt_min <- cropCharacteristics_annual[crop == cropChoice, topt_min]

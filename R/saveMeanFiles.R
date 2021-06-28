@@ -36,12 +36,12 @@ climateVars <- c("tasmin", "tasmax", "tas", "pr", "hurs", "rsds", "sfcwind", "ps
 climateVars <- c("tasmin") # "tasmax", "tasmin"
 
 f_means <- function() {
-  for (m in climateVars) {
+  for (climateVar in climateVars) {
     for (i in modelChoices) {
       # i = "UKESM1-0-LL"
       # l = 2081
       modelName.lower <- tolower(i)
-      if (m %in% "rh") {
+      if (climateVar %in% "rh") {
         fileName_rh <- paste0(locOfFiles, modelName.lower, "_", k, "_hurs_global_daily_", yearSpan, ".tif")
         rh <- rast(fileName_rh)
         indices_day <- format(as.Date(names(rh), format = "X%Y-%m-%d"), format = "%j") # %j is day of the year
@@ -54,7 +54,7 @@ f_means <- function() {
         print(paste0("rh file out: ", fileName_rh_out))
         print(system.time(writeRaster(rh.mean, filename = fileName_rh_out, overwrite=TRUE, wopt = woptList))); flush.console()
       }
-      if (m %in% "tasmax") {
+      if (climateVar %in% "tasmax") {
         fileName_tasmax <- paste0(locOfFiles,  modelName.lower, "_", k, "_tasmax_global_daily_", yearSpan, ".tif")
         tmax <- rast(fileName_tasmax)
         indices_day <- format(as.Date(names(tmax), format = "X%Y-%m-%d"), format = "%j") # %j is day of the year
@@ -67,7 +67,7 @@ f_means <- function() {
         print(paste0("tmax file out: ", fileName_tmax_out))
         print(system.time(writeRaster(tmax.mean, filename = fileName_tmax_out, overwrite=TRUE, wopt = woptList))); flush.console()
       }
-      if (m %in% "tasmin") {
+      if (climateVar %in% "tasmin") {
         fileName_tasmin <- paste0(locOfFiles,  modelName.lower, "_", k, "_tasmin_global_daily_", yearSpan, ".tif")
         tmin <- rast(fileName_tasmin)
         indices_day <- format(as.Date(names(tmin), format = "X%Y-%m-%d"), format = "%j") # %j is day of the year
@@ -80,7 +80,7 @@ f_means <- function() {
         print(paste0("tmin file out: ", fileName_tmin_out))
         print(system.time(writeRaster(tmin.mean, filename = fileName_tmin_out, overwrite=TRUE, wopt = woptList))); flush.console()
       }
-      if (m %in% "tas") {
+      if (climateVar %in% "tas") {
         fileName_tas <- paste0(locOfFiles,  modelName.lower, "_", k, "_tas_global_daily_", yearSpan, ".tif")
         tas <- rast(fileName_tas)
         indices_day <- format(as.Date(names(tas), format = "X%Y-%m-%d"), format = "%j") # %j is day of the year
@@ -93,7 +93,7 @@ f_means <- function() {
         print(paste0("tas file out: ", fileName_tas_out))
         print(system.time(writeRaster(tas.mean, filename = fileName_tas_out, overwrite=TRUE, wopt = woptList))); flush.console()
       }
-      if (m %in% "sfcWind") {
+      if (climateVar %in% "sfcWind") {
         fileName_sfcWind <- paste0(locOfFiles,  modelName.lower, "_", k, "_sfcWind_global_daily_", yearSpan, ".tif")
         sfcWind <- rast(fileName_sfcWind)
         indices_day <- format(as.Date(names(sfcWind), format = "X%Y-%m-%d"), format = "%j") # %j is day of the year
@@ -106,7 +106,7 @@ f_means <- function() {
         print(paste0("sfcWind file out: ", fileName_sfcWind_out))
         print(system.time(writeRaster(sfcWind.mean, filename = fileName_sfcWind_out, overwrite=TRUE, wopt = woptList))); flush.console()
       }
-      if (m %in% "rsds") {
+      if (climateVar %in% "rsds") {
         fileName_rsds <- paste0(locOfFiles,  modelName.lower, "_", k, "_rsds_global_daily_", yearSpan, ".tif")
         rsds <- rast(fileName_rsds)
         indices_day <- format(as.Date(names(rsds), format = "X%Y-%m-%d"), format = "%j") # %j is day of the year
@@ -119,7 +119,7 @@ f_means <- function() {
         print(paste0("rsds file out: ", fileName_rsds_out))
         print(system.time(writeRaster(rsds.mean, filename = fileName_rsds_out, overwrite=TRUE, wopt = woptList))); flush.console()
       }
-      if (m %in% "ps") {
+      if (climateVar %in% "ps") {
         fileName_ps <- paste0(locOfFiles,  modelName.lower, "_", k, "_ps_global_daily_", yearSpan, ".tif")
         ps <- rast(fileName_ps)
         indices_day <- format(as.Date(names(ps), format = "X%Y-%m-%d"), format = "%j") # %j is day of the year
@@ -132,7 +132,7 @@ f_means <- function() {
         print(paste0("ps file out: ", fileName_ps_out))
         print(system.time(writeRaster(ps.mean, filename = fileName_ps_out, overwrite=TRUE, wopt = woptList))); flush.console()
       }
-      if (m %in% "pr") {
+      if (climateVar %in% "pr") {
         fileName_pr <- paste0(locOfFiles,  modelName.lower, "_", k, "_pr_global_daily_", yearSpan, ".tif")
         pr <- rast(fileName_pr)
         indices_day <- format(as.Date(names(pr), format = "X%Y-%m-%d"), format = "%j") # %j is day of the year

@@ -38,7 +38,7 @@ extent_SH <-c( -180, 180, -60, 0) #-60 gets rid of Antarctica for SH
 yearRange <- 19
 
 # file locations -----
-locOfClimFiles <- "data/bigFiles/"
+locOfClimFiles <- "climdata/"
 locOfDataFiles_perennials <- "data/cmip6/perennials/"
 locOfCPFiles <- "data/cmip6/chillPortions/chill_portions/"
 locOfDataFiles_THI <- "data/cmip6/THI/"
@@ -46,6 +46,7 @@ locOfResultsFiles <- "results/"
 lofOfGraphicsFiles <- "graphics/cmip6/"
 locOfRawDataFiles <- "data-raw/"
 locOfHarvestDataFiles <- "data-raw/crops/HarvestedAreaYield175Crops_Geotiff/GeoTiff/"
+locOfgddsFiles <- "data/cmip6/growingDegreeDays/"
 
 # general test values
 modelChoice <-  "IPSL-CM6A-LR"
