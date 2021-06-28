@@ -73,5 +73,5 @@ double chill_func(DoubleVector temp) {
     
   }
   
-  return floor(portions);
+  return portions;
 }

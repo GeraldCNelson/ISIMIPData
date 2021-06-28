@@ -122,10 +122,13 @@ ssp585_GFDL_ESM4 <- getChillWorld(scenario=scenarios[3], model=models[1], year_r
 future:::ClusterRegistry("stop")
 gc() 
 
+
+########
 plan(multiprocess, workers=3, gc=TRUE)
 ssp585_IPSL_CM6A_LR <- getChillWorld(scenario=scenarios[3], model=models[2], year_range=2041:2060)
 future:::ClusterRegistry("stop")
 gc() 
+#########
 
 plan(multiprocess, workers=3, gc=TRUE)
 ssp585_MPI_ESM1_2_HR <- getChillWorld(scenario=scenarios[3], model=models[3], year_range=2041:2060)
@@ -170,6 +173,8 @@ plan(multiprocess, workers=3, gc=TRUE)
 ssp126_UKESM1_0_LL <- getChillWorld(scenario=scenarios[2], model=models[5], year_range=2081:2100)
 future:::ClusterRegistry("stop")
 gc() 
+
+
 
 plan(multiprocess, workers=3, gc=TRUE)
 ssp585_GFDL_ESM4 <- getChillWorld(scenario=scenarios[3], model=models[1], year_range=2081:2100)
