@@ -12,6 +12,7 @@
   l <- 2041
   yearSpan <- paste0(l, "_", l + yearRange)
   fileName_tasmin <- paste0(locOfClimFiles,  modelChoice_lower, "_tasmin", "_", k,  "_", yearSpan, ".tif")
+  speciesChoice <- "apple_main"
   rastIn <- rast(fileName_tasmin)
   
   
@@ -166,83 +167,112 @@ for (runlength in runlengthChoices) {
     }
   }
 }
-  
-  # runs, historical -----
-  k = "historical"
-  l = 1991
-  yearSpan <- paste0(l, "_", l + yearRange)
-  for (runlength in runlengthChoices) {
+
+# runs, historical -----
+k = "historical"
+l = 1991
+yearSpan <- paste0(l, "_", l + yearRange)
+for (runlength in runlengthChoices) {
+  for (modelChoice in modelChoices) {
+    modelChoice_lower <- tolower(modelChoice)
+    logicString <- paste0("x ", logicDirection, " ", climVal)
+    fileName_in <- paste0(locOfClimFiles, modelChoice_lower, "_", varName, "_", k, "_", yearSpan, ".tif")
+    r <- rast(fileName_in)
+    for (hem in hemispheres) {
+      yrs <- l + yearRange # for NH
+      if (hem == "SH") yrs <- l + yearRange - 1
+      for (yearNumber in l:yrs) {
+        print(paste0("working on ssp: ", k, ", start year: ", l, ", model choice: ", modelChoice, ", hemisphere: ", hem, ", year: ", yearNumber))
+        if (hem == "SH")  {startDate <-  paste0(yearNumber, "-07-01"); endDate <- paste0(yearNumber + 1, "-06-30")} # in southern hemisphere search July 1 to June 30 of the next year.
+        if (hem == "NH")  {startDate <-  paste0(yearNumber, "-01-01"); endDate <- paste0(yearNumber + 1, "-12-31")}
+        indices <- seq(as.Date(startDate), as.Date(endDate), by = "days")
+        indicesChar <- paste0("X", indices)
+        r_yr <- subset(r, indicesChar)
+        r_yr <- crop(r_yr, get(paste0("extent_", hem)))
+        print(system.time(r_runs <- app(r_yr, f_runs)))
+        if (yearNumber == l ) {
+          runs_ct <- subset(r_runs, 1)
+          runs_length <- subset(r_runs, 2)
+          startday_1 <- subset(r_runs, 3)
+          endday_1 <- subset(r_runs, 4)
+          
+        } else {
+          runs_ct <- c(runs_ct, subset(r_runs, 1))
+          runs_length <- c(runs_length, subset(r_runs, 2))
+          startday_1 <- c(startday_1, subset(r_runs, 3))
+          endday_1 <- c(endday_1, subset(r_runs, 4))
+        }
+      }
+      fileName_ct_out <- paste0("data/cmip6/runs/", "runs_ct_", varName,"_",modelChoice_lower, "_run_", runlength, "_lim_", ldtext, climVal, "_", hem, "_", k, "_", yearSpan, ".tif")
+      fileName_length_out <- paste0("data/cmip6/runs/", "runs_length_", varName,"_",modelChoice_lower, "_run_", runlength, "_lim_", ldtext, climVal, "_", hem, "_", k, "_", yearSpan, ".tif")
+      fileName_startDay1_out <- paste0("data/cmip6/runs/", "startday_1_", varName,"_",modelChoice_lower, "_run_", runlength, "_lim_", ldtext, climVal, "_", hem, "_", k, "_", yearSpan, ".tif")
+      fileName_endDay1_out <- paste0("data/cmip6/runs/", "endday_1_", varName,"_",modelChoice_lower, "_run_", runlength, "_lim_", ldtext, climVal, "_", hem, "_", k, "_", yearSpan, ".tif")
+      print(system.time(writeRaster(runs_ct, filename = fileName_ct_out,  overwrite = TRUE, wopt= woptList))); flush.console()
+      print(system.time(writeRaster(runs_length, filename = fileName_length_out,  overwrite = TRUE, wopt= woptList))); flush.console()
+      print(system.time(writeRaster(startday_1, filename = fileName_startDay1_out,  overwrite = TRUE, wopt= woptList))); flush.console()
+      print(system.time(writeRaster(endday_1, filename = fileName_endDay1_out,  overwrite = TRUE, wopt= woptList))); flush.console()
+      print(paste0("fileName_ct_out: ", fileName_ct_out))
+      print(paste0("fileName_length_out: ", fileName_length_out))
+      print(paste0("fileName_startDay1_out: ", fileName_startDay1_out))
+      print(paste0("fileName_endDay1_out: ", fileName_endDay1_out))
+    }
+    mainct <- paste0("Count of consecutive days of at least 100 where temp is greater than 0°C, \nssp: ", k, ", yearspan: ", yearSpan, ", model: ", modelChoice)
+    mainrl <- paste0("Locations with at least 100 consecutive days where temp is greater than 0°C, \nssp: ", k, ", yearspan: ", yearSpan, ", model: ", modelChoice)
+    plot(r_runs$lyr.1, main = mainct)
+    plot(r_runs$lyr.2, main = mainrl)
+  }
+}
+
+# get GDDs during first of the 'growing' periods
+runlength = "100" # minimum number of days above climval
+ldtext <- "gt" # logic direction - gt, ge, ld, le
+climVal <- 0 # temperature threshold
+varName <- "tasmin" # variable logic is applied to
+
+for (k in sspChoices) {
+  for (l in startYearChoices) {
+    yearSpan <- paste0(l, "_", l + yearRange)
     for (modelChoice in modelChoices) {
       modelChoice_lower <- tolower(modelChoice)
-      logicString <- paste0("x ", logicDirection, " ", climVal)
-      fileName_in <- paste0(locOfClimFiles, modelChoice_lower, "_", varName, "_", k, "_", yearSpan, ".tif")
-      r <- rast(fileName_in)
-      for (hem in hemispheres) {
-        yrs <- l + yearRange # for NH
-        if (hem == "SH") yrs <- l + yearRange - 1
-        for (yearNumber in l:yrs) {
-          print(paste0("working on ssp: ", k, ", start year: ", l, ", model choice: ", modelChoice, ", hemisphere: ", hem, ", year: ", yearNumber))
-          if (hem == "SH")  {startDate <-  paste0(yearNumber, "-07-01"); endDate <- paste0(yearNumber + 1, "-06-30")} # in southern hemisphere search July 1 to June 30 of the next year.
-          if (hem == "NH")  {startDate <-  paste0(yearNumber, "-01-01"); endDate <- paste0(yearNumber + 1, "-12-31")}
+      for (speciesChoice in speciesChoices) {
+        for (hem in hemispheres) {
+          fileName_gdd_in <- paste0(locOfgddsFiles, modelChoice_lower, "_", hem, "_", "gdd", "_", speciesChoice, "_", k, "_", yearSpan, ".tif")
+          gdds <- rast(fileName_gdd_in)
+          if (hem == "SH")  {startDate <-  paste0(l, "-07-01"); endDate <- paste0(l + yearRange - 1, "-06-30")} # in southern hemisphere search July 1 to June 30 of the next year. NH is just the calendar year
+          if (hem == "NH")  {startDate <-  paste0(l, "-01-01"); endDate <- paste0(l + yearRange - 1, "-12-31")} # in southern hemisphere search July 1 to June 30 of the next year. NH is just the calendar year
           indices <- seq(as.Date(startDate), as.Date(endDate), by = "days")
+          indicesYr <- seq(as.Date(startDate), as.Date(endDate), by = "years")
           indicesChar <- paste0("X", indices)
-          r_yr <- subset(r, indicesChar)
-          r_yr <- crop(r_yr, get(paste0("extent_", hem)))
-          print(system.time(r_runs <- app(r_yr, f_runs)))
-          if (yearNumber == l ) {
-            runs_ct <- subset(r_runs, 1)
-            runs_length <- subset(r_runs, 2)
-            startday_1 <- subset(r_runs, 3)
-            endday_1 <- subset(r_runs, 4)
+          gdds <- subset(gdds, indicesChar)
+          if (hem == "SH") gdds <- crop(gdds, get(paste0("extent_", hem)))
+          fileName_startDay1_in <- paste0("data/cmip6/runs/", "startday_1_", varName,"_",modelChoice_lower, "_run_", runlength, "_lim_", ldtext, climVal, "_", hem, "_", k, "_", yearSpan, ".tif")
+          fileName_endDay1_in <- paste0("data/cmip6/runs/", "endday_1_", varName,"_",modelChoice_lower, "_run_", runlength, "_lim_", ldtext, climVal, "_", hem, "_", k, "_", yearSpan, ".tif")
+          startDay <- rast(fileName_startDay1_in)
+ #         names(startDay) <- indicesChar
+          endDay <- rast(fileName_endDay1_in)
+          
+          # now do calc by year
+          for (yrnum in 1:nlyr(startDay))
             
-          } else {
-            runs_ct <- c(runs_ct, subset(r_runs, 1))
-            runs_length <- c(runs_length, subset(r_runs, 2))
-            startday_1 <- c(startday_1, subset(r_runs, 3))
-            endday_1 <- c(endday_1, subset(r_runs, 4))
+            startDay <- x
+          endDay <- y
+          gdd_yr <- subset(gdds, x:y)
+          combined <- sds(gdds, startDay, endDay)
+          f_test <- function(v_gdds, v_startDay, v_endDay) {
+ #           print(head(v_gdds))
+            print(v_startDay)
+            print("-----")
+            print(v_endDay)
+            print("-----")
+            return(v_endDay - v_startDay)
+
           }
-        }
-        fileName_ct_out <- paste0("data/cmip6/runs/", "runs_ct_", varName,"_",modelChoice_lower, "_run_", runlength, "_lim_", ldtext, climVal, "_", hem, "_", k, "_", yearSpan, ".tif")
-        fileName_length_out <- paste0("data/cmip6/runs/", "runs_length_", varName,"_",modelChoice_lower, "_run_", runlength, "_lim_", ldtext, climVal, "_", hem, "_", k, "_", yearSpan, ".tif")
-        fileName_startDay1_out <- paste0("data/cmip6/runs/", "startday_1_", varName,"_",modelChoice_lower, "_run_", runlength, "_lim_", ldtext, climVal, "_", hem, "_", k, "_", yearSpan, ".tif")
-        fileName_endDay1_out <- paste0("data/cmip6/runs/", "endday_1_", varName,"_",modelChoice_lower, "_run_", runlength, "_lim_", ldtext, climVal, "_", hem, "_", k, "_", yearSpan, ".tif")
-        print(system.time(writeRaster(runs_ct, filename = fileName_ct_out,  overwrite = TRUE, wopt= woptList))); flush.console()
-        print(system.time(writeRaster(runs_length, filename = fileName_length_out,  overwrite = TRUE, wopt= woptList))); flush.console()
-        print(system.time(writeRaster(startday_1, filename = fileName_startDay1_out,  overwrite = TRUE, wopt= woptList))); flush.console()
-        print(system.time(writeRaster(endday_1, filename = fileName_endDay1_out,  overwrite = TRUE, wopt= woptList))); flush.console()
-        print(paste0("fileName_ct_out: ", fileName_ct_out))
-        print(paste0("fileName_length_out: ", fileName_length_out))
-        print(paste0("fileName_startDay1_out: ", fileName_startDay1_out))
-        print(paste0("fileName_endDay1_out: ", fileName_endDay1_out))
-      }
-      mainct <- paste0("Count of consecutive days of at least 100 where temp is greater than 0°C, \nssp: ", k, ", yearspan: ", yearSpan, ", model: ", modelChoice)
-      mainrl <- paste0("Locations with at least 100 consecutive days where temp is greater than 0°C, \nssp: ", k, ", yearspan: ", yearSpan, ", model: ", modelChoice)
-      plot(r_runs$lyr.1, main = mainct)
-      plot(r_runs$lyr.2, main = mainrl)
-    }
-  }
-  
-  # get GDDs during first of the 'growing' periods
-  
-  for (k in sspChoices) {
-    for (l in startYearChoices) {
-      yearSpan <- paste0(l, "_", l + yearRange)
-      for (modelChoice in modelChoices) {
-        for (speciesChoice in speciesChoices) {
-          for (hem in hemispheres) {
-            fileName_gdd_in <- paste0(locOfgddsFiles, modelChoice_lower, "_", hem, "_", "gdd", "_", speciesChoice, "_", k, "_", yearSpan, ".tif")
-            gdds <- rast(fileName_gdd_in)
-            if (hem == "SH")  {startDate <-  paste0(l, "-07-01"); endDate <- paste0(l + yearRange - 1, "-06-30")} # in southern hemisphere search July 1 to June 30 of the next year.
-            indices <- seq(as.Date(startDate), as.Date(endDate), by = "days")
-            indicesChar <- paste0("X", indices)
-            gdds <- subset(gdds, indicesChar)
-            fileName_startDay1_in <- paste0("data/cmip6/runs/", "startday_1_", varName,"_",modelChoice_lower, "_run_", runlength, "_lim_", ldtext, climVal, "_", hem, "_", k, "_", yearSpan, ".tif")
-            fileName_endDay1_in <- paste0("data/cmip6/runs/", "endday_1_", varName,"_",modelChoice_lower, "_run_", runlength, "_lim_", ldtext, climVal, "_", hem, "_", k, "_", yearSpan, ".tif")
-            startDay <- rast(fileName_startDay1_in)
-            endDay <- rast(fileName_endDay1_in)
-            
-            
+          x <- app(gdds, f_test, startDay, endDay)
+          
+          f_test <- function(v_gdds) {
+            print(v_gdds[1])
           }
+          
         }
       }
     }
