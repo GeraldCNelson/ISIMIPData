@@ -284,7 +284,7 @@
     if (speciesChoice == paste0("winegrape", varietiesChoiceSuffix)) speciesName <- "grape"
     
     # crop out areas where summer heat or spring frost are greater than the unsuitable values, either unsuitable_springFreezeDays or unsuitable_summerHotDays
-    CPfruit <- cropVals[cropName == speciesChoice, CR_cultivar_mean]
+    CPfruit <- cropVals[cropName == speciesChoice, chill_portions]
     summerHeat <- cropVals[cropName == speciesChoice, summer_heat_threshold]
     cultivar <-  cropVals[cropName == speciesChoice, cultivar]
     titleText <- paste0("Growing conditions for ", speciesName,", cultivar ", cultivar, ", are ", suitabilityLevel, "\n" , "scenario: ", k, ", period: ", gsub("_", "-", yearSpan))
@@ -553,7 +553,7 @@ for (speciesChoice in speciesChoices) {
     for (l in startYearChoices) {
       yearSpan <- paste0(l, "_", l + yearRange)
       for (speciesChoice in speciesChoices) {
-        CPfruit <- cropVals[cropName == speciesChoice, CR_cultivar_mean]
+        CPfruit <- cropVals[cropName == speciesChoice, chill_portions]
         cultivar <-  cropVals[cropName == speciesChoice, cultivar]
         
         for (hem in hemispheres) {
@@ -576,7 +576,7 @@ for (speciesChoice in speciesChoices) {
   l <- 1991
   yearSpan <- paste0(l, "_", l + yearRange)
   for (speciesChoice in speciesChoices) {
-    CPfruit <- cropVals[cropName == speciesChoice, CR_cultivar_mean]
+    CPfruit <- cropVals[cropName == speciesChoice, chill_portions]
     cultivar <-  cropVals[cropName == speciesChoice, cultivar]
     for (hem in hemispheres) {
       for (suitabilityLevel in suitabilityLevels) {
@@ -598,7 +598,7 @@ for (speciesChoice in speciesChoices) {
 # area deltas, need to run code above first -----
 dt_area_delta <- data.table(species = character(), cultivar = character(), chillPortions= numeric(), hemisphere = character(), ssp_base = character(), ssp = character(), yearSpan = character(), quality = character(), area_base = numeric(), area_delta = numeric(), delta_share = numeric())
 for (speciesChoice in speciesChoices) {
-  CPfruit <- cropVals[cropName == speciesChoice, CR_cultivar_mean]
+  CPfruit <- cropVals[cropName == speciesChoice, chill_portions]
   cultivar <-  cropVals[cropName == speciesChoice, cultivar]
   for (hem in hemispheres) {
     for (suitabilityLevel in suitabilityLevels) {
@@ -628,7 +628,7 @@ print(paste0("fileName out: ", fileName_out))
 # area common to early and end century -----
 dt_area_common <- data.table(species = character(), cultivar = character(), chillPortions= numeric(), hemisphere = character(), ssp = character(), area_common = numeric())
 for (speciesChoice in speciesChoices) {
-  CPfruit <- cropVals[cropName == speciesChoice, CR_cultivar_mean]
+  CPfruit <- cropVals[cropName == speciesChoice, chill_portions]
   cultivar <-  cropVals[cropName == speciesChoice, cultivar]
   speciesName <- gsub(varietiesChoiceSuffix, "", speciesChoice) # needed for the harvested area data
   # the harvested area data is just for grapes so need to get rid of wine in the names
@@ -739,7 +739,7 @@ speciesChoice <- "cherry_main"
 suitabilityLevel = "good"
 legendTitle <- "Suitable"
 defaultColor <- c("green", "red")
-CPfruit <- cropVals[cropName == speciesChoice, CR_cultivar_mean]
+CPfruit <- cropVals[cropName == speciesChoice, chill_portions]
 if (i == "good") {
   caption <- paste0("Note: ", suitabilityLevel, " growing conditions for ", speciesChoice, " include chill portions of at least ", CPfruit, ", ", frostRiskDays[3], "-",  frostRiskDays[4], 
                     " days of flowering frost risk and \n",   heatRiskDays[3], "-",  heatRiskDays[4], " days of summer excessive heat.")
@@ -1273,7 +1273,7 @@ print(my_pres, target = "presentations/cmip6/perennials/summerHeatandfloweringFr
 #   #   for (hem in hemispheres) {
 #   # crop out areas where summer heat or flowering frost are greater than the unsuitable values, either unsuitable_floweringFreezeDays or unsuitable_summerHotDays
 #   #    CPfruit <- CPs$chillRequirement[CPs$crop==fruitSpecies] - old version
-#   CPfruit <- cropVals[cropName == fruitSpecies, CR_cultivar_mean]
+#   CPfruit <- cropVals[cropName == fruitSpecies, chill_portions]
 #   for (i in c("good", "acceptable", "bad")) {
 #     fruitSpeciesTitleText <- fruitSpecies
 #     if (fruitSpecies %in% paste0("winegrape", varietiesChoiceSuffix)) fruitSpeciesTitleText <- "wine grape"

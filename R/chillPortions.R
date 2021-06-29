@@ -14,9 +14,9 @@
   modelChoice <- "UKESM1-0-LL"
   k <- "ssp585"
   l <- 2041
-  midYear <- 2050
+  midYear <- 2080
   hem <- "NH"
-  speciesChoice <- "winegrape_main"
+  speciesChoice <- "olive_main"
   varietyChoice <- "varieties_main" # this choice determines what gets run below
   
   # choice for varietyChoice in next line-----------
