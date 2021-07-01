@@ -168,7 +168,7 @@ for (k in sspChoices) {
           
           # now do calc by year
           for (yearNumber in 1:nlyr(startDay)){
-#            print(yearNumber)
+            print(paste0("ssp:" , k, ", startYear: ", l, ", hem: ", hem, "model: ", modelChoice, ", yearNumber: ", yearNumber))
             startDay_yr <- subset(startDay, yearNumber)
             endDay_yr <- subset(endDay, yearNumber)
             startYear <- l + yearNumber - 1
