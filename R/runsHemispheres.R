@@ -138,12 +138,11 @@ f_runsSetup(k, l, logicDirection, climVal)
   varietiesChoice <- "varieties_main"
   varietiesChoiceSuffix <- gsub("varieties", "", varietiesChoice) # whether to use lo, main, or hi cp values
   cropVals <- eval(parse(text = (paste0(" majorCropValues", varietiesChoiceSuffix))))
-  #test values, perennials -----
   speciesChoices <- unique(cropVals$cropName)
   
 }
 
-# gdd sums, scenarios
+# gdd sums, scenarios ------
 for (k in sspChoices) {
   for (l in startYearChoices) {
     yearSpan <- paste0(l, "_", l + yearRange)
@@ -153,7 +152,7 @@ for (k in sspChoices) {
         for (hem in hemispheres) {
           fileName_gdd_in <- paste0(locOfgddsFiles, modelChoice_lower, "_", hem, "_", "gdd", "_", speciesChoice, "_", k, "_", yearSpan, ".tif")
           gdds <- rast(fileName_gdd_in)
-          if (hem == "SH") gdds <- crop(gdds, get(paste0("extent_", hem)))
+          gdds <- crop(gdds, get(paste0("extent_", hem)))
           if (hem == "SH")  {startDate <-  paste0(l, "-07-01"); endDate <- paste0(l + yearRange, "-06-30")} # in southern hemisphere search July 1 to June 30 of the next year. NH is just the calendar year
           if (hem == "NH")  {startDate <-  paste0(l, "-01-01"); endDate <- paste0(l + yearRange, "-12-31")} # in southern hemisphere search July 1 to June 30 of the next year. NH is just the calendar year
           indices <- seq(as.Date(startDate), as.Date(endDate), by = "days")
