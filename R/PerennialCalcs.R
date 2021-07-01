@@ -410,12 +410,10 @@
     knitr::plot_crop(fileName_out) # gets rid of margins around the plot
   }
   
-  f_computeGDDs <- function(k, l, modelChoice, cropVals, hem) {
+  f_computeGDDs <- function(k, l, modelChoice, cropVals) {
     print(paste0("start year: ", l, ", ssp: ", k,  " model: ", modelChoice, ", start year: ", l, ", hemisphere: ", hem))
     modelChoice_lower <- tolower(modelChoice)
-    #    if (hem == "SH") yearRange <- 18
     yearSpan <- paste0(l, "_", l + yearRange)
-    #     fileName_in <- paste0("data/cmip6/runs/", modelChoice_lower, "_", "tas", "_", hem, "_", "summer", "_", k, "_", yearSpan, ".tif")
     fileName_tas_in <- paste0(locOfClimFiles, modelChoice_lower, "_", "tas", "_", k, "_", yearSpan, ".tif")
     tas <- rast(fileName_tas_in)
     print(tas)
@@ -423,7 +421,7 @@
     # split tas up into individual years and run gdd on those
     for (speciesChoice in speciesChoices[!speciesChoices %in% "cherry_main"]) {
       if (speciesChoice == "apple_main") fileName_cherry_out = paste0(locOfgddsFiles, modelChoice_lower, "_", "gdd", "_", "cherry_main", "_", k, "_", yearSpan, ".tif") # apple and cherry have the
-      fileName_out <- paste0(locOfgddsFiles, modelChoice_lower, "_", hem, "_", "gdd", "_", speciesChoice, "_", k, "_", yearSpan, ".tif")
+      fileName_out <- paste0(locOfgddsFiles, modelChoice_lower, "_", "gdd", "_", speciesChoice, "_", k, "_", yearSpan, ".tif")
       if (!fileName_out %in% gddFilesCompleted) {
         #      print(paste0("Working on: ", fileName_out))
         topt_min <- cropVals[cropName == speciesChoice, gddtb]
@@ -510,7 +508,7 @@ for (k in sspChoices) {
   for (l in startYearChoices) {
     for (modelChoice in modelChoices) {
       for (hem in hemispheres) {
-        f_computeGDDs(k, l, modelChoice, cropVals, hem) 
+        f_computeGDDs(k, l, modelChoice, cropVals) 
       }
     }
   }
@@ -521,7 +519,7 @@ k <- "historical"
 l <- 1991
 for (modelChoice in modelChoices) {
   for (hem in hemispheres) {
-    f_computeGDDs(k, l, modelChoice, cropVals, hem) 
+    f_computeGDDs(k, l, modelChoice, cropVals) 
   }
 }
 
