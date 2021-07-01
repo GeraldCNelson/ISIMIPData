@@ -26,6 +26,7 @@ if (get_os() %in% "osx") {
   terraOptions(memfrac = .6,  progress = 10, tempdir =  "data/ISIMIP", verbose = TRUE) # need to use a relative path
 }
 
+
 # choice variables, often used in for loops
 sspChoices <- c("ssp126", "ssp585") 
 modelChoices <- c( "GFDL-ESM4", "IPSL-CM6A-LR", "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL") 
