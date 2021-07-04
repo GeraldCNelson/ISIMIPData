@@ -158,7 +158,7 @@ f_gddSums <- function(k, l) {
   for (modelChoice in modelChoices) {
     modelChoice_lower <- tolower(modelChoice)
     for (hem in hemispheres) {
-      fileName_gdd_in <- paste0(locOfgddsFiles, modelChoice_lower, "_", hem, "_", "gdd", "_", speciesChoice, "_", k, "_", yearSpan, ".tif")
+      fileName_gdd_in <- paste0(locOfgddsFiles, modelChoice_lower, "_", "gdd", "_", speciesChoice, "_", k, "_", yearSpan, ".tif")
       gdds <- rast(fileName_gdd_in)
       gdds <- crop(gdds, get(paste0("extent_", hem)))
       if (hem == "SH")  {startDate <-  paste0(l, "-07-01"); endDate <- paste0(l + yearRange, "-06-30")} # in southern hemisphere search July 1 to June 30 of the next year. NH is just the calendar year
