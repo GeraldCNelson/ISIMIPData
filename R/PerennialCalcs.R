@@ -419,8 +419,10 @@
     print(tas)
     
     # split tas up into individual years and run gdd on those
-    for (speciesChoice in speciesChoices[!speciesChoices %in% "cherry_main"]) {
-      if (speciesChoice == "apple_main") fileName_cherry_out = paste0(locOfgddsFiles, modelChoice_lower, "_", "gdd", "_", "cherry_main", "_", k, "_", yearSpan, ".tif") # apple and cherry have the
+    # with July 6, 2021 adjustments gddtb and GDD_opt are identical for two groups - almond, apple and cherry in one and olive and winegrape in the other
+    # first do gdds for one from each group - choose almond and winegrape
+    for (speciesChoice in c("almond_main", "winegrape_main")) {
+      #    for (speciesChoice in speciesChoices[!speciesChoices %in% "cherry_main"]) {
       fileName_out <- paste0(locOfgddsFiles, modelChoice_lower, "_", "gdd", "_", speciesChoice, "_", k, "_", yearSpan, ".tif")
       if (!fileName_out %in% gddFilesCompleted) {
         #      print(paste0("Working on: ", fileName_out))
@@ -429,24 +431,45 @@
         print(paste0("crop: ", speciesChoice, " topt_min: ", topt_min, " topt_max: ", topt_max, " fileName_out: ", fileName_out))
         print(system.time(gdd <- app(tas, fun = f_gdd, topt_min, topt_max, cores = 1, filename = fileName_out, overwrite = TRUE, wopt = woptList)))
         print(paste0("gdd file out name: ", fileName_out))
-        if (speciesChoice == "apple_main") fileName_cherry_out = paste0(locOfgddsFiles, modelChoice_lower, "_", "gdd", "_", "cherry_main", "_", k, "_", yearSpan, ".tif") # apple and cherry have the same topt_min and max values
-        #       return(gdd)
         gdd <- NULL
         gc()
       }else{
         print(paste("This file has already been created: ", fileName_out))
       }
+      # copy gdd files to other crops with same gdd ranges
+      gddFilesCompleted <- list.files(locOfgddsFiles,  full.names = TRUE)
+      gddFilesCompleted <- gddFilesCompleted[!grepl("aux.xml", gddFilesCompleted, fixed = TRUE)]
+      gddFilesCompleted <- gsub("//", "/", gddFilesCompleted)
+      gddFiles_almond <- gddFilesCompleted[grepl("almond", gddFilesCompleted, fixed = TRUE)]
+      gddFiles_winegrape <- gddFilesCompleted[grepl("winegrape", gddFilesCompleted, fixed = TRUE)]
+      
+      for (i in gddFiles_almond) {
+        gdd_cherry <- gsub("almond", "cherry", i)
+        file.copy(from = i, to = gdd_cherry)
+        gdd_apple <- gsub("almond", "apple", i)
+        file.copy(from = i, to = gdd_apple)
+      }
+      gdd_olive <- gsub("winegrape", "olive", gddFiles_winegrape)
+      file.copy(from = gddFiles_winegrape, to = gdd_olive)
     }
   }
   
-  f_gdd = function(cellVector, topt_min, topt_max){
+  f_gdd = function(cellVector, topt_min, topt_max) {
     # max1 <- pmin(cellVector, topt_max)-topt_min
     # ycalc <- pmax(0, max1)
-    gdd <- clamp(cellVector - topt_min, 0, (topt_max-topt_min))  
+    gdd <- clamp(cellVector - topt_min, 0, (topt_max-topt_min), values = TRUE)  
     return(gdd)
   }
   
-  #  Growing season of ‘frost free season’ for all crops is assumed to be the period from last spring frost to first autumn frost (Tmin≤0°C).
+  f_readRast_gddSum <- function(modelChoice, speciesChoice, k, l, hem) {
+    yearSpan <- paste0(l, "_", l + yearRange)
+    modelChoice_lower <- tolower(modelChoice)
+    fileName_in = paste0(locOfgddsFiles, "gddSum_mean", "_", modelChoice_lower, "_", hem, "_",  speciesChoice, "_", k, "_", yearSpan, ".tif")
+    print(paste0("speciesChoice: ", speciesChoice, ", k: ", k, ", modelChoice: ", modelChoice, ", fileName in: ", fileName_in))
+    r <- rast(fileName_in)
+  }
+  
+  #  Growing season of ‘frost free season’ for all crops is assumed to be the period from last spring frost (defined as -2C) to first autumn frost (Tmin≤-2°C).
   # get a years worth of data
   f_yearSubset <- function(l, yearRange, r, hem) {
     yearSpan <- paste0(l, "_", l + yearRange)
@@ -522,6 +545,73 @@ for (modelChoice in modelChoices) {
     f_computeGDDs(k, l, modelChoice, cropVals) 
   }
 }
+
+# GDD sum, means by model, historical -----
+k <- "historical"
+l <- 1991
+yearSpan <- paste0(l, "_", l + yearRange)
+# startDate <- paste0(l, "-01-01"); endDate <- paste0(l + yearRange, "-12-31")
+# indices <- seq(as.Date(startDate), as.Date(endDate), 1)
+# indices_day <- as.numeric(format(indices, format = "%j"))
+
+for (speciesChoice in speciesChoices) {
+  for (modelChoice in modelChoices) {
+    modelChoice_lower <- tolower(modelChoice)
+    for (hem in hemispheres) {
+      fileName_gddSums_in <- paste0(locOfgddsFiles, "gddSum", "_", modelChoice_lower, "_", hem, "_",  speciesChoice, "_", k, "_", yearSpan, ".tif")
+      r_in <- rast(fileName_gddSums_in)
+      fileName_out = paste0(locOfgddsFiles, "gddSum_mean", "_", modelChoice_lower, "_", hem, "_",  speciesChoice, "_", k, "_", yearSpan, ".tif")
+      test <- app(r_in, mean, filename = fileName_out, overwrite = TRUE, wopt = woptList)
+      print(paste0("fileName_out: ", fileName_out))
+    }
+  }
+}
+
+# GDD sum, means by model, scenarios -----
+for (k in sspChoices) {
+  for (l in startYearChoices) {
+    yearSpan <- paste0(l, "_", l + yearRange)
+    startDate <- paste0(l, "-01-01"); endDate <- paste0(l + yearRange, "-12-31")
+    indices <- seq(as.Date(startDate), as.Date(endDate), 1)
+    indices_day <- as.numeric(format(indices, format = "%j"))
+    
+    for (speciesChoice in speciesChoices) {
+      for (modelChoice in modelChoices) {
+        modelChoice_lower <- tolower(modelChoice)
+        for (hem in hemispheres) {
+          fileName_gddSums_in <- paste0(locOfgddsFiles, "gddSum", "_", modelChoice_lower, "_", hem, "_",  speciesChoice, "_", k, "_", yearSpan, ".tif")
+          r_in <- rast(fileName_gddSums_in)
+          fileName_out = paste0(locOfgddsFiles, "gddSum_mean", "_", modelChoice_lower, "_", hem, "_",  speciesChoice, "_", k, "_", yearSpan, ".tif")
+          test <- app(r_in, mean, filename = fileName_out, overwrite = TRUE, wopt = woptList)
+          print(paste0("fileName_out: ", fileName_out))
+        }
+      }
+    }
+  }
+}
+
+# ensemble mean, gdds sum -----
+
+# ensemble GDD sum, historical -----
+k <- "historical"
+l <- 1991
+yearSpan <- paste0(l, "_", l + yearRange)
+#startDate <- paste0(l, "-01-01"); endDate <- paste0(l + yearRange, "-12-31")
+for (speciesChoice in speciesChoices) {
+  gddsRequired <- majorCropValues_main[cropName == speciesChoice, gdd]
+  for (hem in hemispheres) {
+    x <- lapply(modelChoices, f_readRast_gddSum, speciesChoice, k, l, hem)
+    r <- rast(x)
+    indices_day <- rep(seq(1, nlyr(x[[1]]), 1), 5) # 5 is number of models; if omitted should get the same result
+    #     maxVal <- round(max(minmax(r)), 2); minVal <- round(min(minmax(r)), 2)
+    fileName_out <- paste0(locOfgddsFiles, "ensemble_gddSum_mean", "_", hem, "_",  speciesChoice, "_", k, "_", yearSpan, ".tif")
+    print(paste0("speciesChoice: ", speciesChoice, ", ensemble ssp: ", k, ", start year: ", l , ", fileName out: ", fileName_out))
+    print(system.time(r.mean <- tapp(r, indices_day, fun = "mean", na.rm = TRUE, filename = fileName_out, overwrite = TRUE, wopt = woptList)))
+    main <- paste0("Perennial: ", speciesChoice, ", GDDs required: ", gddsRequired, ", hemisphere: ", hem, ", ssp: ", k, ", period: ", yearSpan)
+    plot(r.mean, main = main, axes = FALSE)
+  }
+}
+
 
 # combined damage, scenarios -----
 # code to read in chill portions, cold, freeze and heat stress 1/0 files and produce 1/0 tifs where the crop is potentially growable. The chill portions files are created in the chillPortions.R script

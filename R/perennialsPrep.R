@@ -14,6 +14,19 @@ test <- test[, CR_crop_mean := round(mean(chill_requirement, na.rm = TRUE), 1), 
 test[CR_crop_max =="Inf" | CR_crop_max =="-Inf", CR_crop_max := NA]
 test[CR_crop_min =="Inf" | CR_crop_min =="-Inf", CR_crop_min := NA]
 
+# added July 6, 2021
+test[, chill_threshold := -2] # a general value for all plants. They can survive some period of temps below 0
+# adjust GDD_opt to be the same for all crops
+test[, GDD_opt := 25]
+
+#adjust gddtb
+test[cropName == "almond", gddtb := 5]
+test[cropName == "apple", gddtb := 5]
+test[cropName == "cherry", gddtb := 5]
+test[cropName == "olive", gddtb := 10]
+test[cropName == "winegrape", gddtb := 10]
+# ---- end of adjustments of July 6, 2021
+
 # remove extraneous columns
 test [, c("chill_requirement", "comment", "reference_chill_portions", "reference_other_information", "other_comments", "chill_hours", "reference_gdd") := NULL]
 test <- unique(test)

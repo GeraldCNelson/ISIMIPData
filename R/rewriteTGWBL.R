@@ -1,10 +1,34 @@
 
+# all constants, raw or derived
+propDirect <- 0.8
+Pair <- 1010
+MinWindSpeed <- 0.1
+# Physical constants
+stefanb <- 5.6696e-08
+
+cp <- 1003.5 # heat capacity at constant pressure of dry air
+m.air <- 28.97
+m.h2o <- 18.015
+r.gas <- 8314.34
+r.air <- r.gas / m.air
+ratio <- cp * m.air/ m.h2o
+Pr <- cp / (cp + (1.25 * r.air))
+
+# Globe constants
+emis.globe <- 0.95 # emissivity
+alb.globe <- 0.05 # albedo
+diam.globe <- 0.0508 #0.05 = 50mm diam globe
+
+# Surface constants
+emis.sfc <- 0.999
+
+emis.wick <- 0.95
+alb.wick <- 0.4
+diam.wick <- 0.007
+len.wick <- 0.0254
 
 
 wbgt.Liljegren <- function(tas, dewp, relh, wind, radiation, dates, lon, lat, tolerance = 1e-04, noNAs = TRUE, swap = FALSE, hour = FALSE) {
-  propDirect <- 0.8
-  Pair <- 1010
-  MinWindSpeed <- 0.1
   ndates <- length(tas)
   Tnwb <- rep(NA, ndates)
   Tg <- rep(NA, ndates)
@@ -30,18 +54,6 @@ wbgt.Liljegren <- function(tas, dewp, relh, wind, radiation, dates, lon, lat, to
 }
 
 fTg <- function (tas, relh, Pair, wind, min.speed, radiation, propDirect, zenith, SurfAlbedo = 0.4, tolerance = 1e-04) {
-  stefanb <- 5.6696e-08
-  cp <- 1003.5
-  m.air <- 28.97
-  m.h2o <- 18.015
-  r.gas <- 8314.34
-  r.air <- r.gas/m.air
-  ratio <- cp * m.air/m.h2o
-  Pr <- cp/(cp + (1.25 * r.air))
-  emis.globe <- 0.95
-  alb.globe <- 0.05
-  diam.globe <- 0.05
-  emis.sfc <- 0.999
   alb.sfc <- SurfAlbedo
   if (zenith <= 0) zenith <- 1e-10
   if (radiation > 0 & zenith > 1.57) zenith <- 1.57
@@ -53,35 +65,13 @@ fTg <- function (tas, relh, Pair, wind, min.speed, radiation, propDirect, zenith
   cza <- cos(zenith)
   Tsfc <- Tair
   
-  fr <- function(Tglobe_prev, Tair, Pair) {
-    Tref <- 0.5 * (Tglobe_prev + Tair)
-    h <- h_sphere_in_air(Tref, Pair, wind, min.speed, diam.globe)
-    Tglobe <- (0.5 * (emis_atm(Tair, RH) * Tair^4 + emis.sfc * Tsfc^4) - h/(emis.globe * stefanb) * (Tglobe_prev - Tair) + 
-                 radiation/(2 * emis.globe * stefanb) * (1 - alb.globe) * (propDirect * (1/(2 * cza) - 1) + 1 + alb.sfc))^0.25
-    abs(Tglobe - Tglobe_prev)
-  }
-  opt <- stats::optimize(fr, range(Tair - 2, Tair + 10), Tair, Pair, tol = tolerance)
+  # Minimization (iteratively)
+  opt <- stats::optimize(fr, range(Tair-2, Tair+10),Tair,Pair, tol=tolerance)
   Tg <- opt$minimum - 273.15
   return(Tg)
 }
 
 fTnwb <- function (tas, dewp, relh, Pair, wind, min.speed, radiation, propDirect, zenith, irad = 1, SurfAlbedo = 0.4, tolerance = 1e-04) {
-  stefanb <- 5.6696e-08
-  cp <- 1003.5
-  m.air <- 28.97
-  m.h2o <- 18.015
-  r.gas <- 8314.34
-  r.air <- r.gas/m.air
-  ratio <- cp * m.air/m.h2o
-  Pr <- cp/(cp + (1.25 * r.air))
-  emis.wick <- 0.95
-  alb.wick <- 0.4
-  diam.wick <- 0.007
-  len.wick <- 0.0254
-  emis.globe <- 0.95
-  alb.globe <- 0.05
-  diam.globe <- 0.0508
-  emis.sfc <- 0.999
   alb.sfc <- SurfAlbedo
   if (zenith <= 0) zenith <- 1e-10
   if (radiation > 0 & zenith > 1.57) zenith <- 1.57
@@ -95,17 +85,6 @@ fTnwb <- function (tas, dewp, relh, Pair, wind, min.speed, radiation, propDirect
   emis.atm <- emis_atm(Tair, RH)
   Tsfc <- Tair
   density <- Pair * 100/(Tair * r.air)
-  fr <- function(Twb_prev, Tair, Pair) {
-    Tref <- 0.5 * (Twb_prev + Tair)
-    Fatm <- stefanb * emis.wick * (0.5 * (emis.atm * Tair^4 + emis.sfc * Tsfc^4) - Twb_prev^4) + (1 - alb.wick) * 
-      radiation * ((1 - propDirect) * (1 + 0.25 * diam.wick/len.wick) + ((tan(zenith)/3.1416) + 0.25 * diam.wick/len.wick) * propDirect + alb.sfc)
-    Sc <- viscosity(Tair)/(density * diffusivity(Tref, Pair))
-    h <- h_cylinder_in_air(Twb_prev, Pair, wind, min.speed, diam.wick)
-    ewick <- esat(Twb_prev)
-    evap <- h_evap(Twb_prev)
-    Twb <- Tair - evap/ratio * (ewick - eair)/(Pair - ewick) * (Pr/Sc)^0.56 + Fatm/h * irad
-    return(abs(Twb - Twb_prev))
-  }
   opt <- stats::optimize(fr, range(Tdew - 1, Tair + 1), Tair, Pair, tol = tolerance)
   Tnwb <- opt$minimum - 273.15
   return(Tnwb)
@@ -168,13 +147,6 @@ is.leapyear <- function(year){
 }
 
 h_sphere_in_air <- function(Tk, Pair, speed, min.speed, diam.globe) {
-  # Constants
-  m.air <- 28.97
-  r.gas <- 8314.34
-  r.air <- r.gas / m.air
-  cp <- 1003.5 # heat capacity at constant pressure of dry air
-  Pr <- cp / (cp + 1.25 * r.air)
-  
   # Calculate the thermal conductivity of air, W/(m K)
   therm.con <- thermal_cond(Tk)
   
@@ -212,13 +184,6 @@ esat <- function(Tk) {
 }
 
 h_cylinder_in_air <- function(Tk, Pair, speed, min.speed, diam.wick) {
-  # Constants
-  m.air <- 28.97
-  r.gas <- 8314.34
-  r.air <- r.gas / m.air
-  cp <- 1003.5 # heat capaticy at constant pressure of dry air
-  Pr <- cp / (cp + (1.25 * r.air))
-  
   # Calculate the thermal conductivity of air, W/(m K)
   therm.con <- thermal_cond(Tk)
   
@@ -238,13 +203,30 @@ h_cylinder_in_air <- function(Tk, Pair, speed, min.speed, diam.wick) {
 }
 
 thermal_cond <- function(Tk) {
-  # Constants
-  m.air <- 28.97
-  r.gas <- 8314.34
-  r.air <- r.gas / m.air
-  cp <- 1003.5 # heat capacity at constant pressure of dry air
-  
   # Calculate the thermal conductivity of air, W/(m K)
   therm.con <- (cp + 1.25 * r.air) * viscosity(Tk)
   return(therm.con)
+}
+
+diffusivity <- function(Tk, Pair) {
+  diffusivity <- 0.000364 * (Tk / Tcrit12) ^ 2.334 * pcrit13 * tcrit512 * Mmix / (Pair / 1013.25) * 0.0001
+  return(diffusivity)
+}
+
+fr <- function(Twb_prev, Tair, Pair, emis.wick, emis.sfc, radiation, wind, zenith, density, min.speed) {
+  Tref <- 0.5 * (Twb_prev + Tair)
+  Fatm <- stefanb * emis.wick * (0.5 * (emis.atm * Tair^4 + emis.sfc * Tsfc^4) - Twb_prev^4) + (1 - alb.wick) * 
+    radiation * ((1 - propDirect) * (1 + 0.25 * diam.wick/len.wick) + ((tan(zenith)/3.1416) + 0.25 * diam.wick/len.wick) * propDirect + alb.sfc)
+  Sc <- viscosity(Tair)/(density * diffusivity(Tref, Pair))
+  h <- h_cylinder_in_air(Twb_prev, Pair, wind, min.speed, diam.wick)
+  ewick <- esat(Twb_prev)
+  evap <- h_evap(Twb_prev)
+  Twb <- Tair - evap/ratio * (ewick - eair)/(Pair - ewick) * (Pr/Sc)^0.56 + Fatm/h * irad
+  return(abs(Twb - Twb_prev))
+}
+
+emis_atm <- function(Tk, RH) {
+  e <- RH * esat(Tk)
+  emis_atm <- 0.575 * e ^ 0.143
+  return(emis_atm)
 }

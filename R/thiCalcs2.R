@@ -39,7 +39,7 @@
   f_readRast_thi_ensemble <- function(modelChoice, breedChoice, k, l) {
     yearSpan <- paste0(l, "_", l + yearRange)
     fileName_in <- paste0(locOfDataFiles_THI, "thi.", breedChoice, "_", modelChoice, "_", k,  "_", yearSpan, ".tif")
-    print(paste0("m: ", breedChoice, ", k: ", k, ", modelChoice: ", modelChoice, ", fileName in: ", fileName_in))
+    print(paste0("breedChoice: ", breedChoice, ", k: ", k, ", modelChoice: ", modelChoice, ", fileName in: ", fileName_in))
     r <- rast(fileName_in)
     indices <- seq(from = 1, to = nlyr(r), 1)
     indices <- paste0("X", as.character(indices))
