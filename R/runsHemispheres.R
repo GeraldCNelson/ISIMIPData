@@ -2,22 +2,29 @@
   require(terra)
   source("R/ISIMIPconstants.R")
   source("R/ISIMIPspatialConstants.R")
-  source("R/perennialsPrep.R") # creates the data tables majorCropValues_main, majorCropValues_lo and majorCropValues_hi
-  
-  startYearChoices <-  c(2041, 2081) 
+
   options(warn = 1) # 2 converts warnings to errors
-  locOfRunsFiles <- "data/cmip6/runs/"
-  #test files
+  #test values
   i <- "IPSL-CM6A-LR"
   modelChoice_lower <- tolower(i)
   k <- "ssp585"
   l <- 2041
   yearSpan <- paste0(l, "_", l + yearRange)
   fileName_tasmin <- paste0(locOfClimFiles,  modelChoice_lower, "_tasmin", "_", k,  "_", yearSpan, ".tif")
-  speciesChoice <- "apple_main"
   rastIn <- rast(fileName_tasmin)
   
-  
+  # variables that define the runs parameters. This is the only place they are assigned values
+  {
+    climVal <- -2 # changed from 0 because subject experts say plants can tolerate this
+    test_logic <- paste0("x > ", climVal)
+    logicDirection <- ">"
+    if (logicDirection == ">") ldtext <-"gt"
+    if (logicDirection == "<") ldtext <-"lt"
+    runlengthChoices <- c(100) # at least 100 days of tmin > 0
+    climateVariable <- "tasmin"
+    runsParms <- c(climVal, test_logic, logicDirection, ldtext, runlengthChoices, climateVariable)
+  }
+
   f_runs <- function(x, runlength) {
     # number of layers to be returned 
     # element 1 - number of runs that meet the logic criterion
@@ -48,8 +55,11 @@
     return(runResult)
   }
   
-  
-  f_runsSetup <- function(k, l, logicDirection, climVal) {
+  f_runsSetup <- function(k, l, runsParms) {
+    logicDirection <- runsParms[3]
+    climVal <- runsParms[1]
+    climateVariable <- runsParms[6]
+    ldtext <- runsParms[4]
     yearSpan <- paste0(l, "_", l + yearRange)
     for (runlength in runlengthChoices) {
       for (modelChoice in modelChoices) {
@@ -114,70 +124,38 @@
       }
     }
   }
-  # perennials hemisphere specific runs calculations -----
-  {
-    climVal <- 0 
-    test_logic <- paste0("x > ", climVal)
-    logicDirection <- ">"
-    if (logicDirection == ">") ldtext <-"gt"
-    if (logicDirection == "<") ldtext <-"lt"
-    runlengthChoices <- c(100) # at least 100 days of tmin > 0
-    climateVariable <- "tasmin"
-  }
-}
-
-
-# runs, scenarios -----
-for (runlength in runlengthChoices) {
-  for (k in sspChoices) {
-    for (l in startYearChoices) {
-      f_runsSetup(k, l, logicDirection, climVal)
-    }
-  }
-}
-
-# runs, historical -----
-k = "historical"
-l = 1991
-f_runsSetup(k, l, logicDirection, climVal)
-
-#  GDDs sum start  -----
-{
-  runlength = 100 # minimum number of days above climVal
-  ldtext <- "gt" # logic direction - gt, ge, ld, le
-  climVal <- 0 # temperature threshold
-  climateVariable <- "tasmin" # variable logic is applied to
-  varietiesChoice <- "varieties_main"
-  varietiesChoiceSuffix <- gsub("varieties", "", varietiesChoice) # whether to use lo, main, or hi cp values
-  cropVals <- eval(parse(text = (paste0(" majorCropValues", varietiesChoiceSuffix))))
-  speciesChoices <- unique(cropVals$cropName)
-}
-
-f_gddSums <- function(k, l) {
-  yearSpan <- paste0(l, "_", l + yearRange)
-  for (modelChoice in modelChoices) {
-    modelChoice_lower <- tolower(modelChoice)
-    for (hem in hemispheres) {
+  
+  f_gddSums <- function(k, l, speciesChoice, hem, runsParms) {
+    logicDirection <- runsParms[3]
+    climVal <- runsParms[1]
+    climateVariable <- runsParms[6]
+    ldtext <- runsParms[4]
+    yearSpan <- paste0(l, "_", l + yearRange)
+    for (modelChoice in modelChoices) {
+      modelChoice_lower <- tolower(modelChoice)
       fileName_gdd_in <- paste0(locOfgddsFiles, modelChoice_lower, "_", "gdd", "_", speciesChoice, "_", k, "_", yearSpan, ".tif")
       gdds <- rast(fileName_gdd_in)
       gdds <- crop(gdds, get(paste0("extent_", hem)))
-      if (hem == "SH")  {startDate <-  paste0(l, "-07-01"); endDate <- paste0(l + yearRange, "-06-30")} # in southern hemisphere search July 1 to June 30 of the next year. NH is just the calendar year
-      if (hem == "NH")  {startDate <-  paste0(l, "-01-01"); endDate <- paste0(l + yearRange, "-12-31")} # in southern hemisphere search July 1 to June 30 of the next year. NH is just the calendar year
+      # gdds are daily for the 20 year period
+      # if (hem == "SH")  {startDate <-  paste0(l, "-07-01"); endDate <- paste0(l + yearRange-1, "-06-30")} # in southern hemisphere search July 1 to June 30 of the next year. NH is just the calendar year
+      # if (hem == "NH")  {startDate <-  paste0(l, "-01-01"); endDate <- paste0(l + yearRange, "-12-31")} # in southern hemisphere search July 1 to June 30 of the next year. NH is just the calendar year
+      startDate <-  paste0(l, "-01-01"); endDate <- paste0(l + yearRange, "-12-31")
       indices <- seq(as.Date(startDate), as.Date(endDate), by = "days")
       indicesChar <- paste0("X", indices)
+      # in case gdds doesn't have correct names
+      names(gdds) <- indicesChar
       indicesYr <- unique(as.numeric(format(indices, "%Y")))
       if (hem == "SH") indicesYr <- indicesYr[1:yearRange]
       if (length(gdds) == length(indicesChar)) gdds <- subset(gdds, indicesChar) # if SH, gets rid of the first 1/2 year and  last 1/2 year. may not be necessary because I think gdds in sh file already have this done. If statement may capture this
       fileName_startDay1_in <- paste0(locOfRunsFiles, "startday_1_", climateVariable,"_",modelChoice_lower, "_run_", runlength, "_lim_", ldtext, climVal, "_", hem, "_", k, "_", yearSpan, ".tif")
       fileName_endDay1_in <- paste0(locOfRunsFiles, "endday_1_", climateVariable,"_",modelChoice_lower, "_run_", runlength, "_lim_", ldtext, climVal, "_", hem, "_", k, "_", yearSpan, ".tif")
       startDay <- rast(fileName_startDay1_in)
-      names(startDay) <- sort(unique(indicesYr))
       endDay <- rast(fileName_endDay1_in)
       names(startDay) <-names(endDay) <- sort(unique(indicesYr))
       
       # now do calc by year
       for (yearNumber in 1:nlyr(startDay)) {
-        print(paste0("Working on ssp:" , k, ", startYear: ", l, ", hem: ", hem, ", model: ", modelChoice, ", yearNumber: ", yearNumber))
+        print(paste0("Working on species choice: ", speciesChoice, ", ssp: " , k, ", startYear: ", l, ", hem: ", hem, ", model: ", modelChoice, ", yearNumber: ", yearNumber))
         startDay_yr <- subset(startDay, yearNumber)
         endDay_yr <- subset(endDay, yearNumber)
         startYear <- l + yearNumber - 1
@@ -192,7 +170,7 @@ f_gddSums <- function(k, l) {
         #            print(system.time(sum_gdds <- app(gdds_yr, f_sumVec, startDay_yr, endDay_yr)))
         if ((hem == "SH" & yearNumber < 20) | (hem == "NH")) {
           gdds_yr <- subset(gdds, indicesChar)
-          print(paste0("Just before browser, iteration number: ",  yearNumber))
+          #         print(paste0("Just before browser, iteration number: ",  yearNumber))
           #              browser()
           print(system.time(sum_gdds <- rapp(gdds_yr, startDay_yr, endDay_yr, sum)))
           if (yearNumber == 1 ) {
@@ -200,32 +178,146 @@ f_gddSums <- function(k, l) {
           } else {
             period_sums <- c(period_sums, sum_gdds)
           }
-          fileName_gddSums_out <- paste0(locOfgddsFiles, "gddSum", "_", modelChoice_lower, "_", hem, "_",  speciesChoice, "_", k, "_", yearSpan, ".tif")
-          print(system.time(writeRaster(period_sums, filename = fileName_gddSums_out,  overwrite = TRUE, wopt= woptList))); flush.console()
-          print(paste0("fileName_gddSums_out: ", fileName_gddSums_out))
-          gc()
+        }
+        gc()
+      }
+      fileName_gddSums_out <- paste0(locOfgddsFiles, "gddSum", "_", modelChoice_lower, "_", hem, "_",  speciesChoice, "_", k, "_", yearSpan, ".tif")
+      print(system.time(writeRaster(period_sums, filename = fileName_gddSums_out,  overwrite = TRUE, wopt= woptList))); flush.console()
+      print(paste0("fileName_gddSums_out: ", fileName_gddSums_out))
+      
+    }
+  }
+}
+
+# perennials hemisphere specific runs calculations -----
+
+
+# runs, scenarios -----
+for (runlength in runlengthChoices) {
+  for (k in sspChoices) {
+    for (l in startYearChoices) {
+      f_runsSetup(k, l, runsParms)
+    }
+  }
+}
+
+# runs, historical -----
+k = "historical"
+l = 1991
+f_runsSetup(k, l, runsParms)
+
+# runs , means by model, historical -----
+logicDirection <- runsParms[3]
+climVal <- runsParms[1]
+climateVariable <- runsParms[6]
+ldtext <- runsParms[4]
+
+k <- "historical"
+l <- 1991
+yearSpan <- paste0(l, "_", l + yearRange)
+# startDate <- paste0(l, "-01-01"); endDate <- paste0(l + yearRange, "-12-31")
+# indices <- seq(as.Date(startDate), as.Date(endDate), 1)
+# indices_day <- as.numeric(format(indices, format = "%j"))
+for (speciesChoice in speciesChoices) {
+  for (modelChoice in modelChoices) {
+    modelChoice_lower <- tolower(modelChoice)
+    for (hem in hemispheres) {
+      fileName_ct_in <- paste0(locOfRunsFiles, "runs_ct_", climateVariable,"_",modelChoice_lower, "_run_", runlength, "_lim_", ldtext, climVal, "_", hem, "_", k, "_", yearSpan, ".tif")
+      fileName_length_in <- paste0(locOfRunsFiles, "runs_length_", climateVariable,"_",modelChoice_lower, "_run_", runlength, "_lim_", ldtext, climVal, "_", hem, "_", k, "_", yearSpan, ".tif")
+      fileName_startDay1_in <- paste0(locOfRunsFiles, "startday_1_", climateVariable,"_",modelChoice_lower, "_run_", runlength, "_lim_", ldtext, climVal, "_", hem, "_", k, "_", yearSpan, ".tif")
+      fileName_endDay1_in <- paste0(locOfRunsFiles, "endday_1_", climateVariable,"_",modelChoice_lower, "_run_", runlength, "_lim_", ldtext, climVal, "_", hem, "_", k, "_", yearSpan, ".tif")
+      fileName_ct_out <- paste0(locOfRunsFiles, "runs_ct_mean_", climateVariable,"_",modelChoice_lower, "_run_", runlength, "_lim_", ldtext, climVal, "_", hem, "_", k, "_", yearSpan, ".tif")
+      fileName_length_out <- paste0(locOfRunsFiles, "runs_length_mean_", climateVariable,"_",modelChoice_lower, "_run_", runlength, "_lim_", ldtext, climVal, "_", hem, "_", k, "_", yearSpan, ".tif")
+      fileName_startDay1_out <- paste0(locOfRunsFiles, "startday_1_mean_", climateVariable,"_",modelChoice_lower, "_run_", runlength, "_lim_", ldtext, climVal, "_", hem, "_", k, "_", yearSpan, ".tif")
+      fileName_endDay1_out <- paste0(locOfRunsFiles, "endday_1_mean_", climateVariable,"_",modelChoice_lower, "_run_", runlength, "_lim_", ldtext, climVal, "_", hem, "_", k, "_", yearSpan, ".tif")
+      ct_in <- rast(fileName_ct_in)
+      length_in <- rast(fileName_length_in)
+      startDay1_in <- rast(fileName_startDay1_in)
+      endDay1_in <- rast(fileName_endDay1_in)
+      test_cp <- app(ct_in, mean, filename = fileName_ct_out, overwrite = TRUE, wopt = woptList)
+      test_length <- app(length_in, mean, filename = fileName_length_out, overwrite = TRUE, wopt = woptList)
+      test_startDay <- app(startDay1_in, mean, filename = fileName_startDay1_out, overwrite = TRUE, wopt = woptList)
+      test_endDay <- app(endDay1_in, mean, filename = fileName_endDay1_out, overwrite = TRUE, wopt = woptList)
+    }
+  }
+}
+
+# runs , means by model, scenarios -----
+logicDirection <- runsParms[3]
+climVal <- runsParms[1]
+climateVariable <- runsParms[6]
+ldtext <- runsParms[4]
+for (k in sspChoices) {
+  for (l in startYearChoices) {
+    yearSpan <- paste0(l, "_", l + yearRange)
+    # startDate <- paste0(l, "-01-01"); endDate <- paste0(l + yearRange, "-12-31")
+    # indices <- seq(as.Date(startDate), as.Date(endDate), 1)
+    # indices_day <- as.numeric(format(indices, format = "%j"))
+    for (speciesChoice in speciesChoices) {
+      for (modelChoice in modelChoices) {
+        modelChoice_lower <- tolower(modelChoice)
+        for (hem in hemispheres) {
+          fileName_ct_in <- paste0(locOfRunsFiles, "runs_ct_", climateVariable,"_",modelChoice_lower, "_run_", runlength, "_lim_", ldtext, climVal, "_", hem, "_", k, "_", yearSpan, ".tif")
+          fileName_length_in <- paste0(locOfRunsFiles, "runs_length_", climateVariable,"_",modelChoice_lower, "_run_", runlength, "_lim_", ldtext, climVal, "_", hem, "_", k, "_", yearSpan, ".tif")
+          fileName_startDay1_in <- paste0(locOfRunsFiles, "startday_1_", climateVariable,"_",modelChoice_lower, "_run_", runlength, "_lim_", ldtext, climVal, "_", hem, "_", k, "_", yearSpan, ".tif")
+          fileName_endDay1_in <- paste0(locOfRunsFiles, "endday_1_", climateVariable,"_",modelChoice_lower, "_run_", runlength, "_lim_", ldtext, climVal, "_", hem, "_", k, "_", yearSpan, ".tif")
+          fileName_ct_out <- paste0(locOfRunsFiles, "runs_ct_mean_", climateVariable,"_",modelChoice_lower, "_run_", runlength, "_lim_", ldtext, climVal, "_", hem, "_", k, "_", yearSpan, ".tif")
+          fileName_length_out <- paste0(locOfRunsFiles, "runs_length_mean_", climateVariable,"_",modelChoice_lower, "_run_", runlength, "_lim_", ldtext, climVal, "_", hem, "_", k, "_", yearSpan, ".tif")
+          fileName_startDay1_out <- paste0(locOfRunsFiles, "startday_1_mean_", climateVariable,"_",modelChoice_lower, "_run_", runlength, "_lim_", ldtext, climVal, "_", hem, "_", k, "_", yearSpan, ".tif")
+          fileName_endDay1_out <- paste0(locOfRunsFiles, "endday_1_mean_", climateVariable,"_",modelChoice_lower, "_run_", runlength, "_lim_", ldtext, climVal, "_", hem, "_", k, "_", yearSpan, ".tif")
+          ct_in <- rast(fileName_ct_in)
+          length_in <- rast(fileName_length_in)
+          startDay1_in <- rast(fileName_startDay1_in)
+          endDay1_in <- rast(fileName_endDay1_in)
+          test_cp <- app(ct_in, mean, filename = fileName_ct_out, overwrite = TRUE, wopt = woptList)
+          test_length <- app(length_in, mean, filename = fileName_length_out, overwrite = TRUE, wopt = woptList)
+          test_startDay <- app(startDay1_in, mean, filename = fileName_startDay1_out, overwrite = TRUE, wopt = woptList)
+          test_endDay <- app(endDay1_in, mean, filename = fileName_endDay1_out, overwrite = TRUE, wopt = woptList)
         }
       }
     }
   }
 }
 
-# gdd sums, scenarios ------
-for (speciesChoice in speciesChoices) {
-  for (k in sspChoices) {
-    for (l in startYearChoices) {
-      f_gddSums(k, l)
-    }
-  }
+# ensemble mean, runs -----
+# runs ensembles, historical
+f_readRast_runs <- function(modelChoice, k, l, hem, runType, runsParms) {
+  logicDirection <- runsParms[3]
+  climVal <- runsParms[1]
+  climateVariable <- runsParms[6]
+  ldtext <- runsParms[4]
+  
+  yearSpan <- paste0(l, "_", l + yearRange)
+  modelChoice_lower <- tolower(modelChoice)
+  fileName_in = paste0(locOfRunsFiles, runType, "_", climateVariable, "_", modelChoice_lower, "_run_", runlength, "_lim_", ldtext, climVal, "_", hem, "_", k, "_", yearSpan, ".tif")
+  print(paste0("runType: ", runType, ", k: ", k, ", modelChoice: ", modelChoice, ", fileName in: ", fileName_in))
+  r <- rast(fileName_in)
 }
 
-# gdd sums, historical ------
+# ensemble mean runs, historical -----
+logicDirection <- runsParms[3]
+climVal <- runsParms[1]
+climateVariable <- runsParms[6]
+ldtext <- runsParms[4]
 k <- "historical"
 l <- 1991
-for (speciesChoice in speciesChoices) {
-  f_gddSums(k, l)
+yearSpan <- paste0(l, "_", l + yearRange)
+runType <- "runs_length" # choices are c("runs_ct", "runs_length", "startday_1", "endday_1")
+for (hem in hemispheres) {
+  x <- lapply(modelChoices, f_readRast_runs, k, l, hem, runType, runsParms)
+  r <- rast(x)
+  indices_day <- rep(seq(1, nlyr(x[[1]]), 1), 5) # 5 is number of models; if omitted should get the same result
+  fileName_out <- paste0(locOfRunsFiles, "ensemble_", runType, "_", climateVariable, "_", modelChoice_lower, "_run_", runlength, "_lim_", ldtext, climVal, "_", hem, "_", k, "_", yearSpan, ".tif")
+  cat(paste0("ensemble ssp: ", k, ", start year: ", l , ", fileName out: ", fileName_out))
+  print(system.time(r_mean <- tapp(r, indices_day, fun = "mean", na.rm = TRUE, filename = fileName_out, overwrite = TRUE, wopt = woptList)))
+  names(r.mean) <- gsub("X", "Day ", names(r.mean))
 }
 
 
 
-
+  
+  
+  
+  
+  
+  

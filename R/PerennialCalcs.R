@@ -546,14 +546,30 @@ for (modelChoice in modelChoices) {
   }
 }
 
+# gdd sums, scenarios ------
+for (speciesChoice in speciesChoices) {
+  for (k in sspChoices) {
+    for (l in startYearChoices) {
+      for (hem in hemispheres) {
+        f_gddSums(k, l, speciesChoice, hem)
+      }
+    }
+  }
+}
+
+# gdd sums, historical ------
+k <- "historical"
+l <- 1991
+for (speciesChoice in speciesChoices) {
+  for (hem in hemispheres) {
+    f_gddSums(k, l, speciesChoice, hem)
+  }
+}
+
 # GDD sum, means by model, historical -----
 k <- "historical"
 l <- 1991
 yearSpan <- paste0(l, "_", l + yearRange)
-# startDate <- paste0(l, "-01-01"); endDate <- paste0(l + yearRange, "-12-31")
-# indices <- seq(as.Date(startDate), as.Date(endDate), 1)
-# indices_day <- as.numeric(format(indices, format = "%j"))
-
 for (speciesChoice in speciesChoices) {
   for (modelChoice in modelChoices) {
     modelChoice_lower <- tolower(modelChoice)
@@ -589,8 +605,6 @@ for (k in sspChoices) {
     }
   }
 }
-
-# ensemble mean, gdds sum -----
 
 # ensemble GDD sum, historical -----
 k <- "historical"
