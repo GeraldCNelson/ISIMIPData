@@ -469,6 +469,68 @@
     r <- rast(fileName_in)
   }
   
+  f_gddSums <- function(k, l, speciesChoice, hem, runsParms) {
+    logicDirection <- runsParms[3]
+    climVal <- runsParms[1]
+    climateVariable <- runsParms[6]
+    ldtext <- runsParms[4]
+    yearSpan <- paste0(l, "_", l + yearRange)
+    for (modelChoice in modelChoices) {
+      modelChoice_lower <- tolower(modelChoice)
+      fileName_gdd_in <- paste0(locOfgddsFiles, modelChoice_lower, "_", "gdd", "_", speciesChoice, "_", k, "_", yearSpan, ".tif")
+      gdds <- rast(fileName_gdd_in)
+      gdds <- crop(gdds, get(paste0("extent_", hem)))
+      # gdds are daily for the 20 year period
+      # if (hem == "SH")  {startDate <-  paste0(l, "-07-01"); endDate <- paste0(l + yearRange-1, "-06-30")} # in southern hemisphere search July 1 to June 30 of the next year. NH is just the calendar year
+      # if (hem == "NH")  {startDate <-  paste0(l, "-01-01"); endDate <- paste0(l + yearRange, "-12-31")} # in southern hemisphere search July 1 to June 30 of the next year. NH is just the calendar year
+      startDate <-  paste0(l, "-01-01"); endDate <- paste0(l + yearRange, "-12-31")
+      indices <- seq(as.Date(startDate), as.Date(endDate), by = "days")
+      indicesChar <- paste0("X", indices)
+      # in case gdds doesn't have correct names
+      names(gdds) <- indicesChar
+      indicesYr <- unique(as.numeric(format(indices, "%Y")))
+      if (hem == "SH") indicesYr <- indicesYr[1:yearRange]
+      if (length(gdds) == length(indicesChar)) gdds <- subset(gdds, indicesChar) # if SH, gets rid of the first 1/2 year and  last 1/2 year. may not be necessary because I think gdds in sh file already have this done. If statement may capture this
+      fileName_startDay1_in <- paste0(locOfRunsFiles, "startday_1_", climateVariable,"_",modelChoice_lower, "_run_", runlength, "_lim_", ldtext, climVal, "_", hem, "_", k, "_", yearSpan, ".tif")
+      fileName_endDay1_in <- paste0(locOfRunsFiles, "endday_1_", climateVariable,"_",modelChoice_lower, "_run_", runlength, "_lim_", ldtext, climVal, "_", hem, "_", k, "_", yearSpan, ".tif")
+      startDay <- rast(fileName_startDay1_in)
+      endDay <- rast(fileName_endDay1_in)
+      names(startDay) <-names(endDay) <- sort(unique(indicesYr))
+      
+      # now do calc by year
+      for (yearNumber in 1:nlyr(startDay)) {
+        print(paste0("Working on species choice: ", speciesChoice, ", ssp: " , k, ", startYear: ", l, ", hem: ", hem, ", model: ", modelChoice, ", yearNumber: ", yearNumber))
+        startDay_yr <- subset(startDay, yearNumber)
+        endDay_yr <- subset(endDay, yearNumber)
+        startYear <- l + yearNumber - 1
+        
+        if (hem == "SH")  {
+          startDate <-  paste0(startYear, "-07-01"); endDate <- paste0(startYear + 1, "-06-30")} # in southern hemisphere search July 1 to June 30 of the next year. NH is just the calendar year
+        if (hem == "NH")  {
+          startDate <-  paste0(startYear, "-01-01"); endDate <- paste0(startYear, "-12-31")
+        } # in southern hemisphere search July 1 to June 30 of the next year. NH is just the calendar year
+        indices <- seq(as.Date(startDate), as.Date(endDate), by = "days")
+        indicesChar <- paste0("X", indices)
+        #            print(system.time(sum_gdds <- app(gdds_yr, f_sumVec, startDay_yr, endDay_yr)))
+        if ((hem == "SH" & yearNumber < 20) | (hem == "NH")) {
+          gdds_yr <- subset(gdds, indicesChar)
+          #         print(paste0("Just before browser, iteration number: ",  yearNumber))
+          #              browser()
+          print(system.time(sum_gdds <- rapp(gdds_yr, startDay_yr, endDay_yr, sum)))
+          if (yearNumber == 1 ) {
+            period_sums <- sum_gdds
+          } else {
+            period_sums <- c(period_sums, sum_gdds)
+          }
+        }
+        gc()
+      }
+      fileName_gddSums_out <- paste0(locOfgddsFiles, "gddSum", "_", modelChoice_lower, "_", hem, "_",  speciesChoice, "_", k, "_", yearSpan, ".tif")
+      print(system.time(writeRaster(period_sums, filename = fileName_gddSums_out,  overwrite = TRUE, wopt= woptList))); flush.console()
+      print(paste0("fileName_gddSums_out: ", fileName_gddSums_out))
+    }
+  }
+  
   #  Growing season of ‘frost free season’ for all crops is assumed to be the period from last spring frost (defined as -2C) to first autumn frost (Tmin≤-2°C).
   # get a years worth of data
   f_yearSubset <- function(l, yearRange, r, hem) {
