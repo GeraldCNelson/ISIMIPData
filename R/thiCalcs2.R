@@ -6,14 +6,14 @@
   library(Rcpp)
   library(data.table)
   sourceCpp("R/cpp/THI_functions_combined.cpp")
-  library("crayon")
+ library("crayon")
   locOfClimFiles <- "/Volumes/ExtremeSSD2/ISIMIP/cmip6/"
   
   # constants, THI -----
   speciesChoices <- c("generic") #, "humans", "cattle",  "pigs", "chicken", "sheep") # note goats use same THI formula as cattle.
-  speciesChoices <- c("humans")
+  speciesChoices <- c("generic")
   breedChoices <- c("generic_generic", "humans_adj", "bos_Taurus", "bos_Indicus",  "goats", "pigs_temp", "pigs_trop", "chicken_temp")
-  breedChoices <- c("humans_adj")
+  breedChoices <- c("generic_generic")
   stressLevelChoices <- c("noStress", "moderateStress", "extremeStress")
   hours_worked_humans <- 8
   animalCts_global <- as.data.table(read.csv("data/animals/animalCt.csv"))

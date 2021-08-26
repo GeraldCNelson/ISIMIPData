@@ -5,16 +5,16 @@
   source("R/ISIMIPspatialConstants.R")
   locOfClimFiles <- "/Volumes/ExtremeSSD2/ISIMIP/cmip6/"
   
-  climateVars <- c("sfcwind", "rsds") #, "pr", "tas" , "tasmax", "tasmin" "hurs"
+  climateVars <- c("pr") #, "tasmax", "tasmin", "hurs") #, "pr", "tas" , "tasmax", "tasmin" "hurs" , "sfcwind", "rsds"
   meanChoices <- c("daily", "monthly", "annual")
-  meanChoices <- c("daily")
+  meanChoices <- c("monthly")
   
   # test values
-  climateVar <- "tasmin"
+  climateVar <- "pr"
   k <- "ssp585"
   l <- 2041
   modelChoice <- "IPSL-CM6A-LR"
-  meanChoice <- "daily"
+  meanChoice <- "monthly"
   
   # f_readRast is for the ensemble calcs
   f_readRast <- function(modelChoice, k, l, climateVar, meanChoice) {
@@ -36,49 +36,57 @@
     indices_date  <- paste0("X", as.character(indices))
     indices_month <- as.numeric(format(indices, format = "%m"))
     indices_day <- as.numeric(format(indices, format = "%j"))
-    print(paste0("working on start year: ", l, ", variable: ", climateVar, ", ssp choice: ", k, ", modelChoice: ", modelChoice, ", mean choice: ", meanChoice))
+    print(paste0("working on start year: ", l, ", variable: ", climateVar, ", ssp choice: ", k, ", modelChoice: ", modelChoice, ", period choice: ", meanChoice))
     fileName_in <- paste0(locOfClimFiles, modelChoice_lower, "_", climateVar, "_", k, "_", yearSpan, ".tif") 
     r_in <- rast(fileName_in)
     fileName_mean_daily_out <- paste0(locOfClimFiles, "mean_daily/mean_daily_", climateVar, "_", modelChoice_lower, "_", k,  "_", yearSpan, ".tif")
     fileName_mean_monthly_out <- paste0(locOfClimFiles, "mean_monthly/mean_monthly_", climateVar, "_", modelChoice_lower, "_", k,  "_", yearSpan, ".tif")
-    if (climateVar %in% "pr") { 
-      if (meanChoice == "annual") {
-        fileName_annualSum_out <- paste0(locOfClimFiles, "mean_annual/annualSum_", climateVar, "_", modelChoice_lower, "_", k,  "_", yearSpan, ".tif")
-        print(system.time(r_annualSum <- app(r_in, fun = sum)))
-        r_annualSum <- r_annualSum/(yearRange + 1)
-        print(system.time(writeRaster(r_annualSum, filename = fileName_annualSum_out, overwrite = TRUE, wopt = woptList)))
-        print(r_annualSum)
-      }
-      if (meanChoice == "daily") {
-        print(system.time(r_mean_daily <- tapp(r_in, indices_day, fun = mean)))
-        names(r_mean_daily) <- indices_date
-        writeRaster(r_mean_daily, filename = fileName_out_mean_daily, overwrite = TRUE, wopt = list()) # daily mean over the data set, output has 366 layers  
-      }
-    } else {
-      if (meanChoice == "annual") {
-        fileName_mean_annual_out <- paste0(locOfClimFiles, "mean_annual/mean_annual_", climateVar, "_", modelChoice_lower, "_", k,  "_", yearSpan, ".tif")
-        print(system.time(r_mean_annual <- app(r_in, fun = mean, filename = fileName_mean_annual_out, overwrite = TRUE, wopt = list())))
-        print(paste0("fileName out, annual mean: ", fileName_mean_annual_out))
-      }
-      # fileName_out_dailySD <- paste0(locOfClimFiles, "mean_daily/dailySD_", climateVar, "_", modelChoice_lower, "_", k,  "_", yearSpan, ".tif")
-      # print(system.time(r_dailySD <- tapp(r_in, indices_day, fun = "sd", filename = fileName_out_dailySD, overwrite = TRUE, wopt = list()))) # daily mean over the data set, output has 366 layers   
-      if (meanChoice == "monthly") {
-        print(system.time(r_mean_monthly <- tapp(r_in, indices_month, fun = mean, filename = fileName_mean_monthly_out, overwrite = TRUE, wopt = list()))) # Output has 12 layers
-        print(paste0("fileName out, monthly mean: ", fileName_mean_monthly_out))
-      }
-      if (meanChoice == "daily") {
-        print(system.time(r_mean_daily <- tapp(r_in, indices_day, fun = mean, filename = fileName_mean_daily_out, overwrite = TRUE, wopt = list()))) # daily mean over the data set, output has 366 layers  
-        print(paste0("fileName out, daily mean: ", fileName_mean_daily_out))
-        
-      }
-      
-      #    print(paste0("writing annual mean: ", fileName_out_mean_annual))
-      #    writeRaster(r_mean_daily, filename = paste0("data/cmip6/mean_annual/", fileName_out_mean_annual),  overwrite = TRUE, wopt= woptList)
-      #     print(paste0("fileName out, daily mean: ", fileName_out_mean_daily))
-      #     print(paste0("fileName out, daily SD: ", fileName_out_dailySD))
-      # print(paste0("fileName out, monthly mean: ", fileName_out_mean_monthly))
+    if (climateVar == "pr" & meanChoice == "annual") { 
+      fileName_annualSum_out <- paste0(locOfClimFiles, "mean_annual/ precip_annualSum_", climateVar, "_", modelChoice_lower, "_", k,  "_", yearSpan, ".tif")
+      print(system.time(r_annualSum <- app(r_in, fun = sum)))
+      r_annualSum <- r_annualSum/(yearRange + 1)
+      print(system.time(writeRaster(r_annualSum, filename = fileName_annualSum_out, overwrite = TRUE, wopt = woptList)))
+      #     print(r_annualSum)
+    }
+    if (climateVar == "pr" & meanChoice == "monthly") { 
+      fileName_monthlySum_out <- paste0(locOfClimFiles, "mean_monthly/precip_monthlySum_", climateVar, "_", modelChoice_lower, "_", k,  "_", yearSpan, ".tif")
+      print(system.time(r_monthlySum <- tapp(r_in, indices_month, fun = sum)))
+      r_monthlySum <- r_monthlySum/(yearRange + 1)
+      print(system.time(writeRaster(r_monthlySum, filename = fileName_monthlySum_out, overwrite = TRUE, wopt = woptList)))
+      print(paste0("fileName out, monthly sum: ", fileName_monthlySum_out))
+    }
+    if (!climateVar == "pr" & meanChoice == "daily") {
+      print(system.time(r_mean_daily <- tapp(r_in, indices_day, fun = mean)))
+      names(r_mean_daily) <- indices_date
+      writeRaster(r_mean_daily, filename = fileName_out_mean_daily, overwrite = TRUE, wopt = list()) # daily mean over the data set, output has 366 layers  
+    }
+    if (!climateVar == "pr" & meanChoice == "monthly") {
+      print(system.time(r_mean_monthly <- tapp(r_in, indices_month, fun = mean, filename = fileName_mean_monthly_out, overwrite = TRUE, wopt = list()))) # Output has 12 layers
+      print(paste0("fileName out, monthly mean: ", fileName_mean_monthly_out))
+    } 
+    if (!climateVar == "pr" & meanChoice == "annual") {
+      fileName_mean_annual_out <- paste0(locOfClimFiles, "mean_annual/mean_annual_", climateVar, "_", modelChoice_lower, "_", k,  "_", yearSpan, ".tif")
+      print(system.time(r_mean_annual <- app(r_in, fun = mean, filename = fileName_mean_annual_out, overwrite = TRUE, wopt = list())))
+      print(paste0("fileName out, annual mean: ", fileName_mean_annual_out))
     }
   }
+  # fileName_out_dailySD <- paste0(locOfClimFiles, "mean_daily/dailySD_", climateVar, "_", modelChoice_lower, "_", k,  "_", yearSpan, ".tif")
+  # # print(system.time(r_dailySD <- tapp(r_in, indices_day, fun = "sd", filename = fileName_out_dailySD, overwrite = TRUE, wopt = list()))) # daily mean over the data set, output has 366 layers   
+  # if (meanChoice == "monthly") {
+  #   print(system.time(r_mean_monthly <- tapp(r_in, indices_month, fun = mean, filename = fileName_mean_monthly_out, overwrite = TRUE, wopt = list()))) # Output has 12 layers
+  #   print(paste0("fileName out, monthly mean: ", fileName_mean_monthly_out))
+  # }
+  # if (meanChoice == "daily") {
+  #   print(system.time(r_mean_daily <- tapp(r_in, indices_day, fun = mean, filename = fileName_mean_daily_out, overwrite = TRUE, wopt = list()))) # daily mean over the data set, output has 366 layers  
+  #   print(paste0("fileName out, daily mean: ", fileName_mean_daily_out))
+  #   
+  # }
+  
+  #    print(paste0("writing annual mean: ", fileName_out_mean_annual))
+  #    writeRaster(r_mean_daily, filename = paste0("data/cmip6/mean_annual/", fileName_out_mean_annual),  overwrite = TRUE, wopt= woptList)
+  #     print(paste0("fileName out, daily mean: ", fileName_out_mean_daily))
+  #     print(paste0("fileName out, daily SD: ", fileName_out_dailySD))
+  # print(paste0("fileName out, monthly mean: ", fileName_out_mean_monthly))
 }
 
 # means, scenarios -----

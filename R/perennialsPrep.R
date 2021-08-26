@@ -3,7 +3,7 @@ library(readxl)
 library(data.table)
 supp_materials_chill_portions <- as.data.table(read_excel("data-raw/crops/perennials/supp_materials_2021_06_22.xlsx")) #, col_types = c("text", "text", "numeric", "text", "text")))
 setnames(supp_materials_chill_portions, old = names(supp_materials_chill_portions), 
-         new = c("cropName", "cultivar", "chill_requirement", "comment", "chill_threshold", "low_temp_threshold", "chill_hours", "summer_heat_threshold", "gdd", "gddtb", "GDD_opt", "reference_chill_portions", "reference_other_information", "reference_gdd", "other_comments"))
+         new = c("cropName", "cultivar", "chill_requirement", "comment", "frost_threshold", "low_temp_threshold", "chill_hours", "summer_heat_threshold", "gdd", "gddtb", "GDD_opt", "reference_chill_portions", "reference_other_information", "reference_gdd", "other_comments"))
 supp_materials_chill_portions[, cropName := tolower(cropName)]
 
 # get rid of blueberries row for now
@@ -15,7 +15,7 @@ test[CR_crop_max =="Inf" | CR_crop_max =="-Inf", CR_crop_max := NA]
 test[CR_crop_min =="Inf" | CR_crop_min =="-Inf", CR_crop_min := NA]
 
 # added July 6, 2021
-test[, chill_threshold := -2] # a general value for all plants. They can survive some period of temps below 0
+test[, frost_threshold := -2] # a general value for all plants. They can survive some period of temps below 0
 # adjust GDD_opt to be the same for all crops
 test[, GDD_opt := 25]
 
@@ -26,6 +26,8 @@ test[cropName == "cherry", gddtb := 5]
 test[cropName == "olive", gddtb := 10]
 test[cropName == "winegrape", gddtb := 10]
 # ---- end of adjustments of July 6, 2021
+# use lower gdd value of 1100 for Chardonnay grapes
+test[cultivar == "Chardonnay", gdd := 1100]
 
 # remove extraneous columns
 test [, c("chill_requirement", "comment", "reference_chill_portions", "reference_other_information", "other_comments", "chill_hours", "reference_gdd") := NULL]

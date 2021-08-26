@@ -33,7 +33,7 @@
     print(paste0("fileName in: ", fileName_in_hem))
     r <- rast(fileName_in_hem)
     if (hem == "NH") r <- subset(r, 1:19) # because NH chill season crosses end of calendar year
-    system.time(chillPortion <- quantile(r, probs = 0.1, na.rm = TRUE))
+    system.time(chillPortion <- quantile(r, probs = 0.2, na.rm = TRUE))
     print(chillPortion)
     return(chillPortion)
   }

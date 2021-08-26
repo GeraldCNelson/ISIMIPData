@@ -2,6 +2,7 @@
 library(HeatStress)
 library(terra)
 library(meteor)
+if (rstudioapi::getActiveProject() == "/Users/gcn/Documents/workspace/testbed") setwd("/Users/gcn/Documents/workspace/ISIMIPData")
 # library(Rcpp)
 # sourceCpp("R/cpp/dewpoint.cpp")
 
@@ -32,18 +33,26 @@ dewp <- rast(fileName_dewpoint_in)
 lat <- init(tas, "y")
 lon <- init(tas, "x")
 
+tas <- crop(tas, extent_noAntarctica)
+hurs <- crop(hurs, extent_noAntarctica)
+wind <- crop(wind, extent_noAntarctica)
+solar <- crop(solar, extent_noAntarctica)
+dewp <- crop(dewp, extent_noAntarctica)
+lat <- crop(lat, extent_noAntarctica)
+lon <- crop(lon, extent_noAntarctica)
+
 # one year only
-startDate <- paste0(l, "-01-01"); endDate <- paste0(l + yearRange, "-12-31") 
+startDate <- paste0(l, "-01-01"); endDate <- paste0(l, "-12-31") 
 dates <- seq(as.Date(startDate), as.Date(endDate), 1)
 indices <- seq(as.Date(startDate), as.Date(paste0(l, "-12-31") ), by = "days")
-indicesChar <- paste0("X", dates)
+indicesChar <- paste0("X", indices)
 tas_yr <- subset(tas, indicesChar)
 hurs_yr <- subset(hurs, indicesChar)
 wind_yr <- subset(wind, indicesChar)
 solar_yr <- subset(solar, indicesChar)
 dewp_yr <- subset(dewp, indicesChar)
-lat <- init(tas_yr, "y")
-lon <- init(tas_yr, "x")
+lat_yr <- init(tas_yr, "y")
+lon_yr <- init(tas_yr, "x")
 
 
 # tas_cell <- as.numeric(extract(tas, cellNum))
@@ -56,15 +65,18 @@ lon <- init(tas_yr, "x")
 
 # for dewpoint, see dewpointFileGenerator.R
 
-combined <- sds(tas_yr, dewp_yr, wind_yr, solar_yr, lon, lat)
+combined <- sds(tas_yr, dewp_yr, wind_yr, solar_yr, lon_yr, lat_yr)
 f_wbgt <- function (vtas, vdewp, vwind, vrad, vlon, vlat, dates) {
-  print(vtas[1])
-  if (is.na(vtas[1])) {return(vtas)}
   print(Sys.time())
+  vtas_out <<- vtas
+  # if (is.na(vtas[1, 1])) {
+  #   #   print(Sys.time())
+  #   return(vtas)
+  # }
   
   r <- vtas
-  for (i in 1:nrow(vtas)) {
-    print("i ", i, ", nrow(vtas): ", nrow(vtas))
+  not_na <- which(!is.na(vtas[,1]))
+  for (i in not_na) {
     x <- wbgt.Liljegren(vtas[i,], vdewp[i,], vwind[i,], vrad[i,], dates, vlon[i,1], vlat[i,1])
     r[i,] <- x$data
   }
@@ -72,3 +84,23 @@ f_wbgt <- function (vtas, vdewp, vwind, vrad, vlon, vlat, dates) {
 }
 
 print(system.time(out <- lapp(combined, fun = f_wbgt, dates)))
+
+combined_c <- c(tas_yr, dewp_yr, wind_yr, solar_yr, lon_yr, lat_yr)
+combined_smaller <- c(tas_yr, dewp_yr)
+plot(tas_yr$`X2041-03-07`)
+clickout <- click(combined_c, xy = TRUE, cell = TRUE, show = TRUE)
+clickout_data <- clickout[4:length(clickout)]
+daysInYear <- 365
+clickout_tas <- clickout_data[1:daysInYear]
+clickout_tdewp <- clickout_data[(daysInYear*1 + 1):(daysInYear*2)]
+clickout_wind <- clickout_data[(daysInYear*2 + 1):(daysInYear*3)]
+clickout_vrad <- clickout_data[(daysInYear*3 + 1):(daysInYear*4)]
+lon_loc <- clickout$x
+lat_loc <- clickout$y
+wbgt.Liljegren(clickout_tas, clickout_tdewp, clickout_wind, clickout_vrad, dates, lon_loc, lat_loc)
+anyNA(clickout_tas)
+anyNA(clickout_tdewp)
+anyNA(clickout_wind)
+anyNA(clickout_vrad)
+
+
