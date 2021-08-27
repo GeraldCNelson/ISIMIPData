@@ -115,7 +115,7 @@ Rcpp::IntegerVector get_days(const Rcpp::DateVector& dates) {
   Rcpp::IntegerVector out(dates.size(), Rcpp::NumericVector::get_na());
   for (R_xlen_t i=0; i< dates.size(); i++) {
     Rcpp::Date d = dates[i];
-    out[i] = d.getDay();
+    out[i] = d.getYearday();
     // Rcpp::Rcout << "dates[i] = " << dates[i] << std::endl << "-------------" << std::endl;
     // Rcpp::Rcout << "out[i] = " << out[i] << std::endl << "-------------" << std::endl;
   }
@@ -167,11 +167,11 @@ RadLat = degToRad(lat);
 //  Rcpp::Rcout << " lat = " << lat << std::endl << "-------------" << std::endl;
 
 Gamma = 2 * pi * ((doy - 1.0) + (utc_hour/24.0))/dpy; //Evaluate the fractional year in radians 
-Rcpp::Rcout << "Gamma = " << Gamma << std::endl << "-------------" << std::endl;
-Rcpp::Rcout << "doy = " << doy << std::endl << "-------------" << std::endl;
-Rcpp::Rcout << "dpy = " << doy << std::endl << "-------------" << std::endl;
-Rcpp::Rcout << "utc_hour = " << utc_hour << std::endl << "-------------" << std::endl;
-Rcpp::Rcout << "pi = " << pi << std::endl << "-------------" << std::endl;
+// Rcpp::Rcout << "Gamma = " << Gamma << std::endl << "-------------" << std::endl;
+// Rcpp::Rcout << "doy = " << doy << std::endl << "-------------" << std::endl;
+// Rcpp::Rcout << "dpy = " << doy << std::endl << "-------------" << std::endl;
+// Rcpp::Rcout << "utc_hour = " << utc_hour << std::endl << "-------------" << std::endl;
+// Rcpp::Rcout << "pi = " << pi << std::endl << "-------------" << std::endl;
 
 EquTime = EQTIME1 * (EQTIME2 + EQTIME3 * cos(Gamma) - EQTIME4 * sin(Gamma) - EQTIME5 * cos(2 * Gamma) - EQTIME6 * sin(2 * Gamma)); //Evaluate the Equation of time in minutes 
 Decli = DECL1 - DECL2 * cos(Gamma) + DECL3 * sin(Gamma) - DECL4 * cos(2 * Gamma) + DECL5 * sin(2 * Gamma) - DECL6 * cos(3 * Gamma) + DECL7 * sin(3 * Gamma); //Evaluate the solar declination angle in radians (must be between -23.5 and 23.5 degrees)
@@ -451,7 +451,8 @@ Rcpp::NumericVector fr_tnwb(double Twb_prev, Rcpp::NumericVector tas, Rcpp::Nume
   // Rcpp::Rcout << "radiationMod = " << radiationMod << std::endl;
   
   Tref = 0.5 * (Twb_prev_vec + Tair);
-  Fatm =  stefanb * emis_wick * (0.5 * (emis_atm_out * vecpow(Tair, 4.0) + emis_sfc * vecpow(Tair, 4.0)) - vecpow(Twb_prev_vec, 4.0)) + (1.0 - alb_wick) * radiationMod * ((1.0 - propDirect) * (1.0 + 0.25 * diam_wick/len_wick) + ((tan(zenith)/3.1416) + 0.25 * diam_wick/len_wick) * propDirect + SurfAlbedo);
+  Fatm =  stefanb * emis_wick * (0.5 * (emis_atm_out * vecpow(Tair, 4.0) + emis_sfc * vecpow(Tair, 4.0)) - vecpow(Twb_prev_vec, 4.0)) + (1.0 - alb_wick) * radiationMod * ((1.0 - propDirect) * 
+    (1.0 + 0.25 * diam_wick/len_wick) + ((tan(zenith)/3.1416) + 0.25 * diam_wick/len_wick) * propDirect + SurfAlbedo);
   Sc = viscosity(Tair)/(density * diffusivity(Tref));
   h = h_cylinder_in_air(Twb_prev_vec, speed);
   Twb = Tair - h_evap(Twb_prev_vec)/ratio * (esat(Twb_prev_vec) - eair)/(Pair - esat(Twb_prev_vec)) * vecpow((Pr/Sc), 0.56) + Fatm/h * irad;
@@ -462,4 +463,49 @@ Rcpp::NumericVector fr_tnwb(double Twb_prev, Rcpp::NumericVector tas, Rcpp::Nume
   
   return abs(Twb - Twb_prev_vec);
 }
+
+// attempt to do internal optimization
+
+Rcpp::NumericVector opt_fr_tnwb(double Twb_prev, Rcpp::NumericVector tas, Rcpp::NumericVector dewp, Rcpp::NumericVector hurs, Rcpp::NumericVector radiation, Rcpp::NumericVector zenith, Rcpp::NumericVector speed) {
+  int	converged, iter;
+  Rcpp::NumericVector Tref(tas.size(), Rcpp::NumericVector::get_na());
+  Rcpp::NumericVector Fatm(tas.size(), Rcpp::NumericVector::get_na());
+  Rcpp::NumericVector Sc(tas.size(), Rcpp::NumericVector::get_na());
+  Rcpp::NumericVector h(tas.size(), Rcpp::NumericVector::get_na());
+  Rcpp::NumericVector ewick(tas.size(), Rcpp::NumericVector::get_na());
+  Rcpp::NumericVector evap(tas.size(), Rcpp::NumericVector::get_na());
+  Rcpp::NumericVector Twb(tas.size(), Rcpp::NumericVector::get_na());
+  Rcpp::NumericVector Twb_new(tas.size(), Rcpp::NumericVector::get_na());
+  Rcpp::NumericVector Twb_prev_vec(tas.size(), Twb_prev);
+  Rcpp::NumericVector RH(tas.size(), Rcpp::NumericVector::get_na());
+  Rcpp::NumericVector eair(tas.size(), Rcpp::NumericVector::get_na());
+  Rcpp::NumericVector emis_atm_out(tas.size(), Rcpp::NumericVector::get_na());
+  Rcpp::NumericVector Tair(tas.size(), Rcpp::NumericVector::get_na());
+  Rcpp::NumericVector Tsfc(tas.size(), Rcpp::NumericVector::get_na());
+  Rcpp::NumericVector density(tas.size(), Rcpp::NumericVector::get_na());
+  
+  RH = hurs * 0.01;
+  eair = RH * esat(Tair);
+  emis_atm_out = emis_atm(Tair, RH);
+  Tair = tas + kVal;
+  Tsfc = Tair;
+  density = Pair * 100 / (r_air * Tair);
+  Rcpp:: List l_zenRadCorrect = zenRadCorrect(radiation, zenith);
+  Rcpp::NumericVector zenithMod = l_zenRadCorrect["zenithMod"];
+  Rcpp::NumericVector radiationMod = l_zenRadCorrect["radiationMod"];
+  
+do {
+  iter++;
+  Tref = 0.5*( Twb_prev + Tair );	/* evaluate properties at the average temperature */
+  h = h_cylinder_in_air( Tref, speed);
+  Fatm = stefanb * emis_wick * ( 0.5*( emis_atm(Tair, RH)*pow(Tair,4.) + emis_sfc*pow(Tsfc,4.) ) - pow(Twb_prev,4.) )
+    + (1.-alb_wick) * radiationMod * ( (1.-propDirect)*(1.+0.25*diam_wick/len_wick) + propDirect *((tan(zenith)/PI)+0.25*diam_wick/len_wick) + SurfAlbedo );
+  ewick = esat(Twb_prev);
+  density = Pair * 100. / (r_air * Tref);
+  Sc = viscosity(Tref)/(density * diffusivity(Tref));
+  Twb_new = Tair - evap(Tref)/ratio * (ewick-eair)/(Pair-ewick) * pow(Pr/Sc) + (Fatm/h * irad);
+  if ( abs(Twb_new-Twb_prev) < CONVERGENCE ) converged = TRUE;
+  Twb_prev = 0.9*Twb_prev + 0.1*Twb_new;
+} while (!converged && iter < MAX_ITER);
+
 

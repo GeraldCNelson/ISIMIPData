@@ -34,7 +34,7 @@ calZenithR <- function(dates,lon,lat, hour=FALSE){
   DECL5 <- 0.000907
   DECL6 <- 0.002697
   DECL7 <- 0.00148
-  
+
   # Translate from date to utc_hour and year. If daily, set time to 12.
   if(hour){
     d0<- strftime(dates, format = "%Y-%m-%d %H:%M:%S", usetz=TRUE, tz="UTC") 
@@ -51,7 +51,7 @@ calZenithR <- function(dates,lon,lat, hour=FALSE){
   
   # Number of day per year (check if it is leap year)
  # if (is_leapyear(year)) dpy=366 else dpy=365 converted to vectorized below
-  dpy <- is_leapyear(year) * 366
+  dpy <- is_leapyearR(year) * 366
   dpy[dpy == 0] <- 365
   # Evaluate the input lat and lon in radians 
   RadLon <- degToRad(lon) 
@@ -61,12 +61,6 @@ calZenithR <- function(dates,lon,lat, hour=FALSE){
   # print("------------------")
   # Evaluate the fractional year in radians 
   Gamma <-  2 * pi * ((doy - 1) + (utc_hour/24)) / dpy
-  print(Gamma)
-  print(doy)
-  print(dpy)
-  print(utc_hour)
-  print(pi)
-  print("------------------")
   
   # Evaluate the Equation of time in minutes 
   EquTime <- EQTIME1*(EQTIME2+EQTIME3*cos(Gamma)-EQTIME4*sin(Gamma)- EQTIME5*cos(2*Gamma)-EQTIME6 * sin(2*Gamma))
