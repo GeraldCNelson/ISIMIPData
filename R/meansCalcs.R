@@ -34,7 +34,7 @@
     startDate <- paste0(l, "-01-01"); endDate <- paste0(l + yearRange, "-12-31")
     indices <- seq(as.Date(startDate), as.Date(endDate), 1)
     indices_date  <- paste0("X", as.character(indices))
-    indices_month <- as.numeric(format(indices, format = "%m"))
+    # indices_month <- as.numeric(format(indices, format = "%m"))
     indices_day <- as.numeric(format(indices, format = "%j"))
     print(paste0("working on start year: ", l, ", variable: ", climateVar, ", ssp choice: ", k, ", modelChoice: ", modelChoice, ", period choice: ", meanChoice))
     fileName_in <- paste0(locOfClimFiles, modelChoice_lower, "_", climateVar, "_", k, "_", yearSpan, ".tif") 
