@@ -5,15 +5,14 @@
   #  source("R/globallyUsed.R")
   library(Rcpp)
   library(data.table)
+  library("crayon")
   sourceCpp("R/cpp/THI_functions_combined.cpp")
- library("crayon")
-  locOfClimFiles <- "/Volumes/ExtremeSSD2/ISIMIP/cmip6/"
   
   # constants, THI -----
   speciesChoices <- c("generic") #, "humans", "cattle",  "pigs", "chicken", "sheep") # note goats use same THI formula as cattle.
-  speciesChoices <- c("generic")
+  speciesChoices <- c("humans")
   breedChoices <- c("generic_generic", "humans_adj", "bos_Taurus", "bos_Indicus",  "goats", "pigs_temp", "pigs_trop", "chicken_temp")
-  breedChoices <- c("generic_generic")
+  breedChoices <- c("humans")
   stressLevelChoices <- c("noStress", "moderateStress", "extremeStress")
   hours_worked_humans <- 8
   animalCts_global <- as.data.table(read.csv("data/animals/animalCt.csv"))
@@ -28,7 +27,7 @@
   f_getStressValue <- function(breedChoice, stressLevel) {
     if (speciesChoice == "humans") {
       if (stressLevel == "extremeStress") stressValue <- 40
-      if (stressLevel == "moderateStress") stressValue <- 60
+      if (stressLevel == "moderateStress") stressValue <- 60 # changed from 60 for SPM graphic
       if (stressLevel == "noStress") stressValue <- 80
     } else {
       stressValue <- bpList[breeds == breedChoice, get(stressLevel)]
@@ -59,8 +58,7 @@
   }
   
   f_THI <- function(k, l, yearRange) {
-    # k, l, i, yearRange are set outside the function, in THI scenarios and THI historical
-    yearSpan <- paste0(l, "_", l + yearRange)
+     yearSpan <- paste0(l, "_", l + yearRange)
     startDate <- paste0(l, "-01-01"); endDate <- paste0(l + yearRange, "-12-31")
     indices <- seq(as.Date(startDate), as.Date(endDate), 1)
     indices <- paste0("X", as.character(indices))
@@ -94,7 +92,9 @@
         if (speciesName == "humans") {
           tas.mean <- rast(fileName_tas_mean)
           comb_humans <- sds(rh.mean, tas.mean)
-          print(system.time(r_out <- lapp(comb_humans, fun = funName, hours_worked_humans, filename = fileName_out, overwrite = TRUE, wopt = woptList)))
+          # print(system.time(r_out <- lapp(comb_humans, fun = f_THI_humans_adj, hours_worked_humans, filename = fileName_out, overwrite = TRUE, wopt = woptList)))
+          funName <- "f_THI_humans"
+          print(system.time(r_out <- lapp(comb_humans, fun = funName, filename = fileName_out, overwrite = TRUE, wopt = woptList)))
           cols = rev(colorList)
         } 
         if (speciesName %in% c("generic", "bos", "chicken", "sheep", "pigs", "cattle")) { 
@@ -113,7 +113,7 @@
           breaks = c(0, 40, 60, 80, 100)
         }
         breaks <- round(breaks, 0)
-        extremeStress <- f_getStressValue(breedChoice, stressLevel= "extremeStress")
+        extremeStress <- f_getStressValue(breedChoice, stressLevel= "moderateStress")
         #       if (!breedName == "humans_adj") extremeStress <- bpList[breeds %in% breedName, extremeStress]
         plot(r_out, 1, main = paste0(breedName, ", ", modelChoice, ", ", k, ", ", l, ", Jan 1, extreme stress value: ", extremeStress), ylim = c(-60, 90), range = c(0, 100), col = cols, breaks = breaks, axes = FALSE) #breaks = c(0, 40, 60, 80, 100)
         
@@ -155,7 +155,7 @@
   }
   
   f_extremeTHI <- function(cellVector, stressValue, breedChoice) {
-    if (breedChoice == "humans_adj") {
+    if (breedChoice == "humans") {
       extremeCt <- sum(cellVector <= stressValue, na.rm = FALSE)
     } else {extremeCt <- sum(cellVector >= stressValue, na.rm = FALSE)
     }
@@ -176,7 +176,7 @@
         print(system.time(extremeCt <- app(r, fun = f_extremeTHI, stressValue, breedChoice, filename = fileName_out, overwrite = TRUE, wopt = woptList)))
         print(paste0("fileName in: ", fileName_in, ", fileName out: ", fileName_out))
         titleText <- paste0(breedChoice, ", days above stress value of ", stressValue, ", \nensemble means, ", k, ", ", gsub("_", "-", yearSpan))
-         cols = colorList
+        cols = colorList
         if (breedChoice == "humans_adj") {
           cols <- colorList
           titleText <- paste0("Days where PWC is less than ", stressValue, " percent, \nensemble means, ", k, ", ", gsub("_", "-", yearSpan))
@@ -195,15 +195,15 @@
     }
   }
   
-  f_extremeStressGenericCt <- function(k, l) { #, colorList
+  f_extremeStressGenericCt <- function(breedChoice, k, l) { #, colorList
     stressValueList <- c(80, 81, 84, 85, 86, 89, 90, 91, 92, 93, 94)
     yearSpan <- paste0(l, "_", l + yearRange)
     #for (m in breedChoice) {
-    breedChoice <- "generic_generic"
+#    breedChoice <- "generic_generic"
     speciesChoice <- strsplit(breedChoice,"_")[[1]][1]
     
     #      for (s in stressLevelChoices) { # eg noStress, moderateStress, etc
-    s <- "extremeStress"
+    s <- "moderateStress"
     #       stressValue <- f_getStressValue(m, stressLevel = s)
     fileName_in <- paste0(locOfDataFiles_THI, "ensemble_thi.", breedChoice, "_", k, "_", yearSpan, ".tif")
     r <- rast(fileName_in)
@@ -245,18 +245,18 @@
     return(mean(cellVector, na.rm = TRUE))
   }
   
-  f_prepareR <- function() {
-    speciesChoice <- strsplit(breedChoice,"_")[[1]][1]
-    yearSpan <- paste0(l, "_", l + yearRange)
-    fileName_in <- paste0(locOfDataFiles_THI, "extremeCt.", speciesChoice, "_", k, "_", yearSpan, ".tif")
-    print(paste0("fileName in: ", fileName_in))
-    r <- rast(fileName_in)
-    names(r) <- "value"
-    return(r)
-  }
+  # f_prepareR <- function() {
+  #   speciesChoice <- strsplit(breedChoice,"_")[[1]][1]
+  #   yearSpan <- paste0(l, "_", l + yearRange)
+  #   fileName_in <- paste0(locOfDataFiles_THI, "extremeCt.", speciesChoice, "_", k, "_", yearSpan, ".tif")
+  #   print(paste0("fileName in: ", fileName_in))
+  #   r <- rast(fileName_in)
+  #   names(r) <- "value"
+  #   return(r)
+  # }
   
   # function to fill in dt_stressCts
-  f_dt_stressCts <- function(r, dt_stressCts, r_mask, stressValue) {
+  f_dt_stressCts <- function(r, dt_stressCts, r_mask, stressValue, maskMin, maxCount) {
     r_mask_scen <- r_mask
     r_mask_scen[r_mask_scen < maskMin] <- NA
     r_mask_scen[r_mask_scen > 0] <- 1
@@ -271,12 +271,15 @@
     return(dt_stressCts)
   }
   
-  f_thi_graphing <- function(m, r, r_mask, maskMin, col, dt_stressCts) {
+  f_thi_graphing <- function(m, r, r_mask, maskMin, cols, dt_stressCts, k, l) {
     print("--------------------------")
-    speciesChoice <- strsplit(breedChoice,"_")[[1]][1]
-    extremeStress <- dt_stressCts[species == speciesChoice, extremeStress]
-    totalNum<- dt_stressCts[species == speciesChoice, totalCts]
-    totalNum_extreme<- dt_stressCts[species == speciesChoice, stressCts]
+    #    speciesChoice <- strsplit(breedChoice,"_")[[1]][1] same as m
+    extremeStress <- dt_stressCts[species == m & ssp == k & startYear == l, extremeStress]
+    extremeStress <- unique(extremeStress)
+    totalNum <- dt_stressCts[species == m & ssp == k & startYear == l, totalCts]
+    totalNum <- unique(totalNum)
+    totalNum_extreme<- dt_stressCts[species == m & ssp == k & startYear == l, stressCts]
+    totalNum_extreme <- unique(totalNum_extreme)
     totalNum_extreme <- totalNum_extreme/1000000 # convert to millions
     totalNum <- totalNum/1000000 # convert to millions
     ratio_extreme <- 100 * totalNum_extreme/totalNum # convert to percent
@@ -290,14 +293,13 @@
     # # crop to eliminate Antarctica and project to Robinson
     # r_mask <- crop(r, extent_noAntarctica)
     # r_maskRob <- project(r_mask, crsRob)
-    r <- project(r, crsRob)
-    r_mask <- project(r_mask, crsRob)
-    r_mask_df <- as.data.frame(r_mask, xy = TRUE)
+    r_proj_rob <- project(r, crsRob)
+    r_mask_rob <- project(r_mask, crsRob)
+    r_mask_df <- as.data.frame(r_mask_rob, xy = TRUE)
     names(r_mask_df) <-   c("x", "y", "value")
     
-    r_df <- as.data.frame(r, xy = TRUE)
-    #   r_df$value[r_df$value > maxVal] <- maxVal #set values > maxVal to maxVal
-    r_df_mod <- r_df %>%
+    r_proj_rob_df <- as.data.frame(r_proj_rob, xy = TRUE)
+    r_proj_rob_df_mod <- r_proj_rob_df %>%
       mutate(value_2 = cut(value, breaks = custom_bins)) %>%
       group_by(value_2)
     
@@ -308,12 +310,12 @@
     }
     caption <- paste0("The extreme stress value for ", speciesChoice, " is ", extremeStress, ". Stress locations are where the species was raised in the early 21st century. \nOf early century species numbers, ", ratio_extreme, "% are in locations with at least ", maxCount, " days with extreme stress during this period.")
     if (m == "humans") {
-      caption <- paste0("The extreme stress value for reduction in physical work capacity (PWC) is ", extremeStress, " %.")
+      caption <- paste0("The extreme stress value for reduction in physical work capacity (PWC) is ", extremeStress, "%.")
     }
     g <- ggplot() +
-      geom_tile(data = r_df_mod, aes(x, y, fill = value_2)) +
+      geom_tile(data = r_proj_rob_df_mod, aes(x, y, fill = value_2)) +
       #      scale_fill_discrete(colors = colorList, drop = FALSE, na.value = 'grey95') +
-      scale_fill_manual(values = col, drop = FALSE, na.value = 'grey95') + # the na.value doesn't work yet. See https://stackoverflow.com/questions/45144630/scale-fill-manual-define-color-for-na-values/45147172 for a possible solution
+      scale_fill_manual(values = cols, drop = FALSE, na.value = 'grey95') + # the na.value doesn't work yet. See https://stackoverflow.com/questions/45144630/scale-fill-manual-define-color-for-na-values/45147172 for a possible solution
       labs(title = titleText, fill = legendTitle, x = "", y = "", caption = caption) + 
       theme_bw()  +
       #      theme(plot.title = element_text(size = 12, hjust = 0.5), plot.caption = element_text(hjust = 0, size = 8)) +
@@ -323,9 +325,8 @@
         axis.text.y = element_blank(),
         axis.ticks = element_blank(),
         plot.title = element_text(size = 12, hjust = 0.5),
-        plot.caption = element_text(hjust = 0, vjust = 7.0, size = 8)
-      ) +
-      geom_sf(data = coastline_cropped , 
+        plot.caption = element_text(hjust = 0, vjust = 7.0, size = 8)) +
+      geom_sf(data = sf::st_as_sf(coastline_cropped_Rob_sf), 
               color = "black", size = 0.1, stat = "sf", fill = NA,
               position = "identity")
     #    if (! m == "humans") g <- g + geom_tile(data = r_mask_df, aes(x, y, fill = value), alpha = .2, show.legend = FALSE) # +
@@ -338,7 +339,7 @@
     print(paste0("fileName out: ", fileName_out))
   }
   
-  f_thi_runs_graphing <- function(m, r, col, dt_stressCts, run_length) {
+  f_thi_runs_graphing <- function(m, r, cols, dt_stressCts, runlength) {
     print("--------------------------")
     speciesChoice <- strsplit(breedChoice,"_")[[1]][1]
     print(paste0("species: ", speciesChoice, ", min r: ", min(minmax(r)), ", max r: ", max(minmax(r))))
@@ -346,24 +347,19 @@
     extremeStress <- dt_stressCts[species == speciesChoice, extremeStress]
     # maxCount<- dt_stressCts[species == speciesChoice, countDays]
     
-    r <- project(r, crsRob)
-    r_runsCt <- r$runsCt
-    r_runLength <- r$runLength
-    r_runsCt_df <- as.data.frame(r_runsCt, xy = TRUE)
-    names(r_runsCt_df) <-   c("x", "y", "value")
-    r_runLength_df <- as.data.frame(r_runLength, xy = TRUE)
-    names(r_runLength_df) <-   c("x", "y", "value")
-    
-    # use this code to get binned legend
-    # r_df_mod <- r_df %>%
-    #   mutate(value_2 = cut(value, breaks = custom_bins)) %>%
-    #   group_by(value_2)
+    r_proj_rob <- project(r, crsRob)
+    r_proj_rob_runsCt <- r_proj_rob$runsCt
+    r_proj_rob_runLength <- r_proj_rob$runLength
+    r_proj_rob_runsCt_df <- as.data.frame(r_proj_rob_runsCt, xy = TRUE)
+    names(r_proj_rob_runsCt_df) <-   c("x", "y", "value")
+    r_proj_rob_runLength_df <- as.data.frame(r_proj_rob_runLength, xy = TRUE)
+    names(r_proj_rob_runLength_df) <-   c("x", "y", "value")
     
     # graphing for r_runsCt -----
     legendTitle <- "No. of runs"
-    titleText <- paste0(m, ", number of ", run_length, " day runs above extreme stress value, \n", k, ", ", gsub("_", "-", yearSpan))
+    titleText <- paste0(m, ", number of ", runlength, " day runs above extreme stress value, \n", k, ", ", gsub("_", "-", yearSpan))
     if (m == "humans") {
-      titleText <- paste0(m, ", number of ", run_length, " day runs with PWC below ", extremeStress, " percent, \n" , k, ", ", gsub("_", "-", yearSpan))
+      titleText <- paste0(m, ", number of ", runlength, " day runs with PWC below ", extremeStress, " percent, \n" , k, ", ", gsub("_", "-", yearSpan))
     }
     caption <- paste0("The extreme stress value for ", speciesChoice, " is ", extremeStress, ". Stress locations are where the species was raised in the early 21st century.")
     if (m == "humans") {
@@ -371,10 +367,9 @@
     }
     colorList0 <- c("gray95", colorList)
     g <- ggplot() +
-      #      geom_tile(data = r_df_mod, aes(x, y, fill = value_2)) + # use for binned legend
-      geom_tile(data = r_runsCt_df, aes(x, y, fill = value)) +
+      geom_tile(data = r_proj_rob_runsCt_df, aes(x, y, fill = value)) +
       scale_fill_gradientn(colors = colorList0,  na.value = 'grey50') +
-      #scale_fill_manual(values = col, drop = FALSE, na.value = 'grey95') + # the na.value doesn't work yet. See https://stackoverflow.com/questions/45144630/scale-fill-manual-define-color-for-na-values/45147172 for a possible solution
+      #scale_fill_manual(values = cols, drop = FALSE, na.value = 'grey95') + # the na.value doesn't work yet. See https://stackoverflow.com/questions/45144630/scale-fill-manual-define-color-for-na-values/45147172 for a possible solution
       labs(title = titleText, fill = legendTitle, x = "", y = "", caption = caption) + 
       theme_bw()  +
       #      theme(plot.title = element_text(size = 12, hjust = 0.5), plot.caption = element_text(hjust = 0, size = 8)) +
@@ -386,7 +381,7 @@
         plot.title = element_text(size = 12, hjust = 0.5),
         plot.caption = element_text(hjust = 0, vjust = 7.0, size = 8)
       ) +
-      geom_sf(data = coastline_cropped , 
+      geom_sf(data = sf::st_as_sf(coastline_cropped_Rob_sf), 
               color = "black", size = 0.1, stat = "sf", fill = NA, position = "identity")
     #    if (! m == "humans") g <- g + geom_tile(data = r_mask_df, aes(x, y, fill = value), alpha = .2, show.legend = FALSE) # +
     
@@ -397,12 +392,12 @@
     knitr::plot_crop(fileName_out) # gets rid of margins around the plot
     print(paste0("fileName out: ", fileName_out))
     
-    # graphing for r_runLength-----
+    # graphing for r_runLength -----
     legendTitle <- "Longest run length"
-    titleText <- paste0(m, ", length of longest run with at least ", run_length, " \ndays above extreme stress value, ", k, ", ", gsub("_", "-", yearSpan))
+    titleText <- paste0(m, ", length of longest run with at least ", runlength, " \ndays above extreme stress value, ", k, ", ", gsub("_", "-", yearSpan))
     if (m == "humans_adj") {
       stressValue <- f_getStressValue(m, stressLevel)
-      titleText <- paste0(m, ", length of longest run with at least ", run_length, " \ndays where PWC is below ", stressValue, " percent, " , k, ", ", gsub("_", "-", yearSpan))
+      titleText <- paste0(m, ", length of longest run with at least ", runlength, " \ndays where PWC is below ", stressValue, " percent, " , k, ", ", gsub("_", "-", yearSpan))
     }
     caption <- paste0("The extreme stress value for ", speciesChoice, " is ", stressValue, ". Stress locations are where the species was raised in the early 21st century.")
     if (m =="humans_adj") {
@@ -410,10 +405,9 @@
     }
     colorList0 <- c("gray95", colorList)
     g <- ggplot() +
-      #      geom_tile(data = r_df_mod, aes(x, y, fill = value_2)) + # use for binned legend
-      geom_tile(data = r_runLength_df, aes(x, y, fill = value)) +
+      geom_tile(data = r_proj_rob_runLength_df, aes(x, y, fill = value)) +
       scale_fill_gradientn(colors = colorList0,  na.value = 'grey50') +
-      #scale_fill_manual(values = col, drop = FALSE, na.value = 'grey95') + # the na.value doesn't work yet. See https://stackoverflow.com/questions/45144630/scale-fill-manual-define-color-for-na-values/45147172 for a possible solution
+      #scale_fill_manual(values = cols, drop = FALSE, na.value = 'grey95') + # the na.value doesn't work yet. See https://stackoverflow.com/questions/45144630/scale-fill-manual-define-color-for-na-values/45147172 for a possible solution
       labs(title = titleText, fill = legendTitle, x = "", y = "", caption = caption) + 
       theme_bw()  +
       #      theme(plot.title = element_text(size = 12, hjust = 0.5), plot.caption = element_text(hjust = 0, size = 8)) +
@@ -425,7 +419,7 @@
         plot.title = element_text(size = 12, hjust = 0.5),
         plot.caption = element_text(hjust = 0, vjust = 7.0, size = 8)
       ) +
-      geom_sf(data = coastline_cropped , 
+      geom_sf(data = sf::st_as_sf(coastline_cropped_Rob_sf), 
               color = "black", size = 0.1, stat = "sf", fill = NA, position = "identity")
     #    if (! m == "humans") g <- g + geom_tile(data = r_mask_df, aes(x, y, fill = value), alpha = .2, show.legend = FALSE) # +
     
@@ -437,19 +431,14 @@
     print(paste0("fileName out: ", fileName_out))
   }
   
-  f_thi_means_graphing <- function(m, r, col) {
+  f_thi_means_graphing <- function(m, r, cols) {
     print("--------------------------")
     print(paste0("species: ", speciesChoice, ", min r: ", min(minmax(r)), ", max r: ", max(minmax(r))))
     if (is.na(max(minmax(r)))) stop("max is na")
     
-    r <- project(r, crsRob)
-    r_df <- as.data.frame(r, xy = TRUE)
-    names(r_df) <-   c("x", "y", "value")
-    
-    # use this code to get binned legend
-    # r_df_mod <- r_df %>%
-    #   mutate(value_2 = cut(value, breaks = custom_bins)) %>%
-    #   group_by(value_2)
+    r_proj_rob <- project(r, crsRob)
+    r_proj_rob_df <- as.data.frame(r, xy = TRUE)
+    names(r_proj_rob_df) <-   c("x", "y", "value")
     
     # graphing for r_runsCt -----
     legendTitle <- "Global daily mean"
@@ -464,9 +453,8 @@
     colorList0 <- c("gray95", colorList)
     g <- ggplot() +
       #      geom_tile(data = r_df_mod, aes(x, y, fill = value_2)) + # use for binned legend
-      geom_tile(data = r__df, aes(x, y, fill = value)) +
+      geom_tile(data = r_proj_rob_df, aes(x, y, fill = value)) +
       scale_fill_gradientn(colors = colorList0,  na.value = 'grey50') +
-      #scale_fill_manual(values = col, drop = FALSE, na.value = 'grey95') + # the na.value doesn't work yet. See https://stackoverflow.com/questions/45144630/scale-fill-manual-define-color-for-na-values/45147172 for a possible solution
       labs(title = titleText, fill = legendTitle, x = "", y = "") + #, caption = caption) + 
       theme_bw()  +
       #      theme(plot.title = element_text(size = 12, hjust = 0.5), plot.caption = element_text(hjust = 0, size = 8)) +
@@ -478,16 +466,94 @@
         plot.title = element_text(size = 12, hjust = 0.5) #,
         #     plot.caption = element_text(hjust = 0, vjust = 7.0, size = 8)
       ) +
-      geom_sf(data = coastline_cropped , 
+      geom_sf(data = sf::st_as_sf(coastline_cropped_Rob_sf), 
               color = "black", size = 0.1, stat = "sf", fill = NA, position = "identity")
-    #    if (! m == "humans") g <- g + geom_tile(data = r_mask_df, aes(x, y, fill = value), alpha = .2, show.legend = FALSE) # +
-    
+   
     print(g)
     fileName_out <- paste0(lofOfGraphicsFiles, "THI/mean.", speciesChoice, "_", k, "_", yearSpan, ".png")
     
     ggsave(filename = fileName_out, plot = g, device = "png", width = 6, height = 6, units = "in", dpi = 300)
     knitr::plot_crop(fileName_out) # gets rid of margins around the plot
     print(paste0("fileName out: ", fileName_out))
+  }
+  
+  f_extremeCtSpeciesForPptx <- function(m) {
+    fileNameStart <- paste0("THIextremeCt.", speciesChoice, "_")
+    fileName_in <- paste0(lofOfGraphicsFiles, "THI/", fileNameStart, k, "_", yearSpan, ".png")
+    print(paste0("fileName in: ", fileName_in))
+    extImg_favLocs <- external_img(src = fileName_in, width = defaultWidth, height = defaultHeight)
+    my_pres <- add_slide(x = my_pres, layout = 'Title Only', master = 'Office Theme')
+    my_pres <- ph_with(x = my_pres, value = extImg_favLocs, location = ph_location(left = defaultLeft, top = defaultTop, width = defaultWidth, height = defaultHeight - 0.5) )
+    return(my_pres)
+  }
+  
+  f_deltaExtremeCtSpeciesForPptx <- function() {
+    print(paste0("fileName in: ", fileName_in))
+    extImg_favLocs <- external_img(src = fileName_in, width = defaultWidth, height = defaultHeight)
+    my_pres <- add_slide(x = my_pres, layout = 'Title Only', master = 'Office Theme')
+    my_pres <- ph_with(x = my_pres, value = extImg_favLocs, location = ph_location(left = defaultLeft, top = defaultTop, width = defaultWidth, height = defaultHeight - 0.5) )
+    return(my_pres)
+  }
+  f_runs <- function(x, runlength, test_logic) {
+    #  print(paste0("test_logic: ", test_logic))
+    runResult <- c(NA, NA) 
+    if (is.nan(x[1])) {
+      return(runResult)
+    }
+    seqLengthCode <- paste0("1{", runlength, ",}") #A regular expression  to get the first item of gregexpr. It says look for  runlength times See http://xenon.stanford.edu/~xusch/regexp/
+    g <- gregexpr(seqLengthCode, paste(+eval(parse(text = test_logic)), collapse = ""))[[1]] # The + converts TRUE and FALSE to 1 and 0
+    #  print(paste0("g1: ", g[1]))
+    if ((g[1] == -1)) { # no need to write to growing season if g returns -1, return 0,0
+      runResult <- c(0, 0) 
+      #    print("no runs")
+    } else {
+      startDays <- unlist(g)
+      runLengths <- sum(as.numeric(attributes(g)$match.length))
+      runResult <- c(length(startDays), runLengths)
+    }
+    return(runResult)
+  }
+  
+  f_runs_calculator <- function(k, l, runlengthChoices) {
+    yearSpan <- paste0(l, "_", l + yearRange)
+    for (runlength in runlengthChoices) {
+      for (m in breedChoice) {
+        for (s in "moderateStress") {
+          stressValue <- f_getStressValue(m, s) -1
+          logicDirection <- ">"
+          if (speciesChoice == "humans") logicDirection <- "<" # pwc less than thiStressVal is bad
+          
+          if (logicDirection == ">") ldtext <-"gt"
+          if (logicDirection == "<") ldtext <-"lt"
+          test_logic <- paste0("x ", logicDirection, " ", stressValue)
+          #       print(paste0("test_logicFirst: ", test_logic))
+          fileName_in <- paste0("data/cmip6/THI/ensemble_thi.", speciesChoice, "_", k, "_", yearSpan, ".tif")
+          r <- rast(fileName_in)
+          fileName_out <- paste0("data/cmip6/THI/run_", runlength, "_lim_", logicDirection, stressValue, "_ensemble_thi.", speciesChoice, "_", k, "_", yearSpan, ".tif")
+          print(system.time(r_runs <- app(r, f_runs, runlength, test_logic, filename = fileName_out,  overwrite = TRUE, wopt= woptList)))
+          #   print(system.time(writeRaster(r_runs, filename = fileName_out,  overwrite = TRUE, wopt= woptList))); flush.console()
+          mainrl = paste0(m, ", THI gt ", stressValue, ", \nlongest no. of days in a min. run of ", runlength, " days, ", k, ", ", gsub("_", "-", yearSpan))
+          if (m =="humans")  mainrl = paste0(m, ", PWC ", logicDirection, " , ", stressValue, ", \nlongest no of days in a min. run of ", runlength, " days, ", k, ", ", gsub("_", "-", yearSpan))
+          mainct = paste0(m, ", THI gt ", stressValue, ", \nrun minimum length is ", runlength, " days, ", k, ", ", yearSpan)
+          if (m =="humans")  mainct = paste0(m, ", PWC  ", logicDirection, " , ", stressValue, ", \nrun minimum length is ", runlength, " days, ", k, ", ", gsub("_", "-", yearSpan))
+          
+          plot(r_runs$lyr.1, main = mainct)
+          plot(r_runs$lyr.2, main = mainrl)
+        }
+      }
+    }
+  }
+  f_runsCtForPptx <- function(m) {
+    fileName_in_rl <- paste0(lofOfGraphicsFiles, "THI/runLength.", speciesChoice, "_", k, "_", yearSpan, ".png")
+    fileName_in_rCt <- paste0(lofOfGraphicsFiles, "THI/runsCt.", speciesChoice, "_", k, "_", yearSpan, ".png")
+    print(paste0("fileName in, rl: ", fileName_in_rl, ", fileName in, cts: ", fileName_in_rCt))
+    extImg_rl <- external_img(src = fileName_in_rl, width = defaultWidth, height = defaultHeight)
+    extImg_rCt <- external_img(src = fileName_in_rCt, width = defaultWidth, height = defaultHeight)
+    my_pres <- add_slide(x = my_pres, layout = 'Title Only', master = 'Office Theme')
+    my_pres <- ph_with(x = my_pres, value = extImg_rCt, location = ph_location(left = defaultLeft, top = defaultTop, width = defaultWidth, height = defaultHeight - 0.5) )
+    my_pres <- add_slide(x = my_pres, layout = 'Title Only', master = 'Office Theme')
+    my_pres <- ph_with(x = my_pres, value = extImg_rl, location = ph_location(left = defaultLeft, top = defaultTop, width = defaultWidth, height = defaultHeight - 0.5) )
+    return(my_pres)
   }
 }
 
@@ -525,62 +591,14 @@ write.csv(resultsStorage, fileName_out, row.names = FALSE)
 
 for (k in sspChoices) {
   for (l in startYearChoices) {
-    f_extremeStressGenericCt(k, l)
+    f_extremeStressGenericCt(breedChoice, k, l)
   }
 }
 
 k <- "historical"
 l <- 1991
-f_extremeStressGenericCt(k, l)
+f_extremeStressGenericCt(breedChoice, k, l)
 
-# mpegs, ensemble means -----
-
-# for (k in sspChoices) {
-#   for (l in startYearChoices) {
-#     yearSpan <- paste0(l, "_", l + yearRange)
-#     #     yearnumberRange <- seq(l, (l + yearRange), 1)
-#     
-#     # cattle and goats have the same values, but mpegs are created separately
-#     for (speciesChoice in speciesChoices) {
-#       cols <- colorList
-#       if (speciesChoice == "humans") cols = rev(colorList)
-#       #      browser()      
-#       extremeStress <- f_getStressValue(m, stressLevel) # just to have something to put display
-#       print(paste0("species choice: ", speciesChoice))
-#       fileName_in <- paste0(locOfDataFiles_THI, "ensemble_thi.", speciesChoice, "_", k, "_", yearSpan, ".tif")
-#       r <- rast(fileName_in)
-#       maxVal <- round(max(minmax(r)), 3)
-#       minVal <- round(min(minmax(r)), 3)
-#       print(paste0("raster r, ", "species: ", speciesChoice, ", minVal: ", minVal, ", maxVal: ", maxVal, ", extreme stress: ", extremeStress, ", fileName in: ", fileName_in))      
-#       # set up names with Jan-1. Need to set up the endDate_year with a leap year such as 2040
-#       startDate_year <- paste0(2040, "-01-01")
-#       endDate_year <- paste0(2040, "-12-31")
-#       indices <- seq(as.Date(startDate_year), as.Date(endDate_year), 1)
-#       indices_day <- format(indices, "%b %d")
-#       indices_date <- format(indices, "%j")
-#       #      names(r) <- gsub("X", "Day.", names(r))
-#       videoName_out <- paste0(lofOfGraphicsFiles, "THI/ensemble_thi.", speciesChoice, "_", k, "_", yearSpan, ".mp4")
-#       print(paste0("video fileName out: ", videoName_out))
-#       #     x.cv <- tapp(x, indices_date, fun = cv, na.rm = TRUE)
-#       system.time(r.mean <- tapp(r, indices_date, fun = mean, na.rm = TRUE)) #, filename = fileName_out, overwrite = TRUE, wopt = woptList))
-#       print(r.mean)
-#       names(r.mean) <- gsub("X", "Day ", names(r.mean))
-#       title_animate <- paste0("THI value, ", speciesChoice, " ", k,  ", ", gsub("_", "-", yearSpan), ", extreme stress value: ", extremeStress)
-#       breaks = c(1, bpList[species %in% speciesChoice, noStress], bpList[species %in% speciesChoice, moderateStress],bpList[species %in% speciesChoice, extremeStress], max(minmax(r.mean)))
-#       if (m == "humans") {
-#         title_animate <- paste0("PWC value (%), ", k, ", ", gsub("_", "-", yearSpan), ", extreme stress PWC value is less than: ", extremeStress)
-#         range = c(0, 100)
-#         breaks = c(1, 40, 60, 80, 100)
-#       }
-#       print(paste0("raster r.mean, ", "species: ", speciesChoice, ", minVal: ", minVal, ", maxVal: ", maxVal, ", extreme stress: ", extremeStress, ", fileName in: ", fileName_in))      
-#       breaks <- round(breaks, 0)
-#       print(paste0("breaks: ", breaks))
-#       names(r.mean) <- paste0(title_animate, ", ", indices_day)
-#       rangeMaximum <- max(minmax(r.mean))
-#       animation::saveVideo(animate(r.mean, n=1, ylim = c(-60, 90), range = c(0, rangeMaximum,  main = "test",), pause = .001, sub = title_animate, col = cols, breaks = breaks, axes = FALSE), ani.height = 800, ani.width = 1200, video.name = videoName_out)
-#     }
-#   }
-# }
 
 #speciesChoice <- "cattle"
 #  stress level counts, scenarios -------
@@ -622,7 +640,7 @@ maxCount <- 30 # used to identify regions with extreme stress value more than ma
 
 for (speciesChoice in speciesChoices) {
   print(paste0("------", speciesChoice, "------"))
-  stressValue <- f_getStressValue(speciesChoice, "extremeStress") 
+  stressValue <- f_getStressValue(speciesChoice, "moderateStress") 
   
   # create mask by number of animals in cell of fileName_r_mask
   fileName_r_mask <- paste0("data/animals/raster_ct_", speciesChoice, ".tif") # already cropped Antarctica off
@@ -645,18 +663,15 @@ for (speciesChoice in speciesChoices) {
   cols <- colorList
   
   #  graphics, scenarios  -----
-  breedChoice <- "humans_adj"
-  stressLevel <- "extremeStress"
-  stressValue <- f_getStressValue(breedChoice, stressLevel)
-  for (k in sspChoices) {
+   for (k in sspChoices) {
     for (l in startYearChoices) {
       yearSpan <- paste0(l, "_", l + yearRange)
       fileName_in <- paste0(locOfDataFiles_THI, "stressCt_", breedChoice, "_", k, "_stressLevel_", stressValue, "_", yearSpan, ".tif")
       print(paste0("fileName in: ", fileName_in))
       r <- rast(fileName_in)
       names(r) <- "value"
-      dt_stressCts <- f_dt_stressCts(r, dt_stressCts, r_mask, stressValue)
-      f_thi_graphing(speciesChoice, r, r_mask, maskMin, col, dt_stressCts)
+      dt_stressCts <- f_dt_stressCts(r, dt_stressCts, r_mask, stressValue, maskMin, maxCount) 
+      f_thi_graphing(speciesChoice, r, r_mask, maskMin, cols, dt_stressCts, k, l)
       print("-------------------------")
     }
   }
@@ -669,8 +684,8 @@ for (speciesChoice in speciesChoices) {
   print(paste0("fileName in: ", fileName_in))
   r <- rast(fileName_in)
   names(r) <- "value"
-  dt_stressCts <- f_dt_stressCts(r, dt_stressCts, r_mask, stressValue)
-  f_thi_graphing(speciesChoice, r, r_mask, maskMin, col, dt_stressCts)
+  dt_stressCts <- f_dt_stressCts(r, dt_stressCts, r_mask, stressValue, maskMin, maxCount)
+  f_thi_graphing(speciesChoice, r, r_mask, maskMin, cols, dt_stressCts, k, l)
   print("-------------------------")
   
   # delta graphics -----
@@ -683,14 +698,12 @@ for (speciesChoice in speciesChoices) {
       titleText <- paste0(m, ", change in days with PWC below ", extremeStress, " percent, \n early to end century ", k)
     }
     fileName_out <- paste0(lofOfGraphicsFiles, "THI/THIextremeCtDelta.", speciesChoice, "_", k, "_", yearSpan, ".png")
-    r_ssp <- rast(paste0(locOfDataFiles_THI, "extremeCt.", speciesChoice, "_", k, "_", yearSpan, ".tif"))
-    r_historical <- rast(paste0(locOfDataFiles_THI, "extremeCt.", speciesChoice, "_", "historical", "_", "1991_2010", ".tif"))
+     r_ssp <- rast(paste0(locOfDataFiles_THI, "stressCt_", breedChoice, "_", k, "_stressLevel_",  stressValue, "_", yearSpan,  ".tif"))
+      r_historical <- rast(paste0(locOfDataFiles_THI, "stressCt_", breedChoice, "_", "historical", "_stressLevel_",  stressValue, "_", "1991_2010",  ".tif"))
     r <- r_ssp - r_historical
     names(r) <- "value"
     r[r$value < 0] <- 0
     print(r)
-    # r <- mask(r, r_maskRob)
-    # r_df <- as.data.frame(r, xy = TRUE)
     r_mask_scen <- r_mask
     r_mask_scen[r_mask_scen < maskMin] <- NA
     r_mask_scen[r_mask_scen > 0] <- 1
@@ -705,32 +718,142 @@ for (speciesChoice in speciesChoices) {
     
     
     r <- crop(r, extent_noAntarctica)
-    f_thi_graphing(m, r, r_mask, maskMin, col, dt_stressCts)
+    f_thi_graphing(m, r, r_mask, maskMin, cols, dt_stressCts, k, l)
   }
 }
 
-write.csv(dt_stressCts, paste0(locOfDataFiles_THI, "stressCtsTable.csv"))
+write.csv(dt_stressCts, paste0(locOfDataFiles_THI, "stressCtsTable.csv"), row.names = FALSE)
+
+# runs, scenarios -----
+thiMax = 88
+test_logic <- paste0("x > ", thiMax)
+k <- "ssp585"
+l = "2041"
+
+runlength <- 40
+runlengthChoices <- c(5, 10, 20, 40)
+for (k in sspChoices) {
+  for (l in startYearChoices) {
+    f_runs_calculator(k, l, runlengthChoices)
+  }
+}
+
+#runs, historical -----
+k = "historical"
+l = 1991
+f_runs_calculator(k, l, runlengthChoices)
+
+# runs graphics -----
+dt_stressCts<- as.data.table(read.csv(paste0(locOfDataFiles_THI, "stressCtsTable.csv")))
+
+# runs graphics, scenarios -----
+for (k in sspChoices) {
+  for (l in startYearChoices) {
+    #    m = "cattle"
+    for (m in breedChoice) {
+      thiMax <- f_getStressValue(m, stressLevel) -1
+      logicDirection <- ">"
+      if (m == "humans") logicDirection <- "<" # pwc less than thiMax is bad
+      
+      if (logicDirection == ">") ldtext <-"gt"
+      if (logicDirection == "<") ldtext <-"lt"
+      test_logic <- paste0("x ", logicDirection, " ", thiMax)
+      
+      yearSpan <- paste0(l, "_", l + yearRange)
+      fileName_in <- paste0("data/cmip6/THI/run_", runlength, "_lim_", logicDirection, thiMax, "_ensemble_thi.", speciesChoice, "_", k, "_", yearSpan, ".tif")
+      print(paste0("fileName in: ", fileName_in))
+      r <- rast(fileName_in)
+      names(r) <- c("runsCt", "runLength")
+      f_thi_runs_graphing(m, r, cols, dt_stressCts, runlength)
+      print("-------------------------")
+    }
+  }
+}
+
+# runs graphics, historical -----
+k = "historical"
+l = 1991
+#    m = "cattle"
+for (m in breedChoice) {
+  thiMax <- f_getStressValue(m, stressLevel) -1
+  logicDirection <- ">"
+  if (m == "humans") logicDirection <- "<" # pwc less than thiMax is bad
+  
+  if (logicDirection == ">") ldtext <-"gt"
+  if (logicDirection == "<") ldtext <-"lt"
+  test_logic <- paste0("x ", logicDirection, " ", thiMax)
+  
+  yearSpan <- paste0(l, "_", l + yearRange)
+  fileName_in <- paste0("data/cmip6/THI/run_", runlength, "_lim_", logicDirection, thiMax, "_ensemble_thi.", speciesChoice, "_", k, "_", yearSpan, ".tif")
+  print(paste0("fileName in: ", fileName_in))
+  r <- rast(fileName_in)
+  names(r) <- c("runsCt", "runLength")
+  f_thi_runs_graphing(m, r, cols, dt_stressCts, runlength)
+  print("-------------------------")
+}
+
+# calculate mean values over a year for each pixel -----
+
+#means, scenarios -----
+ext_north <- ext(-180, 180, 50, 90)
+
+{
+  r_global <- data.frame(row.names = seq(1, 366, 1))
+  for (k in sspChoices) {
+    for (l in startYearChoices) {
+      yearSpan <- paste0(l, "_", l + yearRange)
+      for (speciesChoice in speciesChoices) {
+        fileName_in <- paste0(locOfDataFiles_THI, "ensemble_thi.", speciesChoice, "_", k, "_", yearSpan, ".tif")
+        print(paste0("fileName in: ", fileName_in))
+        r <- rast(fileName_in)
+        r <- crop(r, ext_north)
+        print(system.time({r_mean <- global(r, "mean", na.rm = TRUE)
+        r_max <- global(r, "max", na.rm = TRUE)
+        r_min <- global(r, "min", na.rm = TRUE)}))
+        r_combined <- cbind(r_min, r_mean, r_max)
+        names(r_combined) <- c(paste0(m, "_", k, "_", l, "_min"), paste0(m, "_", k, "_", l, "_mean"), paste0(m, "_", k, "_", l, "_max"))
+        r_global <- cbind(r_global, r_combined)
+        #     fileName_out <- paste0(locOfDataFiles_THI, "mean_ensemble_thi.", speciesChoice, "_", k, "_", yearSpan, ".tif")
+      }
+    }
+  }
+  
+  k = "historical"
+  l = 1991
+  yearSpan <- paste0(l, "_", l + yearRange)
+  for (speciesChoice in speciesChoices) {
+    fileName_in <- paste0(locOfDataFiles_THI, "ensemble_thi.", speciesChoice, "_", k, "_", yearSpan, ".tif")
+    r <- rast(fileName_in)
+    r <- crop(r, ext_north)
+    print(paste0("fileName in: ", fileName_in))
+    print(system.time({r_mean <- global(r, "mean", na.rm = TRUE)
+    r_max <- global(r, "max", na.rm = TRUE)
+    r_min <- global(r, "min", na.rm = TRUE)}))
+    r_combined <- cbind(r_min, r_mean, r_max)
+    names(r_combined) <- c(paste0(m, "_", k, "_", l, "_min"), paste0(m, "_", k, "_", l, "_mean"), paste0(m, "_", k, "_", l, "_max"))
+    r_global <- cbind(r_global, r_combined)
+    #     fileName_out <- paste0(locOfDataFiles_THI, "mean_ensemble_thi.", speciesChoice, "_", k, "_", yearSpan, ".tif")
+  }
+  r_global <- r_global[, sort(names(r_global))]
+  write.csv(r_global, paste0(locOfDataFiles_THI, "thi_global_nh.csv"))
+  
+}
+
+# mean graphics, scenarios -----
+for (k in sspChoices) {
+  for (l in startYearChoices) {
+    yearSpan <- paste0(l, "_", l + yearRange)
+    for (speciesChoice in speciesChoices) {
+      fileName_in <- paste0(locOfDataFiles_THI, "mean_ensemble_thi.", speciesChoice, "_", k, "_", yearSpan, ".tif")
+      print(paste0("fileName in: ", fileName_in))
+      f_thi_means_graphing(m, r, cols) 
+    }
+  }
+}
 
 {# do ppt for THI extreme ct ensemble means -----
   library(officer)
   source("R/pptFunctions.R")
-  f_extremeCtSpeciesForPptx <- function(m) {
-    fileNameStart <- paste0("THIextremeCt.", speciesChoice, "_")
-    fileName_in <- paste0(lofOfGraphicsFiles, "THI/", fileNameStart, k, "_", yearSpan, ".png")
-    print(paste0("fileName in: ", fileName_in))
-    extImg_favLocs <- external_img(src = fileName_in, width = defaultWidth, height = defaultHeight)
-    my_pres <- add_slide(x = my_pres, layout = 'Title Only', master = 'Office Theme')
-    my_pres <- ph_with(x = my_pres, value = extImg_favLocs, location = ph_location(left = defaultLeft, top = defaultTop, width = defaultWidth, height = defaultHeight - 0.5) )
-    return(my_pres)
-  }
-  
-  f_deltaExtremeCtSpeciesForPptx <- function() {
-    print(paste0("fileName in: ", fileName_in))
-    extImg_favLocs <- external_img(src = fileName_in, width = defaultWidth, height = defaultHeight)
-    my_pres <- add_slide(x = my_pres, layout = 'Title Only', master = 'Office Theme')
-    my_pres <- ph_with(x = my_pres, value = extImg_favLocs, location = ph_location(left = defaultLeft, top = defaultTop, width = defaultWidth, height = defaultHeight - 0.5) )
-    return(my_pres)
-  }
   
   thiList <- c("thi.humans", "thi.cattle", "thi.sheep", "thi.goat", "thi.yak", "thi.broiler", "thi.layer", "thi.chicken", "thi.pigs")
   thiListReduced <- thiList[!thiList %in% c("thi.yak", "thi.broiler", "thi.layer")]
@@ -802,199 +925,14 @@ for (m in breedChoice) {
 
 print(my_pres, target = "presentations/cmip6/THI/damageTemp_Ensemble.pptx") %>% browseURL()
 
-
-# for (j in 1:length(thiListReduced)) {
-#   for (k in sspChoices) {
-#     yearSpan <- paste0(l, "_", l + yearRange)
-#     print(paste0("ssp choice: ", k, ", start year: ", l))
-#     speciesName <- gsub("thi.", "", thiListReduced[j])
-#     ensembleTitle <- paste("Ensemble Mean for", speciesName)
-#     add_slide(my_pres, layout = 'Section Header', master = 'Office Theme')  %>% 
-#       ph_with(value = ensembleTitle, location = ph_location_type(type = "body"))
-#     
-#     fileNameCts <- paste0(lofOfGraphicsFiles, "THI/THIextremeCt.", speciesName, "_", k, "_", yearSpan, ".png")
-#     extImgObs <- external_img(src = fileNameCts, width = 5, height = 8)
-#     
-#     add_slide(my_pres, layout = 'Title Only', master = 'Office Theme') %>% 
-#       ph_with(value = extImgObs, location = ph_location(left = 2, top = 0, width = 5, height = 8) )
-#     
-#     fileNameObserved <- paste0(lofOfGraphicsFiles, "THI/THIextremeCt.", speciesName, "_historical_",  "1991_2010", ".png")
-#     
-#     extImgObs <- external_img(src = fileNameObserved, width = 5, height = 8)
-#     add_slide(my_pres, layout = 'Title Only', master = 'Office Theme') %>% 
-#       ph_with(value = extImgObs, location = ph_location(left = 0, top = 0, width = 5, height = 8) )
-#     
-#     for (l in startYearChoices_ensemble) {
-#       yearSpan <- paste0(l, "_", l + yearRange)
-# #      fileNameCV <- paste0(lofOfGraphicsFiles, "THI/THI_ensembleCV_masked_",   speciesName, "_",  yearSpan, "_", k, ".jpg")
-#       fileNameMean <- paste0(lofOfGraphicsFiles, "THI/THI_ensembleMean_masked_",  speciesName, "_",  yearSpan, "_", k, ".png")
-#       
-#       extImgMean <- external_img(src = fileNameMean, width = 5, height = 8)
-# #      extImgCV <- external_img(src = fileNameCV, width = 5, height = 8)
-#       
-#       #   add_slide(my_pres, layout = 'Comparison', master = 'Office Theme') %>% 
-#       #     ph_with(value = extImgMean, location = ph_location_left(),  use_loc_size = FALSE ) %>%
-#       # #  add_slide(my_pres, layout = 'Comparison', master = 'Office Theme') %>% 
-#       #     ph_with(value = extImgCV, location = ph_location_right(),  use_loc_size = FALSE )
-#       
-#       
-#       add_slide(my_pres, layout = 'Title Only', master = 'Office Theme') %>% 
-#         ph_with(value = extImgMean, location = ph_location(left = 0, top = 0, width = 5, height = 8) ) %>%
-#         ph_with(value = extImgCV, location = ph_location(left = 5, top = 0, width = 5, height = 8) )
-#       
-#       my_pres <- add_slide(my_pres, layout = "Title and Content", master = "Office Theme")
-#       my_pres <-  ph_with(x = my_pres, value = "Data Source", location = ph_location_type(type = "title"))
-#       my_pres <- ph_with(x = my_pres, value = blData, location = ph_location_type(type = "body") )
-#       
-#     #     }
-#   }
-# }
-
-# library(rgl)
-# plot3d(x = r_end_ssp126_df$x, y = r_end_ssp126_df$y, z = r_end_ssp126_df$value, cols <- colorList,
-#        xlab="longitude", ylab="latitude", zlab="Count of extreme stress")
-# 
-# library(plotly)
-# plot_ly(x = r_end_ssp126_df$x, y = r_end_ssp126_df$y, z = r_end_ssp126_df$value, colors = colorList, type = "scatter3d", mode = "markers",
-#         xlab="longitude", ylab="latitude", zlab="Count of extreme stress")
-
-# runs, scenarios -----
-thiMax = 88
-test_logic <- paste0("x > ", thiMax)
-k <- "ssp585"
-l = "2041"
-
-f_runs <- function(x, runlength, test_logic) {
-  #  print(paste0("test_logic: ", test_logic))
-  runResult <- c(NA, NA) 
-  if (is.nan(x[1])) {
-    return(runResult)
-  }
-  seqLengthCode <- paste0("1{", runlength, ",}") #A regular expression  to get the first item of gregexpr. It says look for  run_length times See http://xenon.stanford.edu/~xusch/regexp/
-  g <- gregexpr(seqLengthCode, paste(+eval(parse(text = test_logic)), collapse = ""))[[1]] # The + converts TRUE and FALSE to 1 and 0
-  #  print(paste0("g1: ", g[1]))
-  if ((g[1] == -1)) { # no need to write to growing season if g returns -1, return 0,0
-    runResult <- c(0, 0) 
-    #    print("no runs")
-  } else {
-    startDays <- unlist(g)
-    runLengths <- sum(as.numeric(attributes(g)$match.length))
-    runResult <- c(length(startDays), runLengths)
-  }
-  return(runResult)
-}
-
-f_runs_calculator <- function(k, l, runlengthChoices) {
-  yearSpan <- paste0(l, "_", l + yearRange)
-  for (runlength in runlengthChoices) {
-    for (m in breedChoice) {
-      for (s in "extremeStress") {
-        stressValue <- f_getStressValue(m, s) -1
-        logicDirection <- ">"
-        if (speciesChoice == "humans") logicDirection <- "<" # pwc less than thiStressVal is bad
-        
-        if (logicDirection == ">") ldtext <-"gt"
-        if (logicDirection == "<") ldtext <-"lt"
-        test_logic <- paste0("x ", logicDirection, " ", stressValue)
-        #       print(paste0("test_logicFirst: ", test_logic))
-        fileName_in <- paste0("data/cmip6/THI/ensemble_thi.", speciesChoice, "_", k, "_", yearSpan, ".tif")
-        r <- rast(fileName_in)
-        fileName_out <- paste0("data/cmip6/THI/run_", runlength, "_lim_", logicDirection, stressValue, "_ensemble_thi.", speciesChoice, "_", k, "_", yearSpan, ".tif")
-        print(system.time(r_runs <- app(r, f_runs, runlength, test_logic, filename = fileName_out,  overwrite = TRUE, wopt= woptList)))
-        #   print(system.time(writeRaster(r_runs, filename = fileName_out,  overwrite = TRUE, wopt= woptList))); flush.console()
-        mainrl = paste0(m, ", THI gt ", stressValue, ", \nlongest no. of days in a min. run of ", runlength, " days, ", k, ", ", gsub("_", "-", yearSpan))
-        if (m =="humans")  mainrl = paste0(m, ", PWC ", logicDirection, " , ", stressValue, ", \nlongest no of days in a min. run of ", runlength, " days, ", k, ", ", gsub("_", "-", yearSpan))
-        mainct = paste0(m, ", THI gt ", stressValue, ", \nrun minimum length is ", runlength, " days, ", k, ", ", yearSpan)
-        if (m =="humans")  mainct = paste0(m, ", PWC  ", logicDirection, " , ", stressValue, ", \nrun minimum length is ", runlength, " days, ", k, ", ", gsub("_", "-", yearSpan))
-        
-        plot(r_runs$lyr.1, main = mainct)
-        plot(r_runs$lyr.2, main = mainrl)
-      }
-    }
-  }
-}
-
-#run_length <- 40
-runlengthChoices <- c(5, 10, 20, 40)
-for (k in sspChoices) {
-  for (l in startYearChoices) {
-    f_runs_calculator(k, l, runlengthChoices)
-  }
-}
-
-#runs, historical -----
-k = "historical"
-l = 1991
-f_runs_calculator(k, l, runlengthChoices)
-
-# runs graphics -----
-dt_stressCts<- as.data.table(read.csv(paste0(locOfDataFiles_THI, "stressCtsTable.csv")))
-
-# runs graphics, scenarios -----
-for (k in sspChoices) {
-  for (l in startYearChoices) {
-    #    m = "cattle"
-    for (m in breedChoice) {
-      thiMax <- f_getStressValue(m, stressLevel) -1
-      logicDirection <- ">"
-      if (m == "humans") logicDirection <- "<" # pwc less than thiMax is bad
-      
-      if (logicDirection == ">") ldtext <-"gt"
-      if (logicDirection == "<") ldtext <-"lt"
-      test_logic <- paste0("x ", logicDirection, " ", thiMax)
-      
-      yearSpan <- paste0(l, "_", l + yearRange)
-      fileName_in <- paste0("data/cmip6/THI/run_", runlength, "_lim_", logicDirection, thiMax, "_ensemble_thi.", speciesChoice, "_", k, "_", yearSpan, ".tif")
-      print(paste0("fileName in: ", fileName_in))
-      r <- rast(fileName_in)
-      names(r) <- c("runsCt", "runLength")
-      f_thi_runs_graphing(m, r, col, dt_stressCts, run_length)
-      print("-------------------------")
-    }
-  }
-}
-
-# runs graphics, historical -----
-k = "historical"
-l = 1991
-#    m = "cattle"
-for (m in breedChoice) {
-  thiMax <- f_getStressValue(m, stressLevel) -1
-  logicDirection <- ">"
-  if (m == "humans") logicDirection <- "<" # pwc less than thiMax is bad
-  
-  if (logicDirection == ">") ldtext <-"gt"
-  if (logicDirection == "<") ldtext <-"lt"
-  test_logic <- paste0("x ", logicDirection, " ", thiMax)
-  
-  yearSpan <- paste0(l, "_", l + yearRange)
-  fileName_in <- paste0("data/cmip6/THI/run_", run_length, "_lim_", logicDirection, thiMax, "_ensemble_thi.", speciesChoice, "_", k, "_", yearSpan, ".tif")
-  print(paste0("fileName in: ", fileName_in))
-  r <- rast(fileName_in)
-  names(r) <- c("runsCt", "runLength")
-  f_thi_runs_graphing(m, r, col, dt_stressCts, run_length)
-  print("-------------------------")
-}
 # runs, ppt -----
 library(officer)
 source("R/pptFunctions.R")
 
-f_runsCtForPptx <- function(m) {
-  fileName_in_rl <- paste0(lofOfGraphicsFiles, "THI/runLength.", speciesChoice, "_", k, "_", yearSpan, ".png")
-  fileName_in_rCt <- paste0(lofOfGraphicsFiles, "THI/runsCt.", speciesChoice, "_", k, "_", yearSpan, ".png")
-  print(paste0("fileName in, rl: ", fileName_in_rl, ", fileName in, cts: ", fileName_in_rCt))
-  extImg_rl <- external_img(src = fileName_in_rl, width = defaultWidth, height = defaultHeight)
-  extImg_rCt <- external_img(src = fileName_in_rCt, width = defaultWidth, height = defaultHeight)
-  my_pres <- add_slide(x = my_pres, layout = 'Title Only', master = 'Office Theme')
-  my_pres <- ph_with(x = my_pres, value = extImg_rCt, location = ph_location(left = defaultLeft, top = defaultTop, width = defaultWidth, height = defaultHeight - 0.5) )
-  my_pres <- add_slide(x = my_pres, layout = 'Title Only', master = 'Office Theme')
-  my_pres <- ph_with(x = my_pres, value = extImg_rl, location = ph_location(left = defaultLeft, top = defaultTop, width = defaultWidth, height = defaultHeight - 0.5) )
-  return(my_pres)
-}
 thiList <- c("thi.humans", "thi.cattle", "thi.sheep", "thi.goat", "thi.yak", "thi.broiler", "thi.layer", "thi.chicken", "thi.pigs")
 thiListReduced <- thiList[!thiList %in% c("thi.yak", "thi.broiler", "thi.layer")]
 
-titleString <- paste0("Number of ", run_length, " day runs and longest run of extreme stress days for humans and ", length(thiListReduced)-1 , " animal species.")
+titleString <- paste0("Number of ", runlength, " day runs and longest run of extreme stress days for humans and ", length(thiListReduced)-1 , " animal species.")
 contentString <- paste0("Preliminary results for two scenarios and three time periods to 2100. Powerpoint produced on ", Sys.Date())
 
 IntroText0 <- "The negative impacts of extreme stress are amplified if the stress comes for an extended period. "
@@ -1042,68 +980,8 @@ for (speciesChoice in speciesChoices) {
   }
 }
 my_pres <- f_addDataSlide()
-fileName_out <- paste("presentations/cmip6/THI/extremeStressRuns_Ensemble_rl_", run_length, ".pptx")
+fileName_out <- paste("presentations/cmip6/THI/extremeStressRuns_Ensemble_rl_", runlength, ".pptx")
 print(my_pres, target = fileName_out) %>% browseURL()
-
-# calculate mean values over a year for each pixel -----
-
-#means, scenarios -----
-ext_north <- ext(-180, 180, 50, 90)
-
-{
-  r_global <- data.frame(row.names = seq(1, 366, 1))
-  for (k in sspChoices) {
-    for (l in startYearChoices) {
-      yearSpan <- paste0(l, "_", l + yearRange)
-      for (speciesChoice in speciesChoices) {
-        fileName_in <- paste0(locOfDataFiles_THI, "ensemble_thi.", speciesChoice, "_", k, "_", yearSpan, ".tif")
-        print(paste0("fileName in: ", fileName_in))
-        r <- rast(fileName_in)
-        r <- crop(r, ext_north)
-        print(system.time({r_mean <- global(r, "mean", na.rm = TRUE)
-        r_max <- global(r, "max", na.rm = TRUE)
-        r_min <- global(r, "min", na.rm = TRUE)}))
-        r_combined <- cbind(r_min, r_mean, r_max)
-        names(r_combined) <- c(paste0(m, "_", k, "_", l, "_min"), paste0(m, "_", k, "_", l, "_mean"), paste0(m, "_", k, "_", l, "_max"))
-        r_global <- cbind(r_global, r_combined)
-        #     fileName_out <- paste0(locOfDataFiles_THI, "mean_ensemble_thi.", speciesChoice, "_", k, "_", yearSpan, ".tif")
-      }
-    }
-  }
-  
-  k = "historical"
-  l = 1991
-  yearSpan <- paste0(l, "_", l + yearRange)
-  for (speciesChoice in speciesChoices) {
-    fileName_in <- paste0(locOfDataFiles_THI, "ensemble_thi.", speciesChoice, "_", k, "_", yearSpan, ".tif")
-    r <- rast(fileName_in)
-    r <- crop(r, ext_north)
-    print(paste0("fileName in: ", fileName_in))
-    print(system.time({r_mean <- global(r, "mean", na.rm = TRUE)
-    r_max <- global(r, "max", na.rm = TRUE)
-    r_min <- global(r, "min", na.rm = TRUE)}))
-    r_combined <- cbind(r_min, r_mean, r_max)
-    names(r_combined) <- c(paste0(m, "_", k, "_", l, "_min"), paste0(m, "_", k, "_", l, "_mean"), paste0(m, "_", k, "_", l, "_max"))
-    r_global <- cbind(r_global, r_combined)
-    #     fileName_out <- paste0(locOfDataFiles_THI, "mean_ensemble_thi.", speciesChoice, "_", k, "_", yearSpan, ".tif")
-  }
-  r_global <- r_global[, sort(names(r_global))]
-  write.csv(r_global, paste0(locOfDataFiles_THI, "thi_global_nh.csv"))
-  
-}
-
-# mean graphics, scenarios -----
-for (k in sspChoices) {
-  for (l in startYearChoices) {
-    yearSpan <- paste0(l, "_", l + yearRange)
-    for (speciesChoice in speciesChoices) {
-      fileName_in <- paste0(locOfDataFiles_THI, "mean_ensemble_thi.", speciesChoice, "_", k, "_", yearSpan, ".tif")
-      print(paste0("fileName in: ", fileName_in))
-      f_thi_means_graphing(m, r, col) 
-    }
-  }
-}
-
 
 
 
@@ -1141,7 +1019,7 @@ for (k in sspChoices) {
 #   custom_bins <- round(seq.int(from = 0, to = maxVal, length = 6))
 #   r <- r_delta_df
 #   r$value[r$value > maxVal] <- maxVal
-#   g <- ggplot(data = coastline) +
+#   g <- ggplot(data = sf::st_as_sf(coastline_cropped)) +
 #     labs(title = titleText, fill = legendTitle) + theme(plot.title = element_text(size = 12, hjust = 0.5)) +
 #     labs(x = "", y = "") +
 #     
@@ -1226,7 +1104,109 @@ for (k in sspChoices) {
 #   r <- rast(fileName_in)
 # }
 
-PWCadj <- library(readxl)
-PWCadj <- read_excel("/Volumes/ExtremeSSD3/data/animals/PWCadj.xlsx")
+# mpegs, ensemble means -----
 
+# for (k in sspChoices) {
+#   for (l in startYearChoices) {
+#     yearSpan <- paste0(l, "_", l + yearRange)
+#     #     yearnumberRange <- seq(l, (l + yearRange), 1)
+#     
+#     # cattle and goats have the same values, but mpegs are created separately
+#     for (speciesChoice in speciesChoices) {
+#       cols <- colorList
+#       if (speciesChoice == "humans") cols = rev(colorList)
+#       #      browser()      
+#       extremeStress <- f_getStressValue(m, stressLevel) # just to have something to put display
+#       print(paste0("species choice: ", speciesChoice))
+#       fileName_in <- paste0(locOfDataFiles_THI, "ensemble_thi.", speciesChoice, "_", k, "_", yearSpan, ".tif")
+#       r <- rast(fileName_in)
+#       maxVal <- round(max(minmax(r)), 3)
+#       minVal <- round(min(minmax(r)), 3)
+#       print(paste0("raster r, ", "species: ", speciesChoice, ", minVal: ", minVal, ", maxVal: ", maxVal, ", extreme stress: ", extremeStress, ", fileName in: ", fileName_in))      
+#       # set up names with Jan-1. Need to set up the endDate_year with a leap year such as 2040
+#       startDate_year <- paste0(2040, "-01-01")
+#       endDate_year <- paste0(2040, "-12-31")
+#       indices <- seq(as.Date(startDate_year), as.Date(endDate_year), 1)
+#       indices_day <- format(indices, "%b %d")
+#       indices_date <- format(indices, "%j")
+#       #      names(r) <- gsub("X", "Day.", names(r))
+#       videoName_out <- paste0(lofOfGraphicsFiles, "THI/ensemble_thi.", speciesChoice, "_", k, "_", yearSpan, ".mp4")
+#       print(paste0("video fileName out: ", videoName_out))
+#       #     x.cv <- tapp(x, indices_date, fun = cv, na.rm = TRUE)
+#       system.time(r.mean <- tapp(r, indices_date, fun = mean, na.rm = TRUE)) #, filename = fileName_out, overwrite = TRUE, wopt = woptList))
+#       print(r.mean)
+#       names(r.mean) <- gsub("X", "Day ", names(r.mean))
+#       title_animate <- paste0("THI value, ", speciesChoice, " ", k,  ", ", gsub("_", "-", yearSpan), ", extreme stress value: ", extremeStress)
+#       breaks = c(1, bpList[species %in% speciesChoice, noStress], bpList[species %in% speciesChoice, moderateStress],bpList[species %in% speciesChoice, extremeStress], max(minmax(r.mean)))
+#       if (m == "humans") {
+#         title_animate <- paste0("PWC value (%), ", k, ", ", gsub("_", "-", yearSpan), ", extreme stress PWC value is less than: ", extremeStress)
+#         range = c(0, 100)
+#         breaks = c(1, 40, 60, 80, 100)
+#       }
+#       print(paste0("raster r.mean, ", "species: ", speciesChoice, ", minVal: ", minVal, ", maxVal: ", maxVal, ", extreme stress: ", extremeStress, ", fileName in: ", fileName_in))      
+#       breaks <- round(breaks, 0)
+#       print(paste0("breaks: ", breaks))
+#       names(r.mean) <- paste0(title_animate, ", ", indices_day)
+#       rangeMaximum <- max(minmax(r.mean))
+#       animation::saveVideo(animate(r.mean, n=1, ylim = c(-60, 90), range = c(0, rangeMaximum,  main = "test",), pause = .001, sub = title_animate, col = cols, breaks = breaks, axes = FALSE), ani.height = 800, ani.width = 1200, video.name = videoName_out)
+#     }
+#   }
+# }
+
+
+
+# for (j in 1:length(thiListReduced)) {
+#   for (k in sspChoices) {
+#     yearSpan <- paste0(l, "_", l + yearRange)
+#     print(paste0("ssp choice: ", k, ", start year: ", l))
+#     speciesName <- gsub("thi.", "", thiListReduced[j])
+#     ensembleTitle <- paste("Ensemble Mean for", speciesName)
+#     add_slide(my_pres, layout = 'Section Header', master = 'Office Theme')  %>% 
+#       ph_with(value = ensembleTitle, location = ph_location_type(type = "body"))
+#     
+#     fileNameCts <- paste0(lofOfGraphicsFiles, "THI/THIextremeCt.", speciesName, "_", k, "_", yearSpan, ".png")
+#     extImgObs <- external_img(src = fileNameCts, width = 5, height = 8)
+#     
+#     add_slide(my_pres, layout = 'Title Only', master = 'Office Theme') %>% 
+#       ph_with(value = extImgObs, location = ph_location(left = 2, top = 0, width = 5, height = 8) )
+#     
+#     fileNameObserved <- paste0(lofOfGraphicsFiles, "THI/THIextremeCt.", speciesName, "_historical_",  "1991_2010", ".png")
+#     
+#     extImgObs <- external_img(src = fileNameObserved, width = 5, height = 8)
+#     add_slide(my_pres, layout = 'Title Only', master = 'Office Theme') %>% 
+#       ph_with(value = extImgObs, location = ph_location(left = 0, top = 0, width = 5, height = 8) )
+#     
+#     for (l in startYearChoices_ensemble) {
+#       yearSpan <- paste0(l, "_", l + yearRange)
+# #      fileNameCV <- paste0(lofOfGraphicsFiles, "THI/THI_ensembleCV_masked_",   speciesName, "_",  yearSpan, "_", k, ".jpg")
+#       fileNameMean <- paste0(lofOfGraphicsFiles, "THI/THI_ensembleMean_masked_",  speciesName, "_",  yearSpan, "_", k, ".png")
+#       
+#       extImgMean <- external_img(src = fileNameMean, width = 5, height = 8)
+# #      extImgCV <- external_img(src = fileNameCV, width = 5, height = 8)
+#       
+#       #   add_slide(my_pres, layout = 'Comparison', master = 'Office Theme') %>% 
+#       #     ph_with(value = extImgMean, location = ph_location_left(),  use_loc_size = FALSE ) %>%
+#       # #  add_slide(my_pres, layout = 'Comparison', master = 'Office Theme') %>% 
+#       #     ph_with(value = extImgCV, location = ph_location_right(),  use_loc_size = FALSE )
+#       
+#       
+#       add_slide(my_pres, layout = 'Title Only', master = 'Office Theme') %>% 
+#         ph_with(value = extImgMean, location = ph_location(left = 0, top = 0, width = 5, height = 8) ) %>%
+#         ph_with(value = extImgCV, location = ph_location(left = 5, top = 0, width = 5, height = 8) )
+#       
+#       my_pres <- add_slide(my_pres, layout = "Title and Content", master = "Office Theme")
+#       my_pres <-  ph_with(x = my_pres, value = "Data Source", location = ph_location_type(type = "title"))
+#       my_pres <- ph_with(x = my_pres, value = blData, location = ph_location_type(type = "body") )
+#       
+#     #     }
+#   }
+# }
+
+# library(rgl)
+# plot3d(x = r_end_ssp126_df$x, y = r_end_ssp126_df$y, z = r_end_ssp126_df$value, cols <- colorList,
+#        xlab="longitude", ylab="latitude", zlab="Count of extreme stress")
+# 
+# library(plotly)
+# plot_ly(x = r_end_ssp126_df$x, y = r_end_ssp126_df$y, z = r_end_ssp126_df$value, colors = colorList, type = "scatter3d", mode = "markers",
+#         xlab="longitude", ylab="latitude", zlab="Count of extreme stress")
 

@@ -1,16 +1,20 @@
 # climate data means
 {
   require("terra") # always used so load it here
-  source("R/ISIMIPconstants.R")
-  source("R/ISIMIPspatialConstants.R")
-  locOfClimFiles <- "/Volumes/ExtremeSSD2/ISIMIP/cmip6/"
+  woptList <- list(gdal=c("COMPRESS=DEFLATE", "PREDICTOR=2", "ZLEVEL = 6", "NUM_THREADS=ALL_CPUS"))
   
-  climateVars <- c("pr") #, "tasmax", "tasmin", "hurs") #, "pr", "tas" , "tasmax", "tasmin" "hurs" , "sfcwind", "rsds"
+  # try a larger memory allowance, for macs only
+  terraOptions(memfrac = 2,  ncopies = 1, progress = 10, tempdir =  "data/ISIMIP", verbose = TRUE) # need to use a relative path
+  # source("R/ISIMIPconstants.R")
+  # source("R/ISIMIPspatialConstants.R")
+  locOfClimFiles <- "/Volumes/ExtremeSSD2/ISIMIP/cmip6/"
+  yearRange <- 19
+  climateVars <- c("prsn", "hurs" , "sfcwind", "rsds", "tas","tasmax", "tasmin","pr") #, "tasmax", "tasmin", "hurs") #, "pr", "tas" , "tasmax", "tasmin" "hurs" , "sfcwind", "rsds"
   meanChoices <- c("daily", "monthly", "annual")
   meanChoices <- c("monthly")
   
   # test values
-  climateVar <- "pr"
+  climateVar <- "hurs"
   k <- "ssp585"
   l <- 2041
   modelChoice <- "IPSL-CM6A-LR"
@@ -34,7 +38,7 @@
     startDate <- paste0(l, "-01-01"); endDate <- paste0(l + yearRange, "-12-31")
     indices <- seq(as.Date(startDate), as.Date(endDate), 1)
     indices_date  <- paste0("X", as.character(indices))
-    # indices_month <- as.numeric(format(indices, format = "%m"))
+    indices_month <- as.numeric(format(indices, format = "%m"))
     indices_day <- as.numeric(format(indices, format = "%j"))
     print(paste0("working on start year: ", l, ", variable: ", climateVar, ", ssp choice: ", k, ", modelChoice: ", modelChoice, ", period choice: ", meanChoice))
     fileName_in <- paste0(locOfClimFiles, modelChoice_lower, "_", climateVar, "_", k, "_", yearSpan, ".tif") 
@@ -70,23 +74,59 @@
       print(paste0("fileName out, annual mean: ", fileName_mean_annual_out))
     }
   }
-  # fileName_out_dailySD <- paste0(locOfClimFiles, "mean_daily/dailySD_", climateVar, "_", modelChoice_lower, "_", k,  "_", yearSpan, ".tif")
-  # # print(system.time(r_dailySD <- tapp(r_in, indices_day, fun = "sd", filename = fileName_out_dailySD, overwrite = TRUE, wopt = list()))) # daily mean over the data set, output has 366 layers   
-  # if (meanChoice == "monthly") {
-  #   print(system.time(r_mean_monthly <- tapp(r_in, indices_month, fun = mean, filename = fileName_mean_monthly_out, overwrite = TRUE, wopt = list()))) # Output has 12 layers
-  #   print(paste0("fileName out, monthly mean: ", fileName_mean_monthly_out))
-  # }
-  # if (meanChoice == "daily") {
-  #   print(system.time(r_mean_daily <- tapp(r_in, indices_day, fun = mean, filename = fileName_mean_daily_out, overwrite = TRUE, wopt = list()))) # daily mean over the data set, output has 366 layers  
-  #   print(paste0("fileName out, daily mean: ", fileName_mean_daily_out))
-  #   
-  # }
-  
-  #    print(paste0("writing annual mean: ", fileName_out_mean_annual))
-  #    writeRaster(r_mean_daily, filename = paste0("data/cmip6/mean_annual/", fileName_out_mean_annual),  overwrite = TRUE, wopt= woptList)
-  #     print(paste0("fileName out, daily mean: ", fileName_out_mean_daily))
-  #     print(paste0("fileName out, daily SD: ", fileName_out_dailySD))
-  # print(paste0("fileName out, monthly mean: ", fileName_out_mean_monthly))
+}
+f_annualMonth_means <- function(k, l, yearRange, climVars) {
+  print(l)
+  print(yearRange)
+  yearSpan <- paste0(l, "_", l + yearRange)
+  for (climateVar in climVars) {
+    for (modelChoice in modelChoices) {
+      modelChoice_lower <- tolower(modelChoice)
+      startDate <- paste0(l, "-01-01"); endDate <- paste0(l + yearRange, "-12-31")
+      indices <- seq(as.Date(startDate), as.Date(endDate), 1)
+      indices_date  <- paste0("X", as.character(indices))
+      indices_month <- as.numeric(format(indices, format = "%m"))
+      indices_day <- as.numeric(format(indices, format = "%j"))
+      print(paste0("working on start year: ", l, ", variable: ", climateVar, ", ssp choice: ", k, ", modelChoice: ", modelChoice, ", period choice: ", meanChoice))
+      fileName_in <- paste0(locOfClimFiles, modelChoice_lower, "_", climateVar, "_", k, "_", yearSpan, ".tif") 
+      r_in <- rast(fileName_in)
+      #      names(r_in) <- indices_date
+      
+      # get a year at a time
+      for (yr in l:(l + yearRange)) {
+        startDate <- paste0(yr, "-01-01"); endDate <- paste0(yr, "-12-31")
+        indices_yr <- seq(as.Date(startDate), as.Date(endDate), 1)
+        indices_month_yr <- as.numeric(format(indices_yr, format = "%m"))
+        indices_date_yr <- paste0("X", as.character(indices_yr))
+        yr_data_in <- subset(r_in, indices_date_yr)
+        fileName_out <- paste0("data/bigFiles/mean_monthly/monthlyMn_Yr_",climateVar, "_", modelChoice, "_", k,  "_", yr, ".tif")
+        print(system.time(yr_mean_monthly <- tapp(yr_data_in, indices_month_yr, fun = "mean", na.rm = TRUE, filename = fileName_out, overwrite = TRUE, wopt = woptList)))
+      }
+    }
+  }
+}
+
+f_convert_nc_to_tif <- function(k, l, yearRange, climVars, locOfNCFiles) {
+  yearSpan <-paste0(l, "_", l + yearRange)
+  for (modelChoice in modelChoices) {
+    modelChoice_lower <- tolower(modelChoice)
+    for (climateVar in climVars) {
+      fillerText <- "_r1i1p1f1_w5e5_"
+      if (modelChoice %in% "UKESM1-0-LL") fillerText <- "_r1i1p1f2_w5e5_"
+      fileName_in <- paste0(locOfNCFiles, k, "/", modelChoice, "/", modelChoice_lower, fillerText, k, "_", climateVar, "_global_daily_", yearSpan, ".nc")
+      fileName_out <- paste0(locOfClimFiles, modelChoice_lower, "_", climateVar, "_", k, "_", yearSpan, ".tif") 
+      r_in <- rast(fileName_in)
+      r_out <- r_in
+      if (climateVar %in% c("pr", "prsn")) r_out <- r_in * 86400
+      if (climateVar %in% c("tas", "tasmin", "tasmax")) r_out <- r_in - 273.15
+      startDate <- paste0(l, "-01-01"); endDate <- paste0(l + yearRange, "-12-31")
+      indices <- seq(as.Date(startDate), as.Date(endDate), 1)
+      indices_date  <- paste0("X", as.character(indices))
+      names(r_out) <- indices_date
+      setMinMax((r_out))
+      print(system.time(writeRaster(r_out, filename = fileName_out, overwrite = TRUE, wopt = woptList)))
+    }
+  }
 }
 
 # means, scenarios -----
@@ -111,105 +151,142 @@ for (modelChoice in modelChoices) {
   }
 }
 
+f_ensemble_calcs <- function(k, l) {
+  yearSpan <- paste0(l, "_", l + yearRange)
+  indices_day <- paste0("X", seq(1,366,1))
+  indices_month <- paste0("X", seq(1, 12, 1))
+  for (climateVar in climateVars) {
+    # meanName <- paste0("mean_", meanChoice, "/", "mean_", meanChoice, "_")
+    # fileName_in <- paste0(locOfClimFiles, meanName, climateVar, "_", modelChoice_lower, "_", k,  "_", yearSpan, ".tif")
+    for (meanChoice in meanChoices) {
+      x <- lapply(modelChoices, f_readRast, k, l, climateVar, meanChoice)
+      r <- rast(x)
+      for (hem in hemispheres) {
+        if (hem == "NH") hemExt <- extent_NH
+        if (hem == "SH") hemExt <- extent_SH
+        r_hem <- crop(r, hemExt)
+        if (meanChoice == "daily") {
+          fileName_out <- paste0("data/bigFiles/ensembleMn_dailyMn_20Yr_", k,  "_", hem, "_", climateVar, "_", yearSpan, ".tif") 
+          print(system.time(r_hem <- tapp(r_hem, indices_day, fun = "mean", na.rm = TRUE, filename = fileName_out, overwrite = TRUE, wopt = woptList)))
+        }
+        
+        if (meanChoice == "monthly") {
+          fileName_out <- paste0("data/bigFiles/ensembleMn_monthlyMn_20Yr_", k,  "_", hem, "_", climateVar, "_", yearSpan, ".tif")
+          print(system.time(r_hem <- tapp(r_hem, indices_month, fun = "mean", na.rm = TRUE, filename = fileName_out, overwrite = TRUE, wopt = woptList)))
+        }
+        
+        print(paste0("fileName out: ", fileName_out))
+      }
+    }
+  }
+}
+
 #  ensemble calcs -----
 # ensembles, scenarios -----
 for (k in sspChoices) {
   for (l in startYearChoices) {
-    for (climateVar in climateVars) {
-      # meanName <- paste0("mean_", meanChoice, "/", "mean_", meanChoice, "_")
-      # fileName_in <- paste0(locOfClimFiles, meanName, climateVar, "_", modelChoice_lower, "_", k,  "_", yearSpan, ".tif")
-      for (meanChoice in meanChoices) {
-        x <- lapply(modelChoices, f_readRast, k, l, climateVar, meanChoice)
-        r <- rast(x)
-        if (meanChoice == "daily") indices_day <- rep(seq(1, nlyr(x[[1]]), 1), 5) # 5 is number of models; if omitted should get the same result XXX check here at some point
-        if (meanChoice == "monthly") indices_month <- as.numeric(format(as.Date(names(r_in), format = "X%Y-%m-%d"), format = "%m"))
-        for (hem in hemispheres) {
-          if (hem == "NH") hemExt <- extent_NH
-          if (hem == "SH") hemExt <- extent_SH
-          r_hem <- crop(r, hemExt)
-          if (meanChoice == "daily") fileName_out <- paste0("data/bigFiles/ensembleMn_dailyMn_20Yr_", k,  "_", hem, "_", climateVar, "_", yearSpan, ".tif") 
-          if (meanChoice == "monthly") fileName_out <- paste0("data/bigFiles/ensembleMn_monthlyMn_20Yr_", k,  "_", hem, "_", climateVar, "_", yearSpan, ".tif")
-          print(system.time(r_hem <- tapp(r_hem, indices_day, fun = "mean", na.rm = TRUE, filename = fileName_out, overwrite = TRUE, wopt = woptList)))
-          print(paste0("fileName out: ", fileName_out))
-        }
-      }
-    }
+    f_ensemble_calcs(k, l)
   }
 }
 
 # ensembles, historical -----
 k = "historical"
 l = 1991
-for (climateVar in climateVars) {
-  x <- lapply(modelChoices, f_readRast, k, l, climateVar, meanChoice)
-  r <- rast(x)
-  indices_day <- rep(seq(1, nlyr(x[[1]]), 1), 5) # 5 is number of models; if omitted should get the same result
-  for (hem in hemispheres) {
-    if (hem == "NH") hemExt <- extent_NH
-    if (hem == "SH") hemExt <- extent_SH
-    r_hem <- crop(r, hemExt)
-    if (meanChoice == "daily") fileName_out <- paste0("data/bigFiles/ensembleMn_dailyMn_20Yr_", k,  "_", hem, "_", climateVar, "_", yearSpan, ".tif") 
-    if (meanChoice == "monthly") fileName_out <- paste0("data/bigFiles/ensembleMn_monthlyMn_20Yr_", k,  "_", hem, "_", climateVar, "_", yearSpan, ".tif")
-    print(system.time(r_hem <- tapp(r_hem, indices_day, fun = "mean", na.rm = TRUE, filename = fileName_out, overwrite = TRUE, wopt = woptList)))
-    print(paste0("fileName out: ", fileName_out))
-    
+f_ensemble_calcs(k, l)
+
+# combine hemisphere results, monthly means ----
+for (k in sspChoices) {
+  for (l in startYearChoices) {
+    yearSpan <- paste0(l, "_", l + yearRange)
+    for (climateVar in climateVars) {
+      fileName_in_NH <- paste0("data/bigFiles/ensembleMn_monthlyMn_20Yr_", k,  "_", "NH", "_", climateVar, "_", yearSpan, ".tif")
+      fileName_in_SH <- paste0("data/bigFiles/ensembleMn_monthlyMn_20Yr_", k,  "_", "SH", "_", climateVar, "_", yearSpan, ".tif")
+      fileName_out <- paste0("data/bigFiles/ensembleMn_monthlyMn_20Yr_", k,  "_", climateVar, "_", yearSpan, ".tif")
+      r_NH <- rast(fileName_in_NH)
+      r_SH <- rast(fileName_in_SH)
+      r_out <- merge(r_NH, r_SH)
+      print(system.time(writeRaster(r_out, fileName_out, overwrite = TRUE, wopt = woptList)))
+    }
   }
 }
 
-# do calculations on historical data; note ensemble calculations for historical done in ensembleCalcsHistoricalData.R. Here we just need to calculate the monthly means (sums for precip)s
-# climateVars <- c( "tasmax", "tasmin",  "pr", "rsds", "sfcwind", "hurs") #"hurs", "tas", 
-# climateVars <- c("tasmax", "tasmin", "hurs") #"hurs",
-# startYearChoices <-  c(1991, 2001) 
-# startYearChoices <-  c(2001) 
-# locOfClimFiles <- "/Volumes/ExtremeSSD2/climate_land_only/unitsCorrected/historical/ensemble/"
-# 
-# #test values
-# l = 2001
-# var = "hurs"
-# 
-# for (l in startYearChoices) {
-#   yearSpan <- paste0(l, "_", l + yearRange)
-#   startDate <- paste0(l, "-01-01"); endDate <- paste0(l + yearRange, "-12-31")
-#   indices <- seq(as.Date(startDate), as.Date(endDate), 1)
-#   indices_month <- format(indices, format = "%m")
-#   indices_day <- format(indices, format = "%var")
-#   indices_month <- as.numeric(indices_month)
-#   indices_day <- as.numeric(indices_day)
-#   
-#   for (climateVar in climateVars) {
-#     gc()
-#     
-#     print(paste0("working on start year: ", l, ", variable: ", climateVar, ", pid: ", Sys.getpid(), " systime: ", Sys.time()))
-#     fileName_in <- paste("ensemble_historical",  climateVar, yearSpan, sep = "_")
-#     fileName_in <- paste0(fileName_in, ".tif")
-#     temp <- paste(locOfClimFiles, fileName_in, sep = "")
-#     r_in <- rast(temp)
-#     print(r_in)
-#     
-#     print(system.time(r_mean <- mean(r_in))) # one layer with one value per cell; the means of daily values for the 10 year period
-#     print(r_mean)
-#     
-#     if (climateVar %in% "pr") {
-#       print(system.time(r_mean_daily <- tapp(r_in, indices_day, fun = mean)))
-#       
-#       indices_month <- format(indices, format = "%m")
-#       indices_month <- as.numeric(indices_month)
-#       print(system.time(r_mean_monthly <- tapp(r_in, indices_month, fun = sum))) # sum for pr. this sums the values for all days in a month across the whole data set. Need to divide by yearRange to get the per month value
-#       print(system.time(r_mean_monthly <- r_mean_monthly/yearRange))
-#     } else {
-#       print(system.time(r_mean_monthly <- tapp(r_in, indices_month, fun = mean)))
-#     }
-#     names(r_mean_monthly) <- month.abb
-#     print(r_mean_monthly)
-#     XXXX this needs to be reviewedXXX
-#     fileName_out_mean_annual <- paste0("ensemblemean_annual_", climateVar, "_historical_", yearSpan, ".tif")
-#     fileName_out_mean_monthly <- paste0("ensemblemean_monthly_", climateVar, "_historical_", yearSpan, ".tif")
-#     fileName_out_mean_daily <- paste0("ensemblemean_daily_", climateVar, "_", modelChoice_lower, "_", k,  "_", yearSpan, ".tif")
-#     
-#     print(paste0("writing annual mean: ", fileName_out_mean_annual))
-#     writeRaster(r_mean, filename = paste0("data/cmip6/mean_annual/", fileName_out_mean_annual),  overwrite = TRUE, wopt= woptList)
-#     
-#     print(paste0("writing monthly mean: ", fileName_out_mean_monthly))
-#     writeRaster(r_mean_monthly, filename = paste0("data/cmip6/mean_monthly/", fileName_out_mean_monthly),  overwrite = TRUE, wopt= woptList)
-#   }
-# }
+k = "historical"
+l = 1991
+yearSpan <- paste0(l, "_", l + yearRange)
+for (climateVar in climateVars) {
+  fileName_in_NH <- paste0("data/bigFiles/ensembleMn_monthlyMn_20Yr_", k,  "_", "NH", "_", climateVar, "_", yearSpan, ".tif")
+  fileName_in_SH <- paste0("data/bigFiles/ensembleMn_monthlyMn_20Yr_", k,  "_", "SH", "_", climateVar, "_", yearSpan, ".tif")
+  fileName_out <- paste0("data/bigFiles/ensembleMn_monthlyMn_20Yr_", k,  "_", climateVar, "_", yearSpan, ".tif")
+  r_NH <- rast(fileName_in_NH)
+  r_SH <- rast(fileName_in_SH)
+  r_out <- merge(r_NH, r_SH)
+  print(system.time(writeRaster(r_out, fileName_out, overwrite = TRUE, wopt = woptList)))
+}
+
+# annual monthly means -----
+climVars <- c("pr"s, "tas" , "tasmax", "tasmin", "hurs")
+yearRange <- 19
+for (k in sspChoices) {
+  for (l in startYearChoices) {
+    f_annualMonth_means(k, l, yearRange, climVars)
+  }
+}
+
+# new years, 10 year window ----
+# convert the nc files to tifs
+locOfNCFiles <- "/Volumes/PassportMac/ISIMIP/cmip6/"
+startYearChoices_new <- c(2021, 2031, 2071)
+startYearChoices_new <- c(2071)
+yearRange <- 9
+for (k in sspChoices) {
+  for (l in startYearChoices_new) {
+    f_convert_nc_to_tif(k, l, yearRange, climVars, locOfNCFiles)
+  }
+}
+climVars_temp <- c("pr", "tas" , "tasmax", "tasmin", "hurs")
+yearRange <- 9
+for (k in sspChoices) {
+  for (l in startYearChoices_new) {
+    f_annualMonth_means(k, l, yearRange, climVars_temp)
+  }
+}
+
+# convert smaller nc files
+climVars <- c("pr", "tas" , "tasmax", "tasmin", "hurs")
+yearRange <- 5
+l = 2015
+for (k in sspChoices) {
+  f_convert_nc_to_tif(k, l, yearRange, climVars, locOfNCFiles)
+}
+
+#historical data -----
+k = "historical"
+l = 2011
+yearRange <- 3
+f_convert_nc_to_tif(k, l, yearRange, climVars, locOfNCFiles)
+
+# calculate monthly averages -----
+
+yearRange <- 5
+l = 2015
+for (k in sspChoices) {
+  f_annualMonth_means(k, l, yearRange, climVars)
+}
+
+yearRange <- 3
+l = 2011
+k = "historical"
+f_annualMonth_means(k, l, yearRange, climVars)
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -5,7 +5,7 @@ library(terra)
 woptList <- list(gdal=c("COMPRESS=LZW"))
 woptList <- list(gdal=c("COMPRESS=DEFLATE", "PREDICTOR=3", "ZLEVEL = 6"))
 
-terraOptions(memfrac = 3,  progress = 10, tempdir =  "data/ISIMIP", verbose = TRUE) # need to use a relative path
+terraOptions(memfrac = 2,  progress = 10, tempdir =  "data/ISIMIP", verbose = TRUE) # need to use a relative path
 
 locOfFiles <- "/Volumes/PassportMac/ISIMIP/cmip6"
 locOfFiles_out <- "/Volumes/ExtremeSSD2/ISIMIP/cmip6/"

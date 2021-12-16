@@ -2,6 +2,7 @@
 require(terra)
 source("R/ISIMIPconstants.R")
 extent_noAntarctica <- ext(-180, 180, -60, 90) #-60 gets rid of Antarctica for global
+woptList <- list(gdal=c("COMPRESS=DEFLATE", "PREDICTOR=2", "ZLEVEL = 6", "NUM_THREADS=ALL_CPUS"))
 
 # projection choices -----
 RobinsonProj <-  "+proj=robin +lon_0=0 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs"

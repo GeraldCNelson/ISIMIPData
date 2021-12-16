@@ -16,8 +16,8 @@
   l <- 2041
   midYear <- 2080
   hem <- "NH"
-  speciesChoice <- "olive_main"
-  varietyChoice <- "varieties_main" # this choice determines what gets run below
+  speciesChoice <- "olive_lo"
+  varietyChoice <- "varieties_lo" # this choice determines what gets run below
   
   # choice for varietyChoice in next line-----------
   var_suffix <- gsub("varieties", "", varietyChoice)
